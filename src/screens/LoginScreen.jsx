@@ -87,7 +87,7 @@ export default function LoginScreen({ navigation }) {
 	};
 
 	const handleSignUp = () => {
-		Alert.alert("Đăng ký", "Chức năng đang được phát triển");
+		navigation.navigate("Signup");
 	};
 
 	return (
