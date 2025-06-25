@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 const SplashScreen = ({ navigation }) => {
-	const logoAnim = useRef(new Animated.Value(0)).current; // ban đầu opacity = 0
+	const logoAnim = useRef(new Animated.Value(0)).current;
 
 	useEffect(() => {
 		Animated.timing(logoAnim, {
@@ -47,7 +47,7 @@ export default SplashScreen;
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#fff", // Nền trắng
+		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 	},

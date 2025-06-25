@@ -11,14 +11,12 @@ import Onboarding from "react-native-onboarding-swiper";
 
 const { width, height } = Dimensions.get("window");
 
-// Nút tùy chỉnh (Dừng, Sau, Bắt đầu)
 const Button = ({ label, ...props }) => (
 	<TouchableOpacity style={styles.button} {...props}>
 		<Text style={styles.buttonText}>{label}</Text>
 	</TouchableOpacity>
 );
 
-// Custom 3 chấm tròn pagination
 const Dot = ({ selected }) => {
 	return (
 		<View
@@ -33,7 +31,6 @@ const Dot = ({ selected }) => {
 	);
 };
 
-// Ảnh có animation trôi lên trôi xuống
 const FloatingImage = ({ source }) => {
 	const animation = useRef(new Animated.Value(0)).current;
 
