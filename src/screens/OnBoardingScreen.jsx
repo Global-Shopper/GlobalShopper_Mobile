@@ -66,9 +66,15 @@ const OnboardingScreen = ({ navigation }) => {
 			<Onboarding
 				onSkip={() => navigation.replace("Login")}
 				onDone={() => navigation.replace("Login")}
-				SkipButtonComponent={() => <Button label="Dừng" />}
-				NextButtonComponent={() => <Button label="Sau" />}
-				DoneButtonComponent={() => <Button label="Bắt đầu" />}
+				SkipButtonComponent={(props) => (
+					<Button label="Dừng" {...props} />
+				)}
+				NextButtonComponent={(props) => (
+					<Button label="Sau" {...props} />
+				)}
+				DoneButtonComponent={(props) => (
+					<Button label="Bắt đầu" {...props} />
+				)}
 				DotComponent={Dot}
 				containerStyles={styles.container}
 				titleStyles={styles.title}

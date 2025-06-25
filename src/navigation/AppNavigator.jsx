@@ -1,4 +1,5 @@
 import { createStackNavigator } from "@react-navigation/stack";
+import LoginScreen from "../screens/LoginScreen";
 import OnBoardingScreen from "../screens/OnBoardingScreen";
 import SplashScreen from "../screens/SplashScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
@@ -21,6 +22,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="OnBoarding"
 				component={OnBoardingScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="Login"
+				component={LoginScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
