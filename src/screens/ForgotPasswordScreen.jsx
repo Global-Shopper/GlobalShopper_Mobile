@@ -86,20 +86,11 @@ export default function ForgotPasswordScreen({ navigation }) {
 			// Simulate API call to send OTP
 			await new Promise((resolve) => setTimeout(resolve, 2000));
 
-			Alert.alert(
-				"Thành công",
-				"Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email.",
-				[
-					{
-						text: "OK",
-						onPress: () =>
-							navigation.navigate("OTPVerification", {
-								email: email,
-								type: "forgot-password", // Để phân biệt với OTP đăng ký
-							}),
-					},
-				]
-			);
+			// Chuyển thẳng sang màn hình OTP Verification
+			navigation.navigate("OTPVerification", {
+				email: email,
+				type: "forgot-password", // Để phân biệt với OTP đăng ký
+			});
 		} catch (_error) {
 			Alert.alert("Lỗi", "Không thể gửi mã OTP. Vui lòng thử lại sau.");
 		} finally {

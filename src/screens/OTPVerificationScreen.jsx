@@ -18,8 +18,34 @@ export default function OTPVerificationScreen({ navigation, route }) {
 	const [timer, setTimer] = useState(60);
 	const [canResend, setCanResend] = useState(false);
 
-	// Get email from navigation params
+	// Get email and type from navigation params
 	const email = route?.params?.email || "your-email@example.com";
+	const type = route?.params?.type || "signup";
+
+	// Content based on flow type
+	const getContent = () => {
+		if (type === "forgot-password") {
+			return {
+				title: "Nhập mã xác minh",
+				subtitle: "Mã xác minh đã được gửi đến",
+				successMessage:
+					"Xác minh mã thành công! Bạn có thể đặt lại mật khẩu.",
+				resendMessage: "Mã xác minh mới đã được gửi đến email của bạn",
+				changeEmailText: "Sai email? Thay đổi email",
+			};
+		} else {
+			return {
+				title: "Xác thực Email",
+				subtitle: "Mã OTP đã được gửi đến",
+				successMessage:
+					"Xác thực email thành công! Email của bạn đã được xác thực.",
+				resendMessage: "Mã OTP mới đã được gửi đến email của bạn",
+				changeEmailText: "Đổi email",
+			};
+		}
+	};
+
+	const content = getContent();
 
 	// Refs for OTP inputs
 	const otpRefs = useRef([]);
@@ -126,7 +152,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 			// Simulate API call - replace with real API call
 			await new Promise((resolve, reject) => {
 				setTimeout(() => {
-					// For demo: accept "123456" as valid OTP, others as invalid
+					// "123456" as valid OTP, others as invalid
 					if (otpCode === "123456") {
 						resolve();
 					} else {
@@ -141,16 +167,22 @@ export default function OTPVerificationScreen({ navigation, route }) {
 			});
 
 			// Success case
-			Alert.alert(
-				"Thành công",
-				"Xác thực OTP thành công! Email của bạn đã được xác thực.",
-				[
-					{
-						text: "OK",
-						onPress: () => navigation.navigate("Login"),
+			Alert.alert("Thành công", content.successMessage, [
+				{
+					text: "OK",
+					onPress: () => {
+						if (type === "forgot-password") {
+							// For forgot password, navigate to reset password screen
+							// navigation.navigate("ResetPassword", { email });
+							// For now, go back to login since ResetPassword screen doesn't exist yet
+							navigation.navigate("Login");
+						} else {
+							// For signup verification, go to login
+							navigation.navigate("Login");
+						}
 					},
-				]
-			);
+				},
+			]);
 		} catch (error) {
 			// Handle different error cases
 			if (error?.data?.errorCode === "ALREADY_VERIFIED") {
@@ -192,10 +224,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 			// Simulate API call - replace with real API call
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 
-			Alert.alert(
-				"Đã gửi lại mã OTP",
-				`Mã xác thực mới đã được gửi tới ${email}`
-			);
+			Alert.alert("Đã gửi lại mã OTP", content.resendMessage);
 		} catch (_error) {
 			Alert.alert("Gửi lại OTP thất bại", "Vui lòng thử lại sau.");
 			// Reset timer on failure
@@ -238,18 +267,20 @@ export default function OTPVerificationScreen({ navigation, route }) {
 						]}
 						resizeMode="contain"
 					/>
-					<Text style={styles.title}>Xác thực Email</Text>
+					<Text style={styles.title}>{content.title}</Text>
 				</View>
 
 				{/* Email Info */}
 				<View style={styles.emailContainer}>
-					<Text style={styles.subtitle}>Mã OTP đã được gửi đến</Text>
+					<Text style={styles.subtitle}>{content.subtitle}</Text>
 					<Text style={styles.emailText}>{email}</Text>
 					<TouchableOpacity
 						style={styles.changeEmailButton}
 						onPress={() => navigation.goBack()}
 					>
-						<Text style={styles.changeEmailText}>Đổi email</Text>
+						<Text style={styles.changeEmailText}>
+							{content.changeEmailText}
+						</Text>
 					</TouchableOpacity>
 				</View>
 
