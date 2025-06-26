@@ -125,7 +125,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 				{/* Logo Section */}
 				<View style={styles.logoContainer}>
 					<Animated.Image
-						source={require("../assets/images/logo/logo-gshop-removebg.png")}
+						source={require("../../assets/images/logo/logo-gshop-removebg.png")}
 						style={[
 							styles.logo,
 							{

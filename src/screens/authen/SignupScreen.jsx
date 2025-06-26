@@ -16,20 +16,21 @@ import {
 
 const { height } = Dimensions.get("window");
 
-export default function ResetPasswordScreen({ navigation, route }) {
+export default function SignupScreen({ navigation }) {
+	const [fullName, setFullName] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const [gender, setGender] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [agreeToTerms, setAgreeToTerms] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [passwordValidation, setPasswordValidation] = useState({
 		minLength: false,
 		hasLetterAndNumber: false,
 		hasSpecialChar: false,
 	});
-
-	// Get email from navigation params
-	const email = route?.params?.email || "your-email@example.com";
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -87,6 +88,11 @@ export default function ResetPasswordScreen({ navigation, route }) {
 		});
 	}, [password]);
 
+	const validateEmail = (email) => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email);
+	};
+
 	const isPasswordValid =
 		passwordValidation.minLength && passwordValidation.hasLetterAndNumber;
 
@@ -95,17 +101,37 @@ export default function ResetPasswordScreen({ navigation, route }) {
 		if (scrollViewRef.current) {
 			setTimeout(() => {
 				scrollViewRef.current.scrollTo({
-					y: inputY - 50,
+					y: inputY - 50, // Offset để field không bị che bởi keyboard
 					animated: true,
 				});
-			}, 100);
+			}, 100); // Delay nhỏ để đảm bảo keyboard đã hiện
 		}
 	};
 
-	const handleResetPassword = async () => {
+	const handleSignup = async () => {
 		// Validation
+		if (!fullName.trim()) {
+			Alert.alert("Lỗi", "Vui lòng nhập họ tên");
+			return;
+		}
+
+		if (!email.trim()) {
+			Alert.alert("Lỗi", "Vui lòng nhập email");
+			return;
+		}
+
+		if (!validateEmail(email)) {
+			Alert.alert("Lỗi", "Email không hợp lệ");
+			return;
+		}
+
+		if (!gender) {
+			Alert.alert("Lỗi", "Vui lòng chọn giới tính");
+			return;
+		}
+
 		if (!password) {
-			Alert.alert("Lỗi", "Vui lòng nhập mật khẩu mới");
+			Alert.alert("Lỗi", "Vui lòng nhập mật khẩu");
 			return;
 		}
 
@@ -119,46 +145,30 @@ export default function ResetPasswordScreen({ navigation, route }) {
 			return;
 		}
 
+		if (!agreeToTerms) {
+			Alert.alert("Lỗi", "Vui lòng đồng ý với điều khoản và chính sách");
+			return;
+		}
+
 		setIsLoading(true);
 
-		try {
-			// Simulate API call to reset password
-			await new Promise((resolve) => setTimeout(resolve, 2000));
-
-			Alert.alert(
-				"Thành công",
-				"Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập với mật khẩu mới.",
-				[
-					{
-						text: "OK",
-						onPress: () => navigation.navigate("Login"),
-					},
-				]
-			);
-		} catch (_error) {
-			Alert.alert(
-				"Lỗi",
-				"Không thể đặt lại mật khẩu. Vui lòng thử lại sau."
-			);
-		} finally {
+		// Simulate API call
+		setTimeout(() => {
 			setIsLoading(false);
-		}
+			navigation.navigate("OTPVerification", {
+				email: email,
+			});
+		}, 2000);
 	};
 
-	const handleBackToLogin = () => {
+	const handleLoginNavigation = () => {
+		navigation.navigate("Login");
+	};
+
+	const handleTermsPress = () => {
 		Alert.alert(
-			"Xác nhận",
-			"Bạn có chắc chắn muốn quay lại? Mật khẩu sẽ không được đặt lại.",
-			[
-				{
-					text: "Hủy",
-					style: "cancel",
-				},
-				{
-					text: "Quay lại",
-					onPress: () => navigation.navigate("Login"),
-				},
-			]
+			"Điều khoản và Chính sách",
+			"Chức năng đang được phát triển"
 		);
 	};
 
@@ -168,16 +178,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
 		>
-			{/* Header */}
-			<View style={styles.header}>
-				<TouchableOpacity
-					style={styles.backButton}
-					onPress={handleBackToLogin}
-				>
-					<Ionicons name="chevron-back" size={24} color="#333" />
-				</TouchableOpacity>
-			</View>
-
 			<ScrollView
 				ref={scrollViewRef}
 				contentContainerStyle={styles.scrollContainer}
@@ -200,34 +200,100 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						]}
 						resizeMode="contain"
 					/>
-					<Text style={styles.titleText}>Đặt lại mật khẩu</Text>
+					<Text style={styles.welcomeText}>Tạo tài khoản mới</Text>
 					<Text style={styles.subtitleText}>
-						Tạo mật khẩu mới cho tài khoản của bạn
+						Điền thông tin để bắt đầu mua sắm
 					</Text>
-				</View>
-
-				{/* Account Info - Compact Design */}
-				<View style={styles.accountContainer}>
-					<View style={styles.accountRow}>
-						<Ionicons
-							name="person-circle-outline"
-							size={20}
-							color="#007bff"
-							style={styles.accountIcon}
-						/>
-						<Text style={styles.accountEmail}>{email}</Text>
-						<Ionicons
-							name="checkmark-circle"
-							size={16}
-							color="#28a745"
-							style={styles.verifiedIcon}
-						/>
-					</View>
 				</View>
 
 				{/* Form Section */}
 				<View style={styles.formContainer}>
-					{/* New Password Input */}
+					{/* Full Name Input */}
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="person-outline"
+							size={20}
+							color="#666"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.input}
+							placeholder="Họ tên"
+							placeholderTextColor="#999"
+							value={fullName}
+							onChangeText={setFullName}
+							autoCapitalize="words"
+							autoCorrect={false}
+							onFocus={() => scrollToInput(180)}
+						/>
+					</View>
+
+					{/* Gender Selection */}
+					<View style={styles.genderContainer}>
+						<Text style={styles.genderLabel}>Giới tính</Text>
+						<View style={styles.genderOptions}>
+							{[
+								{ value: "male", label: "Nam" },
+								{ value: "female", label: "Nữ" },
+								{ value: "other", label: "Khác" },
+							].map((option) => (
+								<TouchableOpacity
+									key={option.value}
+									style={styles.genderOption}
+									onPress={() => setGender(option.value)}
+									activeOpacity={0.7}
+								>
+									<View
+										style={[
+											styles.radioButton,
+											gender === option.value &&
+												styles.radioButtonActive,
+										]}
+									>
+										<View
+											style={[
+												styles.radioButtonInner,
+												gender === option.value &&
+													styles.radioButtonSelected,
+											]}
+										/>
+									</View>
+									<Text
+										style={[
+											styles.genderOptionText,
+											gender === option.value &&
+												styles.genderOptionTextSelected,
+										]}
+									>
+										{option.label}
+									</Text>
+								</TouchableOpacity>
+							))}
+						</View>
+					</View>
+
+					{/* Email Input */}
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="mail-outline"
+							size={20}
+							color="#666"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.input}
+							placeholder="Email"
+							placeholderTextColor="#999"
+							value={email}
+							onChangeText={setEmail}
+							keyboardType="email-address"
+							autoCapitalize="none"
+							autoCorrect={false}
+							onFocus={() => scrollToInput(350)}
+						/>
+					</View>
+
+					{/* Password Input */}
 					<View style={styles.inputContainer}>
 						<Ionicons
 							name="lock-closed-outline"
@@ -237,7 +303,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						/>
 						<TextInput
 							style={styles.input}
-							placeholder="Mật khẩu mới"
+							placeholder="Mật khẩu"
 							placeholderTextColor="#999"
 							value={password}
 							onChangeText={setPassword}
@@ -246,7 +312,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 							autoCorrect={false}
 							autoComplete="off"
 							textContentType="none"
-							onFocus={() => scrollToInput(280)}
+							onFocus={() => scrollToInput(420)}
 						/>
 						<TouchableOpacity
 							onPress={() => setShowPassword(!showPassword)}
@@ -361,7 +427,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						/>
 						<TextInput
 							style={styles.input}
-							placeholder="Xác nhận mật khẩu mới"
+							placeholder="Xác nhận mật khẩu"
 							placeholderTextColor="#999"
 							value={confirmPassword}
 							onChangeText={setConfirmPassword}
@@ -370,7 +436,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 							autoCorrect={false}
 							autoComplete="off"
 							textContentType="none"
-							onFocus={() => scrollToInput(450)}
+							onFocus={() => scrollToInput(600)}
 						/>
 						<TouchableOpacity
 							onPress={() =>
@@ -424,35 +490,61 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						</View>
 					)}
 
-					{/* Reset Password Button */}
+					{/* Terms Agreement */}
+					<TouchableOpacity
+						style={styles.termsContainer}
+						onPress={() => setAgreeToTerms(!agreeToTerms)}
+					>
+						<View style={styles.checkboxContainer}>
+							<Ionicons
+								name={
+									agreeToTerms ? "checkbox" : "square-outline"
+								}
+								size={20}
+								color={agreeToTerms ? "#007bff" : "#666"}
+							/>
+						</View>
+						<Text style={styles.termsText}>
+							<Text>Tôi đồng ý với </Text>
+							<Text
+								style={styles.termsLink}
+								onPress={handleTermsPress}
+							>
+								Điều khoản
+							</Text>
+							<Text> và </Text>
+							<Text
+								style={styles.termsLink}
+								onPress={handleTermsPress}
+							>
+								Chính sách
+							</Text>
+						</Text>
+					</TouchableOpacity>
+
+					{/* Signup Button */}
 					<TouchableOpacity
 						style={[
-							styles.resetButton,
-							isLoading && styles.resetButtonDisabled,
+							styles.signupButton,
+							isLoading && styles.signupButtonDisabled,
 						]}
-						onPress={handleResetPassword}
+						onPress={handleSignup}
 						disabled={isLoading}
 					>
 						{isLoading ? (
-							<Text style={styles.resetButtonText}>
-								Đang đặt lại...
+							<Text style={styles.signupButtonText}>
+								Đang đăng ký...
 							</Text>
 						) : (
-							<Text style={styles.resetButtonText}>
-								Đặt lại mật khẩu
-							</Text>
+							<Text style={styles.signupButtonText}>Đăng ký</Text>
 						)}
 					</TouchableOpacity>
 
-					{/* Back to Login */}
-					<View style={styles.backToLoginContainer}>
-						<Text style={styles.backToLoginText}>
-							Nhớ mật khẩu?{" "}
-						</Text>
-						<TouchableOpacity onPress={handleBackToLogin}>
-							<Text style={styles.backToLoginLink}>
-								Quay lại đăng nhập
-							</Text>
+					{/* Login Link */}
+					<View style={styles.loginContainer}>
+						<Text style={styles.loginText}>Đã có tài khoản? </Text>
+						<TouchableOpacity onPress={handleLoginNavigation}>
+							<Text style={styles.loginLink}>Đăng nhập ngay</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -466,29 +558,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#ffffff",
 	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingHorizontal: 20,
-		paddingTop: Platform.OS === "ios" ? 50 : 30,
-		paddingBottom: 10,
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "#f8f9fa",
-		justifyContent: "center",
-		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3,
-		elevation: 3,
-	},
 	scrollContainer: {
 		flexGrow: 1,
 		paddingHorizontal: 30,
@@ -496,57 +565,25 @@ const styles = StyleSheet.create({
 	},
 	logoContainer: {
 		alignItems: "center",
-		marginTop: height * 0.01,
-		marginBottom: 15,
+		marginTop: height * 0.04,
+		marginBottom: 25,
 	},
 	logo: {
 		width: 80,
 		height: 80,
 		marginBottom: 12,
 	},
-	titleText: {
-		fontSize: 28,
+	welcomeText: {
+		fontSize: 22,
 		fontWeight: "bold",
 		color: "#333",
 		textAlign: "center",
-		marginBottom: 10,
+		marginBottom: 5,
 	},
 	subtitleText: {
-		fontSize: 14,
+		fontSize: 13,
 		color: "#666",
 		textAlign: "center",
-	},
-	accountContainer: {
-		backgroundColor: "#f8fafc",
-		borderRadius: 12,
-		padding: 14,
-		marginBottom: 20,
-		borderWidth: 1,
-		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.05,
-		shadowRadius: 6,
-		elevation: 2,
-	},
-	accountRow: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	accountIcon: {
-		marginRight: 10,
-	},
-	accountEmail: {
-		flex: 1,
-		fontSize: 15,
-		color: "#1a202c",
-		fontWeight: "500",
-	},
-	verifiedIcon: {
-		marginLeft: 8,
 	},
 	formContainer: {
 		flex: 1,
@@ -605,26 +642,80 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 		paddingHorizontal: 4,
 	},
-	securityInfoContainer: {
+	genderContainer: {
+		marginBottom: 20,
+	},
+	genderLabel: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 12,
+		paddingHorizontal: 4,
+	},
+	genderOptions: {
 		flexDirection: "row",
-		backgroundColor: "#e8f5e8",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 25,
-		borderWidth: 1,
-		borderColor: "#c3e6c3",
+		justifyContent: "space-between",
+		gap: 12,
 	},
-	securityIcon: {
-		marginRight: 12,
-		marginTop: 1,
+	genderOption: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 8,
+		paddingHorizontal: 4,
 	},
-	securityText: {
+	radioButton: {
+		width: 18,
+		height: 18,
+		borderRadius: 9,
+		borderWidth: 2,
+		borderColor: "#ccc",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 8,
+	},
+	radioButtonActive: {
+		borderColor: "#007bff",
+	},
+	radioButtonInner: {
+		width: 8,
+		height: 8,
+		borderRadius: 4,
+		backgroundColor: "transparent",
+	},
+	radioButtonSelected: {
+		backgroundColor: "#007bff",
+	},
+	genderOptionText: {
+		fontSize: 14,
+		color: "#666",
+		fontWeight: "500",
+		flex: 1,
+	},
+	genderOptionTextSelected: {
+		color: "#007bff",
+		fontWeight: "600",
+	},
+	termsContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 24,
+		paddingHorizontal: 4,
+	},
+	checkboxContainer: {
+		marginRight: 10,
+	},
+	termsText: {
 		flex: 1,
 		fontSize: 14,
-		color: "#155724",
+		color: "#666",
 		lineHeight: 20,
 	},
-	resetButton: {
+	termsLink: {
+		color: "#007bff",
+		fontWeight: "500",
+	},
+	signupButton: {
 		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
@@ -640,27 +731,27 @@ const styles = StyleSheet.create({
 		shadowRadius: 8,
 		elevation: 8,
 	},
-	resetButtonDisabled: {
+	signupButtonDisabled: {
 		backgroundColor: "#6c757d",
 		shadowOpacity: 0,
 		elevation: 0,
 	},
-	resetButtonText: {
+	signupButtonText: {
 		color: "#ffffff",
 		fontSize: 16,
 		fontWeight: "bold",
 	},
-	backToLoginContainer: {
+	loginContainer: {
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
-		marginTop: 10,
+		marginBottom: 25,
 	},
-	backToLoginText: {
+	loginText: {
 		fontSize: 15,
 		color: "#666",
 	},
-	backToLoginLink: {
+	loginLink: {
 		fontSize: 15,
 		color: "#007bff",
 		fontWeight: "bold",

@@ -1,11 +1,11 @@
 import { createStackNavigator } from "@react-navigation/stack";
-import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
-import LoginScreen from "../screens/LoginScreen";
-import OnBoardingScreen from "../screens/OnBoardingScreen";
-import OTPVerificationScreen from "../screens/OTPVerificationScreen";
-import ResetPasswordScreen from "../screens/ResetPasswordScreen";
-import SignupScreen from "../screens/SignupScreen";
-import SplashScreen from "../screens/SplashScreen";
+import ForgotPasswordScreen from "../screens/authen/ForgotPasswordScreen";
+import LoginScreen from "../screens/authen/LoginScreen";
+import OnBoardingScreen from "../screens/authen/OnBoardingScreen";
+import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
+import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
+import SignupScreen from "../screens/authen/SignupScreen";
+import SplashScreen from "../screens/authen/SplashScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();

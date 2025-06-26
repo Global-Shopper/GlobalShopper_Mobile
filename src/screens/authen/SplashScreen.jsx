@@ -21,7 +21,7 @@ const SplashScreen = ({ navigation }) => {
 	return (
 		<View style={styles.container}>
 			<Animated.Image
-				source={require("../assets/images/logo/logo-gshop-removebg.png")}
+				source={require("../../assets/images/logo/logo-gshop-removebg.png")}
 				style={[
 					styles.logo,
 					{

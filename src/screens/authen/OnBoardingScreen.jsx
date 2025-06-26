@@ -85,7 +85,7 @@ const OnboardingScreen = ({ navigation }) => {
 						backgroundColor: "transparent",
 						image: (
 							<FloatingImage
-								source={require("../assets/images/onboarding/ob1.png")}
+								source={require("../../assets/images/onboarding/ob1.png")}
 							/>
 						),
 						title: "Mua hộ từ khắp nơi trên thế giới",
@@ -95,7 +95,7 @@ const OnboardingScreen = ({ navigation }) => {
 						backgroundColor: "transparent",
 						image: (
 							<FloatingImage
-								source={require("../assets/images/onboarding/ob2.png")}
+								source={require("../../assets/images/onboarding/ob2.png")}
 							/>
 						),
 						title: "Theo dõi đơn hàng minh bạch",
@@ -106,7 +106,7 @@ const OnboardingScreen = ({ navigation }) => {
 						backgroundColor: "transparent",
 						image: (
 							<FloatingImage
-								source={require("../assets/images/onboarding/ob3.png")}
+								source={require("../../assets/images/onboarding/ob3.png")}
 							/>
 						),
 						title: "An toàn và hoàn tiền linh hoạt",
