@@ -1,21 +1,22 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "~/*": [
-        "*"
-      ]
-    },
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "jsx": "react-native",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "extends": "expo/tsconfig.base",
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ]
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["*"]
+		},
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"jsx": "react-native",
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"module": "ESNext"
+	},
+	"extends": "expo/tsconfig.base",
+	"include": [
+		"**/*.ts",
+		"**/*.tsx",
+		"./nativewind-env.d.ts",
+		"nativewind-env.d.ts"
+	]
 }
