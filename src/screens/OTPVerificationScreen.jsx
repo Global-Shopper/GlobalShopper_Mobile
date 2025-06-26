@@ -167,22 +167,18 @@ export default function OTPVerificationScreen({ navigation, route }) {
 			});
 
 			// Success case
-			Alert.alert("Thành công", content.successMessage, [
-				{
-					text: "OK",
-					onPress: () => {
-						if (type === "forgot-password") {
-							// For forgot password, navigate to reset password screen
-							// navigation.navigate("ResetPassword", { email });
-							// For now, go back to login since ResetPassword screen doesn't exist yet
-							navigation.navigate("Login");
-						} else {
-							// For signup verification, go to login
-							navigation.navigate("Login");
-						}
+			if (type === "forgot-password") {
+				// For forgot password, navigate directly to reset password screen
+				navigation.navigate("ResetPassword", { email });
+			} else {
+				// For signup verification, show success message then go to login
+				Alert.alert("Thành công", content.successMessage, [
+					{
+						text: "OK",
+						onPress: () => navigation.navigate("Login"),
 					},
-				},
-			]);
+				]);
+			}
 		} catch (error) {
 			// Handle different error cases
 			if (error?.data?.errorCode === "ALREADY_VERIFIED") {

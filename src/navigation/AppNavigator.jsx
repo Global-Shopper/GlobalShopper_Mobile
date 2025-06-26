@@ -3,6 +3,7 @@ import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OnBoardingScreen from "../screens/OnBoardingScreen";
 import OTPVerificationScreen from "../screens/OTPVerificationScreen";
+import ResetPasswordScreen from "../screens/ResetPasswordScreen";
 import SignupScreen from "../screens/SignupScreen";
 import SplashScreen from "../screens/SplashScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
@@ -45,6 +46,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="OTPVerification"
 				component={OTPVerificationScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ResetPassword"
+				component={ResetPasswordScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
