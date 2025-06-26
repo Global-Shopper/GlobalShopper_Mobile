@@ -16,10 +16,8 @@ import {
 
 const { height } = Dimensions.get("window");
 
-export default function LoginScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation }) {
 	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
 	// Animation for logo
@@ -66,28 +64,51 @@ export default function LoginScreen({ navigation }) {
 		outputRange: ["0deg", "5deg"],
 	});
 
-	const handleLogin = async () => {
-		if (!email || !password) {
-			Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
+	const validateEmail = (email) => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email);
+	};
+
+	const handleSendOTP = async () => {
+		if (!email.trim()) {
+			Alert.alert("Lỗi", "Vui lòng nhập email");
+			return;
+		}
+
+		if (!validateEmail(email)) {
+			Alert.alert("Lỗi", "Email không hợp lệ");
 			return;
 		}
 
 		setIsLoading(true);
 
-		// Simulate API call
-		setTimeout(() => {
+		try {
+			// Simulate API call to send OTP
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
+			Alert.alert(
+				"Thành công",
+				"Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email.",
+				[
+					{
+						text: "OK",
+						onPress: () =>
+							navigation.navigate("OTPVerification", {
+								email: email,
+								type: "forgot-password", // Để phân biệt với OTP đăng ký
+							}),
+					},
+				]
+			);
+		} catch (_error) {
+			Alert.alert("Lỗi", "Không thể gửi mã OTP. Vui lòng thử lại sau.");
+		} finally {
 			setIsLoading(false);
-			// Navigate to main app or show error
-			Alert.alert("Thành công", "Đăng nhập thành công!");
-		}, 2000);
+		}
 	};
 
-	const handleForgotPassword = () => {
-		navigation.navigate("ForgotPassword");
-	};
-
-	const handleSignUp = () => {
-		navigation.navigate("Signup");
+	const handleBackToLogin = () => {
+		navigation.goBack();
 	};
 
 	return (
@@ -95,9 +116,20 @@ export default function LoginScreen({ navigation }) {
 			style={styles.container}
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
+			{/* Header */}
+			<View style={styles.header}>
+				<TouchableOpacity
+					style={styles.backButton}
+					onPress={handleBackToLogin}
+				>
+					<Ionicons name="chevron-back" size={24} color="#333" />
+				</TouchableOpacity>
+			</View>
+
 			<ScrollView
 				contentContainerStyle={styles.scrollContainer}
 				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
 			>
 				{/* Logo Section */}
 				<View style={styles.logoContainer}>
@@ -114,11 +146,9 @@ export default function LoginScreen({ navigation }) {
 						]}
 						resizeMode="contain"
 					/>
-					<Text style={styles.welcomeText}>
-						Chào mừng bạn đã quay trở lại!
-					</Text>
+					<Text style={styles.titleText}>Bạn quên mật khẩu?</Text>
 					<Text style={styles.subtitleText}>
-						Nhập email và mật khẩu để đăng nhập
+						Không sao, chúng tôi sẽ giúp bạn khôi phục tài khoản
 					</Text>
 				</View>
 
@@ -134,109 +164,60 @@ export default function LoginScreen({ navigation }) {
 						/>
 						<TextInput
 							style={styles.input}
-							placeholder="Email"
+							placeholder="Nhập email của bạn"
 							placeholderTextColor="#999"
 							value={email}
 							onChangeText={setEmail}
 							keyboardType="email-address"
 							autoCapitalize="none"
 							autoCorrect={false}
+							autoFocus={true}
 						/>
 					</View>
 
-					{/* Password Input */}
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="lock-closed-outline"
-							size={20}
-							color="#666"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.input}
-							placeholder="Mật khẩu"
-							placeholderTextColor="#999"
-							value={password}
-							onChangeText={setPassword}
-							secureTextEntry={!showPassword}
-							autoCapitalize="none"
-							autoCorrect={false}
-						/>
-						<TouchableOpacity
-							onPress={() => setShowPassword(!showPassword)}
-							style={styles.eyeIcon}
-						>
-							<Ionicons
-								name={
-									showPassword
-										? "eye-outline"
-										: "eye-off-outline"
-								}
-								size={20}
-								color="#666"
-							/>
-						</TouchableOpacity>
-					</View>
-
-					{/* Forgot Password */}
-					<TouchableOpacity
-						onPress={handleForgotPassword}
-						style={styles.forgotPasswordContainer}
-					>
-						<Text style={styles.forgotPasswordText}>
-							Quên mật khẩu?
-						</Text>
-					</TouchableOpacity>
-
-					{/* Login Button */}
+					{/* Send OTP Button */}
 					<TouchableOpacity
 						style={[
-							styles.loginButton,
-							isLoading && styles.loginButtonDisabled,
+							styles.sendButton,
+							isLoading && styles.sendButtonDisabled,
 						]}
-						onPress={handleLogin}
+						onPress={handleSendOTP}
 						disabled={isLoading}
 					>
 						{isLoading ? (
-							<Text style={styles.loginButtonText}>
-								Đang đăng nhập...
+							<Text style={styles.sendButtonText}>
+								Đang gửi mã OTP...
 							</Text>
 						) : (
-							<Text style={styles.loginButtonText}>
-								Đăng nhập
+							<Text style={styles.sendButtonText}>
+								Gửi mã OTP
 							</Text>
 						)}
 					</TouchableOpacity>
 
-					{/* Divider */}
-					<View style={styles.dividerContainer}>
-						<View style={styles.divider} />
-						<Text style={styles.dividerText}>Hoặc</Text>
-						<View style={styles.divider} />
-					</View>
-
-					{/* Social Login Buttons */}
-					<View style={styles.socialContainer}>
-						<TouchableOpacity style={styles.socialButtonFull}>
-							<Ionicons
-								name="logo-google"
-								size={20}
-								color="#4285F4"
-								style={styles.googleIcon}
-							/>
-							<Text style={styles.socialButtonText}>
-								Đăng nhập với Google
-							</Text>
-						</TouchableOpacity>
-					</View>
-
-					{/* Sign Up Link */}
-					<View style={styles.signUpContainer}>
-						<Text style={styles.signUpText}>
-							Chưa có tài khoản?{" "}
+					{/* Information Box */}
+					<View style={styles.infoContainer}>
+						<Ionicons
+							name="information-circle-outline"
+							size={18}
+							color="#007bff"
+							style={styles.infoIcon}
+						/>
+						<Text style={styles.infoText}>
+							Chúng tôi sẽ gửi mã OTP 6 số đến email của bạn để
+							xác thực danh tính.
 						</Text>
-						<TouchableOpacity onPress={handleSignUp}>
-							<Text style={styles.signUpLink}>Đăng ký ngay</Text>
+					</View>
+
+					{/* Back to Login */}
+					<View style={styles.backToLoginContainer}>
+						<Text style={styles.backToLoginText}>
+							Nhớ mật khẩu?{" "}
+						</Text>
+						<TouchableOpacity onPress={handleBackToLogin}>
+							<Text style={styles.backToLoginLink}>
+								Quay lại đăng nhập
+							</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -250,21 +231,44 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#ffffff",
 	},
+	header: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingHorizontal: 20,
+		paddingTop: Platform.OS === "ios" ? 50 : 30,
+	},
+	backButton: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: "#f8f9fa",
+		justifyContent: "center",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 3,
+	},
 	scrollContainer: {
 		flexGrow: 1,
 		paddingHorizontal: 30,
+		paddingBottom: 20,
 	},
 	logoContainer: {
 		alignItems: "center",
-		marginTop: height * 0.06,
-		marginBottom: 30,
+		marginTop: height * 0.02,
+		marginBottom: 20,
 	},
 	logo: {
-		width: 100,
-		height: 100,
-		marginBottom: 16,
+		width: 80,
+		height: 80,
+		marginBottom: 8,
 	},
-	welcomeText: {
+	titleText: {
 		fontSize: 24,
 		fontWeight: "bold",
 		color: "#333",
@@ -285,7 +289,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f8f9fa",
 		borderRadius: 15,
 		paddingHorizontal: 15,
-		marginBottom: 14,
+		marginBottom: 20,
 		height: 50,
 		borderWidth: 1,
 		borderColor: "#e9ecef",
@@ -306,19 +310,7 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		color: "#333",
 	},
-	eyeIcon: {
-		padding: 5,
-	},
-	forgotPasswordContainer: {
-		alignItems: "flex-end",
-		marginBottom: 20,
-	},
-	forgotPasswordText: {
-		color: "#007bff",
-		fontSize: 13,
-		fontWeight: "500",
-	},
-	loginButton: {
+	sendButton: {
 		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
@@ -334,85 +326,46 @@ const styles = StyleSheet.create({
 		shadowRadius: 8,
 		elevation: 8,
 	},
-	loginButtonDisabled: {
+	sendButtonDisabled: {
 		backgroundColor: "#6c757d",
 		shadowOpacity: 0,
 		elevation: 0,
 	},
-	loginButtonText: {
+	sendButtonText: {
 		color: "#ffffff",
 		fontSize: 16,
 		fontWeight: "bold",
 	},
-	dividerContainer: {
+	infoContainer: {
 		flexDirection: "row",
-		alignItems: "center",
-		marginVertical: 20,
-	},
-	divider: {
-		flex: 1,
-		height: 1,
-		backgroundColor: "#e9ecef",
-	},
-	dividerText: {
-		marginHorizontal: 16,
-		color: "#6c757d",
-		fontSize: 13,
-	},
-	socialContainer: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginBottom: 28,
-	},
-	socialButton: {
-		flex: 0.48,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#f8f9fa",
+		backgroundColor: "#e7f3ff",
 		borderRadius: 12,
-		height: 50,
+		padding: 16,
+		marginBottom: 30,
 		borderWidth: 1,
-		borderColor: "#e9ecef",
+		borderColor: "#cce7ff",
 	},
-	socialButtonFull: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#f8f9fa",
-		borderRadius: 15,
-		height: 45,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
-		width: "100%",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3,
-		elevation: 3,
+	infoIcon: {
+		marginRight: 12,
+		marginTop: 1,
 	},
-	googleIcon: {
-		marginRight: 8,
+	infoText: {
+		flex: 1,
+		fontSize: 14,
+		color: "#0066cc",
+		lineHeight: 20,
 	},
-	socialButtonText: {
-		fontSize: 15,
-		fontWeight: "500",
-		color: "#333",
-	},
-	signUpContainer: {
+	backToLoginContainer: {
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
-		marginBottom: 25,
+		marginTop: 20,
 	},
-	signUpText: {
+	backToLoginText: {
 		fontSize: 15,
 		color: "#666",
 	},
-	signUpLink: {
+	backToLoginLink: {
 		fontSize: 15,
 		color: "#007bff",
 		fontWeight: "bold",
