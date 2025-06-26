@@ -1,6 +1,7 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/LoginScreen";
 import OnBoardingScreen from "../screens/OnBoardingScreen";
+import OTPVerificationScreen from "../screens/OTPVerificationScreen";
 import SignupScreen from "../screens/SignupScreen";
 import SplashScreen from "../screens/SplashScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
@@ -33,6 +34,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="Signup"
 				component={SignupScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="OTPVerification"
+				component={OTPVerificationScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

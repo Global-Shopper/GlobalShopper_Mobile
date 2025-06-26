@@ -35,7 +35,7 @@ export default function SignupScreen({ navigation }) {
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
-	
+
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
 
@@ -155,12 +155,9 @@ export default function SignupScreen({ navigation }) {
 		// Simulate API call
 		setTimeout(() => {
 			setIsLoading(false);
-			Alert.alert("Thành công", "Đăng ký thành công!", [
-				{
-					text: "OK",
-					onPress: () => navigation.navigate("Login"),
-				},
-			]);
+			navigation.navigate("OTPVerification", {
+				email: email,
+			});
 		}, 2000);
 	};
 
@@ -246,10 +243,13 @@ export default function SignupScreen({ navigation }) {
 									onPress={() => setGender(option.value)}
 									activeOpacity={0.7}
 								>
-									<View style={[
-										styles.radioButton,
-										gender === option.value && styles.radioButtonActive
-									]}>
+									<View
+										style={[
+											styles.radioButton,
+											gender === option.value &&
+												styles.radioButtonActive,
+										]}
+									>
 										<View
 											style={[
 												styles.radioButtonInner,
