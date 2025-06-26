@@ -1,16 +1,21 @@
 {
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"~/*": ["*"]
-		},
-		"forceConsistentCasingInFileNames": true,
-		"strict": true,
-		"jsx": "react-native",
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true
-	},
-	"extends": "expo/tsconfig.base",
-	"include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "*"
+      ]
+    },
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "jsx": "react-native",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }

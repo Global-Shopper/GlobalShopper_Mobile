@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
-import { Text } from "../../../components/ui/text";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Text } from "../../components/ui/text";
 
 export default function HomeScreen() {
 	return (

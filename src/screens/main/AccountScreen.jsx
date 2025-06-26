@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
-import { Text } from "../../../components/ui/text";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Text } from "../../components/ui/text";
 
 export default function AccountScreen({ navigation }) {
 	const [user] = useState({

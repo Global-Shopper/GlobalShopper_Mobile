@@ -77,8 +77,11 @@ export default function LoginScreen({ navigation }) {
 		// Simulate API call
 		setTimeout(() => {
 			setIsLoading(false);
-			// Navigate to main app or show error
-			Alert.alert("Thành công", "Đăng nhập thành công!");
+			// Navigate to main app with BottomTab
+			navigation.reset({
+				index: 0,
+				routes: [{ name: "Tabs" }],
+			});
 		}, 2000);
 	};
 

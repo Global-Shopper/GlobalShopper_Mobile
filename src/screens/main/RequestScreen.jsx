@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Text } from "../../../components/ui/text";
+import { Text } from "../../components/ui/text";
 
 export default function RequestScreen() {
 	const [activeTab, setActiveTab] = useState("all");

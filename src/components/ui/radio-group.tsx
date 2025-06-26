@@ -1,6 +1,6 @@
 import * as RadioGroupPrimitive from '@rn-primitives/radio-group';
 import { View } from 'react-native';
-import { cn } from '../../src/lib/utils';
+import { cn } from '../../lib/utils';
 
 function RadioGroup({
   className,

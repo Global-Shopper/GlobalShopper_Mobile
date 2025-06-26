@@ -1,6 +1,6 @@
 import * as AvatarPrimitive from '@rn-primitives/avatar';
 import * as React from 'react';
-import { cn } from '../../src/lib/utils';
+import { cn } from '../../lib/utils';
 
 function Avatar({
   className,
