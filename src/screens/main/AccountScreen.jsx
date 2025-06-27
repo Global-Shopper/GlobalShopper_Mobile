@@ -87,7 +87,7 @@ export default function AccountScreen({ navigation }) {
 			subtitle: "Tìm câu trả lời nhanh chóng",
 			icon: "help-circle-outline",
 			gradientColors: ["#4FC3F7", "#29B6F6"],
-			action: () => console.log("Navigate to FAQ"),
+			action: () => navigation.navigate("FAQScreen"),
 		},
 		{
 			id: 2,

@@ -11,6 +11,7 @@ import AddAddress from "../screens/profile/AddAddress";
 import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChangePassword from "../screens/profile/ChangePassword";
 import ChatSetting from "../screens/profile/ChatSetting";
+import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
 import PaymentMethod from "../screens/profile/PaymentMethod";
@@ -99,6 +100,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ChangePassword"
 				component={ChangePassword}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="FAQScreen"
+				component={FAQScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
