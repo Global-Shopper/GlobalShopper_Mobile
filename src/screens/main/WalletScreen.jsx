@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../components/ui/text";
@@ -40,12 +41,19 @@ export default function WalletScreen() {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<Text className="text-2xl font-bold text-white">Ví tiền</Text>
-				<TouchableOpacity style={styles.historyButton}>
-					<Ionicons name="time-outline" size={24} color="#ffffff" />
-				</TouchableOpacity>
-			</View>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={styles.header}
+			>
+				<View style={styles.headerContent}>
+					<Text style={styles.headerTitle}>Ví tiền</Text>
+					<TouchableOpacity style={styles.historyButton}>
+						<Ionicons name="time-outline" size={24} color="#ffffff" />
+					</TouchableOpacity>
+				</View>
+			</LinearGradient>
 
 			<ScrollView 
 				style={styles.content}
@@ -157,16 +165,24 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f8f9fa",
 	},
 	header: {
-		backgroundColor: "#007bff",
 		paddingHorizontal: 20,
 		paddingTop: 50,
 		paddingBottom: 20,
+	},
+	headerContent: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 	},
+	headerTitle: {
+		fontSize: 24,
+		fontWeight: "700",
+		color: "#FFFFFF",
+	},
 	historyButton: {
 		padding: 8,
+		borderRadius: 20,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
 	},
 	content: {
 		flex: 1,

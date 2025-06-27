@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
@@ -8,26 +9,33 @@ export default function HomeScreen() {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<View style={styles.headerLeft}>
-					<Avatar className="h-12 w-12">
-						<AvatarImage source={{ uri: "https://github.com/shadcn.png" }} />
-						<AvatarFallback>
-							<Text>CN</Text>
-						</AvatarFallback>
-					</Avatar>
-					<View style={styles.greetingContainer}>
-						<Text className="text-sm text-muted-foreground">Xin chào,</Text>
-						<Text className="text-lg font-semibold">John Doe</Text>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={styles.header}
+			>
+				<View style={styles.headerContent}>
+					<View style={styles.headerLeft}>
+						<Avatar className="h-12 w-12">
+							<AvatarImage source={{ uri: "https://github.com/shadcn.png" }} />
+							<AvatarFallback>
+								<Text style={styles.avatarFallback}>CN</Text>
+							</AvatarFallback>
+						</Avatar>
+						<View style={styles.greetingContainer}>
+							<Text style={styles.greetingText}>Xin chào,</Text>
+							<Text style={styles.userName}>John Doe</Text>
+						</View>
+					</View>
+					<View style={styles.headerRight}>
+						<Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+						<View style={styles.notificationBadge}>
+							<Text style={styles.notificationText}>3</Text>
+						</View>
 					</View>
 				</View>
-				<View style={styles.headerRight}>
-					<Ionicons name="notifications-outline" size={24} color="#333" />
-					<View style={styles.notificationBadge}>
-						<Text className="text-xs text-white">3</Text>
-					</View>
-				</View>
-			</View>
+			</LinearGradient>
 
 			<ScrollView 
 				style={styles.content}
@@ -121,13 +129,14 @@ const styles = StyleSheet.create({
 		backgroundColor: "#ffffff",
 	},
 	header: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
 		paddingHorizontal: 20,
 		paddingTop: 50,
 		paddingBottom: 20,
-		backgroundColor: "#f8f9fa",
+	},
+	headerContent: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
 	},
 	headerLeft: {
 		flexDirection: "row",
@@ -135,6 +144,19 @@ const styles = StyleSheet.create({
 	},
 	greetingContainer: {
 		marginLeft: 12,
+	},
+	greetingText: {
+		fontSize: 14,
+		color: "rgba(255, 255, 255, 0.8)",
+	},
+	userName: {
+		fontSize: 18,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	avatarFallback: {
+		color: "#333",
+		fontWeight: "600",
 	},
 	headerRight: {
 		position: "relative",
@@ -149,6 +171,11 @@ const styles = StyleSheet.create({
 		height: 16,
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	notificationText: {
+		color: "#FFFFFF",
+		fontSize: 12,
+		fontWeight: "600",
 	},
 	content: {
 		flex: 1,
