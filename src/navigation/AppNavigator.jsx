@@ -8,6 +8,7 @@ import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import ChangeProfile from "../screens/profile/ChangeProfile";
+import MyAddress from "../screens/profile/MyAddress";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -63,6 +64,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ChangeProfile"
 				component={ChangeProfile}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="MyAddress"
+				component={MyAddress}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

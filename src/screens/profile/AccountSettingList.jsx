@@ -24,7 +24,7 @@ export default function AccountSettingList({ navigation }) {
 			title: "Địa chỉ",
 			subtitle: "Quản lý địa chỉ giao hàng",
 			icon: "location-outline",
-			action: () => console.log("Navigate to addresses"),
+			action: () => navigation.navigate("MyAddress"),
 		},
 		{
 			id: 3,
