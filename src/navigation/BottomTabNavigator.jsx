@@ -1,5 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Platform } from "react-native";
 import { Text } from "../components/ui/text";
 
 // Import screens
@@ -36,8 +38,50 @@ const BottomTabNavigator = () => {
 						iconName = focused ? "person" : "person-outline";
 					}
 
+					// Custom icon container with gradient background for active state
+					if (focused) {
+						return (
+							<View style={{
+								justifyContent: 'center',
+								alignItems: 'center',
+								marginBottom: 2,
+							}}>
+								<LinearGradient
+									colors={['#42A5F5', '#1976D2']}
+									start={{ x: 0, y: 0 }}
+									end={{ x: 1, y: 1 }}
+									style={{
+										width: 44,
+										height: 32,
+										borderRadius: 16,
+										justifyContent: 'center',
+										alignItems: 'center',
+										shadowColor: '#1976D2',
+										shadowOffset: {
+											width: 0,
+											height: 2,
+										},
+										shadowOpacity: 0.25,
+										shadowRadius: 4,
+										elevation: 5,
+									}}
+								>
+									<Ionicons name={iconName} size={size - 2} color="#FFFFFF" />
+								</LinearGradient>
+							</View>
+						);
+					}
+
 					return (
-						<Ionicons name={iconName} size={size} color={color} />
+						<View style={{
+							justifyContent: 'center',
+							alignItems: 'center',
+							marginBottom: 2,
+							width: 44,
+							height: 32,
+						}}>
+							<Ionicons name={iconName} size={size} color={color} />
+						</View>
 					);
 				},
 				tabBarLabel: ({ focused, color }) => {
@@ -58,36 +102,44 @@ const BottomTabNavigator = () => {
 					return (
 						<Text
 							style={{
-								color,
-								fontSize: 12,
-								fontWeight: focused ? "600" : "400",
-								marginTop: -4,
+								color: focused ? '#1976D2' : color,
+								fontSize: 10,
+								fontWeight: focused ? "600" : "500",
+								marginTop: 4,
+								textAlign: 'center',
+								paddingHorizontal: 2,
 							}}
 						>
 							{label}
 						</Text>
 					);
 				},
-				tabBarActiveTintColor: "#007bff",
-				tabBarInactiveTintColor: "#8e8e93",
+				tabBarActiveTintColor: "#1976D2",
+				tabBarInactiveTintColor: "#9E9E9E",
 				tabBarStyle: {
-					backgroundColor: "#ffffff",
-					borderTopWidth: 1,
-					borderTopColor: "#e9ecef",
-					paddingTop: 8,
-					paddingBottom: 8,
-					height: 88,
+					backgroundColor: "#FFFFFF",
+					borderTopWidth: 0,
+					paddingTop: 6,
+					paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+					height: Platform.OS === 'ios' ? 85 : 70,
 					shadowColor: "#000",
 					shadowOffset: {
 						width: 0,
-						height: -2,
+						height: -4,
 					},
-					shadowOpacity: 0.1,
-					shadowRadius: 3,
-					elevation: 8,
+					shadowOpacity: 0.15,
+					shadowRadius: 12,
+					elevation: 20,
+					borderTopLeftRadius: 20,
+					borderTopRightRadius: 20,
+					position: 'absolute',
+					bottom: 0,
+					left: 0,
+					right: 0,
 				},
 				tabBarItemStyle: {
 					paddingVertical: 4,
+					marginHorizontal: 2,
 				},
 				headerShown: false,
 			})}
@@ -112,7 +164,18 @@ const BottomTabNavigator = () => {
 				component={RequestScreen}
 				options={{
 					title: "Yêu cầu",
-					tabBarBadge: 3, // Example badge showing 3 pending requests
+					tabBarBadge: 3,
+					tabBarBadgeStyle: {
+						backgroundColor: '#FF5722',
+						color: '#FFFFFF',
+						fontSize: 10,
+						fontWeight: '600',
+						minWidth: 18,
+						height: 18,
+						borderRadius: 9,
+						marginLeft: 8,
+						marginTop: 2,
+					},
 				}}
 			/>
 			<Tab.Screen
@@ -120,7 +183,18 @@ const BottomTabNavigator = () => {
 				component={OrderScreen}
 				options={{
 					title: "Đơn hàng",
-					tabBarBadge: 2, // Example badge showing 2 active orders
+					tabBarBadge: 2,
+					tabBarBadgeStyle: {
+						backgroundColor: '#FF5722',
+						color: '#FFFFFF',
+						fontSize: 10,
+						fontWeight: '600',
+						minWidth: 18,
+						height: 18,
+						borderRadius: 9,
+						marginLeft: 8,
+						marginTop: 2,
+					},
 				}}
 			/>
 			<Tab.Screen
