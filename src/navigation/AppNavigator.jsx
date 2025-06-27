@@ -15,6 +15,8 @@ import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
 import PaymentMethod from "../screens/profile/PaymentMethod";
+import PolicyScreen from "../screens/profile/PolicyScreen";
+import TermsScreen from "../screens/profile/TermsScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -105,6 +107,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="FAQScreen"
 				component={FAQScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="TermsScreen"
+				component={TermsScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="PolicyScreen"
+				component={PolicyScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

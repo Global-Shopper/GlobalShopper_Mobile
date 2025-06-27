@@ -103,7 +103,7 @@ export default function AccountScreen({ navigation }) {
 			subtitle: "Quy định và điều khoản",
 			icon: "document-text-outline",
 			gradientColors: ["#4FC3F7", "#29B6F6"],
-			action: () => console.log("Navigate to terms"),
+			action: () => navigation.navigate("TermsScreen"),
 		},
 		{
 			id: 4,
@@ -111,7 +111,7 @@ export default function AccountScreen({ navigation }) {
 			subtitle: "Quyền riêng tư của bạn",
 			icon: "shield-checkmark-outline",
 			gradientColors: ["#4FC3F7", "#29B6F6"],
-			action: () => console.log("Navigate to privacy policy"),
+			action: () => navigation.navigate("PolicyScreen"),
 		},
 	];
 
@@ -160,7 +160,7 @@ export default function AccountScreen({ navigation }) {
 		<View style={styles.container}>
 			{/* Header với thông tin người dùng */}
 			<LinearGradient
-				colors={["#4a90e2", "#357abd", "#2c6aa0"]}
+				colors={["#42A5F5", "#1976D2"]}
 				start={{ x: 0, y: 0 }}
 				end={{ x: 1, y: 1 }}
 				style={styles.header}
