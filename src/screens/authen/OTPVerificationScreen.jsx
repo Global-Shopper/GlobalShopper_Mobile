@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -336,9 +337,20 @@ export default function OTPVerificationScreen({ navigation, route }) {
 					onPress={handleVerifyOTP}
 					disabled={isLoading}
 				>
-					<Text style={styles.verifyButtonText}>
-						{isLoading ? "Đang xác thực..." : "Xác thực"}
-					</Text>
+					<LinearGradient
+						colors={
+							isLoading
+								? ["#6c757d", "#6c757d"]
+								: ["#42A5F5", "#1976D2"]
+						}
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 1 }}
+						style={styles.verifyButtonGradient}
+					>
+						<Text style={styles.verifyButtonText}>
+							{isLoading ? "Đang xác thực..." : "Xác thực"}
+						</Text>
+					</LinearGradient>
 				</TouchableOpacity>
 			</View>
 		</KeyboardAvoidingView>
@@ -405,7 +417,7 @@ const styles = StyleSheet.create({
 	},
 	emailText: {
 		fontSize: 16,
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "600",
 		textAlign: "center",
 		marginBottom: 12,
@@ -416,7 +428,7 @@ const styles = StyleSheet.create({
 	},
 	changeEmailText: {
 		fontSize: 14,
-		color: "#007bff",
+		color: "#1976D2",
 		textDecorationLine: "underline",
 	},
 	otpContainer: {
@@ -445,7 +457,7 @@ const styles = StyleSheet.create({
 		elevation: 3,
 	},
 	otpInputFilled: {
-		borderColor: "#007bff",
+		borderColor: "#1976D2",
 		backgroundColor: "#e7f3ff",
 	},
 	timerContainer: {
@@ -458,17 +470,16 @@ const styles = StyleSheet.create({
 	},
 	resendText: {
 		fontSize: 14,
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "600",
 	},
 	verifyButton: {
-		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 20,
-		shadowColor: "#007bff",
+		shadowColor: "#1976D2",
 		shadowOffset: {
 			width: 0,
 			height: 4,
@@ -476,6 +487,13 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 8,
+	},
+	verifyButtonGradient: {
+		width: "100%",
+		height: "100%",
+		borderRadius: 15,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	verifyButtonDisabled: {
 		backgroundColor: "#6c757d",

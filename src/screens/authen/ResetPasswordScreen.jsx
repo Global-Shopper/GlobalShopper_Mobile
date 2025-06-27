@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -212,7 +213,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						<Ionicons
 							name="person-circle-outline"
 							size={20}
-							color="#007bff"
+							color="#1976D2"
 							style={styles.accountIcon}
 						/>
 						<Text style={styles.accountEmail}>{email}</Text>
@@ -433,15 +434,26 @@ export default function ResetPasswordScreen({ navigation, route }) {
 						onPress={handleResetPassword}
 						disabled={isLoading}
 					>
-						{isLoading ? (
-							<Text style={styles.resetButtonText}>
-								Đang đặt lại...
-							</Text>
-						) : (
-							<Text style={styles.resetButtonText}>
-								Đặt lại mật khẩu
-							</Text>
-						)}
+						<LinearGradient
+							colors={
+								isLoading
+									? ["#6c757d", "#6c757d"]
+									: ["#42A5F5", "#1976D2"]
+							}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.resetButtonGradient}
+						>
+							{isLoading ? (
+								<Text style={styles.resetButtonText}>
+									Đang đặt lại...
+								</Text>
+							) : (
+								<Text style={styles.resetButtonText}>
+									Đặt lại mật khẩu
+								</Text>
+							)}
+						</LinearGradient>
 					</TouchableOpacity>
 
 					{/* Back to Login */}
@@ -625,13 +637,12 @@ const styles = StyleSheet.create({
 		lineHeight: 20,
 	},
 	resetButton: {
-		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 20,
-		shadowColor: "#007bff",
+		shadowColor: "#1976D2",
 		shadowOffset: {
 			width: 0,
 			height: 4,
@@ -639,6 +650,13 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 8,
+	},
+	resetButtonGradient: {
+		width: "100%",
+		height: "100%",
+		borderRadius: 15,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	resetButtonDisabled: {
 		backgroundColor: "#6c757d",
@@ -662,7 +680,7 @@ const styles = StyleSheet.create({
 	},
 	backToLoginLink: {
 		fontSize: 15,
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "bold",
 	},
 });
