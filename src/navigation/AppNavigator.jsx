@@ -11,6 +11,7 @@ import ChangeProfile from "../screens/profile/ChangeProfile";
 import MyAddress from "../screens/profile/MyAddress";
 import AddAddress from "../screens/profile/AddAddress";
 import PaymentMethod from "../screens/profile/PaymentMethod";
+import ChatSetting from "../screens/profile/ChatSetting";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -81,6 +82,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="PaymentMethod"
 				component={PaymentMethod}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ChatSetting"
+				component={ChatSetting}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

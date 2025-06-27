@@ -42,7 +42,7 @@ export default function AccountSettingList({ navigation }) {
 			title: "Cài đặt chat",
 			subtitle: "Thông báo tin nhắn",
 			icon: "chatbubble-outline",
-			action: () => console.log("Navigate to chat settings"),
+			action: () => navigation.navigate("ChatSetting"),
 		},
 		{
 			id: 2,
