@@ -28,26 +28,26 @@ export default function AccountScreen({ navigation }) {
 		{
 			id: 1,
 			title: "Yêu cầu",
-			icon: "document-text-outline",
-			color: "#007bff",
+			icon: "clipboard",
+			color: "#667eea",
 			value: "12",
 			subtitle: "Đang xử lý",
 		},
 		{
 			id: 2,
 			title: "Đơn hàng",
-			icon: "bag-outline",
-			color: "#28a745",
+			icon: "bag-check",
+			color: "#f093fb",
 			value: "8",
 			subtitle: "Hoàn thành",
 		},
 		{
 			id: 3,
 			title: "Số dư ví",
-			icon: "wallet-outline",
-			color: "#ffc107",
+			icon: "card",
+			color: "#4facfe",
 			value: "2.5M",
-			subtitle: "₫",
+			subtitle: "VNĐ",
 		},
 	];
 
@@ -161,16 +161,24 @@ export default function AccountScreen({ navigation }) {
 				{/* Profile Info trong header */}
 				<View style={styles.headerProfileSection}>
 					<View style={styles.avatarWrapper}>
-						<TouchableOpacity
-							onPress={handleAvatarPress}
-							style={styles.avatarContainer}
+						<LinearGradient
+							colors={["#ff6b6b", "#4ecdc4", "#45b7d1"]}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.avatarGradientBorder}
 						>
-							<Image
-								source={{ uri: user.avatar }}
-								style={styles.avatarImage}
-								defaultSource={require("../../assets/images/icon.png")}
-							/>
-						</TouchableOpacity>
+							<TouchableOpacity
+								onPress={handleAvatarPress}
+								style={styles.avatarContainer}
+								activeOpacity={0.8}
+							>
+								<Image
+									source={{ uri: user.avatar }}
+									style={styles.avatarImage}
+									defaultSource={require("../../assets/images/logo/logo-gshop-removebg.png")}
+								/>
+							</TouchableOpacity>
+						</LinearGradient>
 
 						{/* Verified status ở góc avatar */}
 						<View style={styles.verifiedBadge}>
@@ -223,43 +231,51 @@ export default function AccountScreen({ navigation }) {
 			>
 				{/* Tổng quan nhanh */}
 				<View style={styles.statsContainer}>
-					<Text className="text-lg font-semibold mb-4">
-						Tổng quan
-					</Text>
+					<Text style={styles.sectionTitle}>Tổng quan</Text>
 					<View style={styles.statsRow}>
 						{userStats.map((stat) => (
-							<View key={stat.id} style={styles.statCard}>
-								<View
-									style={[
-										styles.statIcon,
-										{ backgroundColor: stat.color + "20" },
+							<TouchableOpacity
+								key={stat.id}
+								style={styles.statCard}
+								activeOpacity={0.7}
+								onPress={() =>
+									console.log(
+										`Navigate to ${stat.title} details`
+									)
+								}
+							>
+								<LinearGradient
+									colors={[
+										stat.color + "40",
+										stat.color + "10",
 									]}
+									start={{ x: 0, y: 0 }}
+									end={{ x: 1, y: 1 }}
+									style={styles.statIcon}
 								>
 									<Ionicons
 										name={stat.icon}
-										size={20}
+										size={26}
 										color={stat.color}
 									/>
-								</View>
-								<Text className="text-xl font-bold">
+								</LinearGradient>
+								<Text style={styles.statValue}>
 									{stat.value}
 								</Text>
-								<Text className="text-sm text-muted-foreground">
+								<Text style={styles.statTitle}>
 									{stat.title}
 								</Text>
-								<Text className="text-xs text-muted-foreground">
+								<Text style={styles.statSubtitle}>
 									{stat.subtitle}
 								</Text>
-							</View>
+							</TouchableOpacity>
 						))}
 					</View>
 				</View>
 
 				{/* Quản lý tài khoản */}
 				<View style={styles.sectionContainer}>
-					<Text className="text-lg font-semibold mb-3">
-						Quản lý tài khoản
-					</Text>
+					<Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
 					<View style={styles.menuContainer}>
 						{accountManagement.map((item) => (
 							<TouchableOpacity
@@ -296,9 +312,7 @@ export default function AccountScreen({ navigation }) {
 
 				{/* Hỗ trợ & Thông tin */}
 				<View style={styles.sectionContainer}>
-					<Text className="text-lg font-semibold mb-3">
-						Hỗ trợ & Thông tin
-					</Text>
+					<Text style={styles.sectionTitle}>Hỗ trợ & Thông tin</Text>
 					<View style={styles.menuContainer}>
 						{supportAndInfo.map((item) => (
 							<TouchableOpacity
@@ -407,26 +421,41 @@ const styles = StyleSheet.create({
 	},
 	avatarWrapper: {
 		position: "relative",
-		width: 64,
-		height: 64,
+		width: 68,
+		height: 68,
+	},
+	avatarGradientBorder: {
+		width: 68,
+		height: 68,
+		borderRadius: 34,
+		justifyContent: "center",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 10,
 	},
 	avatarContainer: {
-		width: 64,
-		height: 64,
-		borderRadius: 32,
+		width: 60,
+		height: 60,
+		borderRadius: 30,
 		overflow: "hidden",
-		borderWidth: 2,
-		borderColor: "rgba(255, 255, 255, 0.3)",
+		backgroundColor: "#ffffff",
 	},
 	avatarImage: {
-		width: 64,
-		height: 64,
-		borderRadius: 32,
+		width: 60,
+		height: 60,
+		borderRadius: 30,
+		backgroundColor: "#f8f9fa",
 	},
 	verifiedBadge: {
 		position: "absolute",
-		bottom: -2,
-		right: -2,
+		bottom: 0,
+		right: 0,
 		backgroundColor: "#ffffff",
 		borderRadius: 12,
 		width: 24,
@@ -436,11 +465,11 @@ const styles = StyleSheet.create({
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 1,
+			height: 2,
 		},
-		shadowOpacity: 0.15,
-		shadowRadius: 2,
-		elevation: 3,
+		shadowOpacity: 0.2,
+		shadowRadius: 3,
+		elevation: 5,
 		borderWidth: 1,
 		borderColor: "rgba(0, 0, 0, 0.05)",
 	},
@@ -468,39 +497,74 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		paddingTop: 20,
 	},
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#2c3e50",
+		marginBottom: 16,
+		paddingHorizontal: 4,
+	},
 	statsContainer: {
-		marginBottom: 24,
+		marginBottom: 28,
 	},
 	statsRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		gap: 12,
 	},
 	statCard: {
 		flex: 1,
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		padding: 20,
 		alignItems: "center",
-		marginHorizontal: 4,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 6,
+		borderWidth: 1,
+		borderColor: "rgba(0, 0, 0, 0.02)",
+	},
+	statIcon: {
+		width: 52,
+		height: 52,
+		borderRadius: 26,
+		justifyContent: "center",
+		alignItems: "center",
+		marginBottom: 12,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
 			height: 2,
 		},
-		shadowOpacity: 0.05,
-		shadowRadius: 3,
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
 		elevation: 3,
 	},
-	statIcon: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		justifyContent: "center",
-		alignItems: "center",
-		marginBottom: 8,
+	statValue: {
+		fontSize: 24,
+		fontWeight: "800",
+		color: "#2c3e50",
+		marginBottom: 4,
+	},
+	statTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#34495e",
+		marginBottom: 2,
+		textAlign: "center",
+	},
+	statSubtitle: {
+		fontSize: 12,
+		color: "#7f8c8d",
+		textAlign: "center",
 	},
 	sectionContainer: {
-		marginBottom: 20,
+		marginBottom: 24,
 	},
 	menuContainer: {
 		backgroundColor: "#ffffff",
