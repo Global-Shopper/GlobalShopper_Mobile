@@ -7,11 +7,12 @@ import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
-import ChangeProfile from "../screens/profile/ChangeProfile";
-import MyAddress from "../screens/profile/MyAddress";
 import AddAddress from "../screens/profile/AddAddress";
-import PaymentMethod from "../screens/profile/PaymentMethod";
+import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChatSetting from "../screens/profile/ChatSetting";
+import MyAddress from "../screens/profile/MyAddress";
+import NotiSetting from "../screens/profile/NotiSetting";
+import PaymentMethod from "../screens/profile/PaymentMethod";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -87,6 +88,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ChatSetting"
 				component={ChatSetting}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="NotiSetting"
+				component={NotiSetting}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

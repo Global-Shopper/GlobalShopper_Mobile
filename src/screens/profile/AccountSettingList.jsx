@@ -49,7 +49,7 @@ export default function AccountSettingList({ navigation }) {
 			title: "Cài đặt thông báo",
 			subtitle: "Quản lý thông báo",
 			icon: "notifications-outline",
-			action: () => console.log("Navigate to notification settings"),
+			action: () => navigation.navigate("NotiSetting"),
 		},
 	];
 
