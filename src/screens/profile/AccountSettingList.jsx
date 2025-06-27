@@ -31,7 +31,7 @@ export default function AccountSettingList({ navigation }) {
 			title: "Phương thức thanh toán",
 			subtitle: "Thẻ & ví điện tử",
 			icon: "card-outline",
-			action: () => console.log("Navigate to payment methods"),
+			action: () => navigation.navigate("PaymentMethod"),
 		},
 	];
 
