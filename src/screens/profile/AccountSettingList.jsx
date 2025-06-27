@@ -1,24 +1,23 @@
-import React from "react";
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	StyleSheet,
-	StatusBar,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+	ScrollView,
+	StatusBar,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 export default function AccountSettingList({ navigation }) {
 	// Nhóm "Tài khoản của tôi"
 	const myAccountItems = [
 		{
 			id: 1,
-			title: "Tài khoản",
+			title: "Chỉnh sửa tài khoản",
 			subtitle: "Thông tin cá nhân",
 			icon: "person-outline",
-			action: () => console.log("Navigate to account info"),
+			action: () => navigation.navigate("ChangeProfile"),
 		},
 		{
 			id: 2,
@@ -82,9 +81,12 @@ export default function AccountSettingList({ navigation }) {
 	return (
 		<View style={styles.container}>
 			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
-			
+
 			{/* Header */}
-			<LinearGradient colors={["#42A5F5", "#1976D2"]} style={styles.header}>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				style={styles.header}
+			>
 				<View style={styles.headerContent}>
 					<TouchableOpacity
 						onPress={() => navigation.goBack()}
