@@ -30,7 +30,7 @@ export default function MyAddress({ navigation }) {
 
 	const handleAddNewAddress = () => {
 		// Navigate to Add Address screen
-		console.log("Navigate to Add Address");
+		navigation.navigate("AddAddress");
 	};
 
 	const handleEditAddress = (addressId) => {

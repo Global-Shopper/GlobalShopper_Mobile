@@ -9,6 +9,7 @@ import SplashScreen from "../screens/authen/SplashScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import ChangeProfile from "../screens/profile/ChangeProfile";
 import MyAddress from "../screens/profile/MyAddress";
+import AddAddress from "../screens/profile/AddAddress";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -69,6 +70,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="MyAddress"
 				component={MyAddress}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="AddAddress"
+				component={AddAddress}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
