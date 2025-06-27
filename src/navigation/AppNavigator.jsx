@@ -9,6 +9,7 @@ import SplashScreen from "../screens/authen/SplashScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangeProfile from "../screens/profile/ChangeProfile";
+import ChangePassword from "../screens/profile/ChangePassword";
 import ChatSetting from "../screens/profile/ChatSetting";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
@@ -93,6 +94,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="NotiSetting"
 				component={NotiSetting}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ChangePassword"
+				component={ChangePassword}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

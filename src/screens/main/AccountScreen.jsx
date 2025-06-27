@@ -67,7 +67,7 @@ export default function AccountScreen({ navigation }) {
 			subtitle: "Bảo mật tài khoản",
 			icon: "lock-closed-outline",
 			gradientColors: ["#4FC3F7", "#29B6F6"],
-			action: () => console.log("Navigate to change password"),
+			action: () => navigation.navigate("ChangePassword"),
 		},
 		{
 			id: 3,
