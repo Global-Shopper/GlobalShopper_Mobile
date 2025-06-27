@@ -1,87 +1,136 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import {
+	Alert,
+	Image,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import { Text } from "../../components/ui/text";
 
 export default function AccountScreen({ navigation }) {
 	const [user] = useState({
-		name: "John Doe",
-		email: "john.doe@example.com",
+		name: "Hoài Phương",
+		email: "hoaiphuong1328@gmail.com",
 		phone: "+84 123 456 789",
 		avatar: "https://github.com/shadcn.png",
 		memberSince: "2023",
 		isVerified: true,
 	});
 
-	const menuItems = [
+	const [chatNotificationCount] = useState(3); // Số tin nhắn chưa đọc
+
+	// Stats để hiển thị tổng quan nhanh
+	const userStats = [
 		{
 			id: 1,
-			title: "Thông tin cá nhân",
-			subtitle: "Cập nhật thông tin và cài đặt",
-			icon: "person-outline",
-			action: () => console.log("Navigate to profile"),
+			title: "Yêu cầu",
+			icon: "clipboard",
+			color: "#667eea",
+			value: "12",
+			subtitle: "Đang xử lý",
 		},
 		{
 			id: 2,
-			title: "Bảo mật",
-			subtitle: "Mật khẩu và xác thực 2 yếu tố",
-			icon: "shield-checkmark-outline",
-			action: () => console.log("Navigate to security"),
+			title: "Đơn hàng",
+			icon: "bag-check",
+			color: "#f093fb",
+			value: "8",
+			subtitle: "Hoàn thành",
 		},
 		{
 			id: 3,
-			title: "Thông báo",
-			subtitle: "Cài đặt nhận thông báo",
-			icon: "notifications-outline",
-			action: () => console.log("Navigate to notifications"),
-		},
-		{
-			id: 4,
-			title: "Ngôn ngữ",
-			subtitle: "Tiếng Việt",
-			icon: "language-outline",
-			action: () => console.log("Navigate to language"),
-		},
-		{
-			id: 5,
-			title: "Hỗ trợ",
-			subtitle: "Trung tâm trợ giúp và liên hệ",
-			icon: "help-circle-outline",
-			action: () => console.log("Navigate to support"),
-		},
-		{
-			id: 6,
-			title: "Điều khoản sử dụng",
-			subtitle: "Quyền riêng tư và điều khoản",
-			icon: "document-text-outline",
-			action: () => console.log("Navigate to terms"),
+			title: "Số dư ví",
+			icon: "card",
+			color: "#4facfe",
+			value: "2.5M",
+			subtitle: "VNĐ",
 		},
 	];
 
-	const quickActions = [
+	// Quản lý tài khoản
+	const accountManagement = [
 		{
 			id: 1,
-			title: "Ví tiền",
-			icon: "wallet-outline",
-			color: "#007bff",
-			value: "2,500,000 ₫",
+			title: "Cài đặt tài khoản",
+			subtitle: "Cập nhật thông tin cá nhân",
+			icon: "settings-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("AccountSettingList"),
 		},
 		{
 			id: 2,
-			title: "Điểm thưởng",
-			icon: "star-outline",
-			color: "#ffc107",
-			value: "1,250 điểm",
+			title: "Thay đổi mật khẩu",
+			subtitle: "Bảo mật tài khoản",
+			icon: "lock-closed-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("ChangePassword"),
 		},
 		{
 			id: 3,
-			title: "Ưu đãi",
-			icon: "gift-outline",
-			color: "#28a745",
-			value: "5 mã giảm giá",
+			title: "Ngôn ngữ / Language",
+			subtitle: "Tiếng Việt",
+			icon: "language-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => console.log("Navigate to language"),
 		},
 	];
+
+	// Hỗ trợ & Thông tin
+	const supportAndInfo = [
+		{
+			id: 1,
+			title: "Câu hỏi thường gặp (FAQ)",
+			subtitle: "Tìm câu trả lời nhanh chóng",
+			icon: "help-circle-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("FAQScreen"),
+		},
+		{
+			id: 2,
+			title: "Gửi yêu cầu hỗ trợ",
+			subtitle: "Liên hệ đội ngũ hỗ trợ",
+			icon: "mail-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => console.log("Navigate to support request"),
+		},
+		{
+			id: 3,
+			title: "Điều khoản sử dụng",
+			subtitle: "Quy định và điều khoản",
+			icon: "document-text-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("TermsScreen"),
+		},
+		{
+			id: 4,
+			title: "Chính sách bảo mật",
+			subtitle: "Quyền riêng tư của bạn",
+			icon: "shield-checkmark-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("PolicyScreen"),
+		},
+	];
+
+	const handleAvatarPress = () => {
+		Alert.alert("Đổi ảnh đại diện", "Chọn nguồn ảnh", [
+			{
+				text: "Hủy",
+				style: "cancel",
+			},
+			{
+				text: "Thư viện ảnh",
+				onPress: () => console.log("Open photo library"),
+			},
+			{
+				text: "Chụp ảnh",
+				onPress: () => console.log("Open camera"),
+			},
+		]);
+	};
 
 	const handleLogout = () => {
 		Alert.alert(
@@ -109,82 +158,230 @@ export default function AccountScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			{/* Header */}
-			<View style={styles.header}>
-				<Text className="text-2xl font-bold text-white">Tài khoản</Text>
-				<TouchableOpacity style={styles.settingsButton}>
-					<Ionicons name="settings-outline" size={24} color="#ffffff" />
-				</TouchableOpacity>
-			</View>
+			{/* Header với thông tin người dùng */}
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={styles.header}
+			>
+				{/* Profile Info trong header */}
+				<View style={styles.headerProfileSection}>
+					<View style={styles.avatarWrapper}>
+						<LinearGradient
+							colors={["#ff6b6b", "#4ecdc4", "#45b7d1"]}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.avatarGradientBorder}
+						>
+							<TouchableOpacity
+								onPress={handleAvatarPress}
+								style={styles.avatarContainer}
+								activeOpacity={0.8}
+							>
+								<Image
+									source={{ uri: user.avatar }}
+									style={styles.avatarImage}
+									defaultSource={require("../../assets/images/logo/logo-gshop-removebg.png")}
+								/>
+							</TouchableOpacity>
+						</LinearGradient>
 
-			<ScrollView 
+						{/* Verified status ở góc avatar */}
+						<View style={styles.verifiedBadge}>
+							{user.isVerified ? (
+								<Ionicons
+									name="checkmark-circle"
+									size={20}
+									color="#28a745"
+								/>
+							) : (
+								<Ionicons
+									name="close-circle"
+									size={20}
+									color="#dc3545"
+								/>
+							)}
+						</View>
+					</View>
+
+					<View style={styles.headerProfileInfo}>
+						<View style={styles.nameContainer}>
+							<Text style={styles.userName}>{user.name}</Text>
+						</View>
+						<Text style={styles.userEmail}>{user.email}</Text>
+					</View>
+				</View>
+
+				<TouchableOpacity style={styles.chatButton}>
+					<Ionicons
+						name="chatbubble-outline"
+						size={28}
+						color="#ffffff"
+					/>
+					{/* Notification badge cho chat */}
+					{chatNotificationCount > 0 && (
+						<View style={styles.chatNotificationBadge}>
+							<Text style={styles.chatNotificationText}>
+								{chatNotificationCount > 9
+									? "9+"
+									: chatNotificationCount}
+							</Text>
+						</View>
+					)}
+				</TouchableOpacity>
+			</LinearGradient>
+
+			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Profile Card */}
-				<View style={styles.profileCard}>
-					<Avatar className="h-20 w-20">
-						<AvatarImage source={{ uri: user.avatar }} />
-						<AvatarFallback>
-							<Text className="text-xl font-bold">JD</Text>
-						</AvatarFallback>
-					</Avatar>
-					
-					<View style={styles.profileInfo}>
-						<View style={styles.nameContainer}>
-							<Text className="text-xl font-bold">{user.name}</Text>
-							{user.isVerified && (
-								<Ionicons name="checkmark-circle" size={20} color="#28a745" style={styles.verifiedIcon} />
-							)}
-						</View>
-						<Text className="text-sm text-muted-foreground">{user.email}</Text>
-						<Text className="text-sm text-muted-foreground">{user.phone}</Text>
-						<Text className="text-xs text-muted-foreground mt-2">
-							Thành viên từ {user.memberSince}
-						</Text>
+				{/* Tổng quan nhanh */}
+				<View style={styles.statsContainer}>
+					<Text style={styles.sectionTitle}>Tổng quan</Text>
+					<View style={styles.statsRow}>
+						{userStats.map((stat) => (
+							<TouchableOpacity
+								key={stat.id}
+								style={styles.statCard}
+								activeOpacity={0.7}
+								onPress={() =>
+									console.log(
+										`Navigate to ${stat.title} details`
+									)
+								}
+							>
+								<LinearGradient
+									colors={[
+										stat.color + "40",
+										stat.color + "10",
+									]}
+									start={{ x: 0, y: 0 }}
+									end={{ x: 1, y: 1 }}
+									style={styles.statIcon}
+								>
+									<Ionicons
+										name={stat.icon}
+										size={26}
+										color={stat.color}
+									/>
+								</LinearGradient>
+								<Text style={styles.statValue}>
+									{stat.value}
+								</Text>
+								<Text style={styles.statTitle}>
+									{stat.title}
+								</Text>
+								<Text style={styles.statSubtitle}>
+									{stat.subtitle}
+								</Text>
+							</TouchableOpacity>
+						))}
 					</View>
-					
-					<TouchableOpacity style={styles.editButton}>
-						<Ionicons name="create-outline" size={20} color="#007bff" />
-					</TouchableOpacity>
 				</View>
 
-				{/* Quick Actions */}
-				<View style={styles.quickActionsContainer}>
-					{quickActions.map((action) => (
-						<TouchableOpacity key={action.id} style={styles.quickActionCard}>
-							<View style={[styles.quickActionIcon, { backgroundColor: action.color + "20" }]}>
-								<Ionicons name={action.icon} size={24} color={action.color} />
-							</View>
-							<Text className="text-sm font-medium">{action.title}</Text>
-							<Text className="text-xs text-muted-foreground">{action.value}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
-
-				{/* Menu Items */}
-				<View style={styles.menuContainer}>
-					{menuItems.map((item) => (
-						<TouchableOpacity
-							key={item.id}
-							style={styles.menuItem}
-							onPress={item.action}
-						>
-							<View style={styles.menuItemLeft}>
-								<View style={styles.menuIconContainer}>
-									<Ionicons name={item.icon} size={22} color="#007bff" />
+				{/* Quản lý tài khoản */}
+				<View style={styles.sectionContainer}>
+					<Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
+					<View style={styles.menuContainer}>
+						{accountManagement.map((item) => (
+							<TouchableOpacity
+								key={item.id}
+								style={styles.menuItem}
+								onPress={item.action}
+								activeOpacity={0.7}
+							>
+								<View style={styles.menuItemLeft}>
+									<View style={styles.iconContainer}>
+										<LinearGradient
+											colors={item.gradientColors}
+											style={styles.iconGradient}
+										>
+											<Ionicons
+												name={item.icon}
+												size={24}
+												color="#FFFFFF"
+											/>
+										</LinearGradient>
+									</View>
+									<View style={styles.menuItemContent}>
+										<Text style={styles.menuTitle}>
+											{item.title}
+										</Text>
+										<Text style={styles.menuSubtitle}>
+											{item.subtitle}
+										</Text>
+									</View>
 								</View>
-								<View style={styles.menuItemContent}>
-									<Text className="font-medium">{item.title}</Text>
-									<Text className="text-sm text-muted-foreground">{item.subtitle}</Text>
-								</View>
-							</View>
-							<Ionicons name="chevron-forward" size={20} color="#ccc" />
-						</TouchableOpacity>
-					))}
+								<Ionicons
+									name="chevron-forward"
+									size={20}
+									color="#B0BEC5"
+								/>
+							</TouchableOpacity>
+						))}
+					</View>
 				</View>
 
-				{/* App Info */}
+				{/* Hỗ trợ & Thông tin */}
+				<View style={styles.sectionContainer}>
+					<Text style={styles.sectionTitle}>Hỗ trợ & Thông tin</Text>
+					<View style={styles.menuContainer}>
+						{supportAndInfo.map((item) => (
+							<TouchableOpacity
+								key={item.id}
+								style={styles.menuItem}
+								onPress={item.action}
+								activeOpacity={0.7}
+							>
+								<View style={styles.menuItemLeft}>
+									<View style={styles.iconContainer}>
+										<LinearGradient
+											colors={item.gradientColors}
+											style={styles.iconGradient}
+										>
+											<Ionicons
+												name={item.icon}
+												size={24}
+												color="#FFFFFF"
+											/>
+										</LinearGradient>
+									</View>
+									<View style={styles.menuItemContent}>
+										<Text style={styles.menuTitle}>
+											{item.title}
+										</Text>
+										<Text style={styles.menuSubtitle}>
+											{item.subtitle}
+										</Text>
+									</View>
+								</View>
+								<Ionicons
+									name="chevron-forward"
+									size={20}
+									color="#B0BEC5"
+								/>
+							</TouchableOpacity>
+						))}
+					</View>
+				</View>
+
+				{/* Đăng xuất */}
+				<TouchableOpacity
+					style={styles.logoutButton}
+					onPress={handleLogout}
+				>
+					<Ionicons
+						name="log-out-outline"
+						size={20}
+						color="#dc3545"
+					/>
+					<Text className="text-red-600 font-medium ml-2">
+						Đăng xuất
+					</Text>
+				</TouchableOpacity>
+
+				{/* Phiên bản & Branding */}
 				<View style={styles.appInfoContainer}>
 					<Text className="text-center text-sm text-muted-foreground">
 						GlobalShopper Mobile v1.0.0
@@ -193,12 +390,6 @@ export default function AccountScreen({ navigation }) {
 						© 2024 GlobalShopper. All rights reserved.
 					</Text>
 				</View>
-
-				{/* Logout Button */}
-				<TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-					<Ionicons name="log-out-outline" size={20} color="#dc3545" />
-					<Text className="text-red-600 font-medium ml-2">Đăng xuất</Text>
-				</TouchableOpacity>
 			</ScrollView>
 		</View>
 	);
@@ -210,91 +401,193 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f8f9fa",
 	},
 	header: {
-		backgroundColor: "#007bff",
 		paddingHorizontal: 20,
-		paddingTop: 50,
+		paddingTop: 60,
 		paddingBottom: 20,
 		flexDirection: "row",
+		alignItems: "flex-start",
 		justifyContent: "space-between",
-		alignItems: "center",
 	},
-	settingsButton: {
+	chatButton: {
 		padding: 8,
+		marginTop: 8,
+		position: "relative",
 	},
-	content: {
-		flex: 1,
-		paddingHorizontal: 20,
+	chatNotificationBadge: {
+		position: "absolute",
+		top: 4,
+		right: 4,
+		backgroundColor: "#dc3545",
+		borderRadius: 10,
+		minWidth: 20,
+		height: 20,
+		justifyContent: "center",
+		alignItems: "center",
+		borderWidth: 2,
+		borderColor: "#4a90e2",
 	},
-	profileCard: {
-		backgroundColor: "#ffffff",
-		borderRadius: 16,
-		padding: 20,
-		marginTop: -30,
-		marginBottom: 20,
+	chatNotificationText: {
+		color: "#ffffff",
+		fontSize: 12,
+		fontWeight: "bold",
+		paddingHorizontal: 4,
+	},
+	headerProfileSection: {
 		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+		paddingRight: 16,
+	},
+	avatarWrapper: {
+		position: "relative",
+		width: 68,
+		height: 68,
+	},
+	avatarGradientBorder: {
+		width: 68,
+		height: 68,
+		borderRadius: 34,
+		justifyContent: "center",
 		alignItems: "center",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
 			height: 4,
 		},
-		shadowOpacity: 0.1,
+		shadowOpacity: 0.2,
 		shadowRadius: 8,
-		elevation: 8,
+		elevation: 10,
 	},
-	profileInfo: {
+	avatarContainer: {
+		width: 60,
+		height: 60,
+		borderRadius: 30,
+		overflow: "hidden",
+		backgroundColor: "#ffffff",
+	},
+	avatarImage: {
+		width: 60,
+		height: 60,
+		borderRadius: 30,
+		backgroundColor: "#f8f9fa",
+	},
+	verifiedBadge: {
+		position: "absolute",
+		bottom: 0,
+		right: 0,
+		backgroundColor: "#ffffff",
+		borderRadius: 12,
+		width: 24,
+		height: 24,
+		justifyContent: "center",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.2,
+		shadowRadius: 3,
+		elevation: 5,
+		borderWidth: 1,
+		borderColor: "rgba(0, 0, 0, 0.05)",
+	},
+	headerProfileInfo: {
 		flex: 1,
 		marginLeft: 16,
+		justifyContent: "center",
 	},
 	nameContainer: {
 		flexDirection: "row",
 		alignItems: "center",
 		marginBottom: 4,
 	},
-	verifiedIcon: {
-		marginLeft: 8,
+	userName: {
+		fontSize: 22,
+		fontWeight: "bold",
+		color: "#ffffff",
 	},
-	editButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "#f0f8ff",
-		justifyContent: "center",
-		alignItems: "center",
+	userEmail: {
+		fontSize: 15,
+		color: "rgba(255, 255, 255, 0.85)",
 	},
-	quickActionsContainer: {
+	content: {
+		flex: 1,
+		paddingHorizontal: 20,
+		paddingTop: 20,
+	},
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#2c3e50",
+		marginBottom: 16,
+		paddingHorizontal: 4,
+	},
+	statsContainer: {
+		marginBottom: 28,
+	},
+	statsRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		marginBottom: 20,
+		gap: 12,
 	},
-	quickActionCard: {
+	statCard: {
 		flex: 1,
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		padding: 20,
 		alignItems: "center",
-		marginHorizontal: 4,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 6,
+		borderWidth: 1,
+		borderColor: "rgba(0, 0, 0, 0.02)",
+	},
+	statIcon: {
+		width: 52,
+		height: 52,
+		borderRadius: 26,
+		justifyContent: "center",
+		alignItems: "center",
+		marginBottom: 12,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
 			height: 2,
 		},
-		shadowOpacity: 0.05,
-		shadowRadius: 3,
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
 		elevation: 3,
 	},
-	quickActionIcon: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
-		justifyContent: "center",
-		alignItems: "center",
-		marginBottom: 8,
+	statValue: {
+		fontSize: 24,
+		fontWeight: "800",
+		color: "#2c3e50",
+		marginBottom: 4,
+	},
+	statTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#34495e",
+		marginBottom: 2,
+		textAlign: "center",
+	},
+	statSubtitle: {
+		fontSize: 12,
+		color: "#7f8c8d",
+		textAlign: "center",
+	},
+	sectionContainer: {
+		marginBottom: 24,
 	},
 	menuContainer: {
 		backgroundColor: "#ffffff",
 		borderRadius: 12,
-		marginBottom: 20,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -308,15 +601,25 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: 16,
+		paddingHorizontal: 20,
 		paddingVertical: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: "#f0f0f0",
+		borderBottomWidth: StyleSheet.hairlineWidth,
+		borderBottomColor: "#E0E0E0",
 	},
 	menuItemLeft: {
 		flexDirection: "row",
 		alignItems: "center",
 		flex: 1,
+	},
+	iconContainer: {
+		marginRight: 15,
+	},
+	iconGradient: {
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	menuIconContainer: {
 		width: 40,
@@ -330,11 +633,15 @@ const styles = StyleSheet.create({
 	menuItemContent: {
 		flex: 1,
 	},
-	appInfoContainer: {
-		paddingVertical: 20,
-		borderTopWidth: 1,
-		borderTopColor: "#e9ecef",
-		marginBottom: 20,
+	menuTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#263238",
+		marginBottom: 2,
+	},
+	menuSubtitle: {
+		fontSize: 13,
+		color: "#78909C",
 	},
 	logoutButton: {
 		flexDirection: "row",
@@ -343,8 +650,22 @@ const styles = StyleSheet.create({
 		backgroundColor: "#ffffff",
 		borderRadius: 12,
 		paddingVertical: 16,
-		marginBottom: 40,
+		marginBottom: 20,
 		borderWidth: 1,
 		borderColor: "#fee",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.05,
+		shadowRadius: 3,
+		elevation: 3,
+	},
+	appInfoContainer: {
+		paddingVertical: 20,
+		borderTopWidth: 1,
+		borderTopColor: "#e9ecef",
+		marginBottom: 20,
 	},
 });

@@ -6,6 +6,17 @@ import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
 import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
+import AccountSettingList from "../screens/profile/AccountSettingList";
+import AddAddress from "../screens/profile/AddAddress";
+import ChangeProfile from "../screens/profile/ChangeProfile";
+import ChangePassword from "../screens/profile/ChangePassword";
+import ChatSetting from "../screens/profile/ChatSetting";
+import FAQScreen from "../screens/profile/FAQScreen";
+import MyAddress from "../screens/profile/MyAddress";
+import NotiSetting from "../screens/profile/NotiSetting";
+import PaymentMethod from "../screens/profile/PaymentMethod";
+import PolicyScreen from "../screens/profile/PolicyScreen";
+import TermsScreen from "../screens/profile/TermsScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -51,6 +62,61 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ResetPassword"
 				component={ResetPasswordScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="AccountSettingList"
+				component={AccountSettingList}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ChangeProfile"
+				component={ChangeProfile}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="MyAddress"
+				component={MyAddress}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="AddAddress"
+				component={AddAddress}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="PaymentMethod"
+				component={PaymentMethod}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ChatSetting"
+				component={ChatSetting}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="NotiSetting"
+				component={NotiSetting}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ChangePassword"
+				component={ChangePassword}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="FAQScreen"
+				component={FAQScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="TermsScreen"
+				component={TermsScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="PolicyScreen"
+				component={PolicyScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
