@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -200,15 +201,26 @@ export default function LoginScreen({ navigation }) {
 						onPress={handleLogin}
 						disabled={isLoading}
 					>
-						{isLoading ? (
-							<Text style={styles.loginButtonText}>
-								Đang đăng nhập...
-							</Text>
-						) : (
-							<Text style={styles.loginButtonText}>
-								Đăng nhập
-							</Text>
-						)}
+						<LinearGradient
+							colors={
+								isLoading
+									? ["#6c757d", "#6c757d"]
+									: ["#42A5F5", "#1976D2"]
+							}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.loginButtonGradient}
+						>
+							{isLoading ? (
+								<Text style={styles.loginButtonText}>
+									Đang đăng nhập...
+								</Text>
+							) : (
+								<Text style={styles.loginButtonText}>
+									Đăng nhập
+								</Text>
+							)}
+						</LinearGradient>
 					</TouchableOpacity>
 
 					{/* Divider */}
@@ -256,6 +268,7 @@ const styles = StyleSheet.create({
 	scrollContainer: {
 		flexGrow: 1,
 		paddingHorizontal: 30,
+		marginTop: height * 0.1,
 	},
 	logoContainer: {
 		alignItems: "center",
@@ -317,18 +330,17 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 	},
 	forgotPasswordText: {
-		color: "#007bff",
+		color: "#1976D2",
 		fontSize: 13,
 		fontWeight: "500",
 	},
 	loginButton: {
-		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 20,
-		shadowColor: "#007bff",
+		shadowColor: "#1976D2",
 		shadowOffset: {
 			width: 0,
 			height: 4,
@@ -336,6 +348,13 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 8,
+	},
+	loginButtonGradient: {
+		width: "100%",
+		height: "100%",
+		borderRadius: 15,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	loginButtonDisabled: {
 		backgroundColor: "#6c757d",
@@ -417,7 +436,7 @@ const styles = StyleSheet.create({
 	},
 	signUpLink: {
 		fontSize: 15,
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "bold",
 	},
 });

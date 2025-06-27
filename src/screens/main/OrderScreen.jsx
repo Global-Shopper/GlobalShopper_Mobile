@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../components/ui/text";
@@ -115,12 +116,19 @@ export default function OrderScreen() {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<Text className="text-2xl font-bold">Đơn hàng</Text>
-				<TouchableOpacity style={styles.searchButton}>
-					<Ionicons name="search-outline" size={24} color="#007bff" />
-				</TouchableOpacity>
-			</View>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={styles.header}
+			>
+				<View style={styles.headerContent}>
+					<Text style={styles.headerTitle}>Đơn hàng</Text>
+					<TouchableOpacity style={styles.searchButton}>
+						<Ionicons name="search-outline" size={24} color="#FFFFFF" />
+					</TouchableOpacity>
+				</View>
+			</LinearGradient>
 
 			{/* Stats */}
 			<View style={styles.statsContainer}>
@@ -285,19 +293,25 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f8f9fa",
 	},
 	header: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
 		paddingHorizontal: 20,
 		paddingTop: 50,
 		paddingBottom: 16,
-		backgroundColor: "#ffffff",
+	},
+	headerContent: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	headerTitle: {
+		fontSize: 24,
+		fontWeight: "700",
+		color: "#FFFFFF",
 	},
 	searchButton: {
 		width: 40,
 		height: 40,
 		borderRadius: 20,
-		backgroundColor: "#f0f8ff",
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
 		justifyContent: "center",
 		alignItems: "center",
 	},

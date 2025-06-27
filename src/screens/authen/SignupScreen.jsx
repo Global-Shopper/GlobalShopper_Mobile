@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -501,7 +502,7 @@ export default function SignupScreen({ navigation }) {
 									agreeToTerms ? "checkbox" : "square-outline"
 								}
 								size={20}
-								color={agreeToTerms ? "#007bff" : "#666"}
+								color={agreeToTerms ? "#1976D2" : "#666"}
 							/>
 						</View>
 						<Text style={styles.termsText}>
@@ -531,13 +532,26 @@ export default function SignupScreen({ navigation }) {
 						onPress={handleSignup}
 						disabled={isLoading}
 					>
-						{isLoading ? (
-							<Text style={styles.signupButtonText}>
-								Đang đăng ký...
-							</Text>
-						) : (
-							<Text style={styles.signupButtonText}>Đăng ký</Text>
-						)}
+						<LinearGradient
+							colors={
+								isLoading
+									? ["#6c757d", "#6c757d"]
+									: ["#42A5F5", "#1976D2"]
+							}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 1 }}
+							style={styles.signupButtonGradient}
+						>
+							{isLoading ? (
+								<Text style={styles.signupButtonText}>
+									Đang đăng ký...
+								</Text>
+							) : (
+								<Text style={styles.signupButtonText}>
+									Đăng ký
+								</Text>
+							)}
+						</LinearGradient>
 					</TouchableOpacity>
 
 					{/* Login Link */}
@@ -562,6 +576,7 @@ const styles = StyleSheet.create({
 		flexGrow: 1,
 		paddingHorizontal: 30,
 		paddingBottom: 50,
+		marginTop: height * 0.05,
 	},
 	logoContainer: {
 		alignItems: "center",
@@ -675,7 +690,7 @@ const styles = StyleSheet.create({
 		marginRight: 8,
 	},
 	radioButtonActive: {
-		borderColor: "#007bff",
+		borderColor: "#1976D2",
 	},
 	radioButtonInner: {
 		width: 8,
@@ -684,7 +699,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "transparent",
 	},
 	radioButtonSelected: {
-		backgroundColor: "#007bff",
+		backgroundColor: "#1976D2",
 	},
 	genderOptionText: {
 		fontSize: 14,
@@ -693,7 +708,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	genderOptionTextSelected: {
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "600",
 	},
 	termsContainer: {
@@ -712,17 +727,16 @@ const styles = StyleSheet.create({
 		lineHeight: 20,
 	},
 	termsLink: {
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "500",
 	},
 	signupButton: {
-		backgroundColor: "#007bff",
 		borderRadius: 15,
 		height: 50,
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 20,
-		shadowColor: "#007bff",
+		shadowColor: "#1976D2",
 		shadowOffset: {
 			width: 0,
 			height: 4,
@@ -730,6 +744,13 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 8,
+	},
+	signupButtonGradient: {
+		width: "100%",
+		height: "100%",
+		borderRadius: 15,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	signupButtonDisabled: {
 		backgroundColor: "#6c757d",
@@ -753,7 +774,7 @@ const styles = StyleSheet.create({
 	},
 	loginLink: {
 		fontSize: 15,
-		color: "#007bff",
+		color: "#1976D2",
 		fontWeight: "bold",
 	},
 });

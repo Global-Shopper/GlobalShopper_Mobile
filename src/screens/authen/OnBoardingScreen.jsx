@@ -1,19 +1,24 @@
 import { useEffect, useRef } from "react";
 import {
 	Animated,
-	Dimensions,
 	StyleSheet,
 	Text,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Onboarding from "react-native-onboarding-swiper";
-
-const { width, height } = Dimensions.get("window");
 
 const Button = ({ label, ...props }) => (
 	<TouchableOpacity style={styles.button} {...props}>
-		<Text style={styles.buttonText}>{label}</Text>
+		<LinearGradient
+			colors={["#42A5F5", "#1976D2"]}
+			start={{ x: 0, y: 0 }}
+			end={{ x: 1, y: 1 }}
+			style={styles.buttonGradient}
+		>
+			<Text style={styles.buttonText}>{label}</Text>
+		</LinearGradient>
 	</TouchableOpacity>
 );
 
@@ -25,7 +30,7 @@ const Dot = ({ selected }) => {
 				height: 8,
 				borderRadius: 4,
 				marginHorizontal: 4,
-				backgroundColor: selected ? "#007bff" : "#ccc",
+				backgroundColor: selected ? "#1976D2" : "#ccc",
 			}}
 		/>
 	);
@@ -48,8 +53,7 @@ const FloatingImage = ({ source }) => {
 					useNativeDriver: true,
 				}),
 			])
-		).start();
-	}, []);
+		).start();		}, [animation]);
 
 	return (
 		<Animated.Image
@@ -151,10 +155,14 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		marginHorizontal: 25,
-		backgroundColor: "#007bff",
+		borderRadius: 25,
+	},
+	buttonGradient: {
 		paddingVertical: 13,
 		paddingHorizontal: 20,
 		borderRadius: 25,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	buttonText: {
 		color: "#fff",
