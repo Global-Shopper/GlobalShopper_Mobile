@@ -58,13 +58,15 @@ export default function AccountScreen({ navigation }) {
 			title: "Cài đặt tài khoản",
 			subtitle: "Cập nhật thông tin cá nhân",
 			icon: "settings-outline",
-			action: () => console.log("Navigate to account settings"),
+			gradientColors: ["#4FC3F7", "#29B6F6"],
+			action: () => navigation.navigate("AccountSettingList"),
 		},
 		{
 			id: 2,
 			title: "Thay đổi mật khẩu",
 			subtitle: "Bảo mật tài khoản",
 			icon: "lock-closed-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to change password"),
 		},
 		{
@@ -72,6 +74,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Ngôn ngữ / Language",
 			subtitle: "Tiếng Việt",
 			icon: "language-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to language"),
 		},
 	];
@@ -83,6 +86,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Câu hỏi thường gặp (FAQ)",
 			subtitle: "Tìm câu trả lời nhanh chóng",
 			icon: "help-circle-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to FAQ"),
 		},
 		{
@@ -90,6 +94,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Gửi yêu cầu hỗ trợ",
 			subtitle: "Liên hệ đội ngũ hỗ trợ",
 			icon: "mail-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to support request"),
 		},
 		{
@@ -97,6 +102,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Điều khoản sử dụng",
 			subtitle: "Quy định và điều khoản",
 			icon: "document-text-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to terms"),
 		},
 		{
@@ -104,6 +110,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Chính sách bảo mật",
 			subtitle: "Quyền riêng tư của bạn",
 			icon: "shield-checkmark-outline",
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to privacy policy"),
 		},
 	];
@@ -282,20 +289,26 @@ export default function AccountScreen({ navigation }) {
 								key={item.id}
 								style={styles.menuItem}
 								onPress={item.action}
+								activeOpacity={0.7}
 							>
 								<View style={styles.menuItemLeft}>
-									<View style={styles.menuIconContainer}>
-										<Ionicons
-											name={item.icon}
-											size={22}
-											color="#007bff"
-										/>
+									<View style={styles.iconContainer}>
+										<LinearGradient
+											colors={item.gradientColors}
+											style={styles.iconGradient}
+										>
+											<Ionicons
+												name={item.icon}
+												size={24}
+												color="#FFFFFF"
+											/>
+										</LinearGradient>
 									</View>
 									<View style={styles.menuItemContent}>
-										<Text className="font-medium">
+										<Text style={styles.menuTitle}>
 											{item.title}
 										</Text>
-										<Text className="text-sm text-muted-foreground">
+										<Text style={styles.menuSubtitle}>
 											{item.subtitle}
 										</Text>
 									</View>
@@ -303,7 +316,7 @@ export default function AccountScreen({ navigation }) {
 								<Ionicons
 									name="chevron-forward"
 									size={20}
-									color="#ccc"
+									color="#B0BEC5"
 								/>
 							</TouchableOpacity>
 						))}
@@ -319,20 +332,26 @@ export default function AccountScreen({ navigation }) {
 								key={item.id}
 								style={styles.menuItem}
 								onPress={item.action}
+								activeOpacity={0.7}
 							>
 								<View style={styles.menuItemLeft}>
-									<View style={styles.menuIconContainer}>
-										<Ionicons
-											name={item.icon}
-											size={22}
-											color="#007bff"
-										/>
+									<View style={styles.iconContainer}>
+										<LinearGradient
+											colors={item.gradientColors}
+											style={styles.iconGradient}
+										>
+											<Ionicons
+												name={item.icon}
+												size={24}
+												color="#FFFFFF"
+											/>
+										</LinearGradient>
 									</View>
 									<View style={styles.menuItemContent}>
-										<Text className="font-medium">
+										<Text style={styles.menuTitle}>
 											{item.title}
 										</Text>
-										<Text className="text-sm text-muted-foreground">
+										<Text style={styles.menuSubtitle}>
 											{item.subtitle}
 										</Text>
 									</View>
@@ -340,7 +359,7 @@ export default function AccountScreen({ navigation }) {
 								<Ionicons
 									name="chevron-forward"
 									size={20}
-									color="#ccc"
+									color="#B0BEC5"
 								/>
 							</TouchableOpacity>
 						))}
@@ -582,15 +601,25 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: 16,
+		paddingHorizontal: 20,
 		paddingVertical: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: "#f0f0f0",
+		borderBottomWidth: StyleSheet.hairlineWidth,
+		borderBottomColor: "#E0E0E0",
 	},
 	menuItemLeft: {
 		flexDirection: "row",
 		alignItems: "center",
 		flex: 1,
+	},
+	iconContainer: {
+		marginRight: 15,
+	},
+	iconGradient: {
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	menuIconContainer: {
 		width: 40,
@@ -603,6 +632,16 @@ const styles = StyleSheet.create({
 	},
 	menuItemContent: {
 		flex: 1,
+	},
+	menuTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#263238",
+		marginBottom: 2,
+	},
+	menuSubtitle: {
+		fontSize: 13,
+		color: "#78909C",
 	},
 	logoutButton: {
 		flexDirection: "row",
