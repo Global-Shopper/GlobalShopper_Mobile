@@ -149,6 +149,10 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		paddingTop: 50,
+	},
+	scrollContent: {
+		paddingBottom: 30,
 	},
 	balanceCard: {
 		backgroundColor: "#ffffff",

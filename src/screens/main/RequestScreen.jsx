@@ -189,6 +189,7 @@ export default function RequestScreen() {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Stats */}
 				<View style={styles.statsContainer}>
@@ -377,6 +378,10 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		paddingTop: 20,
+	},
+	scrollContent: {
+		paddingBottom: 20,
 	},
 	statsContainer: {
 		flexDirection: "row",

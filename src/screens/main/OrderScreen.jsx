@@ -243,6 +243,7 @@ export default function OrderScreen() {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Order List */}
 				<View style={styles.ordersList}>
@@ -423,6 +424,10 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		paddingTop: 20,
+	},
+	scrollContent: {
+		paddingBottom: 20,
 	},
 	ordersList: {
 		marginTop: 16,
