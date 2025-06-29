@@ -8,8 +8,8 @@ import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
-import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChangePassword from "../screens/profile/ChangePassword";
+import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChatSetting from "../screens/profile/ChatSetting";
 import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
@@ -17,8 +17,9 @@ import NotiSetting from "../screens/profile/NotiSetting";
 import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
-import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
+import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
+import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -129,6 +130,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="TopUp"
 				component={TopUpScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="WithLink"
+				component={WithLink}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
