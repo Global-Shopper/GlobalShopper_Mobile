@@ -1,8 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../../components/ui/text";
 
 export default function HomeScreen() {
@@ -17,104 +15,236 @@ export default function HomeScreen() {
 			>
 				<View style={styles.headerContent}>
 					<View style={styles.headerLeft}>
-						<Avatar className="h-12 w-12">
-							<AvatarImage source={{ uri: "https://github.com/shadcn.png" }} />
-							<AvatarFallback>
-								<Text style={styles.avatarFallback}>CN</Text>
-							</AvatarFallback>
-						</Avatar>
+						<Image
+							source={{ uri: "https://github.com/shadcn.png" }}
+							style={styles.avatar}
+							defaultSource={require("../../assets/images/logo/logo-gshop-removebg.png")}
+						/>
 						<View style={styles.greetingContainer}>
-							<Text style={styles.greetingText}>Xin chào,</Text>
-							<Text style={styles.userName}>John Doe</Text>
+							<Text style={styles.greetingText}>
+								Xin chào, Hoài Phương
+							</Text>
+							<Text style={styles.subGreeting}>
+								Hôm nay bạn muốn mua gì?
+							</Text>
 						</View>
 					</View>
 					<View style={styles.headerRight}>
-						<Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-						<View style={styles.notificationBadge}>
-							<Text style={styles.notificationText}>3</Text>
+						<View style={styles.notificationContainer}>
+							<Ionicons
+								name="notifications-outline"
+								size={24}
+								color="#FFFFFF"
+							/>
+							<View style={styles.notificationBadge}>
+								<Text style={styles.notificationText}>3</Text>
+							</View>
 						</View>
+						<Ionicons
+							name="chatbubble-outline"
+							size={24}
+							color="#FFFFFF"
+							style={styles.chatIcon}
+						/>
 					</View>
 				</View>
 			</LinearGradient>
 
-			<ScrollView 
+			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
-					<Text className="text-xl font-bold mb-4">Trang chủ</Text>
-					
-					<View style={styles.actionGrid}>
-						<View style={styles.actionCard}>
-							<Ionicons name="wallet-outline" size={32} color="#007bff" />
-							<Text className="text-sm font-medium mt-2">Ví tiền</Text>
+					<Text style={styles.sectionTitle}>
+						Bạn muốn làm gì hôm nay?
+					</Text>
+
+					<View style={styles.mainActionGrid}>
+						<View style={styles.mainActionCard}>
+							<Ionicons
+								name="link-outline"
+								size={40}
+								color="#007bff"
+							/>
+							<Text style={styles.mainActionTitle}>
+								Mua hàng có link
+							</Text>
+							<Text style={styles.mainActionSubtitle}>
+								Gửi link sản phẩm bạn muốn mua
+							</Text>
 						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="document-text-outline" size={32} color="#28a745" />
-							<Text className="text-sm font-medium mt-2">Yêu cầu</Text>
-						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="bag-handle-outline" size={32} color="#ffc107" />
-							<Text className="text-sm font-medium mt-2">Đơn hàng</Text>
-						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="person-outline" size={32} color="#6f42c1" />
-							<Text className="text-sm font-medium mt-2">Tài khoản</Text>
+
+						<View style={styles.mainActionCard}>
+							<Ionicons
+								name="create-outline"
+								size={40}
+								color="#28a745"
+							/>
+							<Text style={styles.mainActionTitle}>
+								{" "}
+								Mua hàng không có link
+							</Text>
+							<Text style={styles.mainActionSubtitle}>
+								Mô tả sản phẩm bạn cần tìm
+							</Text>
 						</View>
 					</View>
 				</View>
 
-				{/* Statistics */}
-				<View style={styles.statsContainer}>
-					<Text className="text-lg font-semibold mb-4">Thống kê</Text>
-					
-					<View style={styles.statsGrid}>
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-blue-600">156</Text>
-							<Text className="text-sm text-muted-foreground">Đơn hàng</Text>
-						</View>
-						
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-green-600">23</Text>
-							<Text className="text-sm text-muted-foreground">Hoàn thành</Text>
-						</View>
-						
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-orange-600">12</Text>
-							<Text className="text-sm text-muted-foreground">Đang xử lý</Text>
-						</View>
-					</View>
-				</View>
+				{/* Quy trình mua hộ */}
+				<View style={styles.processContainer}>
+					<Text style={styles.sectionTitle}>Quy trình mua hộ</Text>
 
-				{/* Recent Activity */}
-				<View style={styles.recentActivity}>
-					<Text className="text-lg font-semibold mb-4">Hoạt động gần đây</Text>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="checkmark-circle" size={24} color="#28a745" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Đơn hàng #1234 đã hoàn thành</Text>
-							<Text className="text-sm text-muted-foreground">2 giờ trước</Text>
+					<View style={styles.modernProcessFlow}>
+						{/* Step 1 */}
+						<View style={styles.modernProcessStep}>
+							<View style={styles.stepLeft}>
+								<View
+									style={[
+										styles.modernStepIcon,
+										{ backgroundColor: "#E3F2FD" },
+									]}
+								>
+									<Ionicons
+										name="send"
+										size={28}
+										color="#1976D2"
+									/>
+								</View>
+							</View>
+							<View style={styles.stepContent}>
+								<View style={styles.stepHeader}>
+									<Text style={styles.stepNumber}>01</Text>
+									<Text style={styles.modernStepTitle}>
+										Gửi yêu cầu
+									</Text>
+								</View>
+								<Text style={styles.modernStepDescription}>
+									Gửi link sản phẩm hoặc mô tả chi tiết sản
+									phẩm bạn muốn mua
+								</Text>
+							</View>
 						</View>
-					</View>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="time-outline" size={24} color="#ffc107" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Đơn hàng #1235 đang xử lý</Text>
-							<Text className="text-sm text-muted-foreground">4 giờ trước</Text>
+
+						{/* Connector */}
+						<View style={styles.stepConnector}>
+							<View style={styles.connectorLine} />
+							<Ionicons
+								name="chevron-down"
+								size={16}
+								color="#42A5F5"
+							/>
 						</View>
-					</View>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="add-circle" size={24} color="#007bff" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Yêu cầu mới đã được tạo</Text>
-							<Text className="text-sm text-muted-foreground">1 ngày trước</Text>
+
+						{/* Step 2 */}
+						<View style={styles.modernProcessStep}>
+							<View style={styles.stepLeft}>
+								<View
+									style={[
+										styles.modernStepIcon,
+										{ backgroundColor: "#FFF3CD" },
+									]}
+								>
+									<Ionicons
+										name="calculator"
+										size={28}
+										color="#F57C00"
+									/>
+								</View>
+							</View>
+							<View style={styles.stepContent}>
+								<View style={styles.stepHeader}>
+									<Text style={styles.stepNumber}>02</Text>
+									<Text style={styles.modernStepTitle}>
+										GShop báo giá
+									</Text>
+								</View>
+								<Text style={styles.modernStepDescription}>
+									Nhận báo giá chi tiết bao gồm giá sản phẩm,
+									phí dịch vụ và vận chuyển
+								</Text>
+							</View>
+						</View>
+
+						{/* Connector */}
+						<View style={styles.stepConnector}>
+							<View style={styles.connectorLine} />
+							<Ionicons
+								name="chevron-down"
+								size={16}
+								color="#42A5F5"
+							/>
+						</View>
+
+						{/* Step 3 */}
+						<View style={styles.modernProcessStep}>
+							<View style={styles.stepLeft}>
+								<View
+									style={[
+										styles.modernStepIcon,
+										{ backgroundColor: "#E8F5E8" },
+									]}
+								>
+									<Ionicons
+										name="card"
+										size={28}
+										color="#2E7D32"
+									/>
+								</View>
+							</View>
+							<View style={styles.stepContent}>
+								<View style={styles.stepHeader}>
+									<Text style={styles.stepNumber}>03</Text>
+									<Text style={styles.modernStepTitle}>
+										Thanh toán
+									</Text>
+								</View>
+								<Text style={styles.modernStepDescription}>
+									Thanh toán qua ví điện tử, chuyển khoản ngân
+									hàng hoặc thẻ tín dụng
+								</Text>
+							</View>
+						</View>
+
+						{/* Connector */}
+						<View style={styles.stepConnector}>
+							<View style={styles.connectorLine} />
+							<Ionicons
+								name="chevron-down"
+								size={16}
+								color="#42A5F5"
+							/>
+						</View>
+
+						{/* Step 4 */}
+						<View style={styles.modernProcessStep}>
+							<View style={styles.stepLeft}>
+								<View
+									style={[
+										styles.modernStepIcon,
+										{ backgroundColor: "#F3E5F5" },
+									]}
+								>
+									<Ionicons
+										name="airplane"
+										size={28}
+										color="#7B1FA2"
+									/>
+								</View>
+							</View>
+							<View style={styles.stepContent}>
+								<View style={styles.stepHeader}>
+									<Text style={styles.stepNumber}>04</Text>
+									<Text style={styles.modernStepTitle}>
+										Giao hàng
+									</Text>
+								</View>
+								<Text style={styles.modernStepDescription}>
+									Theo dõi đơn hàng và nhận hàng tại địa chỉ
+									được chỉ định
+								</Text>
+							</View>
 						</View>
 					</View>
 				</View>
@@ -130,8 +260,18 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		paddingHorizontal: 20,
-		paddingTop: 50,
-		paddingBottom: 20,
+		paddingTop: 60,
+		paddingBottom: 25,
+		borderBottomLeftRadius: 25,
+		borderBottomRightRadius: 25,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 8,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 10,
 	},
 	headerContent: {
 		flexDirection: "row",
@@ -141,25 +281,39 @@ const styles = StyleSheet.create({
 	headerLeft: {
 		flexDirection: "row",
 		alignItems: "center",
+		flex: 1,
+	},
+	avatar: {
+		marginRight: 12,
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		borderWidth: 2,
+		borderColor: "rgba(255, 255, 255, 0.3)",
 	},
 	greetingContainer: {
-		marginLeft: 12,
+		flex: 1,
 	},
 	greetingText: {
-		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.8)",
-	},
-	userName: {
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
+		marginBottom: 2,
 	},
-	avatarFallback: {
-		color: "#333",
-		fontWeight: "600",
+	subGreeting: {
+		fontSize: 14,
+		color: "rgba(255, 255, 255, 0.8)",
 	},
 	headerRight: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	notificationContainer: {
 		position: "relative",
+		marginRight: 16,
+	},
+	chatIcon: {
+		marginLeft: 0,
 	},
 	notificationBadge: {
 		position: "absolute",
@@ -180,66 +334,138 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		marginTop: 10,
 	},
 	quickActions: {
 		marginTop: 20,
 	},
-	actionGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "space-between",
-	},
-	actionCard: {
-		width: "48%",
-		backgroundColor: "#f8f9fa",
-		borderRadius: 12,
-		padding: 20,
-		alignItems: "center",
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#333",
 		marginBottom: 16,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
 	},
-	statsContainer: {
-		marginTop: 20,
-	},
-	statsGrid: {
+	mainActionGrid: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		gap: 12,
 	},
-	statCard: {
+	mainActionCard: {
 		flex: 1,
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		padding: 20,
 		alignItems: "center",
-		marginHorizontal: 4,
 		borderWidth: 1,
 		borderColor: "#e9ecef",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 2,
+			height: 4,
 		},
 		shadowOpacity: 0.1,
-		shadowRadius: 3,
-		elevation: 3,
+		shadowRadius: 8,
+		elevation: 4,
 	},
-	recentActivity: {
-		marginTop: 20,
-		marginBottom: 20,
+	mainActionTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginTop: 12,
+		textAlign: "center",
 	},
-	activityItem: {
+	mainActionSubtitle: {
+		fontSize: 12,
+		color: "#666",
+		marginTop: 4,
+		textAlign: "center",
+		lineHeight: 16,
+	},
+	processContainer: {
+		marginTop: 32,
+		marginBottom: 32,
+		backgroundColor: "#ffffff",
+		borderRadius: 20,
+		padding: 24,
+		borderWidth: 1,
+		borderColor: "#e3f2fd",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 8,
+		},
+		shadowOpacity: 0.12,
+		shadowRadius: 16,
+		elevation: 8,
+	},
+	modernProcessFlow: {
+		paddingVertical: 8,
+	},
+	modernProcessStep: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		paddingVertical: 12,
+	},
+	stepLeft: {
+		marginRight: 20,
+		alignItems: "center",
+	},
+	modernStepIcon: {
+		width: 64,
+		height: 64,
+		borderRadius: 32,
+		justifyContent: "center",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	stepContent: {
+		flex: 1,
+		paddingTop: 8,
+	},
+	stepHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: "#f8f9fa",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
+		marginBottom: 8,
 	},
-	activityContent: {
-		flex: 1,
-		marginLeft: 12,
+	stepNumber: {
+		fontSize: 14,
+		fontWeight: "700",
+		color: "#42A5F5",
+		backgroundColor: "#E3F2FD",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 12,
+		marginRight: 12,
+		minWidth: 32,
+		textAlign: "center",
+	},
+	modernStepTitle: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#333",
+	},
+	modernStepDescription: {
+		fontSize: 14,
+		color: "#666",
+		lineHeight: 20,
+		paddingRight: 8,
+	},
+	stepConnector: {
+		alignItems: "center",
+		paddingVertical: 8,
+		marginLeft: 32,
+	},
+	connectorLine: {
+		width: 2,
+		height: 20,
+		backgroundColor: "#E3F2FD",
+		marginBottom: 4,
 	},
 });
