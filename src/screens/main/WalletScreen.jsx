@@ -90,7 +90,10 @@ export default function WalletScreen({ navigation }) {
 					</Text>
 
 					<View style={styles.balanceActions}>
-						<TouchableOpacity style={styles.primaryActionButton}>
+						<TouchableOpacity 
+							style={styles.primaryActionButton}
+							onPress={() => navigation.navigate("TopUp")}
+						>
 							<LinearGradient
 								colors={["#42A5F5", "#1976D2"]}
 								start={{ x: 0, y: 0 }}

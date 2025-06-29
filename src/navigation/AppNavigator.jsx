@@ -18,6 +18,7 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
+import TopUpScreen from "../screens/wallet/TopUpScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -123,6 +124,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="TransactionHistory"
 				component={TransactionHistoryScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="TopUp"
+				component={TopUpScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
