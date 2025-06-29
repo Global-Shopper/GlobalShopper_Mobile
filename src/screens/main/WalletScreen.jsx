@@ -16,6 +16,36 @@ export default function WalletScreen() {
 		}).format(amount);
 	};
 
+	const recentTransactions = [
+		{
+			id: 1,
+			type: "income",
+			amount: 500000,
+			description: "Nạp tiền",
+			date: "Hôm nay",
+			icon: "add-circle",
+			color: "#4CAF50",
+		},
+		{
+			id: 2,
+			type: "expense",
+			amount: -50000,
+			description: "Phí dịch vụ",
+			date: "Hôm qua",
+			icon: "remove-circle",
+			color: "#F44336",
+		},
+		{
+			id: 3,
+			type: "income",
+			amount: 750000,
+			description: "Hoàn tiền đơn #1234",
+			date: "2 ngày trước",
+			icon: "refresh-circle",
+			color: "#FF9800",
+		},
+	];
+
 	return (
 		<View style={styles.container}>
 			{/* Header */}
@@ -104,34 +134,111 @@ export default function WalletScreen() {
 					</View>
 				</View>
 
+				{/* Recent Transactions */}
+				<View style={styles.transactionsContainer}>
+					<View style={styles.transactionsHeader}>
+						<Text style={styles.sectionTitle}>
+							Giao dịch gần đây
+						</Text>
+						<Text style={styles.viewAllText}>
+							Lịch sử giao dịch
+						</Text>
+					</View>
+
+					{recentTransactions.map((transaction, index) => (
+						<View
+							key={transaction.id}
+							style={[
+								styles.transactionItem,
+								index === recentTransactions.length - 1 && {
+									borderBottomWidth: 0,
+								},
+							]}
+						>
+							<View style={styles.transactionLeft}>
+								<View
+									style={[
+										styles.transactionIcon,
+										{
+											backgroundColor: `${transaction.color}20`,
+										},
+									]}
+								>
+									<Ionicons
+										name={transaction.icon}
+										size={20}
+										color={transaction.color}
+									/>
+								</View>
+								<View style={styles.transactionInfo}>
+									<Text style={styles.transactionDescription}>
+										{transaction.description}
+									</Text>
+									<Text style={styles.transactionDate}>
+										{transaction.date}
+									</Text>
+								</View>
+							</View>
+							<Text
+								style={[
+									styles.transactionAmount,
+									{
+										color:
+											transaction.type === "income"
+												? "#4CAF50"
+												: "#F44336",
+									},
+								]}
+							>
+								{transaction.type === "income" ? "+" : ""}
+								{formatCurrency(Math.abs(transaction.amount))}
+							</Text>
+						</View>
+					))}
+				</View>
+
 				{/* Quick Info */}
-				<View style={styles.infoContainer}>
-					<Text style={styles.sectionTitle}>Thông tin ví</Text>
+				<View style={styles.quickInfoContainer}>
+					<View style={styles.infoCard}>
+						<Ionicons
+							name="shield-checkmark-outline"
+							size={24}
+							color="#42A5F5"
+						/>
+						<View style={styles.infoContent}>
+							<Text style={styles.infoTitle}>Bảo mật</Text>
+							<Text style={styles.infoSubtitle}>
+								Ví được bảo vệ bởi mã PIN
+							</Text>
+						</View>
+					</View>
 
 					<View style={styles.infoCard}>
-						<View style={styles.infoItem}>
-							<Ionicons
-								name="shield-checkmark"
-								size={20}
-								color="#4CAF50"
-							/>
-							<Text style={styles.infoText}>
-								Ví của bạn được bảo mật bằng công nghệ mã hóa
-								tiên tiến
+						<Ionicons
+							name="flash-outline"
+							size={24}
+							color="#42A5F5"
+						/>
+						<View style={styles.infoContent}>
+							<Text style={styles.infoTitle}>
+								Giao dịch nhanh
+							</Text>
+							<Text style={styles.infoSubtitle}>
+								Xử lý trong vòng 24h
 							</Text>
 						</View>
+					</View>
 
-						<View style={styles.infoItem}>
-							<Ionicons name="time" size={20} color="#2196F3" />
-							<Text style={styles.infoText}>
-								Giao dịch được xử lý trong vòng 24h
-							</Text>
-						</View>
-
-						<View style={styles.infoItem}>
-							<Ionicons name="call" size={20} color="#FF9800" />
-							<Text style={styles.infoText}>
-								Hỗ trợ 24/7 qua hotline: 1900-xxxx
+					<View style={[styles.infoCard, { borderBottomWidth: 0 }]}>
+						<Ionicons
+							name="headset-outline"
+							size={24}
+							color="#42A5F5"
+						/>
+						<View style={styles.infoContent}>
+							<Text style={styles.infoTitle}>Hỗ trợ 24/7</Text>
+							<Text style={styles.infoSubtitle}>
+								Luôn sẵn sàng hỗ trợ bạn
 							</Text>
 						</View>
 					</View>
@@ -152,7 +259,7 @@ const styles = StyleSheet.create({
 		paddingTop: 50,
 	},
 	scrollContent: {
-		paddingBottom: 30,
+		paddingBottom: 100,
 	},
 	balanceCard: {
 		backgroundColor: "#ffffff",
@@ -229,11 +336,79 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		marginTop: 4,
 	},
-	quickInfoContainer: {
-		marginTop: 20,
+	transactionsContainer: {
 		backgroundColor: "#ffffff",
 		borderRadius: 16,
 		padding: 16,
+		marginBottom: 20,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	transactionsHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 16,
+		paddingBottom: 8,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f8f9fa",
+	},
+	sectionTitle: {
+		fontSize: 18,
+		fontWeight: "600",
+		color: "#1a1a1a",
+	},
+	viewAllText: {
+		fontSize: 14,
+		color: "#42A5F5",
+		fontWeight: "500",
+	},
+	transactionItem: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f8f9fa",
+	},
+	transactionLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+	},
+	transactionIcon: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		justifyContent: "center",
+		alignItems: "center",
+		marginRight: 12,
+	},
+	transactionInfo: {
+		flex: 1,
+	},
+	transactionDescription: {
+		fontSize: 16,
+		fontWeight: "500",
+		color: "#1a1a1a",
+		marginBottom: 2,
+	},
+	transactionDate: {
+		fontSize: 14,
+		color: "#6c757d",
+	},
+	transactionAmount: {
+		fontSize: 16,
+		fontWeight: "600",
+	},
+	quickInfoContainer: {
+		marginTop: 10,
+		backgroundColor: "#ffffff",
+		borderRadius: 16,
+		padding: 15,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.05,
