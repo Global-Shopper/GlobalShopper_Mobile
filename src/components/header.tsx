@@ -20,6 +20,10 @@ interface HeaderProps {
 	onNotificationPress?: () => void;
 	onChatPress?: () => void;
 	onAvatarPress?: () => void;
+
+	// Back navigation support
+	showBackButton?: boolean;
+	onBackPress?: () => void;
 }
 
 export default function Header({
@@ -34,6 +38,8 @@ export default function Header({
 	onNotificationPress,
 	onChatPress,
 	onAvatarPress,
+	showBackButton = false,
+	onBackPress,
 }: HeaderProps) {
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
@@ -50,6 +56,19 @@ export default function Header({
 				{isSimpleHeader ? (
 					// Simple title header (WalletScreen, RequestScreen, OrderScreen)
 					<View style={styles.headerLeft}>
+						{showBackButton && (
+							<TouchableOpacity
+								onPress={onBackPress}
+								style={styles.backButton}
+								activeOpacity={0.7}
+							>
+								<Ionicons
+									name="arrow-back"
+									size={24}
+									color="#FFFFFF"
+								/>
+							</TouchableOpacity>
+						)}
 						<Text style={styles.headerTitle}>{title}</Text>
 					</View>
 				) : (
@@ -253,5 +272,9 @@ const styles = StyleSheet.create({
 		color: "#FFFFFF",
 		fontSize: 12,
 		fontWeight: "600",
+	},
+	backButton: {
+		marginRight: 12,
+		padding: 8,
 	},
 });

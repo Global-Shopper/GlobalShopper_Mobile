@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
-export default function WalletScreen() {
+export default function WalletScreen({ navigation }) {
 	const [balance] = useState(2500000);
 	const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
@@ -140,9 +140,13 @@ export default function WalletScreen() {
 						<Text style={styles.sectionTitle}>
 							Giao dịch gần đây
 						</Text>
-						<Text style={styles.viewAllText}>
-							Lịch sử giao dịch
-						</Text>
+						<TouchableOpacity
+							onPress={() => navigation.navigate("TransactionHistory")}
+						>
+							<Text style={styles.viewAllText}>
+								Lịch sử giao dịch
+							</Text>
+						</TouchableOpacity>
 					</View>
 
 					{recentTransactions.map((transaction, index) => (
