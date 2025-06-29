@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "../../components/ui/text";
 
 export default function PurchaseProcess() {
@@ -8,10 +8,13 @@ export default function PurchaseProcess() {
 		<View style={styles.processContainer}>
 			<Text style={styles.sectionTitle}>Quy trình mua hàng</Text>
 
-			<View style={styles.timelineContainer}>
-				{/* Step 1 */}
-				<View style={styles.timelineStep}>
-					<View style={styles.timelineLeft}>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
+			>
+				<View style={styles.timelineContainer}>
+					{/* Step 1 */}
+					<View style={styles.timelineStep}>
 						<View
 							style={[
 								styles.stepNumber,
@@ -20,197 +23,179 @@ export default function PurchaseProcess() {
 						>
 							<Text style={styles.stepNumberText}>1</Text>
 						</View>
+						<View style={styles.timelineCard}>
+							<LinearGradient
+								colors={["#E3F2FD", "#BBDEFB"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.cardGradient}
+							>
+								<View style={styles.timelineIcon}>
+									<Ionicons
+										name="send"
+										size={24}
+										color="#1976D2"
+									/>
+								</View>
+								<Text style={styles.timelineTitle}>
+									Gửi yêu cầu
+								</Text>
+								<Text style={styles.timelineDescription}>
+									Gửi link sản phẩm hoặc mô tả chi tiết sản
+									phẩm bạn muốn mua
+								</Text>
+								<View style={styles.timelineFeatures}>
+									<View style={styles.featureTag}>
+										<Text style={styles.featureTagText}>
+											Tư vấn miễn phí
+										</Text>
+									</View>
+								</View>
+							</LinearGradient>
+						</View>
 						<View style={styles.timelineLine} />
 					</View>
-					<View style={styles.timelineRight}>
-						<LinearGradient
-							colors={["#E3F2FD", "#BBDEFB"]}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.timelineCard}
-						>
-							<View style={styles.timelineIcon}>
-								<Ionicons
-									name="send"
-									size={24}
-									color="#1976D2"
-								/>
-							</View>
-							<Text style={styles.timelineTitle}>
-								Gửi yêu cầu
-							</Text>
-							<Text style={styles.timelineDescription}>
-								Gửi link sản phẩm hoặc mô tả chi tiết sản phẩm bạn muốn mua
-							</Text>
-							<View style={styles.timelineFeatures}>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Hỗ trợ 24/7
-									</Text>
-								</View>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Tư vấn miễn phí
-									</Text>
-								</View>
-							</View>
-						</LinearGradient>
-					</View>
-				</View>
 
-				{/* Step 2 */}
-				<View style={styles.timelineStep}>
-					<View style={styles.timelineLeft}>
+					{/* Step 2 */}
+					<View style={styles.timelineStep}>
 						<View
 							style={[
 								styles.stepNumber,
-								{ backgroundColor: "#F57C00" },
+								{ backgroundColor: "#1565C0" },
 							]}
 						>
 							<Text style={styles.stepNumberText}>2</Text>
 						</View>
+						<View style={styles.timelineCard}>
+							<LinearGradient
+								colors={["#E8F4FD", "#C5E1FB"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.cardGradient}
+							>
+								<View style={styles.timelineIcon}>
+									<Ionicons
+										name="calculator"
+										size={24}
+										color="#1565C0"
+									/>
+								</View>
+								<Text style={styles.timelineTitle}>
+									Nhận báo giá
+								</Text>
+								<Text style={styles.timelineDescription}>
+									GShop báo giá chi tiết bao gồm giá sản phẩm,
+									phí dịch vụ và vận chuyển
+								</Text>
+								<View style={styles.timelineFeatures}>
+									<View style={styles.featureTag}>
+										<Text style={styles.featureTagText}>
+											Báo giá minh bạch
+										</Text>
+									</View>
+								</View>
+							</LinearGradient>
+						</View>
 						<View style={styles.timelineLine} />
 					</View>
-					<View style={styles.timelineRight}>
-						<LinearGradient
-							colors={["#FFF8E1", "#FFECB3"]}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.timelineCard}
-						>
-							<View style={styles.timelineIcon}>
-								<Ionicons
-									name="calculator"
-									size={24}
-									color="#F57C00"
-								/>
-							</View>
-							<Text style={styles.timelineTitle}>
-								Nhận báo giá
-							</Text>
-							<Text style={styles.timelineDescription}>
-								GShop báo giá chi tiết bao gồm giá sản phẩm, phí dịch vụ và vận chuyển
-							</Text>
-							<View style={styles.timelineFeatures}>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Báo giá minh bạch
-									</Text>
-								</View>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Không phí ẩn
-									</Text>
-								</View>
-							</View>
-						</LinearGradient>
-					</View>
-				</View>
 
-				{/* Step 3 */}
-				<View style={styles.timelineStep}>
-					<View style={styles.timelineLeft}>
+					{/* Step 3 */}
+					<View style={styles.timelineStep}>
 						<View
 							style={[
 								styles.stepNumber,
-								{ backgroundColor: "#2E7D32" },
+								{ backgroundColor: "#1E88E5" },
 							]}
 						>
 							<Text style={styles.stepNumberText}>3</Text>
 						</View>
+						<View style={styles.timelineCard}>
+							<LinearGradient
+								colors={["#E1F5FE", "#B3E5FC"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.cardGradient}
+							>
+								<View style={styles.timelineIcon}>
+									<Ionicons
+										name="card"
+										size={24}
+										color="#1E88E5"
+									/>
+								</View>
+								<Text style={styles.timelineTitle}>
+									Thanh toán
+								</Text>
+								<Text style={styles.timelineDescription}>
+									Thanh toán an toàn qua ví điện tử, chuyển
+									khoản hoặc thẻ tín dụng
+								</Text>
+								<View style={styles.timelineFeatures}>
+									<View style={styles.featureTag}>
+										<Text style={styles.featureTagText}>
+											Bảo mật 100%
+										</Text>
+									</View>
+								</View>
+							</LinearGradient>
+						</View>
 						<View style={styles.timelineLine} />
 					</View>
-					<View style={styles.timelineRight}>
-						<LinearGradient
-							colors={["#E8F5E8", "#C8E6C9"]}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.timelineCard}
-						>
-							<View style={styles.timelineIcon}>
-								<Ionicons
-									name="card"
-									size={24}
-									color="#2E7D32"
-								/>
-							</View>
-							<Text style={styles.timelineTitle}>
-								Thanh toán
-							</Text>
-							<Text style={styles.timelineDescription}>
-								Thanh toán an toàn qua ví điện tử, chuyển khoản hoặc thẻ tín dụng
-							</Text>
-							<View style={styles.timelineFeatures}>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Bảo mật 100%
-									</Text>
-								</View>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Đa phương thức
-									</Text>
-								</View>
-							</View>
-						</LinearGradient>
-					</View>
-				</View>
 
-				{/* Step 4 */}
-				<View style={styles.timelineStep}>
-					<View style={styles.timelineLeft}>
+					{/* Step 4 */}
+					<View style={[styles.timelineStep, { marginBottom: 0 }]}>
 						<View
 							style={[
 								styles.stepNumber,
-								{ backgroundColor: "#7B1FA2" },
+								{ backgroundColor: "#0288D1" },
 							]}
 						>
 							<Text style={styles.stepNumberText}>4</Text>
 						</View>
-					</View>
-					<View style={styles.timelineRight}>
-						<LinearGradient
-							colors={["#F3E5F5", "#E1BEE7"]}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.timelineCard}
-						>
-							<View style={styles.timelineIcon}>
-								<Ionicons
-									name="airplane"
-									size={24}
-									color="#7B1FA2"
-								/>
-							</View>
-							<Text style={styles.timelineTitle}>
-								Nhận hàng
-							</Text>
-							<Text style={styles.timelineDescription}>
-								Theo dõi đơn hàng realtime và nhận hàng tại địa chỉ bạn chỉ định
-							</Text>
-							<View style={styles.timelineFeatures}>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Theo dõi realtime
-									</Text>
+						<View style={styles.timelineCard}>
+							<LinearGradient
+								colors={["#F0F8FF", "#E6F3FF"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.cardGradient}
+							>
+								<View style={styles.timelineIcon}>
+									<Ionicons
+										name="airplane"
+										size={24}
+										color="#0288D1"
+									/>
 								</View>
-								<View style={styles.featureTag}>
-									<Text style={styles.featureTagText}>
-										Giao hàng tận nơi
-									</Text>
+								<Text style={styles.timelineTitle}>
+									Nhận hàng
+								</Text>
+								<Text style={styles.timelineDescription}>
+									Theo dõi đơn hàng realtime và nhận hàng tại
+									địa chỉ bạn chỉ định
+								</Text>
+								<View style={styles.timelineFeatures}>
+									<View style={styles.featureTag}>
+										<Text style={styles.featureTagText}>
+											Theo dõi realtime
+										</Text>
+									</View>
+									<View style={styles.featureTag}>
+										<Text style={styles.featureTagText}>
+											Giao hàng tận nơi
+										</Text>
+									</View>
 								</View>
-							</View>
-						</LinearGradient>
+							</LinearGradient>
+						</View>
 					</View>
 				</View>
-			</View>
+			</ScrollView>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	processContainer: {
-		marginTop: 32,
 		marginBottom: 32,
 	},
 	sectionTitle: {
@@ -218,26 +203,32 @@ const styles = StyleSheet.create({
 		fontWeight: "700",
 		color: "#333",
 		marginBottom: 16,
+		textAlign: "left",
+	},
+	scrollContent: {
+		paddingBottom: 20,
 	},
 	timelineContainer: {
-		paddingLeft: 8,
+		alignItems: "center",
+		paddingHorizontal: 20,
 	},
 	timelineStep: {
-		flexDirection: "row",
-		marginBottom: 24,
-	},
-	timelineLeft: {
-		alignItems: "center",
-		marginRight: 16,
-		width: 40,
+		width: "100%",
+		maxWidth: 350,
+		position: "relative",
+		marginBottom: 40,
 	},
 	stepNumber: {
-		width: 36,
-		height: 36,
-		borderRadius: 18,
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: "#1976D2",
 		justifyContent: "center",
 		alignItems: "center",
-		marginBottom: 8,
+		position: "absolute",
+		left: -20,
+		top: 20,
+		zIndex: 2,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -253,17 +244,18 @@ const styles = StyleSheet.create({
 		color: "#FFFFFF",
 	},
 	timelineLine: {
+		position: "absolute",
+		left: 0,
+		top: 60,
+		bottom: -40,
 		width: 2,
-		flex: 1,
-		backgroundColor: "#E0E0E0",
-		marginTop: 4,
-	},
-	timelineRight: {
-		flex: 1,
+		backgroundColor: "#E3F2FD",
+		zIndex: 1,
 	},
 	timelineCard: {
-		padding: 20,
+		marginLeft: 30,
 		borderRadius: 16,
+		overflow: "hidden",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -272,6 +264,9 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.1,
 		shadowRadius: 8,
 		elevation: 5,
+	},
+	cardGradient: {
+		padding: 20,
 	},
 	timelineIcon: {
 		width: 48,
