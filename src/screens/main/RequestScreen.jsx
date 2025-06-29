@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function RequestScreen() {
@@ -101,19 +101,13 @@ export default function RequestScreen() {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<Text style={styles.headerTitle}>Yêu cầu</Text>
-					<TouchableOpacity style={styles.addButton}>
-						<Ionicons name="add" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-				</View>
-			</LinearGradient>
+			<Header
+				title="Yêu cầu"
+				notificationCount={2}
+				chatCount={0}
+				onNotificationPress={() => console.log("Notification pressed")}
+				onChatPress={() => console.log("Chat pressed")}
+			/>
 
 			{/* Tabs */}
 			<View style={styles.tabContainer}>
@@ -363,39 +357,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8f9fa",
-	},
-	header: {
-		paddingHorizontal: 20,
-		paddingTop: 50,
-		paddingBottom: 25,
-		borderBottomLeftRadius: 25,
-		borderBottomRightRadius: 25,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 8,
-		},
-		shadowOpacity: 0.15,
-		shadowRadius: 12,
-		elevation: 10,
-	},
-	headerContent: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	headerTitle: {
-		fontSize: 24,
-		fontWeight: "700",
-		color: "#FFFFFF",
-	},
-	addButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		justifyContent: "center",
-		alignItems: "center",
 	},
 	tabContainer: {
 		backgroundColor: "#ffffff",

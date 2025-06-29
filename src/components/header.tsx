@@ -4,11 +4,17 @@ import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "./ui/text";
 
 interface HeaderProps {
-	userName: string;
+	// (WalletScreen, RequestScreen, OrderScreen)
+	title?: string;
+
+	// For avatar header (HomeScreen, ProfileScreen)
+	userName?: string;
 	userEmail?: string;
 	subtitle?: string;
-	avatar: string;
+	avatar?: string;
 	isVerified?: boolean;
+
+	// Common props for all headers
 	notificationCount?: number;
 	chatCount?: number;
 	onNotificationPress?: () => void;
@@ -17,6 +23,7 @@ interface HeaderProps {
 }
 
 export default function Header({
+	title,
 	userName,
 	userEmail,
 	subtitle,
@@ -28,6 +35,9 @@ export default function Header({
 	onChatPress,
 	onAvatarPress,
 }: HeaderProps) {
+	// Determine if this is a simple title header or avatar header
+	const isSimpleHeader = !!title;
+
 	return (
 		<LinearGradient
 			colors={["#42A5F5", "#1976D2"]}
@@ -36,37 +46,46 @@ export default function Header({
 			style={styles.header}
 		>
 			<View style={styles.headerContent}>
-				<View style={styles.headerLeft}>
-					<View style={styles.avatarContainer}>
-						<TouchableOpacity
-							onPress={onAvatarPress}
-							activeOpacity={0.8}
-						>
-							<Image
-								source={{ uri: avatar }}
-								style={styles.avatar}
-								defaultSource={require("../assets/images/logo/logo-gshop-removebg.png")}
-							/>
-						</TouchableOpacity>
-						{isVerified && (
-							<View style={styles.verifiedBadge}>
-								<Ionicons
-									name="checkmark-circle"
-									size={20}
-									color="#28a745"
+				{/* Left side - Title or Avatar */}
+				{isSimpleHeader ? (
+					// Simple title header (WalletScreen, RequestScreen, OrderScreen)
+					<View style={styles.headerLeft}>
+						<Text style={styles.headerTitle}>{title}</Text>
+					</View>
+				) : (
+					// Avatar header (HomeScreen, ProfileScreen)
+					<View style={styles.headerLeft}>
+						<View style={styles.avatarContainer}>
+							<TouchableOpacity
+								onPress={onAvatarPress}
+								activeOpacity={0.8}
+							>
+								<Image
+									source={{ uri: avatar }}
+									style={styles.avatar}
+									defaultSource={require("../assets/images/logo/logo-gshop-removebg.png")}
 								/>
-							</View>
-						)}
+							</TouchableOpacity>
+							{isVerified && (
+								<View style={styles.verifiedBadge}>
+									<Ionicons
+										name="checkmark-circle"
+										size={20}
+										color="#28a745"
+									/>
+								</View>
+							)}
+						</View>
+						<View style={styles.greetingContainer}>
+							<Text style={styles.greetingText}>
+								Xin chào, {userName}
+							</Text>
+							<Text style={styles.subGreeting}>
+								{subtitle || userEmail}
+							</Text>
+						</View>
 					</View>
-					<View style={styles.greetingContainer}>
-						<Text style={styles.greetingText}>
-							Xin chào, {userName}
-						</Text>
-						<Text style={styles.subGreeting}>
-							{subtitle || userEmail}
-						</Text>
-					</View>
-				</View>
+				)}
 
 				<View style={styles.headerRight}>
 					{/* Notification Icon */}
@@ -141,6 +160,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		flex: 1,
+	},
+	headerTitle: {
+		fontSize: 24,
+		fontWeight: "700",
+		color: "#FFFFFF",
 	},
 	avatarContainer: {
 		position: "relative",
