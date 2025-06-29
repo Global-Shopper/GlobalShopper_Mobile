@@ -6,7 +6,7 @@ import { Text } from "../../components/ui/text";
 import PurchaseProcess from "../home/PurchaseProcess";
 import QuickAccess from "../home/QuickAccess";
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
 	const handleNotificationPress = () => {
 		console.log("Notification pressed");
 	};
@@ -103,12 +103,7 @@ export default function HomeScreen() {
 				</View>
 
 				{/* Quick Access */}
-				<QuickAccess
-					navigation={{
-						navigate: (screen) =>
-							console.log(`Navigate to ${screen}`),
-					}}
-				/>
+				<QuickAccess navigation={navigation} />
 
 				{/* Purchase Process */}
 				<PurchaseProcess />

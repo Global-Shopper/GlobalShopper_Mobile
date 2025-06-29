@@ -33,7 +33,7 @@ const QuickAccess = ({ navigation }) => {
 			id: 5,
 			title: "Lịch sử giao dịch",
 			icon: "receipt-outline",
-			onPress: () => console.log("Navigate to transaction history"),
+			onPress: () => navigation?.navigate("TransactionHistory"),
 		},
 	];
 

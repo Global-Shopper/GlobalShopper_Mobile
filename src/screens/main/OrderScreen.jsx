@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function OrderScreen() {
@@ -116,23 +116,13 @@ export default function OrderScreen() {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<Text style={styles.headerTitle}>Đơn hàng</Text>
-					<TouchableOpacity style={styles.searchButton}>
-						<Ionicons
-							name="search-outline"
-							size={24}
-							color="#FFFFFF"
-						/>
-					</TouchableOpacity>
-				</View>
-			</LinearGradient>
+			<Header
+				title="Đơn hàng"
+				notificationCount={1}
+				chatCount={3}
+				onNotificationPress={() => console.log("Notification pressed")}
+				onChatPress={() => console.log("Chat pressed")}
+			/>
 
 			{/* Stats */}
 			<View style={styles.statsContainer}>
@@ -253,6 +243,7 @@ export default function OrderScreen() {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Order List */}
 				<View style={styles.ordersList}>
@@ -401,39 +392,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#f8f9fa",
 	},
-	header: {
-		paddingHorizontal: 20,
-		paddingTop: 50,
-		paddingBottom: 25,
-		borderBottomLeftRadius: 25,
-		borderBottomRightRadius: 25,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 8,
-		},
-		shadowOpacity: 0.15,
-		shadowRadius: 12,
-		elevation: 10,
-	},
-	headerContent: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	headerTitle: {
-		fontSize: 24,
-		fontWeight: "700",
-		color: "#FFFFFF",
-	},
-	searchButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		justifyContent: "center",
-		alignItems: "center",
-	},
 	statsContainer: {
 		flexDirection: "row",
 		paddingHorizontal: 20,
@@ -466,6 +424,10 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		paddingTop: 20,
+	},
+	scrollContent: {
+		paddingBottom: 20,
 	},
 	ordersList: {
 		marginTop: 16,
