@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
@@ -37,38 +38,64 @@ export default function HomeScreen() {
 			>
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
-					<Text style={styles.sectionTitle}>
-						Bạn muốn làm gì hôm nay?
-					</Text>
-
 					<View style={styles.mainActionGrid}>
 						<View style={styles.mainActionCard}>
-							<Ionicons
-								name="link-outline"
-								size={40}
-								color="#007bff"
-							/>
-							<Text style={styles.mainActionTitle}>
-								Mua hàng có link
-							</Text>
-							<Text style={styles.mainActionSubtitle}>
-								Gửi link sản phẩm bạn muốn mua
-							</Text>
+							<LinearGradient
+								colors={["#42A5F5", "#1976D2"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.actionGradient}
+							>
+								<View style={styles.actionIconContainer}>
+									<Ionicons
+										name="link-outline"
+										size={28}
+										color="#FFFFFF"
+									/>
+								</View>
+								<Text style={styles.mainActionTitle}>
+									Dán link sản phẩm
+								</Text>
+								<View style={styles.actionArrow}>
+									<Ionicons
+										name="arrow-forward"
+										size={16}
+										color="#FFFFFF"
+									/>
+								</View>
+							</LinearGradient>
 						</View>
 
 						<View style={styles.mainActionCard}>
-							<Ionicons
-								name="create-outline"
-								size={40}
-								color="#28a745"
-							/>
-							<Text style={styles.mainActionTitle}>
-								{" "}
-								Mua hàng không có link
-							</Text>
-							<Text style={styles.mainActionSubtitle}>
-								Mô tả sản phẩm bạn cần tìm
-							</Text>
+							<LinearGradient
+								colors={["#E3F2FD", "#BBDEFB"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.actionGradient}
+							>
+								<View style={styles.actionIconContainer}>
+									<Ionicons
+										name="create-outline"
+										size={28}
+										color="#1976D2"
+									/>
+								</View>
+								<Text
+									style={[
+										styles.mainActionTitle,
+										styles.lightCardText,
+									]}
+								>
+									Nhập thông tin sản phẩm
+								</Text>
+								<View style={styles.actionArrow}>
+									<Ionicons
+										name="arrow-forward"
+										size={16}
+										color="#1976D2"
+									/>
+								</View>
+							</LinearGradient>
 						</View>
 					</View>
 				</View>
@@ -326,7 +353,8 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 	},
 	quickActions: {
-		marginTop: 20,
+		marginTop: 16,
+		marginBottom: 8,
 	},
 	sectionTitle: {
 		fontSize: 20,
@@ -337,38 +365,74 @@ const styles = StyleSheet.create({
 	mainActionGrid: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		gap: 12,
+		gap: 16,
 	},
 	mainActionCard: {
 		flex: 1,
-		backgroundColor: "#ffffff",
 		borderRadius: 16,
-		padding: 20,
-		alignItems: "center",
-		borderWidth: 1,
-		borderColor: "#e9ecef",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
 			height: 4,
 		},
-		shadowOpacity: 0.1,
+		shadowOpacity: 0.15,
 		shadowRadius: 8,
-		elevation: 4,
+		elevation: 6,
+	},
+	actionGradient: {
+		borderRadius: 16,
+		padding: 20,
+		alignItems: "flex-start",
+		justifyContent: "flex-start",
+		minHeight: 110,
+		paddingRight: 60,
+		position: "relative",
+	},
+	actionIconContainer: {
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		justifyContent: "center",
+		alignItems: "center",
+		marginBottom: 12,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
 	},
 	mainActionTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#333",
-		marginTop: 12,
-		textAlign: "center",
+		color: "#FFFFFF",
+		textAlign: "left",
+		lineHeight: 22,
 	},
-	mainActionSubtitle: {
-		fontSize: 12,
-		color: "#666",
-		marginTop: 4,
-		textAlign: "center",
-		lineHeight: 16,
+	lightCardText: {
+		color: "#1976D2",
+	},
+	actionArrow: {
+		position: "absolute",
+		bottom: 18,
+		right: 18,
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		justifyContent: "center",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 2,
 	},
 	processContainer: {
 		marginTop: 32,

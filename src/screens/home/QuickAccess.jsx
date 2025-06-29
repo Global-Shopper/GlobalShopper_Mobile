@@ -51,7 +51,7 @@ const QuickAccess = ({ navigation }) => {
 			>
 				<View style={styles.itemContent}>
 					<View style={styles.iconContainer}>
-						<Ionicons name={item.icon} size={24} color="#42A5F5" />
+						<Ionicons name={item.icon} size={20} color="#42A5F5" />
 						{item.count && (
 							<View style={styles.countBadge}>
 								<Text style={styles.countText}>
@@ -107,54 +107,54 @@ const styles = StyleSheet.create({
 	},
 	itemContent: {
 		backgroundColor: "#ffffff",
-		borderRadius: 16,
-		padding: 16,
+		borderRadius: 12,
+		padding: 12,
 		alignItems: "center",
 		justifyContent: "center",
-		minHeight: 100,
+		minHeight: 85,
 		borderWidth: 1,
-		borderColor: "#e9ecef",
+		borderColor: "#f0f0f0",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 4,
+			height: 2,
 		},
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
-		elevation: 4,
+		shadowOpacity: 0.06,
+		shadowRadius: 4,
+		elevation: 2,
 	},
 	iconContainer: {
 		position: "relative",
 		marginBottom: 8,
-		width: 40,
-		height: 40,
+		width: 36,
+		height: 36,
 		backgroundColor: "#E3F2FD",
-		borderRadius: 20,
+		borderRadius: 18,
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	countBadge: {
 		position: "absolute",
-		top: -4,
-		right: -4,
+		top: -3,
+		right: -3,
 		backgroundColor: "#dc3545",
-		borderRadius: 8,
-		width: 16,
-		height: 16,
+		borderRadius: 7,
+		width: 14,
+		height: 14,
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	countText: {
 		color: "#FFFFFF",
-		fontSize: 10,
+		fontSize: 9,
 		fontWeight: "bold",
 	},
 	itemTitle: {
-		fontSize: 12,
-		fontWeight: "600",
+		fontSize: 11,
+		fontWeight: "500",
 		color: "#333",
 		textAlign: "center",
-		lineHeight: 16,
+		lineHeight: 14,
 	},
 });
 
