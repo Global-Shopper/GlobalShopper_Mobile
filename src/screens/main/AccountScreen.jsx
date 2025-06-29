@@ -3,12 +3,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	Alert,
-	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function AccountScreen({ navigation }) {
@@ -22,6 +22,31 @@ export default function AccountScreen({ navigation }) {
 	});
 
 	const [chatNotificationCount] = useState(3); // Số tin nhắn chưa đọc
+
+	const handleNotificationPress = () => {
+		console.log("Notification pressed");
+	};
+
+	const handleChatPress = () => {
+		console.log("Chat pressed");
+	};
+
+	const handleAvatarPress = () => {
+		Alert.alert("Thay đổi ảnh đại diện", "Chọn nguồn ảnh:", [
+			{
+				text: "Hủy",
+				style: "cancel",
+			},
+			{
+				text: "Thư viện ảnh",
+				onPress: () => console.log("Open photo library"),
+			},
+			{
+				text: "Chụp ảnh",
+				onPress: () => console.log("Open camera"),
+			},
+		]);
+	};
 
 	// Stats để hiển thị tổng quan nhanh
 	const userStats = [
@@ -115,23 +140,6 @@ export default function AccountScreen({ navigation }) {
 		},
 	];
 
-	const handleAvatarPress = () => {
-		Alert.alert("Đổi ảnh đại diện", "Chọn nguồn ảnh", [
-			{
-				text: "Hủy",
-				style: "cancel",
-			},
-			{
-				text: "Thư viện ảnh",
-				onPress: () => console.log("Open photo library"),
-			},
-			{
-				text: "Chụp ảnh",
-				onPress: () => console.log("Open camera"),
-			},
-		]);
-	};
-
 	const handleLogout = () => {
 		Alert.alert(
 			"Đăng xuất",
@@ -158,79 +166,18 @@ export default function AccountScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			{/* Header với thông tin người dùng */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				{/* Profile Info trong header */}
-				<View style={styles.headerProfileSection}>
-					<View style={styles.avatarWrapper}>
-						<LinearGradient
-							colors={["#ff6b6b", "#4ecdc4", "#45b7d1"]}
-							start={{ x: 0, y: 0 }}
-							end={{ x: 1, y: 1 }}
-							style={styles.avatarGradientBorder}
-						>
-							<TouchableOpacity
-								onPress={handleAvatarPress}
-								style={styles.avatarContainer}
-								activeOpacity={0.8}
-							>
-								<Image
-									source={{ uri: user.avatar }}
-									style={styles.avatarImage}
-									defaultSource={require("../../assets/images/logo/logo-gshop-removebg.png")}
-								/>
-							</TouchableOpacity>
-						</LinearGradient>
-
-						{/* Verified status ở góc avatar */}
-						<View style={styles.verifiedBadge}>
-							{user.isVerified ? (
-								<Ionicons
-									name="checkmark-circle"
-									size={20}
-									color="#28a745"
-								/>
-							) : (
-								<Ionicons
-									name="close-circle"
-									size={20}
-									color="#dc3545"
-								/>
-							)}
-						</View>
-					</View>
-
-					<View style={styles.headerProfileInfo}>
-						<View style={styles.nameContainer}>
-							<Text style={styles.userName}>{user.name}</Text>
-						</View>
-						<Text style={styles.userEmail}>{user.email}</Text>
-					</View>
-				</View>
-
-				<TouchableOpacity style={styles.chatButton}>
-					<Ionicons
-						name="chatbubble-outline"
-						size={28}
-						color="#ffffff"
-					/>
-					{/* Notification badge cho chat */}
-					{chatNotificationCount > 0 && (
-						<View style={styles.chatNotificationBadge}>
-							<Text style={styles.chatNotificationText}>
-								{chatNotificationCount > 9
-									? "9+"
-									: chatNotificationCount}
-							</Text>
-						</View>
-					)}
-				</TouchableOpacity>
-			</LinearGradient>
+			{/* Header */}
+			<Header
+				userName={user.name}
+				userEmail={user.email}
+				avatar={user.avatar}
+				isVerified={user.isVerified}
+				notificationCount={3}
+				chatCount={chatNotificationCount}
+				onNotificationPress={handleNotificationPress}
+				onChatPress={handleChatPress}
+				onAvatarPress={handleAvatarPress}
+			/>
 
 			<ScrollView
 				style={styles.content}
@@ -399,117 +346,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8f9fa",
-	},
-	header: {
-		paddingHorizontal: 20,
-		paddingTop: 60,
-		paddingBottom: 20,
-		flexDirection: "row",
-		alignItems: "flex-start",
-		justifyContent: "space-between",
-	},
-	chatButton: {
-		padding: 8,
-		marginTop: 8,
-		position: "relative",
-	},
-	chatNotificationBadge: {
-		position: "absolute",
-		top: 4,
-		right: 4,
-		backgroundColor: "#dc3545",
-		borderRadius: 10,
-		minWidth: 20,
-		height: 20,
-		justifyContent: "center",
-		alignItems: "center",
-		borderWidth: 2,
-		borderColor: "#4a90e2",
-	},
-	chatNotificationText: {
-		color: "#ffffff",
-		fontSize: 12,
-		fontWeight: "bold",
-		paddingHorizontal: 4,
-	},
-	headerProfileSection: {
-		flexDirection: "row",
-		alignItems: "center",
-		flex: 1,
-		paddingRight: 16,
-	},
-	avatarWrapper: {
-		position: "relative",
-		width: 68,
-		height: 68,
-	},
-	avatarGradientBorder: {
-		width: 68,
-		height: 68,
-		borderRadius: 34,
-		justifyContent: "center",
-		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
-		shadowOpacity: 0.2,
-		shadowRadius: 8,
-		elevation: 10,
-	},
-	avatarContainer: {
-		width: 60,
-		height: 60,
-		borderRadius: 30,
-		overflow: "hidden",
-		backgroundColor: "#ffffff",
-	},
-	avatarImage: {
-		width: 60,
-		height: 60,
-		borderRadius: 30,
-		backgroundColor: "#f8f9fa",
-	},
-	verifiedBadge: {
-		position: "absolute",
-		bottom: 0,
-		right: 0,
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		width: 24,
-		height: 24,
-		justifyContent: "center",
-		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.2,
-		shadowRadius: 3,
-		elevation: 5,
-		borderWidth: 1,
-		borderColor: "rgba(0, 0, 0, 0.05)",
-	},
-	headerProfileInfo: {
-		flex: 1,
-		marginLeft: 16,
-		justifyContent: "center",
-	},
-	nameContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 4,
-	},
-	userName: {
-		fontSize: 22,
-		fontWeight: "bold",
-		color: "#ffffff",
-	},
-	userEmail: {
-		fontSize: 15,
-		color: "rgba(255, 255, 255, 0.85)",
 	},
 	content: {
 		flex: 1,

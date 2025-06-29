@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../components/ui/text";
 
@@ -119,44 +119,80 @@ export default function RequestScreen() {
 			<View style={styles.tabContainer}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "all" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "all" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("all")}
 					>
-						<Text className={activeTab === "all" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "all"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Tất cả
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "pending" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "pending" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("pending")}
 					>
-						<Text className={activeTab === "pending" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "pending"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Chờ xử lý
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "processing" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "processing" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("processing")}
 					>
-						<Text className={activeTab === "processing" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "processing"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Đang xử lý
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "completed" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "completed" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("completed")}
 					>
-						<Text className={activeTab === "completed" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "completed"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Hoàn thành
 						</Text>
 					</TouchableOpacity>
 				</ScrollView>
 			</View>
 
-			<ScrollView 
+			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
@@ -164,30 +200,49 @@ export default function RequestScreen() {
 				<View style={styles.statsContainer}>
 					<View style={styles.statCard}>
 						<Text className="text-2xl font-bold text-blue-600">
-							{requests.filter(r => r.status === "pending").length}
+							{
+								requests.filter((r) => r.status === "pending")
+									.length
+							}
 						</Text>
-						<Text className="text-sm text-muted-foreground">Chờ xử lý</Text>
+						<Text className="text-sm text-muted-foreground">
+							Chờ xử lý
+						</Text>
 					</View>
-					
+
 					<View style={styles.statCard}>
 						<Text className="text-2xl font-bold text-orange-600">
-							{requests.filter(r => r.status === "processing").length}
+							{
+								requests.filter(
+									(r) => r.status === "processing"
+								).length
+							}
 						</Text>
-						<Text className="text-sm text-muted-foreground">Đang xử lý</Text>
+						<Text className="text-sm text-muted-foreground">
+							Đang xử lý
+						</Text>
 					</View>
-					
+
 					<View style={styles.statCard}>
 						<Text className="text-2xl font-bold text-green-600">
-							{requests.filter(r => r.status === "completed").length}
+							{
+								requests.filter((r) => r.status === "completed")
+									.length
+							}
 						</Text>
-						<Text className="text-sm text-muted-foreground">Hoàn thành</Text>
+						<Text className="text-sm text-muted-foreground">
+							Hoàn thành
+						</Text>
 					</View>
 				</View>
 
 				{/* Request List */}
 				<View style={styles.requestsList}>
 					{filteredRequests.map((request) => (
-						<TouchableOpacity key={request.id} style={styles.requestCard}>
+						<TouchableOpacity
+							key={request.id}
+							style={styles.requestCard}
+						>
 							<View style={styles.requestHeader}>
 								<View style={styles.requestInfo}>
 									<Ionicons
@@ -196,39 +251,82 @@ export default function RequestScreen() {
 										color="#007bff"
 									/>
 									<View style={styles.requestTitleContainer}>
-										<Text className="font-semibold">{request.title}</Text>
-										<Text className="text-sm text-muted-foreground">{request.date}</Text>
+										<Text className="font-semibold">
+											{request.title}
+										</Text>
+										<Text className="text-sm text-muted-foreground">
+											{request.date}
+										</Text>
 									</View>
 								</View>
-								
+
 								<View style={styles.requestMeta}>
 									<Ionicons
 										name={getPriorityIcon(request.priority)}
 										size={16}
-										color={request.priority === "high" ? "#dc3545" : request.priority === "medium" ? "#ffc107" : "#28a745"}
+										color={
+											request.priority === "high"
+												? "#dc3545"
+												: request.priority === "medium"
+												? "#ffc107"
+												: "#28a745"
+										}
 									/>
-									<View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) + "20" }]}>
-										<Text style={[styles.statusText, { color: getStatusColor(request.status) }]}>
+									<View
+										style={[
+											styles.statusBadge,
+											{
+												backgroundColor:
+													getStatusColor(
+														request.status
+													) + "20",
+											},
+										]}
+									>
+										<Text
+											style={[
+												styles.statusText,
+												{
+													color: getStatusColor(
+														request.status
+													),
+												},
+											]}
+										>
 											{getStatusText(request.status)}
 										</Text>
 									</View>
 								</View>
 							</View>
-							
+
 							<Text className="text-sm text-muted-foreground mt-2 leading-5">
 								{request.description}
 							</Text>
-							
+
 							<View style={styles.requestActions}>
 								<TouchableOpacity style={styles.actionButton}>
-									<Ionicons name="eye-outline" size={16} color="#007bff" />
-									<Text className="text-blue-600 text-sm ml-1">Xem</Text>
+									<Ionicons
+										name="eye-outline"
+										size={16}
+										color="#007bff"
+									/>
+									<Text className="text-blue-600 text-sm ml-1">
+										Xem
+									</Text>
 								</TouchableOpacity>
-								
+
 								{request.status !== "completed" && (
-									<TouchableOpacity style={styles.actionButton}>
-										<Ionicons name="create-outline" size={16} color="#28a745" />
-										<Text className="text-green-600 text-sm ml-1">Chỉnh sửa</Text>
+									<TouchableOpacity
+										style={styles.actionButton}
+									>
+										<Ionicons
+											name="create-outline"
+											size={16}
+											color="#28a745"
+										/>
+										<Text className="text-green-600 text-sm ml-1">
+											Chỉnh sửa
+										</Text>
 									</TouchableOpacity>
 								)}
 							</View>
@@ -238,7 +336,11 @@ export default function RequestScreen() {
 
 				{filteredRequests.length === 0 && (
 					<View style={styles.emptyState}>
-						<Ionicons name="document-outline" size={64} color="#ccc" />
+						<Ionicons
+							name="document-outline"
+							size={64}
+							color="#ccc"
+						/>
 						<Text className="text-lg font-medium text-muted-foreground mt-4">
 							Không có yêu cầu nào
 						</Text>
@@ -265,7 +367,17 @@ const styles = StyleSheet.create({
 	header: {
 		paddingHorizontal: 20,
 		paddingTop: 50,
-		paddingBottom: 20,
+		paddingBottom: 25,
+		borderBottomLeftRadius: 25,
+		borderBottomRightRadius: 25,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 8,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 10,
 	},
 	headerContent: {
 		flexDirection: "row",

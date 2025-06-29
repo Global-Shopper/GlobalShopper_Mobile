@@ -1,54 +1,34 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function HomeScreen() {
+	const handleNotificationPress = () => {
+		console.log("Notification pressed");
+	};
+
+	const handleChatPress = () => {
+		console.log("Chat pressed");
+	};
+
+	const handleAvatarPress = () => {
+		console.log("Avatar pressed");
+	};
+
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<View style={styles.headerLeft}>
-						<Image
-							source={{ uri: "https://github.com/shadcn.png" }}
-							style={styles.avatar}
-							defaultSource={require("../../assets/images/logo/logo-gshop-removebg.png")}
-						/>
-						<View style={styles.greetingContainer}>
-							<Text style={styles.greetingText}>
-								Xin chào, Hoài Phương
-							</Text>
-							<Text style={styles.subGreeting}>
-								Hôm nay bạn muốn mua gì?
-							</Text>
-						</View>
-					</View>
-					<View style={styles.headerRight}>
-						<View style={styles.notificationContainer}>
-							<Ionicons
-								name="notifications-outline"
-								size={24}
-								color="#FFFFFF"
-							/>
-							<View style={styles.notificationBadge}>
-								<Text style={styles.notificationText}>3</Text>
-							</View>
-						</View>
-						<Ionicons
-							name="chatbubble-outline"
-							size={24}
-							color="#FFFFFF"
-							style={styles.chatIcon}
-						/>
-					</View>
-				</View>
-			</LinearGradient>
+			<Header
+				userName="Hoài Phương"
+				subtitle="Hôm nay bạn muốn mua gì?"
+				avatar="https://github.com/shadcn.png"
+				notificationCount={3}
+				chatCount={3}
+				onNotificationPress={handleNotificationPress}
+				onChatPress={handleChatPress}
+				onAvatarPress={handleAvatarPress}
+			/>
 
 			<ScrollView
 				style={styles.content}
@@ -260,7 +240,7 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		paddingHorizontal: 20,
-		paddingTop: 60,
+		paddingTop: 50,
 		paddingBottom: 25,
 		borderBottomLeftRadius: 25,
 		borderBottomRightRadius: 25,
