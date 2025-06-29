@@ -93,7 +93,9 @@ export default function TransactionHistoryScreen({ navigation }) {
 
 	const getFilteredTransactions = () => {
 		if (activeTab === "all") return allTransactions;
-		return allTransactions.filter(transaction => transaction.type === activeTab);
+		return allTransactions.filter(
+			(transaction) => transaction.type === activeTab
+		);
 	};
 
 	const getStatusText = (status) => {
@@ -127,14 +129,14 @@ export default function TransactionHistoryScreen({ navigation }) {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<Header 
+			<Header
 				title="Lịch sử giao dịch"
 				showBackButton={true}
 				onBackPress={() => navigation.goBack()}
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log('Notification pressed')}
-				onChatPress={() => console.log('Chat pressed')}
+				onNotificationPress={() => console.log("Notification pressed")}
+				onChatPress={() => console.log("Chat pressed")}
 			/>
 
 			{/* Tabs */}
@@ -152,7 +154,8 @@ export default function TransactionHistoryScreen({ navigation }) {
 							<Text
 								style={[
 									styles.tabText,
-									activeTab === tab.id && styles.activeTabText,
+									activeTab === tab.id &&
+										styles.activeTabText,
 								]}
 							>
 								{tab.label}
@@ -180,7 +183,9 @@ export default function TransactionHistoryScreen({ navigation }) {
 									<View
 										style={[
 											styles.transactionIcon,
-											{ backgroundColor: `${transaction.color}20` },
+											{
+												backgroundColor: `${transaction.color}20`,
+											},
 										]}
 									>
 										<Ionicons
@@ -190,27 +195,47 @@ export default function TransactionHistoryScreen({ navigation }) {
 										/>
 									</View>
 									<View style={styles.transactionInfo}>
-										<Text style={styles.transactionDescription}>
+										<Text
+											style={
+												styles.transactionDescription
+											}
+										>
 											{transaction.description}
 										</Text>
 										<View style={styles.transactionDetails}>
-											<Text style={styles.transactionDate}>
-												{transaction.date} • {transaction.time}
+											<Text
+												style={styles.transactionDate}
+											>
+												{transaction.date} •{" "}
+												{transaction.time}
 											</Text>
-											<View style={styles.statusContainer}>
+											<View
+												style={styles.statusContainer}
+											>
 												<View
 													style={[
 														styles.statusDot,
-														{ backgroundColor: getStatusColor(transaction.status) },
+														{
+															backgroundColor:
+																getStatusColor(
+																	transaction.status
+																),
+														},
 													]}
 												/>
 												<Text
 													style={[
 														styles.statusText,
-														{ color: getStatusColor(transaction.status) },
+														{
+															color: getStatusColor(
+																transaction.status
+															),
+														},
 													]}
 												>
-													{getStatusText(transaction.status)}
+													{getStatusText(
+														transaction.status
+													)}
 												</Text>
 											</View>
 										</View>
@@ -220,20 +245,31 @@ export default function TransactionHistoryScreen({ navigation }) {
 									style={[
 										styles.transactionAmount,
 										{
-											color: transaction.amount > 0 ? "#4CAF50" : "#F44336",
+											color:
+												transaction.amount > 0
+													? "#4CAF50"
+													: "#F44336",
 										},
 									]}
 								>
 									{transaction.amount > 0 ? "+" : ""}
-									{formatCurrency(Math.abs(transaction.amount))}
+									{formatCurrency(
+										Math.abs(transaction.amount)
+									)}
 								</Text>
 							</TouchableOpacity>
 						))}
 					</View>
 				) : (
 					<View style={styles.emptyContainer}>
-						<Ionicons name="receipt-outline" size={64} color="#ccc" />
-						<Text style={styles.emptyText}>Không có giao dịch nào</Text>
+						<Ionicons
+							name="receipt-outline"
+							size={64}
+							color="#ccc"
+						/>
+						<Text style={styles.emptyText}>
+							Không có giao dịch nào
+						</Text>
 						<Text style={styles.emptySubtext}>
 							Chưa có giao dịch nào trong danh mục này
 						</Text>

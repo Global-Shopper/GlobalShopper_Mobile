@@ -10,42 +10,60 @@ export default function RequestScreen() {
 	const requests = [
 		{
 			id: 1,
-			title: "Yêu cầu hỗ trợ kỹ thuật",
-			description: "Cần hỗ trợ cài đặt ứng dụng trên thiết bị mới",
-			status: "pending",
+			title: "Yêu cầu mua iPhone 15 Pro Max",
+			description:
+				"Cần mua iPhone 15 Pro Max 256GB màu xanh dương từ Apple Store Mỹ",
+			status: "sent",
 			priority: "high",
 			date: "2024-01-15",
-			category: "technical",
+			category: "electronics",
 		},
 		{
 			id: 2,
-			title: "Yêu cầu hoàn tiền",
-			description: "Hoàn tiền cho đơn hàng #1234 do sản phẩm lỗi",
-			status: "processing",
+			title: "Yêu cầu mua giày Nike Air Max",
+			description: "Mua giày Nike Air Max 270 size 42 từ Nike Store Mỹ",
+			status: "checking",
 			priority: "medium",
 			date: "2024-01-14",
-			category: "financial",
+			category: "fashion",
 		},
 		{
 			id: 3,
-			title: "Cập nhật thông tin tài khoản",
-			description: "Thay đổi số điện thoại và địa chỉ email",
-			status: "completed",
-			priority: "low",
+			title: "Yêu cầu mua laptop MacBook Pro",
+			description: "MacBook Pro 16 inch M3 Pro 512GB từ Apple Store",
+			status: "quoted",
+			priority: "high",
 			date: "2024-01-13",
-			category: "account",
+			category: "electronics",
 		},
+		{
+			id: 4,
+			title: "Yêu cầu mua túi Louis Vuitton",
+			description: "Túi Louis Vuitton Neverfull MM từ store chính hãng",
+			status: "cancelled",
+			priority: "low",
+			date: "2024-01-12",
+			category: "fashion",
+		},
+	];
+
+	const tabs = [
+		{ id: "all", label: "Tất cả", status: null },
+		{ id: "sent", label: "Đã gửi yêu cầu", status: "sent" },
+		{ id: "checking", label: "Đang kiểm tra", status: "checking" },
+		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
+		{ id: "cancelled", label: "Đã hủy yêu cầu", status: "cancelled" },
 	];
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "pending":
+			case "sent":
+				return "#17a2b8";
+			case "checking":
 				return "#ffc107";
-			case "processing":
-				return "#007bff";
-			case "completed":
+			case "quoted":
 				return "#28a745";
-			case "rejected":
+			case "cancelled":
 				return "#dc3545";
 			default:
 				return "#6c757d";
@@ -54,14 +72,14 @@ export default function RequestScreen() {
 
 	const getStatusText = (status) => {
 		switch (status) {
-			case "pending":
-				return "Chờ xử lý";
-			case "processing":
-				return "Đang xử lý";
-			case "completed":
-				return "Hoàn thành";
-			case "rejected":
-				return "Từ chối";
+			case "sent":
+				return "Đã gửi yêu cầu";
+			case "checking":
+				return "Đang kiểm tra";
+			case "quoted":
+				return "Đã báo giá";
+			case "cancelled":
+				return "Đã hủy yêu cầu";
 			default:
 				return "Không xác định";
 		}
@@ -82,14 +100,16 @@ export default function RequestScreen() {
 
 	const getCategoryIcon = (category) => {
 		switch (category) {
-			case "technical":
-				return "settings-outline";
-			case "financial":
-				return "card-outline";
-			case "account":
-				return "person-outline";
+			case "electronics":
+				return "phone-portrait-outline";
+			case "fashion":
+				return "shirt-outline";
+			case "books":
+				return "book-outline";
+			case "home":
+				return "home-outline";
 			default:
-				return "document-outline";
+				return "bag-outline";
 		}
 	};
 
@@ -112,77 +132,26 @@ export default function RequestScreen() {
 			{/* Tabs */}
 			<View style={styles.tabContainer}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "all" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("all")}
-					>
-						<Text
-							className={
-								activeTab === "all"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
+					{tabs.map((tab) => (
+						<TouchableOpacity
+							key={tab.id}
+							style={[
+								styles.tab,
+								activeTab === tab.id && styles.activeTab,
+							]}
+							onPress={() => setActiveTab(tab.id)}
 						>
-							Tất cả
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "pending" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("pending")}
-					>
-						<Text
-							className={
-								activeTab === "pending"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Chờ xử lý
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "processing" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("processing")}
-					>
-						<Text
-							className={
-								activeTab === "processing"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Đang xử lý
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "completed" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("completed")}
-					>
-						<Text
-							className={
-								activeTab === "completed"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Hoàn thành
-						</Text>
-					</TouchableOpacity>
+							<Text
+								style={[
+									styles.tabText,
+									activeTab === tab.id &&
+										styles.activeTabText,
+								]}
+							>
+								{tab.label}
+							</Text>
+						</TouchableOpacity>
+					))}
 				</ScrollView>
 			</View>
 
@@ -191,46 +160,6 @@ export default function RequestScreen() {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Stats */}
-				<View style={styles.statsContainer}>
-					<View style={styles.statCard}>
-						<Text className="text-2xl font-bold text-blue-600">
-							{
-								requests.filter((r) => r.status === "pending")
-									.length
-							}
-						</Text>
-						<Text className="text-sm text-muted-foreground">
-							Chờ xử lý
-						</Text>
-					</View>
-
-					<View style={styles.statCard}>
-						<Text className="text-2xl font-bold text-orange-600">
-							{
-								requests.filter(
-									(r) => r.status === "processing"
-								).length
-							}
-						</Text>
-						<Text className="text-sm text-muted-foreground">
-							Đang xử lý
-						</Text>
-					</View>
-
-					<View style={styles.statCard}>
-						<Text className="text-2xl font-bold text-green-600">
-							{
-								requests.filter((r) => r.status === "completed")
-									.length
-							}
-						</Text>
-						<Text className="text-sm text-muted-foreground">
-							Hoàn thành
-						</Text>
-					</View>
-				</View>
-
 				{/* Request List */}
 				<View style={styles.requestsList}>
 					{filteredRequests.map((request) => (
@@ -306,11 +235,11 @@ export default function RequestScreen() {
 										color="#007bff"
 									/>
 									<Text className="text-blue-600 text-sm ml-1">
-										Xem
+										Xem chi tiết
 									</Text>
 								</TouchableOpacity>
 
-								{request.status !== "completed" && (
+								{request.status === "sent" && (
 									<TouchableOpacity
 										style={styles.actionButton}
 									>
@@ -321,6 +250,37 @@ export default function RequestScreen() {
 										/>
 										<Text className="text-green-600 text-sm ml-1">
 											Chỉnh sửa
+										</Text>
+									</TouchableOpacity>
+								)}
+
+								{request.status === "quoted" && (
+									<TouchableOpacity
+										style={styles.actionButton}
+									>
+										<Ionicons
+											name="checkmark-circle-outline"
+											size={16}
+											color="#28a745"
+										/>
+										<Text className="text-green-600 text-sm ml-1">
+											Chấp nhận
+										</Text>
+									</TouchableOpacity>
+								)}
+
+								{(request.status === "sent" ||
+									request.status === "checking") && (
+									<TouchableOpacity
+										style={styles.actionButton}
+									>
+										<Ionicons
+											name="close-circle-outline"
+											size={16}
+											color="#dc3545"
+										/>
+										<Text className="text-red-600 text-sm ml-1">
+											Hủy yêu cầu
 										</Text>
 									</TouchableOpacity>
 								)}
@@ -362,18 +322,31 @@ const styles = StyleSheet.create({
 	tabContainer: {
 		backgroundColor: "#ffffff",
 		paddingHorizontal: 20,
-		paddingBottom: 10,
+		paddingVertical: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: "#e9ecef",
 	},
 	tab: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		marginRight: 12,
-		borderRadius: 20,
+		paddingHorizontal: 20,
+		paddingVertical: 12,
+		marginRight: 16,
+		borderRadius: 25,
+		backgroundColor: "#f8f9fa",
+		borderWidth: 1,
+		borderColor: "#e9ecef",
 	},
 	activeTab: {
-		backgroundColor: "#e7f3ff",
+		backgroundColor: "#42A5F5",
+		borderColor: "#42A5F5",
+	},
+	tabText: {
+		fontSize: 14,
+		fontWeight: "500",
+		color: "#6c757d",
+	},
+	activeTabText: {
+		color: "#ffffff",
+		fontWeight: "600",
 	},
 	content: {
 		flex: 1,
@@ -381,32 +354,10 @@ const styles = StyleSheet.create({
 		paddingTop: 20,
 	},
 	scrollContent: {
-		paddingBottom: 20,
-	},
-	statsContainer: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginTop: 20,
-		marginBottom: 20,
-	},
-	statCard: {
-		flex: 1,
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
-		alignItems: "center",
-		marginHorizontal: 4,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3,
-		elevation: 3,
+		paddingBottom: 100,
 	},
 	requestsList: {
-		marginBottom: 100,
+		marginBottom: 20,
 	},
 	requestCard: {
 		backgroundColor: "#ffffff",
