@@ -119,7 +119,7 @@ export default function Header({
 const styles = StyleSheet.create({
 	header: {
 		paddingHorizontal: 20,
-		paddingTop: 50,
+		paddingTop: 60,
 		paddingBottom: 25,
 		borderBottomLeftRadius: 25,
 		borderBottomRightRadius: 25,

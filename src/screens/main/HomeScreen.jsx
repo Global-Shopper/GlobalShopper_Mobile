@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import QuickAccess from "../home/QuickAccess";
 
 export default function HomeScreen() {
 	const handleNotificationPress = () => {
@@ -71,6 +72,14 @@ export default function HomeScreen() {
 						</View>
 					</View>
 				</View>
+
+				{/* Quick Access */}
+				<QuickAccess
+					navigation={{
+						navigate: (screen) =>
+							console.log(`Navigate to ${screen}`),
+					}}
+				/>
 
 				{/* Quy trình mua hộ */}
 				<View style={styles.processContainer}>
