@@ -36,6 +36,7 @@ export default function HomeScreen() {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
@@ -198,6 +199,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		marginTop: 10,
+	},
+	scrollContent: {
+		paddingBottom: 40,
 	},
 	quickActions: {
 		marginTop: 16,
