@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../components/ui/text";
 
@@ -125,7 +125,11 @@ export default function OrderScreen() {
 				<View style={styles.headerContent}>
 					<Text style={styles.headerTitle}>Đơn hàng</Text>
 					<TouchableOpacity style={styles.searchButton}>
-						<Ionicons name="search-outline" size={24} color="#FFFFFF" />
+						<Ionicons
+							name="search-outline"
+							size={24}
+							color="#FFFFFF"
+						/>
 					</TouchableOpacity>
 				</View>
 			</LinearGradient>
@@ -134,30 +138,38 @@ export default function OrderScreen() {
 			<View style={styles.statsContainer}>
 				<View style={styles.statCard}>
 					<Text className="text-xl font-bold text-blue-600">
-						{orders.filter(o => o.status === "processing").length}
+						{orders.filter((o) => o.status === "processing").length}
 					</Text>
-					<Text className="text-xs text-muted-foreground">Đang xử lý</Text>
+					<Text className="text-xs text-muted-foreground">
+						Đang xử lý
+					</Text>
 				</View>
-				
+
 				<View style={styles.statCard}>
 					<Text className="text-xl font-bold text-teal-600">
-						{orders.filter(o => o.status === "shipping").length}
+						{orders.filter((o) => o.status === "shipping").length}
 					</Text>
-					<Text className="text-xs text-muted-foreground">Đang giao</Text>
+					<Text className="text-xs text-muted-foreground">
+						Đang giao
+					</Text>
 				</View>
-				
+
 				<View style={styles.statCard}>
 					<Text className="text-xl font-bold text-green-600">
-						{orders.filter(o => o.status === "delivered").length}
+						{orders.filter((o) => o.status === "delivered").length}
 					</Text>
-					<Text className="text-xs text-muted-foreground">Đã giao</Text>
+					<Text className="text-xs text-muted-foreground">
+						Đã giao
+					</Text>
 				</View>
-				
+
 				<View style={styles.statCard}>
 					<Text className="text-xl font-bold text-red-600">
-						{orders.filter(o => o.status === "cancelled").length}
+						{orders.filter((o) => o.status === "cancelled").length}
 					</Text>
-					<Text className="text-xs text-muted-foreground">Đã hủy</Text>
+					<Text className="text-xs text-muted-foreground">
+						Đã hủy
+					</Text>
 				</View>
 			</View>
 
@@ -165,84 +177,162 @@ export default function OrderScreen() {
 			<View style={styles.tabContainer}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "all" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "all" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("all")}
 					>
-						<Text className={activeTab === "all" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "all"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Tất cả
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "processing" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "processing" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("processing")}
 					>
-						<Text className={activeTab === "processing" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "processing"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Đang xử lý
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "shipping" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "shipping" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("shipping")}
 					>
-						<Text className={activeTab === "shipping" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "shipping"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Đang giao
 						</Text>
 					</TouchableOpacity>
-					
+
 					<TouchableOpacity
-						style={[styles.tab, activeTab === "delivered" && styles.activeTab]}
+						style={[
+							styles.tab,
+							activeTab === "delivered" && styles.activeTab,
+						]}
 						onPress={() => setActiveTab("delivered")}
 					>
-						<Text className={activeTab === "delivered" ? "font-semibold text-blue-600" : "text-muted-foreground"}>
+						<Text
+							className={
+								activeTab === "delivered"
+									? "font-semibold text-blue-600"
+									: "text-muted-foreground"
+							}
+						>
 							Đã giao
 						</Text>
 					</TouchableOpacity>
 				</ScrollView>
 			</View>
 
-			<ScrollView 
+			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
 				{/* Order List */}
 				<View style={styles.ordersList}>
 					{filteredOrders.map((order) => (
-						<TouchableOpacity key={order.id} style={styles.orderCard}>
+						<TouchableOpacity
+							key={order.id}
+							style={styles.orderCard}
+						>
 							<View style={styles.orderHeader}>
 								<View style={styles.orderIdContainer}>
-									<Text className="font-bold text-blue-600">#{order.id}</Text>
-									<Text className="text-sm text-muted-foreground">{order.date}</Text>
+									<Text className="font-bold text-blue-600">
+										#{order.id}
+									</Text>
+									<Text className="text-sm text-muted-foreground">
+										{order.date}
+									</Text>
 								</View>
-								
-								<View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) + "20" }]}>
+
+								<View
+									style={[
+										styles.statusBadge,
+										{
+											backgroundColor:
+												getStatusColor(order.status) +
+												"20",
+										},
+									]}
+								>
 									<Ionicons
 										name={getStatusIcon(order.status)}
 										size={12}
 										color={getStatusColor(order.status)}
 									/>
-									<Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
+									<Text
+										style={[
+											styles.statusText,
+											{
+												color: getStatusColor(
+													order.status
+												),
+											},
+										]}
+									>
 										{getStatusText(order.status)}
 									</Text>
 								</View>
 							</View>
 
-							<Text className="font-semibold text-lg mb-2">{order.title}</Text>
+							<Text className="font-semibold text-lg mb-2">
+								{order.title}
+							</Text>
 
 							<View style={styles.customerInfo}>
-								<Ionicons name="person-outline" size={16} color="#666" />
-								<Text className="text-sm text-muted-foreground ml-2">{order.customer}</Text>
+								<Ionicons
+									name="person-outline"
+									size={16}
+									color="#666"
+								/>
+								<Text className="text-sm text-muted-foreground ml-2">
+									{order.customer}
+								</Text>
 							</View>
 
 							<View style={styles.addressInfo}>
-								<Ionicons name="location-outline" size={16} color="#666" />
-								<Text className="text-sm text-muted-foreground ml-2 flex-1">{order.address}</Text>
+								<Ionicons
+									name="location-outline"
+									size={16}
+									color="#666"
+								/>
+								<Text className="text-sm text-muted-foreground ml-2 flex-1">
+									{order.address}
+								</Text>
 							</View>
 
 							<View style={styles.itemsList}>
 								{order.items.map((item, index) => (
-									<Text key={index} className="text-sm text-muted-foreground">
+									<Text
+										key={index}
+										className="text-sm text-muted-foreground"
+									>
 										• {item}
 									</Text>
 								))}
@@ -252,17 +342,36 @@ export default function OrderScreen() {
 								<Text className="text-lg font-bold text-green-600">
 									{formatCurrency(order.total)}
 								</Text>
-								
+
 								<View style={styles.orderActions}>
-									<TouchableOpacity style={styles.actionButton}>
-										<Ionicons name="eye-outline" size={16} color="#007bff" />
-										<Text className="text-blue-600 text-sm ml-1">Chi tiết</Text>
+									<TouchableOpacity
+										style={styles.actionButton}
+									>
+										<Ionicons
+											name="eye-outline"
+											size={16}
+											color="#007bff"
+										/>
+										<Text className="text-blue-600 text-sm ml-1">
+											Chi tiết
+										</Text>
 									</TouchableOpacity>
-									
+
 									{order.status === "processing" && (
-										<TouchableOpacity style={[styles.actionButton, { marginLeft: 12 }]}>
-											<Ionicons name="car-outline" size={16} color="#28a745" />
-											<Text className="text-green-600 text-sm ml-1">Giao hàng</Text>
+										<TouchableOpacity
+											style={[
+												styles.actionButton,
+												{ marginLeft: 12 },
+											]}
+										>
+											<Ionicons
+												name="car-outline"
+												size={16}
+												color="#28a745"
+											/>
+											<Text className="text-green-600 text-sm ml-1">
+												Giao hàng
+											</Text>
 										</TouchableOpacity>
 									)}
 								</View>
@@ -295,7 +404,17 @@ const styles = StyleSheet.create({
 	header: {
 		paddingHorizontal: 20,
 		paddingTop: 50,
-		paddingBottom: 16,
+		paddingBottom: 25,
+		borderBottomLeftRadius: 25,
+		borderBottomRightRadius: 25,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 8,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 10,
 	},
 	headerContent: {
 		flexDirection: "row",

@@ -1,123 +1,117 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import PurchaseProcess from "../home/PurchaseProcess";
+import QuickAccess from "../home/QuickAccess";
 
 export default function HomeScreen() {
+	const handleNotificationPress = () => {
+		console.log("Notification pressed");
+	};
+
+	const handleChatPress = () => {
+		console.log("Chat pressed");
+	};
+
+	const handleAvatarPress = () => {
+		console.log("Avatar pressed");
+	};
+
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<View style={styles.headerLeft}>
-						<Avatar className="h-12 w-12">
-							<AvatarImage source={{ uri: "https://github.com/shadcn.png" }} />
-							<AvatarFallback>
-								<Text style={styles.avatarFallback}>CN</Text>
-							</AvatarFallback>
-						</Avatar>
-						<View style={styles.greetingContainer}>
-							<Text style={styles.greetingText}>Xin chào,</Text>
-							<Text style={styles.userName}>John Doe</Text>
-						</View>
-					</View>
-					<View style={styles.headerRight}>
-						<Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
-						<View style={styles.notificationBadge}>
-							<Text style={styles.notificationText}>3</Text>
-						</View>
-					</View>
-				</View>
-			</LinearGradient>
+			<Header
+				userName="Hoài Phương"
+				subtitle="Hôm nay bạn muốn mua gì?"
+				avatar="https://github.com/shadcn.png"
+				notificationCount={3}
+				chatCount={3}
+				onNotificationPress={handleNotificationPress}
+				onChatPress={handleChatPress}
+				onAvatarPress={handleAvatarPress}
+			/>
 
-			<ScrollView 
+			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
-					<Text className="text-xl font-bold mb-4">Trang chủ</Text>
-					
-					<View style={styles.actionGrid}>
-						<View style={styles.actionCard}>
-							<Ionicons name="wallet-outline" size={32} color="#007bff" />
-							<Text className="text-sm font-medium mt-2">Ví tiền</Text>
+					<View style={styles.mainActionGrid}>
+						<View style={styles.mainActionCard}>
+							<LinearGradient
+								colors={["#42A5F5", "#1976D2"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.actionGradient}
+							>
+								<View style={styles.actionIconContainer}>
+									<Ionicons
+										name="link-outline"
+										size={28}
+										color="#FFFFFF"
+									/>
+								</View>
+								<Text style={styles.mainActionTitle}>
+									Dán link sản phẩm
+								</Text>
+								<View style={styles.actionArrow}>
+									<Ionicons
+										name="arrow-forward"
+										size={16}
+										color="#FFFFFF"
+									/>
+								</View>
+							</LinearGradient>
 						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="document-text-outline" size={32} color="#28a745" />
-							<Text className="text-sm font-medium mt-2">Yêu cầu</Text>
-						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="bag-handle-outline" size={32} color="#ffc107" />
-							<Text className="text-sm font-medium mt-2">Đơn hàng</Text>
-						</View>
-						
-						<View style={styles.actionCard}>
-							<Ionicons name="person-outline" size={32} color="#6f42c1" />
-							<Text className="text-sm font-medium mt-2">Tài khoản</Text>
+
+						<View style={styles.mainActionCard}>
+							<LinearGradient
+								colors={["#E3F2FD", "#BBDEFB"]}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+								style={styles.actionGradient}
+							>
+								<View style={styles.actionIconContainer}>
+									<Ionicons
+										name="create-outline"
+										size={28}
+										color="#1976D2"
+									/>
+								</View>
+								<Text
+									style={[
+										styles.mainActionTitle,
+										styles.lightCardText,
+									]}
+								>
+									Nhập thông tin sản phẩm
+								</Text>
+								<View style={styles.actionArrow}>
+									<Ionicons
+										name="arrow-forward"
+										size={16}
+										color="#1976D2"
+									/>
+								</View>
+							</LinearGradient>
 						</View>
 					</View>
 				</View>
 
-				{/* Statistics */}
-				<View style={styles.statsContainer}>
-					<Text className="text-lg font-semibold mb-4">Thống kê</Text>
-					
-					<View style={styles.statsGrid}>
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-blue-600">156</Text>
-							<Text className="text-sm text-muted-foreground">Đơn hàng</Text>
-						</View>
-						
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-green-600">23</Text>
-							<Text className="text-sm text-muted-foreground">Hoàn thành</Text>
-						</View>
-						
-						<View style={styles.statCard}>
-							<Text className="text-2xl font-bold text-orange-600">12</Text>
-							<Text className="text-sm text-muted-foreground">Đang xử lý</Text>
-						</View>
-					</View>
-				</View>
+				{/* Quick Access */}
+				<QuickAccess
+					navigation={{
+						navigate: (screen) =>
+							console.log(`Navigate to ${screen}`),
+					}}
+				/>
 
-				{/* Recent Activity */}
-				<View style={styles.recentActivity}>
-					<Text className="text-lg font-semibold mb-4">Hoạt động gần đây</Text>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="checkmark-circle" size={24} color="#28a745" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Đơn hàng #1234 đã hoàn thành</Text>
-							<Text className="text-sm text-muted-foreground">2 giờ trước</Text>
-						</View>
-					</View>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="time-outline" size={24} color="#ffc107" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Đơn hàng #1235 đang xử lý</Text>
-							<Text className="text-sm text-muted-foreground">4 giờ trước</Text>
-						</View>
-					</View>
-					
-					<View style={styles.activityItem}>
-						<Ionicons name="add-circle" size={24} color="#007bff" />
-						<View style={styles.activityContent}>
-							<Text className="font-medium">Yêu cầu mới đã được tạo</Text>
-							<Text className="text-sm text-muted-foreground">1 ngày trước</Text>
-						</View>
-					</View>
-				</View>
+				{/* Purchase Process */}
+				<PurchaseProcess />
 			</ScrollView>
 		</View>
 	);
@@ -131,7 +125,17 @@ const styles = StyleSheet.create({
 	header: {
 		paddingHorizontal: 20,
 		paddingTop: 50,
-		paddingBottom: 20,
+		paddingBottom: 25,
+		borderBottomLeftRadius: 25,
+		borderBottomRightRadius: 25,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 8,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 10,
 	},
 	headerContent: {
 		flexDirection: "row",
@@ -141,25 +145,39 @@ const styles = StyleSheet.create({
 	headerLeft: {
 		flexDirection: "row",
 		alignItems: "center",
+		flex: 1,
+	},
+	avatar: {
+		marginRight: 12,
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		borderWidth: 2,
+		borderColor: "rgba(255, 255, 255, 0.3)",
 	},
 	greetingContainer: {
-		marginLeft: 12,
+		flex: 1,
 	},
 	greetingText: {
-		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.8)",
-	},
-	userName: {
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
+		marginBottom: 2,
 	},
-	avatarFallback: {
-		color: "#333",
-		fontWeight: "600",
+	subGreeting: {
+		fontSize: 14,
+		color: "rgba(255, 255, 255, 0.8)",
 	},
 	headerRight: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	notificationContainer: {
 		position: "relative",
+		marginRight: 16,
+	},
+	chatIcon: {
+		marginLeft: 0,
 	},
 	notificationBadge: {
 		position: "absolute",
@@ -180,41 +198,84 @@ const styles = StyleSheet.create({
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
+		marginTop: 10,
+	},
+	scrollContent: {
+		paddingBottom: 40,
 	},
 	quickActions: {
-		marginTop: 20,
+		marginTop: 16,
+		marginBottom: 8,
 	},
-	actionGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "space-between",
-	},
-	actionCard: {
-		width: "48%",
-		backgroundColor: "#f8f9fa",
-		borderRadius: 12,
-		padding: 20,
-		alignItems: "center",
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#333",
 		marginBottom: 16,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
 	},
-	statsContainer: {
-		marginTop: 20,
-	},
-	statsGrid: {
+	mainActionGrid: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		gap: 16,
 	},
-	statCard: {
+	mainActionCard: {
 		flex: 1,
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
+		elevation: 6,
+	},
+	actionGradient: {
+		borderRadius: 16,
+		padding: 20,
+		alignItems: "flex-start",
+		justifyContent: "flex-start",
+		minHeight: 110,
+		paddingRight: 60,
+		position: "relative",
+	},
+	actionIconContainer: {
+		width: 48,
+		height: 48,
+		borderRadius: 24,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		justifyContent: "center",
 		alignItems: "center",
-		marginHorizontal: 4,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
+		marginBottom: 12,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	mainActionTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
+		textAlign: "left",
+		lineHeight: 22,
+	},
+	lightCardText: {
+		color: "#1976D2",
+	},
+	actionArrow: {
+		position: "absolute",
+		bottom: 18,
+		right: 18,
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		justifyContent: "center",
+		alignItems: "center",
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
@@ -222,24 +283,6 @@ const styles = StyleSheet.create({
 		},
 		shadowOpacity: 0.1,
 		shadowRadius: 3,
-		elevation: 3,
-	},
-	recentActivity: {
-		marginTop: 20,
-		marginBottom: 20,
-	},
-	activityItem: {
-		flexDirection: "row",
-		alignItems: "center",
-		backgroundColor: "#f8f9fa",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
-	},
-	activityContent: {
-		flex: 1,
-		marginLeft: 12,
+		elevation: 2,
 	},
 });
