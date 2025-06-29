@@ -10,55 +10,125 @@ export default function OrderScreen() {
 	const orders = [
 		{
 			id: "ORD001",
-			title: "Đơn hàng thực phẩm",
-			items: ["2x Cơm gà", "1x Nước cam"],
-			total: 150000,
-			status: "delivered",
+			title: "iPhone 15 Pro Max từ Apple Store",
+			items: ["1x iPhone 15 Pro Max 256GB", "1x Ốp lưng chính hãng"],
+			total: 35000000,
+			status: "paid",
 			date: "2024-01-15",
 			customer: "Nguyễn Văn A",
 			address: "123 Đường ABC, Quận 1, TP.HCM",
 		},
 		{
 			id: "ORD002",
-			title: "Đơn hàng điện tử",
-			items: ["1x Tai nghe Bluetooth", "1x Cáp sạc"],
-			total: 500000,
-			status: "shipping",
+			title: "Giày Nike từ Nike Store US",
+			items: ["1x Nike Air Max 270", "1x Tất Nike"],
+			total: 4500000,
+			status: "purchased",
 			date: "2024-01-14",
 			customer: "Trần Thị B",
 			address: "456 Đường XYZ, Quận 2, TP.HCM",
 		},
 		{
 			id: "ORD003",
-			title: "Đơn hàng thời trang",
-			items: ["1x Áo thun", "1x Quần jeans"],
-			total: 800000,
-			status: "processing",
+			title: "MacBook Pro từ Apple Store",
+			items: ["1x MacBook Pro 16 inch M3", "1x Magic Mouse"],
+			total: 55000000,
+			status: "international_shipping",
 			date: "2024-01-13",
 			customer: "Lê Văn C",
 			address: "789 Đường DEF, Quận 3, TP.HCM",
 		},
 		{
 			id: "ORD004",
-			title: "Đơn hàng sách",
-			items: ["3x Sách giáo khoa", "1x Vở ghi chú"],
-			total: 250000,
-			status: "cancelled",
+			title: "Túi Louis Vuitton từ Paris",
+			items: ["1x Louis Vuitton Neverfull MM", "1x Wallet"],
+			total: 45000000,
+			status: "customs_cleared",
 			date: "2024-01-12",
 			customer: "Phạm Thị D",
 			address: "321 Đường GHI, Quận 4, TP.HCM",
 		},
+		{
+			id: "ORD005",
+			title: "Đồng hồ Rolex từ Switzerland",
+			items: ["1x Rolex Submariner", "1x Hộp đựng"],
+			total: 250000000,
+			status: "domestic_shipping",
+			date: "2024-01-11",
+			customer: "Hoàng Văn E",
+			address: "555 Đường JKL, Quận 5, TP.HCM",
+		},
+		{
+			id: "ORD006",
+			title: "Laptop Gaming từ Newegg",
+			items: ["1x ASUS ROG Strix", "1x Gaming Mouse"],
+			total: 35000000,
+			status: "delivered",
+			date: "2024-01-10",
+			customer: "Võ Thị F",
+			address: "777 Đường MNO, Quận 6, TP.HCM",
+		},
+		{
+			id: "ORD007",
+			title: "Camera Sony từ B&H",
+			items: ["1x Sony A7R V", "1x Lens 24-70mm"],
+			total: 75000000,
+			status: "completed",
+			date: "2024-01-09",
+			customer: "Đặng Văn G",
+			address: "888 Đường PQR, Quận 7, TP.HCM",
+		},
+		{
+			id: "ORD008",
+			title: "Perfume Chanel từ France",
+			items: ["1x Chanel No.5", "1x Travel Size"],
+			total: 8500000,
+			status: "cancelled",
+			date: "2024-01-08",
+			customer: "Bùi Thị H",
+			address: "999 Đường STU, Quận 8, TP.HCM",
+		},
+	];
+
+	const tabs = [
+		{ id: "all", label: "Tất cả", status: null },
+		{ id: "paid", label: "Đã thanh toán", status: "paid" },
+		{ id: "purchased", label: "Đã mua hàng", status: "purchased" },
+		{
+			id: "international_shipping",
+			label: "Đang vận chuyển quốc tế",
+			status: "international_shipping",
+		},
+		{
+			id: "customs_cleared",
+			label: "Đã thông quan",
+			status: "customs_cleared",
+		},
+		{
+			id: "domestic_shipping",
+			label: "Đang giao nội địa",
+			status: "domestic_shipping",
+		},
+		{ id: "delivered", label: "Đã giao hàng", status: "delivered" },
+		{ id: "completed", label: "Hoàn tất", status: "completed" },
+		{ id: "cancelled", label: "Đã hủy đơn", status: "cancelled" },
 	];
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "pending":
-				return "#ffc107";
-			case "processing":
+			case "paid":
 				return "#007bff";
-			case "shipping":
+			case "purchased":
 				return "#17a2b8";
+			case "international_shipping":
+				return "#6610f2";
+			case "customs_cleared":
+				return "#6f42c1";
+			case "domestic_shipping":
+				return "#fd7e14";
 			case "delivered":
+				return "#20c997";
+			case "completed":
 				return "#28a745";
 			case "cancelled":
 				return "#dc3545";
@@ -69,16 +139,22 @@ export default function OrderScreen() {
 
 	const getStatusText = (status) => {
 		switch (status) {
-			case "pending":
-				return "Chờ xác nhận";
-			case "processing":
-				return "Đang xử lý";
-			case "shipping":
-				return "Đang giao";
+			case "paid":
+				return "Đã thanh toán";
+			case "purchased":
+				return "Đã mua hàng";
+			case "international_shipping":
+				return "Vận chuyển quốc tế";
+			case "customs_cleared":
+				return "Đã thông quan";
+			case "domestic_shipping":
+				return "Giao nội địa";
 			case "delivered":
-				return "Đã giao";
+				return "Đã giao hàng";
+			case "completed":
+				return "Hoàn tất";
 			case "cancelled":
-				return "Đã hủy";
+				return "Đã hủy đơn";
 			default:
 				return "Không xác định";
 		}
@@ -86,14 +162,20 @@ export default function OrderScreen() {
 
 	const getStatusIcon = (status) => {
 		switch (status) {
-			case "pending":
-				return "time-outline";
-			case "processing":
-				return "settings-outline";
-			case "shipping":
+			case "paid":
+				return "card-outline";
+			case "purchased":
+				return "bag-check-outline";
+			case "international_shipping":
+				return "airplane-outline";
+			case "customs_cleared":
+				return "shield-checkmark-outline";
+			case "domestic_shipping":
 				return "car-outline";
 			case "delivered":
 				return "checkmark-circle-outline";
+			case "completed":
+				return "trophy-outline";
 			case "cancelled":
 				return "close-circle-outline";
 			default:
@@ -124,119 +206,29 @@ export default function OrderScreen() {
 				onChatPress={() => console.log("Chat pressed")}
 			/>
 
-			{/* Stats */}
-			<View style={styles.statsContainer}>
-				<View style={styles.statCard}>
-					<Text className="text-xl font-bold text-blue-600">
-						{orders.filter((o) => o.status === "processing").length}
-					</Text>
-					<Text className="text-xs text-muted-foreground">
-						Đang xử lý
-					</Text>
-				</View>
-
-				<View style={styles.statCard}>
-					<Text className="text-xl font-bold text-teal-600">
-						{orders.filter((o) => o.status === "shipping").length}
-					</Text>
-					<Text className="text-xs text-muted-foreground">
-						Đang giao
-					</Text>
-				</View>
-
-				<View style={styles.statCard}>
-					<Text className="text-xl font-bold text-green-600">
-						{orders.filter((o) => o.status === "delivered").length}
-					</Text>
-					<Text className="text-xs text-muted-foreground">
-						Đã giao
-					</Text>
-				</View>
-
-				<View style={styles.statCard}>
-					<Text className="text-xl font-bold text-red-600">
-						{orders.filter((o) => o.status === "cancelled").length}
-					</Text>
-					<Text className="text-xs text-muted-foreground">
-						Đã hủy
-					</Text>
-				</View>
-			</View>
-
 			{/* Tabs */}
 			<View style={styles.tabContainer}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "all" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("all")}
-					>
-						<Text
-							className={
-								activeTab === "all"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
+					{tabs.map((tab) => (
+						<TouchableOpacity
+							key={tab.id}
+							style={[
+								styles.tab,
+								activeTab === tab.id && styles.activeTab,
+							]}
+							onPress={() => setActiveTab(tab.id)}
 						>
-							Tất cả
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "processing" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("processing")}
-					>
-						<Text
-							className={
-								activeTab === "processing"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Đang xử lý
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "shipping" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("shipping")}
-					>
-						<Text
-							className={
-								activeTab === "shipping"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Đang giao
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={[
-							styles.tab,
-							activeTab === "delivered" && styles.activeTab,
-						]}
-						onPress={() => setActiveTab("delivered")}
-					>
-						<Text
-							className={
-								activeTab === "delivered"
-									? "font-semibold text-blue-600"
-									: "text-muted-foreground"
-							}
-						>
-							Đã giao
-						</Text>
-					</TouchableOpacity>
+							<Text
+								style={[
+									styles.tabText,
+									activeTab === tab.id &&
+										styles.activeTabText,
+								]}
+							>
+								{tab.label}
+							</Text>
+						</TouchableOpacity>
+					))}
 				</ScrollView>
 			</View>
 
@@ -348,7 +340,7 @@ export default function OrderScreen() {
 										</Text>
 									</TouchableOpacity>
 
-									{order.status === "processing" && (
+									{order.status === "delivered" && (
 										<TouchableOpacity
 											style={[
 												styles.actionButton,
@@ -356,12 +348,31 @@ export default function OrderScreen() {
 											]}
 										>
 											<Ionicons
-												name="car-outline"
+												name="checkmark-circle-outline"
 												size={16}
 												color="#28a745"
 											/>
 											<Text className="text-green-600 text-sm ml-1">
-												Giao hàng
+												Xác nhận
+											</Text>
+										</TouchableOpacity>
+									)}
+
+									{(order.status === "paid" ||
+										order.status === "purchased") && (
+										<TouchableOpacity
+											style={[
+												styles.actionButton,
+												{ marginLeft: 12 },
+											]}
+										>
+											<Ionicons
+												name="close-circle-outline"
+												size={16}
+												color="#dc3545"
+											/>
+											<Text className="text-red-600 text-sm ml-1">
+												Hủy đơn
 											</Text>
 										</TouchableOpacity>
 									)}
@@ -392,34 +403,34 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#f8f9fa",
 	},
-	statsContainer: {
-		flexDirection: "row",
-		paddingHorizontal: 20,
-		paddingVertical: 16,
-		backgroundColor: "#ffffff",
-		borderBottomWidth: 1,
-		borderBottomColor: "#e9ecef",
-	},
-	statCard: {
-		flex: 1,
-		alignItems: "center",
-		paddingVertical: 8,
-	},
 	tabContainer: {
 		backgroundColor: "#ffffff",
 		paddingHorizontal: 20,
-		paddingBottom: 10,
+		paddingVertical: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: "#e9ecef",
 	},
 	tab: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		marginRight: 12,
-		borderRadius: 20,
+		paddingHorizontal: 20,
+		paddingVertical: 12,
+		marginRight: 16,
+		borderRadius: 25,
+		backgroundColor: "#f8f9fa",
+		borderWidth: 1,
+		borderColor: "#e9ecef",
 	},
 	activeTab: {
-		backgroundColor: "#e7f3ff",
+		backgroundColor: "#42A5F5",
+		borderColor: "#42A5F5",
+	},
+	tabText: {
+		fontSize: 14,
+		fontWeight: "500",
+		color: "#6c757d",
+	},
+	activeTabText: {
+		color: "#ffffff",
+		fontWeight: "600",
 	},
 	content: {
 		flex: 1,
@@ -427,10 +438,9 @@ const styles = StyleSheet.create({
 		paddingTop: 20,
 	},
 	scrollContent: {
-		paddingBottom: 20,
+		paddingBottom: 100,
 	},
 	ordersList: {
-		marginTop: 16,
 		marginBottom: 20,
 	},
 	orderCard: {
