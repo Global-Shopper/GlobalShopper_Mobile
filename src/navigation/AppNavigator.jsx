@@ -11,6 +11,7 @@ import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
 import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChatSetting from "../screens/profile/ChatSetting";
+import EditAddress from "../screens/profile/EditAddress";
 import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
@@ -85,6 +86,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="AddAddress"
 				component={AddAddress}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="EditAddress"
+				component={EditAddress}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
