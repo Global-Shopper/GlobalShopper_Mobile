@@ -15,6 +15,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export default function AddAddress({ navigation }) {
 	const [formData, setFormData] = useState({
+		fullName: "",
+		phoneNumber: "",
 		houseNumber: "",
 		ward: "",
 		district: "",
@@ -37,6 +39,20 @@ export default function AddAddress({ navigation }) {
 
 	const handleSave = () => {
 		// Validate required fields
+		if (!formData.fullName.trim()) {
+			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
+			return;
+		}
+		if (!formData.phoneNumber.trim()) {
+			Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+			return;
+		}
+		// Validate phone number format
+		const phoneRegex = /^[0-9]{10,11}$/;
+		if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ""))) {
+			Alert.alert("Lỗi", "Số điện thoại không hợp lệ");
+			return;
+		}
 		if (!formData.houseNumber.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập số nhà");
 			return;
@@ -124,6 +140,57 @@ export default function AddAddress({ navigation }) {
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.formContainer}>
+					{/* Thông tin liên hệ Section */}
+					<View style={styles.sectionHeader}>
+						<Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
+					</View>
+
+					{/* Họ và tên */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>
+							Họ và tên <Text style={styles.required}>*</Text>
+						</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="person-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.fullName}
+								onChangeText={(value) => handleInputChange("fullName", value)}
+								placeholder="Nhập họ và tên"
+								placeholderTextColor="#B0BEC5"
+							/>
+						</View>
+					</View>
+
+					{/* Số điện thoại */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>
+							Số điện thoại <Text style={styles.required}>*</Text>
+						</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="call-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.phoneNumber}
+								onChangeText={(value) => handleInputChange("phoneNumber", value)}
+								placeholder="Nhập số điện thoại"
+								placeholderTextColor="#B0BEC5"
+								keyboardType="phone-pad"
+								maxLength={11}
+							/>
+						</View>
+					</View>
+
 					{/* Địa chỉ Section */}
 					<View style={styles.sectionHeader}>
 						<Text style={styles.sectionTitle}>Thông tin địa chỉ</Text>
