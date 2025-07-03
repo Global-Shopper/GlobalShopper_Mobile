@@ -78,8 +78,8 @@ export default function LinkCard({
 						onPress={onRemove}
 					>
 						<Ionicons
-							name="close-circle"
-							size={24}
+							name="trash-outline"
+							size={22}
 							color="#dc3545"
 						/>
 					</TouchableOpacity>
