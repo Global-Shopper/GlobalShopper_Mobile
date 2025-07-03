@@ -18,6 +18,7 @@ export default function MyAddress({ navigation }) {
 			phone: "+84 123 456 789",
 			address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
 			isDefault: true,
+			addressType: "Nhà riêng",
 		},
 		{
 			id: 2,
@@ -25,6 +26,7 @@ export default function MyAddress({ navigation }) {
 			phone: "+84 987 654 321",
 			address: "456 Đường DEF, Phường UVW, Quận 3, TP.HCM",
 			isDefault: false,
+			addressType: "Văn phòng",
 		},
 	]);
 
@@ -34,8 +36,10 @@ export default function MyAddress({ navigation }) {
 	};
 
 	const handleEditAddress = (addressId) => {
-		// Navigate to Edit Address screen
-		console.log("Edit address:", addressId);
+		// Find the address data
+		const addressData = addresses.find((addr) => addr.id === addressId);
+		// Navigate to Edit Address screen with data
+		navigation.navigate("EditAddress", { addressData });
 	};
 
 	const handleSetDefault = (addressId) => {

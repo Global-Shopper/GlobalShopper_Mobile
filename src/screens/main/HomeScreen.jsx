@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import PurchaseProcess from "../home/PurchaseProcess";
@@ -41,7 +41,10 @@ export default function HomeScreen({ navigation }) {
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
 					<View style={styles.mainActionGrid}>
-						<View style={styles.mainActionCard}>
+						<TouchableOpacity
+							style={styles.mainActionCard}
+							onPress={() => navigation.navigate("WithLink")}
+						>
 							<LinearGradient
 								colors={["#42A5F5", "#1976D2"]}
 								start={{ x: 0, y: 0 }}
@@ -66,9 +69,12 @@ export default function HomeScreen({ navigation }) {
 									/>
 								</View>
 							</LinearGradient>
-						</View>
+						</TouchableOpacity>
 
-						<View style={styles.mainActionCard}>
+						<TouchableOpacity
+							style={styles.mainActionCard}
+							onPress={() => navigation.navigate("AddStore")}
+						>
 							<LinearGradient
 								colors={["#E3F2FD", "#BBDEFB"]}
 								start={{ x: 0, y: 0 }}
@@ -98,7 +104,7 @@ export default function HomeScreen({ navigation }) {
 									/>
 								</View>
 							</LinearGradient>
-						</View>
+						</TouchableOpacity>
 					</View>
 				</View>
 

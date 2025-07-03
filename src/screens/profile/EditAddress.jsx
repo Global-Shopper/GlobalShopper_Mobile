@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Alert,
 	ScrollView,
@@ -13,7 +13,10 @@ import {
 	View,
 } from "react-native";
 
-export default function AddAddress({ navigation }) {
+export default function EditAddress({ navigation, route }) {
+	// Get address data from route params
+	const { addressData } = route.params || {};
+
 	const [formData, setFormData] = useState({
 		fullName: "",
 		phoneNumber: "",
@@ -29,11 +32,30 @@ export default function AddAddress({ navigation }) {
 
 	const addressTypeOptions = ["Nhà riêng", "Văn phòng"];
 
+	useEffect(() => {
+		if (addressData) {
+			// Parse address string to extract components
+			const addressParts = addressData.address.split(", ");
+			const initial = {
+				fullName: addressData.name || "",
+				phoneNumber: addressData.phone?.replace("+84 ", "0") || "",
+				houseNumber: addressParts[0] || "",
+				ward: addressParts[1] || "",
+				district: addressParts[2] || "",
+				city: addressParts[3] || "",
+				isDefault: addressData.isDefault || false,
+				addressType: addressData.addressType || "Nhà riêng",
+			};
+			setFormData(initial);
+		}
+	}, [addressData]);
+
 	const handleInputChange = (field, value) => {
 		setFormData((prev) => ({
 			...prev,
 			[field]: value,
 		}));
+		// Check if data has been modified
 		setIsEdited(true);
 	};
 
@@ -70,14 +92,15 @@ export default function AddAddress({ navigation }) {
 			return;
 		}
 
-		// call an API to save the address
+		// Here you would typically call an API to update the address
 		const fullAddress = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
-		console.log("Saving address data:", {
+		console.log("Updating address data:", {
 			...formData,
 			fullAddress,
+			id: addressData.id,
 		});
 
-		Alert.alert("Thành công", "Địa chỉ đã được thêm thành công", [
+		Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
 			{
 				text: "OK",
 				onPress: () => {
@@ -106,6 +129,28 @@ export default function AddAddress({ navigation }) {
 		);
 	};
 
+	const handleDelete = () => {
+		Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa địa chỉ này?", [
+			{
+				text: "Hủy",
+				style: "cancel",
+			},
+			{
+				text: "Xóa",
+				style: "destructive",
+				onPress: () => {
+					console.log("Deleting address:", addressData.id);
+					Alert.alert("Thành công", "Địa chỉ đã được xóa", [
+						{
+							text: "OK",
+							onPress: () => navigation.goBack(),
+						},
+					]);
+				},
+			},
+		]);
+	};
+
 	return (
 		<View style={styles.container}>
 			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
@@ -122,7 +167,7 @@ export default function AddAddress({ navigation }) {
 					>
 						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
 					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Thêm địa chỉ mới</Text>
+					<Text style={styles.headerTitle}>Chỉnh sửa địa chỉ</Text>
 					<TouchableOpacity
 						onPress={handleSave}
 						style={[
@@ -373,6 +418,23 @@ export default function AddAddress({ navigation }) {
 							}
 						/>
 					</View>
+
+					{/* Delete Button */}
+					{!formData.isDefault && (
+						<TouchableOpacity
+							style={styles.deleteButton}
+							onPress={handleDelete}
+						>
+							<Ionicons
+								name="trash-outline"
+								size={20}
+								color="#dc3545"
+							/>
+							<Text style={styles.deleteButtonText}>
+								Xóa địa chỉ
+							</Text>
+						</TouchableOpacity>
+					)}
 				</View>
 			</ScrollView>
 		</View>
@@ -499,6 +561,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#F8F9FA",
 		borderRadius: 8,
 		marginTop: 8,
+		marginBottom: 20,
 	},
 	switchContent: {
 		flexDirection: "row",
@@ -520,5 +583,22 @@ const styles = StyleSheet.create({
 	switchSubtitle: {
 		fontSize: 13,
 		color: "#78909C",
+	},
+	deleteButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 12,
+		backgroundColor: "#FFF5F5",
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#FFEBEE",
+	},
+	deleteButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#dc3545",
+		marginLeft: 8,
 	},
 });
