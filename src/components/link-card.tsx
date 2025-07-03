@@ -1,78 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import {
-	Image,
-	ScrollView,
-	StyleSheet,
-	TextInput,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Text } from "./ui/text";
-
-interface Platform {
-	id: string;
-	name: string;
-	image: any;
-	placeholder: string;
-}
-
-const platforms: Platform[] = [
-	{
-		id: "amazon",
-		name: "Amazon",
-		image: require("../assets/images/ecommerce/amazon-logo.png"),
-		placeholder: "Dán link Amazon tại đây...",
-	},
-	{
-		id: "ebay",
-		name: "eBay",
-		image: require("../assets/images/ecommerce/ebay-logo.png"),
-		placeholder: "Dán link eBay tại đây...",
-	},
-	{
-		id: "aliexpress",
-		name: "AliExpress",
-		image: require("../assets/images/ecommerce/aliexpress-logo.png"),
-		placeholder: "Dán link AliExpress tại đây...",
-	},
-	{
-		id: "asos",
-		name: "ASOS",
-		image: require("../assets/images/ecommerce/asos-logo.png"),
-		placeholder: "Dán link ASOS tại đây...",
-	},
-	{
-		id: "dhgate",
-		name: "DHgate",
-		image: require("../assets/images/ecommerce/dhgate-logo.png"),
-		placeholder: "Dán link DHgate tại đây...",
-	},
-	{
-		id: "gmarket",
-		name: "Gmarket",
-		image: require("../assets/images/ecommerce/gmarket-logo.png"),
-		placeholder: "Dán link Gmarket tại đây...",
-	},
-	{
-		id: "shein",
-		name: "Shein",
-		image: require("../assets/images/ecommerce/shein-logo.png"),
-		placeholder: "Dán link Shein tại đây...",
-	},
-	{
-		id: "other",
-		name: "Khác",
-		image: null,
-		placeholder: "Dán link sản phẩm tại đây...",
-	},
-];
 
 interface LinkCardProps {
 	index: number;
 	onRemove: () => void;
 	onLinkChange: (link: string) => void;
 	canRemove: boolean;
+	link: string;
+	status: "idle" | "validating" | "success" | "error";
+	data?: any;
+	error?: string | null;
 }
 
 export default function LinkCard({
@@ -80,157 +18,140 @@ export default function LinkCard({
 	onRemove,
 	onLinkChange,
 	canRemove,
+	link,
+	status,
+	data,
+	error,
 }: LinkCardProps) {
-	const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
-		null
-	);
-	const [productLink, setProductLink] = useState("");
-	const [showDropdown, setShowDropdown] = useState(false);
-
-	const handlePlatformSelect = (platform: Platform) => {
-		setSelectedPlatform(platform);
-		setShowDropdown(false);
-	};
-
-	const handleLinkChange = (text: string) => {
-		setProductLink(text);
-		onLinkChange(text);
-	};
-
-	const isValidUrl = (string: string) => {
-		try {
-			new URL(string);
-			return true;
-		} catch {
-			return false;
+	const getInputIcon = () => {
+		switch (status) {
+			case "validating":
+				return {
+					name: "hourglass-outline" as const,
+					color: "#FF9800",
+				};
+			case "success":
+				return {
+					name: "checkmark-circle" as const,
+					color: "#4CAF50",
+				};
+			case "error":
+				return {
+					name: "close-circle" as const,
+					color: "#dc3545",
+				};
+			default:
+				return {
+					name: "link-outline" as const,
+					color: "#42A5F5",
+				};
 		}
 	};
+
+	const getInputStyle = () => {
+		switch (status) {
+			case "success":
+				return [styles.inputContainer, styles.successInput];
+			case "error":
+				return [styles.inputContainer, styles.errorInput];
+			case "validating":
+				return [styles.inputContainer, styles.validatingInput];
+			default:
+				return styles.inputContainer;
+		}
+	};
+
+	const inputIcon = getInputIcon();
 
 	return (
 		<View style={styles.linkCard}>
 			<View style={styles.cardHeader}>
-				<Text style={styles.cardTitle}>Sản phẩm {index + 1}</Text>
+				<View style={styles.cardTitleContainer}>
+					<View style={styles.numberBadge}>
+						<Text style={styles.numberText}>{index + 1}</Text>
+					</View>
+					<Text style={styles.cardTitle}>Sản phẩm {index + 1}</Text>
+				</View>
 				{canRemove && (
 					<TouchableOpacity
 						style={styles.removeButton}
 						onPress={onRemove}
 					>
-						<Ionicons name="close" size={20} color="#dc3545" />
+						<Ionicons
+							name="close-circle"
+							size={24}
+							color="#dc3545"
+						/>
 					</TouchableOpacity>
 				)}
 			</View>
 
-			{/* Platform Selector */}
-			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>
-					Chọn sàn thương mại <Text style={styles.required}>*</Text>
-				</Text>
-				<TouchableOpacity
-					style={styles.dropdown}
-					onPress={() => setShowDropdown(!showDropdown)}
-				>
-					{selectedPlatform ? (
-						<View style={styles.selectedPlatform}>
-							{selectedPlatform.image ? (
-								<Image
-									source={selectedPlatform.image}
-									style={styles.platformImage}
-								/>
-							) : (
-								<Ionicons
-									name="storefront-outline"
-									size={24}
-									color="#42A5F5"
-									style={{ marginRight: 12 }}
-								/>
-							)}
-							<Text style={styles.platformName}>
-								{selectedPlatform.name}
-							</Text>
-						</View>
-					) : (
-						<Text style={styles.dropdownPlaceholder}>
-							Chọn sàn thương mại
-						</Text>
-					)}
+			<View style={styles.inputSection}>
+				<View style={getInputStyle()}>
 					<Ionicons
-						name={showDropdown ? "chevron-up" : "chevron-down"}
+						name={inputIcon.name}
 						size={20}
-						color="#666"
+						color={inputIcon.color}
+						style={styles.inputIcon}
 					/>
-				</TouchableOpacity>
+					<TextInput
+						style={styles.textInput}
+						placeholder="Dán link sản phẩm tại đây..."
+						placeholderTextColor="#9E9E9E"
+						value={link}
+						onChangeText={onLinkChange}
+						multiline
+						numberOfLines={2}
+						autoCapitalize="none"
+						keyboardType="url"
+						editable={status !== "validating"}
+					/>
+					{status === "validating" && (
+						<View style={styles.validatingIcon}>
+							<Ionicons
+								name="refresh"
+								size={16}
+								color="#FF9800"
+							/>
+						</View>
+					)}
+				</View>
 
-				{showDropdown && (
-					<View style={styles.dropdownList}>
-						<ScrollView
-							style={styles.dropdownScrollView}
-							showsVerticalScrollIndicator={false}
-							nestedScrollEnabled={true}
-						>
-							{platforms.map((platform, platformIndex) => (
-								<TouchableOpacity
-									key={platform.id}
-									style={[
-										styles.dropdownItem,
-										platformIndex ===
-											platforms.length - 1 &&
-											styles.lastDropdownItem,
-									]}
-									onPress={() =>
-										handlePlatformSelect(platform)
-									}
-								>
-									{platform.image ? (
-										<Image
-											source={platform.image}
-											style={styles.platformImage}
-										/>
-									) : (
-										<Ionicons
-											name="storefront-outline"
-											size={24}
-											color="#42A5F5"
-											style={{ marginRight: 12 }}
-										/>
-									)}
-									<Text style={styles.platformName}>
-										{platform.name}
-									</Text>
-								</TouchableOpacity>
-							))}
-						</ScrollView>
+				{/* Status Messages */}
+				{status === "success" && data && (
+					<View style={styles.successContainer}>
+						<Ionicons
+							name="checkmark-circle"
+							size={16}
+							color="#4CAF50"
+						/>
+						<Text style={styles.successText}>
+							Đã lấy được dữ liệu sản phẩm:{" "}
+							{data.title || "Sản phẩm hợp lệ"}
+						</Text>
+					</View>
+				)}
+
+				{status === "error" && error && (
+					<View style={styles.errorContainer}>
+						<Ionicons name="warning" size={14} color="#dc3545" />
+						<Text style={styles.errorText}>{error}</Text>
+					</View>
+				)}
+
+				{status === "validating" && (
+					<View style={styles.validatingContainer}>
+						<Ionicons
+							name="hourglass-outline"
+							size={14}
+							color="#FF9800"
+						/>
+						<Text style={styles.validatingText}>
+							Đang kiểm tra link...
+						</Text>
 					</View>
 				)}
 			</View>
-
-			{/* Link Input */}
-			{selectedPlatform && (
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>
-						Link sản phẩm <Text style={styles.required}>*</Text>
-					</Text>
-					<TextInput
-						style={[
-							styles.textInput,
-							productLink &&
-								!isValidUrl(productLink) &&
-								styles.errorInput,
-						]}
-						placeholder={selectedPlatform.placeholder}
-						value={productLink}
-						onChangeText={handleLinkChange}
-						multiline
-						numberOfLines={3}
-						autoCapitalize="none"
-						keyboardType="url"
-					/>
-					{productLink && !isValidUrl(productLink) && (
-						<Text style={styles.errorText}>
-							Link không hợp lệ. Vui lòng kiểm tra lại.
-						</Text>
-					)}
-				</View>
-			)}
 		</View>
 	);
 }
@@ -238,17 +159,40 @@ export default function LinkCard({
 const styles = StyleSheet.create({
 	linkCard: {
 		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		padding: 18,
 		marginBottom: 16,
 		borderWidth: 1,
-		borderColor: "#E0E0E0",
+		borderColor: "#E8F2FF",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 8,
+		elevation: 2,
 	},
 	cardHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 16,
+		marginBottom: 14,
+	},
+	cardTitleContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	numberBadge: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: "#42A5F5",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 10,
+	},
+	numberText: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: "#FFFFFF",
 	},
 	cardTitle: {
 		fontSize: 16,
@@ -258,98 +202,98 @@ const styles = StyleSheet.create({
 	removeButton: {
 		padding: 4,
 	},
-	section: {
-		marginBottom: 16,
+	inputSection: {
+		marginBottom: 0,
 	},
-	sectionTitle: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#333",
-		marginBottom: 8,
-	},
-	required: {
-		color: "#dc3545",
-	},
-	dropdown: {
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#E0E0E0",
-		paddingVertical: 16,
-		paddingHorizontal: 16,
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	selectedPlatform: {
+	inputContainer: {
 		flexDirection: "row",
 		alignItems: "center",
-	},
-	platformImage: {
-		width: 24,
-		height: 24,
-		marginRight: 12,
-		resizeMode: "contain",
-	},
-	platformName: {
-		fontSize: 16,
-		color: "#333",
-	},
-	dropdownPlaceholder: {
-		fontSize: 16,
-		color: "#999",
-	},
-	dropdownList: {
-		backgroundColor: "#FFFFFF",
+		backgroundColor: "#F8FAFE",
 		borderRadius: 12,
 		borderWidth: 1,
-		borderColor: "#E0E0E0",
-		marginTop: 8,
-		maxHeight: 160,
-		overflow: "hidden",
-		elevation: 5,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3.84,
-		zIndex: 1000,
-	},
-	dropdownScrollView: {
-		maxHeight: 160,
-	},
-	dropdownItem: {
+		borderColor: "#E0E7FF",
 		paddingVertical: 12,
-		paddingHorizontal: 16,
-		flexDirection: "row",
-		alignItems: "center",
-		borderBottomWidth: 1,
-		borderBottomColor: "#F0F0F0",
+		paddingHorizontal: 14,
+		minHeight: 48,
 	},
-	lastDropdownItem: {
-		borderBottomWidth: 0,
+	inputIcon: {
+		marginRight: 10,
 	},
 	textInput: {
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#E0E0E0",
-		paddingVertical: 16,
-		paddingHorizontal: 16,
-		fontSize: 16,
+		flex: 1,
+		fontSize: 15,
 		color: "#333",
 		textAlignVertical: "top",
-		minHeight: 80,
+		minHeight: 24,
+		paddingVertical: 0,
+	},
+	validIcon: {
+		marginLeft: 8,
+	},
+	validatingIcon: {
+		marginLeft: 8,
+	},
+	successInput: {
+		borderColor: "#4CAF50",
+		backgroundColor: "#F1F8E9",
+	},
+	validatingInput: {
+		borderColor: "#FF9800",
+		backgroundColor: "#FFF8E1",
 	},
 	errorInput: {
 		borderColor: "#dc3545",
 		backgroundColor: "#FFF5F5",
 	},
+	successContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginTop: 6,
+		marginLeft: 2,
+		backgroundColor: "#E8F5E8",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
+	},
+	successText: {
+		fontSize: 12,
+		color: "#2E7D32",
+		marginLeft: 6,
+		flex: 1,
+		fontWeight: "500",
+	},
+	validatingContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginTop: 6,
+		marginLeft: 2,
+		backgroundColor: "#FFF3E0",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
+	},
+	validatingText: {
+		fontSize: 12,
+		color: "#F57C00",
+		marginLeft: 6,
+		flex: 1,
+		fontWeight: "500",
+	},
+	errorContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginTop: 6,
+		marginLeft: 2,
+		backgroundColor: "#FFEBEE",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
+	},
 	errorText: {
 		fontSize: 12,
 		color: "#dc3545",
-		marginTop: 4,
+		marginLeft: 6,
+		flex: 1,
+		fontWeight: "500",
 	},
 });
