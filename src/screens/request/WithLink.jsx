@@ -14,6 +14,7 @@ import { Text } from "../../components/ui/text";
 
 export default function WithLink({ navigation }) {
 	const [productLinks, setProductLinks] = useState([""]);
+	const [showInstructions, setShowInstructions] = useState(false);
 	const MAX_LINKS = 5;
 
 	const isValidUrl = (string) => {
@@ -106,29 +107,47 @@ export default function WithLink({ navigation }) {
 				onChatPress={() => console.log("Chat pressed")}
 			/>
 
+			{/* Help Button */}
+			<View style={styles.helpButtonContainer}>
+				<TouchableOpacity
+					style={styles.helpButton}
+					onPress={() => setShowInstructions(!showInstructions)}
+				>
+					<Ionicons
+						name="information-circle-outline"
+						size={20}
+						color="#42A5F5"
+					/>
+					<Text style={styles.helpButtonText}>Hướng dẫn</Text>
+				</TouchableOpacity>
+			</View>
+
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Instructions */}
-				<View style={styles.instructionCard}>
-					<Ionicons
-						name="information-circle"
-						size={24}
-						color="#42A5F5"
-					/>
-					<View style={styles.instructionText}>
-						<Text style={styles.instructionTitle}>
-							Hướng dẫn sử dụng
-						</Text>
-						<Text style={styles.instructionDesc}>
-							Dán link sản phẩm từ bất kỳ trang thương mại điện tử
-							nào để chúng tôi hỗ trợ kiểm tra và mua hàng giúp
-							bạn. Bạn có thể thêm tối đa {MAX_LINKS} sản phẩm.
-						</Text>
+				{/* Collapsible Instructions */}
+				{showInstructions && (
+					<View style={styles.instructionCard}>
+						<Ionicons
+							name="information-circle"
+							size={24}
+							color="#42A5F5"
+						/>
+						<View style={styles.instructionText}>
+							<Text style={styles.instructionTitle}>
+								Hướng dẫn sử dụng
+							</Text>
+							<Text style={styles.instructionDesc}>
+								Dán link sản phẩm từ bất kỳ trang thương mại
+								điện tử nào để chúng tôi hỗ trợ kiểm tra và mua
+								hàng giúp bạn. Bạn có thể thêm tối đa{" "}
+								{MAX_LINKS} sản phẩm.
+							</Text>
+						</View>
 					</View>
-				</View>
+				)}
 
 				{/* Product Links */}
 				{productLinks.map((link, index) => (
@@ -284,12 +303,39 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#f8f9fa",
 	},
+	helpButtonContainer: {
+		alignItems: "flex-end",
+		paddingHorizontal: 20,
+		paddingTop: 10,
+		paddingBottom: 5,
+	},
+	helpButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#FFFFFF",
+		borderRadius: 20,
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 2,
+		borderWidth: 1,
+		borderColor: "#E8F2FF",
+	},
+	helpButtonText: {
+		fontSize: 12,
+		color: "#42A5F5",
+		fontWeight: "500",
+		marginLeft: 4,
+	},
 	content: {
 		flex: 1,
 		paddingHorizontal: 20,
 	},
 	scrollContent: {
-		paddingTop: 20,
+		paddingTop: 5,
 		paddingBottom: 100,
 	},
 	instructionCard: {
@@ -298,9 +344,15 @@ const styles = StyleSheet.create({
 		padding: 16,
 		flexDirection: "row",
 		alignItems: "flex-start",
-		marginBottom: 24,
+		marginBottom: 20,
+		marginTop: 10,
 		borderWidth: 1,
 		borderColor: "#BBDEFB",
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 6,
+		elevation: 2,
 	},
 	instructionText: {
 		flex: 1,
