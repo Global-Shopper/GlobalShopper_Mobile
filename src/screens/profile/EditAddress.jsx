@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react";
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	StyleSheet,
-	StatusBar,
-	TextInput,
-	Alert,
-	Switch,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import {
+	Alert,
+	ScrollView,
+	StatusBar,
+	StyleSheet,
+	Switch,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 export default function EditAddress({ navigation, route }) {
 	// Get address data from route params
 	const { addressData } = route.params || {};
-	
+
 	const [formData, setFormData] = useState({
 		fullName: "",
 		phoneNumber: "",
@@ -51,9 +51,9 @@ export default function EditAddress({ navigation, route }) {
 	}, [addressData]);
 
 	const handleInputChange = (field, value) => {
-		setFormData(prev => ({
+		setFormData((prev) => ({
 			...prev,
-			[field]: value
+			[field]: value,
 		}));
 		// Check if data has been modified
 		setIsEdited(true);
@@ -97,76 +97,69 @@ export default function EditAddress({ navigation, route }) {
 		console.log("Updating address data:", {
 			...formData,
 			fullAddress,
-			id: addressData.id
+			id: addressData.id,
 		});
-		
-		Alert.alert(
-			"Thành công",
-			"Địa chỉ đã được cập nhật thành công",
-			[
-				{
-					text: "OK",
-					onPress: () => {
-						setIsEdited(false);
-						navigation.goBack();
-					}
-				}
-			]
-		);
+
+		Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
+			{
+				text: "OK",
+				onPress: () => {
+					setIsEdited(false);
+					navigation.goBack();
+				},
+			},
+		]);
 	};
 
 	const showAddressTypePicker = () => {
 		Alert.alert(
 			"Chọn loại địa chỉ",
 			"",
-			addressTypeOptions.map(option => ({
-				text: option,
-				onPress: () => handleInputChange("addressType", option)
-			})).concat([
-				{
-					text: "Hủy",
-					style: "cancel"
-				}
-			])
+			addressTypeOptions
+				.map((option) => ({
+					text: option,
+					onPress: () => handleInputChange("addressType", option),
+				}))
+				.concat([
+					{
+						text: "Hủy",
+						style: "cancel",
+					},
+				])
 		);
 	};
 
 	const handleDelete = () => {
-		Alert.alert(
-			"Xác nhận xóa",
-			"Bạn có chắc chắn muốn xóa địa chỉ này?",
-			[
-				{
-					text: "Hủy",
-					style: "cancel"
+		Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa địa chỉ này?", [
+			{
+				text: "Hủy",
+				style: "cancel",
+			},
+			{
+				text: "Xóa",
+				style: "destructive",
+				onPress: () => {
+					console.log("Deleting address:", addressData.id);
+					Alert.alert("Thành công", "Địa chỉ đã được xóa", [
+						{
+							text: "OK",
+							onPress: () => navigation.goBack(),
+						},
+					]);
 				},
-				{
-					text: "Xóa",
-					style: "destructive",
-					onPress: () => {
-						console.log("Deleting address:", addressData.id);
-						Alert.alert(
-							"Thành công",
-							"Địa chỉ đã được xóa",
-							[
-								{
-									text: "OK",
-									onPress: () => navigation.goBack()
-								}
-							]
-						);
-					}
-				}
-			]
-		);
+			},
+		]);
 	};
 
 	return (
 		<View style={styles.container}>
 			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
-			
+
 			{/* Header */}
-			<LinearGradient colors={["#42A5F5", "#1976D2"]} style={styles.header}>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				style={styles.header}
+			>
 				<View style={styles.headerContent}>
 					<TouchableOpacity
 						onPress={() => navigation.goBack()}
@@ -177,10 +170,18 @@ export default function EditAddress({ navigation, route }) {
 					<Text style={styles.headerTitle}>Chỉnh sửa địa chỉ</Text>
 					<TouchableOpacity
 						onPress={handleSave}
-						style={[styles.saveButton, isEdited && styles.saveButtonActive]}
+						style={[
+							styles.saveButton,
+							isEdited && styles.saveButtonActive,
+						]}
 						disabled={!isEdited}
 					>
-						<Text style={[styles.saveButtonText, isEdited && styles.saveButtonTextActive]}>
+						<Text
+							style={[
+								styles.saveButtonText,
+								isEdited && styles.saveButtonTextActive,
+							]}
+						>
 							Lưu
 						</Text>
 					</TouchableOpacity>
@@ -195,7 +196,9 @@ export default function EditAddress({ navigation, route }) {
 				<View style={styles.formContainer}>
 					{/* Thông tin liên hệ Section */}
 					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
+						<Text style={styles.sectionTitle}>
+							Thông tin liên hệ
+						</Text>
 					</View>
 
 					{/* Họ và tên */}
@@ -213,7 +216,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.fullName}
-								onChangeText={(value) => handleInputChange("fullName", value)}
+								onChangeText={(value) =>
+									handleInputChange("fullName", value)
+								}
 								placeholder="Nhập họ và tên"
 								placeholderTextColor="#B0BEC5"
 							/>
@@ -235,7 +240,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.phoneNumber}
-								onChangeText={(value) => handleInputChange("phoneNumber", value)}
+								onChangeText={(value) =>
+									handleInputChange("phoneNumber", value)
+								}
 								placeholder="Nhập số điện thoại"
 								placeholderTextColor="#B0BEC5"
 								keyboardType="phone-pad"
@@ -246,13 +253,16 @@ export default function EditAddress({ navigation, route }) {
 
 					{/* Địa chỉ Section */}
 					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Thông tin địa chỉ</Text>
+						<Text style={styles.sectionTitle}>
+							Thông tin địa chỉ
+						</Text>
 					</View>
 
 					{/* Số nhà */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>
-							Số nhà, tên đường <Text style={styles.required}>*</Text>
+							Số nhà, tên đường{" "}
+							<Text style={styles.required}>*</Text>
 						</Text>
 						<View style={styles.inputContainer}>
 							<Ionicons
@@ -264,7 +274,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.houseNumber}
-								onChangeText={(value) => handleInputChange("houseNumber", value)}
+								onChangeText={(value) =>
+									handleInputChange("houseNumber", value)
+								}
 								placeholder="Ví dụ: 123 Đường ABC"
 								placeholderTextColor="#B0BEC5"
 							/>
@@ -286,7 +298,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.ward}
-								onChangeText={(value) => handleInputChange("ward", value)}
+								onChangeText={(value) =>
+									handleInputChange("ward", value)
+								}
 								placeholder="Nhập phường/xã"
 								placeholderTextColor="#B0BEC5"
 							/>
@@ -308,7 +322,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.district}
-								onChangeText={(value) => handleInputChange("district", value)}
+								onChangeText={(value) =>
+									handleInputChange("district", value)
+								}
 								placeholder="Nhập quận/huyện"
 								placeholderTextColor="#B0BEC5"
 							/>
@@ -318,7 +334,8 @@ export default function EditAddress({ navigation, route }) {
 					{/* Tỉnh/Thành phố */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>
-							Tỉnh/Thành phố <Text style={styles.required}>*</Text>
+							Tỉnh/Thành phố{" "}
+							<Text style={styles.required}>*</Text>
 						</Text>
 						<View style={styles.inputContainer}>
 							<Ionicons
@@ -330,7 +347,9 @@ export default function EditAddress({ navigation, route }) {
 							<TextInput
 								style={styles.textInput}
 								value={formData.city}
-								onChangeText={(value) => handleInputChange("city", value)}
+								onChangeText={(value) =>
+									handleInputChange("city", value)
+								}
 								placeholder="Nhập tỉnh/thành phố"
 								placeholderTextColor="#B0BEC5"
 							/>
@@ -340,7 +359,7 @@ export default function EditAddress({ navigation, route }) {
 					{/* Loại địa chỉ */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>Loại địa chỉ</Text>
-						<TouchableOpacity 
+						<TouchableOpacity
 							style={styles.inputContainer}
 							onPress={showAddressTypePicker}
 						>
@@ -350,10 +369,23 @@ export default function EditAddress({ navigation, route }) {
 								color="#78909C"
 								style={styles.inputIcon}
 							/>
-							<Text style={[styles.textInput, { color: formData.addressType ? "#263238" : "#B0BEC5" }]}>
+							<Text
+								style={[
+									styles.textInput,
+									{
+										color: formData.addressType
+											? "#263238"
+											: "#B0BEC5",
+									},
+								]}
+							>
 								{formData.addressType || "Chọn loại địa chỉ"}
 							</Text>
-							<Ionicons name="chevron-down" size={20} color="#78909C" />
+							<Ionicons
+								name="chevron-down"
+								size={20}
+								color="#78909C"
+							/>
 						</TouchableOpacity>
 					</View>
 
@@ -367,7 +399,9 @@ export default function EditAddress({ navigation, route }) {
 								style={styles.switchIcon}
 							/>
 							<View style={styles.switchTextContainer}>
-								<Text style={styles.switchLabel}>Đặt làm địa chỉ mặc định</Text>
+								<Text style={styles.switchLabel}>
+									Đặt làm địa chỉ mặc định
+								</Text>
 								<Text style={styles.switchSubtitle}>
 									Địa chỉ này sẽ được sử dụng làm mặc định
 								</Text>
@@ -375,9 +409,13 @@ export default function EditAddress({ navigation, route }) {
 						</View>
 						<Switch
 							value={formData.isDefault}
-							onValueChange={(value) => handleInputChange("isDefault", value)}
+							onValueChange={(value) =>
+								handleInputChange("isDefault", value)
+							}
 							trackColor={{ false: "#E0E0E0", true: "#4FC3F7" }}
-							thumbColor={formData.isDefault ? "#1976D2" : "#FFFFFF"}
+							thumbColor={
+								formData.isDefault ? "#1976D2" : "#FFFFFF"
+							}
 						/>
 					</View>
 
@@ -387,8 +425,14 @@ export default function EditAddress({ navigation, route }) {
 							style={styles.deleteButton}
 							onPress={handleDelete}
 						>
-							<Ionicons name="trash-outline" size={20} color="#dc3545" />
-							<Text style={styles.deleteButtonText}>Xóa địa chỉ</Text>
+							<Ionicons
+								name="trash-outline"
+								size={20}
+								color="#dc3545"
+							/>
+							<Text style={styles.deleteButtonText}>
+								Xóa địa chỉ
+							</Text>
 						</TouchableOpacity>
 					)}
 				</View>

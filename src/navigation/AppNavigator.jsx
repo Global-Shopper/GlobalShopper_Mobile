@@ -19,6 +19,7 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import WithLink from "../screens/request/WithLink";
+import AddStore from "../screens/request/AddStore";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
@@ -141,6 +142,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="WithLink"
 				component={WithLink}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="AddStore"
+				component={AddStore}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

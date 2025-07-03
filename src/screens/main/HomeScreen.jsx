@@ -73,7 +73,7 @@ export default function HomeScreen({ navigation }) {
 
 						<TouchableOpacity
 							style={styles.mainActionCard}
-							onPress={() => console.log("Nhập thông tin sản phẩm pressed")}
+							onPress={() => navigation.navigate("AddStore")}
 						>
 							<LinearGradient
 								colors={["#E3F2FD", "#BBDEFB"]}

@@ -37,7 +37,7 @@ export default function MyAddress({ navigation }) {
 
 	const handleEditAddress = (addressId) => {
 		// Find the address data
-		const addressData = addresses.find(addr => addr.id === addressId);
+		const addressData = addresses.find((addr) => addr.id === addressId);
 		// Navigate to Edit Address screen with data
 		navigation.navigate("EditAddress", { addressData });
 	};
