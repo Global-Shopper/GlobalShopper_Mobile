@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -29,7 +28,6 @@ export default function LoginScreen({ navigation }) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [login] = useLoginMutation()
 	const dispatch = useDispatch()
-	const navigate = useNavigation()
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -98,10 +96,13 @@ export default function LoginScreen({ navigation }) {
         .catch((e) => {
           if (e.data?.errorCode === 1001) {
             Alert.alert("Bạn cần phải xác nhận email")
+			navigation.navigate("OTPVerification", {
+				email: email,
+			});
           }
           else {
-            Alert("Đã có lỗi xảy ra. Vui lòng thử lại sau")
-          }
+			Alert.alert(e.data.message || "Đã có lỗi xảy ra. Vui lòng thử lại sau")
+		  }
 
         }).finally(()=>{
 			setIsLoading(false);

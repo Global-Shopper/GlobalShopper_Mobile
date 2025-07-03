@@ -12,12 +12,17 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../features/user";
+import { useVerifyOTPMutation } from "../../services/gshopApi";
 
 export default function OTPVerificationScreen({ navigation, route }) {
 	const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [timer, setTimer] = useState(60);
 	const [canResend, setCanResend] = useState(false);
+	const [verifyOTP] = useVerifyOTPMutation()
+	const dispatch = useDispatch()
 
 	// Get email and type from navigation params
 	const email = route?.params?.email || "your-email@example.com";
@@ -150,36 +155,17 @@ export default function OTPVerificationScreen({ navigation, route }) {
 		setIsLoading(true);
 
 		try {
-			// Simulate API call - replace with real API call
-			await new Promise((resolve, reject) => {
-				setTimeout(() => {
-					// "123456" as valid OTP, others as invalid
-					if (otpCode === "123456") {
-						resolve();
-					} else {
-						reject({
-							data: {
-								errorCode: "INVALID_OTP",
-								message: "OTP không hợp lệ hoặc đã hết hạn",
-							},
-						});
-					}
-				}, 2000);
-			});
-
-			// Success case
-			if (type === "forgot-password") {
-				// For forgot password, navigate directly to reset password screen
-				navigation.navigate("ResetPassword", { email });
-			} else {
-				// For signup verification, show success message then go to login
-				Alert.alert("Thành công", content.successMessage, [
-					{
-						text: "OK",
-						onPress: () => navigation.navigate("Login"),
-					},
-				]);
+			const data = {
+				email: email,
+				otp: otp.join('')
 			}
+			verifyOTP(data).unwrap().then(res => {
+				dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
+				navigation.reset({
+					index: 0,
+					routes: [{ name: 'Tabs' }],
+					});
+				})
 		} catch (error) {
 			// Handle different error cases
 			if (error?.data?.errorCode === "ALREADY_VERIFIED") {
