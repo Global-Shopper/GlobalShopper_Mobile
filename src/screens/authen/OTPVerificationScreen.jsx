@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "../../features/user";
-import { useVerifyOTPMutation } from "../../services/gshopApi";
+import { useLazyResendOTPQuery, useVerifyOTPMutation } from "../../services/gshopApi";
 
 export default function OTPVerificationScreen({ navigation, route }) {
 	const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -22,6 +22,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 	const [timer, setTimer] = useState(60);
 	const [canResend, setCanResend] = useState(false);
 	const [verifyOTP] = useVerifyOTPMutation()
+	const [resendOTP] = useLazyResendOTPQuery()
 	const dispatch = useDispatch()
 
 	// Get email and type from navigation params
@@ -205,9 +206,9 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
 		try {
 			// Simulate API call - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-
-			Alert.alert("Đã gửi lại mã OTP", content.resendMessage);
+			resendOTP({email: email}).unwrap().then(res =>{
+				Alert.alert(res.message || "Đã xảy ra lỗi. Vui lòng thử lại!")
+			} )
 		} catch (_error) {
 			Alert.alert("Gửi lại OTP thất bại", "Vui lòng thử lại sau.");
 			// Reset timer on failure
