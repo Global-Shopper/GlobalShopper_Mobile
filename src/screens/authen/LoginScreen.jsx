@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
 	Alert,
@@ -11,9 +12,13 @@ import {
 	StyleSheet,
 	Text,
 	TextInput,
+	ToastAndroid,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../features/user";
+import { useLoginMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
@@ -22,6 +27,9 @@ export default function LoginScreen({ navigation }) {
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [login] = useLoginMutation()
+	const dispatch = useDispatch()
+	const navigate = useNavigation()
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -72,18 +80,33 @@ export default function LoginScreen({ navigation }) {
 			Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
 			return;
 		}
-
 		setIsLoading(true);
 
-		// Simulate API call
-		setTimeout(() => {
+		const values = {
+			email: email,
+			password: password
+		}
+		login(values).unwrap().then((res) => {
+        dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
+		ToastAndroid.show("Đăng nhập thành công",ToastAndroid.SHORT)
+		Alert.alert("Đăng nhập thành công")
+		navigation.reset({
+		index: 0,
+		routes: [{ name: 'Tabs' }],
+		});
+		})
+        .catch((e) => {
+          if (e.data?.errorCode === 1001) {
+            Alert.alert("Bạn cần phải xác nhận email")
+          }
+          else {
+            Alert("Đã có lỗi xảy ra. Vui lòng thử lại sau")
+          }
+
+        }).finally(()=>{
 			setIsLoading(false);
-			// Navigate to main app with BottomTab
-			navigation.reset({
-				index: 0,
-				routes: [{ name: "Tabs" }],
-			});
-		}, 2000);
+		})
+
 	};
 
 	const handleForgotPassword = () => {
