@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import Header from "../../components/header";
 import ProductForm from "../../components/product-form";
 
@@ -27,7 +27,11 @@ export default function ProductDetails({ navigation, route }) {
 	};
 
 	return (
-		<View style={styles.container}>
+		<KeyboardAvoidingView
+			style={styles.container}
+			behavior={Platform.OS === "ios" ? "padding" : "padding"}
+			keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+		>
 			{/* Header */}
 			<Header
 				title={getHeaderTitle()}
@@ -45,7 +49,7 @@ export default function ProductDetails({ navigation, route }) {
 				mode={mode}
 				onSubmit={handleSubmit}
 			/>
-		</View>
+		</KeyboardAvoidingView>
 	);
 }
 
