@@ -14,6 +14,9 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../features/user";
+import { useResetPasswordMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
@@ -31,10 +34,12 @@ export default function ResetPasswordScreen({ navigation, route }) {
 
 	// Get email from navigation params
 	const email = route?.params?.email || "your-email@example.com";
-
+	const resetPasswordToken = route?.params?.resetPasswordToken || "";
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
+	const [resetPassword] = useResetPasswordMutation()
+	const dispatch = useDispatch()
 
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
@@ -124,22 +129,21 @@ export default function ResetPasswordScreen({ navigation, route }) {
 
 		try {
 			// Simulate API call to reset password
-			await new Promise((resolve) => setTimeout(resolve, 2000));
-
-			Alert.alert(
-				"Thành công",
-				"Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập với mật khẩu mới.",
-				[
-					{
-						text: "OK",
-						onPress: () => navigation.navigate("Login"),
-					},
-				]
-			);
+			resetPassword({
+				token: resetPasswordToken,
+				password: password,
+			}).unwrap().then(res => {
+				Alert.alert("Thành công", "Mật khẩu đã được đặt lại thành công");
+				dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
+				navigation.reset({
+					index: 0,
+					routes: [{ name: 'Tabs' }],
+					});
+			})
 		} catch (_error) {
 			Alert.alert(
 				"Lỗi",
-				"Không thể đặt lại mật khẩu. Vui lòng thử lại sau."
+				_error?.data?.message || "Lỗi khi đặt lại mật khẩu"
 			);
 		} finally {
 			setIsLoading(false);

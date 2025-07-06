@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "../../features/user";
-import { useLazyResendOTPQuery, useVerifyOTPMutation } from "../../services/gshopApi";
+import { useLazyResendOTPQuery, useVerifyOTPForgotPasswordMutation, useVerifyOTPMutation } from "../../services/gshopApi";
 
 export default function OTPVerificationScreen({ navigation, route }) {
 	const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -23,6 +23,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 	const [canResend, setCanResend] = useState(false);
 	const [verifyOTP] = useVerifyOTPMutation()
 	const [resendOTP] = useLazyResendOTPQuery()
+	const [verifyOTPForgotPassword] = useVerifyOTPForgotPasswordMutation()
 	const dispatch = useDispatch()
 
 	// Get email and type from navigation params
@@ -160,13 +161,25 @@ export default function OTPVerificationScreen({ navigation, route }) {
 				email: email,
 				otp: otp.join('')
 			}
-			verifyOTP(data).unwrap().then(res => {
-				dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
-				navigation.reset({
-					index: 0,
-					routes: [{ name: 'Tabs' }],
-					});
+			if (type === "signup") {
+				verifyOTP(data).unwrap().then(res => {
+					dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
+					navigation.reset({
+						index: 0,
+						routes: [{ name: 'Tabs' }],
+						});
+					})
+			}
+			if (type === "forgot-password") {
+				verifyOTPForgotPassword(data).unwrap().then(res => {
+					if (res.resetPasswordToken) {
+						Alert.alert("Thành công", "Mã OTP đã được xác thực");
+						navigation.navigate("ResetPassword", { email: email , resetPasswordToken: res?.resetPasswordToken})
+					} else {
+						Alert.alert("Lỗi", res.message);
+					}
 				})
+			}
 		} catch (error) {
 			// Handle different error cases
 			if (error?.data?.errorCode === "ALREADY_VERIFIED") {
