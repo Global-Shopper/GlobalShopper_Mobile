@@ -24,6 +24,8 @@ interface ProductData {
 	description: string;
 	image: string | null;
 	price: string;
+	convertedPrice: string;
+	exchangeRate: number;
 	category: string;
 	brand: string;
 	material: string;
@@ -45,28 +47,54 @@ export default function ProductForm({
 	mode,
 	onSubmit,
 }: ProductFormProps) {
-	const [formData, setFormData] = useState<ProductData>({
-		name: initialData?.title || initialData?.name || "",
-		description: initialData?.description || "",
-		image: initialData?.image || null,
-		price: initialData?.price || "",
-		category: initialData?.category || "",
-		brand: initialData?.brand || "",
-		material: initialData?.material || "",
-		size: initialData?.size || "",
-		color: initialData?.color || "",
-		platform: initialData?.platform || "",
-		productLink: initialData?.productLink || "",
-		sellerInfo: {
-			name: initialData?.sellerInfo?.name || "",
-			phone: initialData?.sellerInfo?.phone || "",
-			email: initialData?.sellerInfo?.email || "",
-			address: initialData?.sellerInfo?.address || "",
-			storeLink: initialData?.sellerInfo?.storeLink || "",
-		},
+	const [formData, setFormData] = useState<ProductData>(() => {
+		const initialPrice = initialData?.price || "";
+		const initialExchangeRate = initialData?.exchangeRate || 25000;
+
+		// Calculate converted price if price is available
+		let initialConvertedPrice = "";
+		if (initialPrice && mode === "fromLink") {
+			const numericPrice = parseFloat(
+				initialPrice.replace(/[^0-9.]/g, "")
+			);
+			if (!isNaN(numericPrice) && numericPrice > 0) {
+				const convertedAmount = Math.round(
+					numericPrice * initialExchangeRate
+				);
+				initialConvertedPrice = convertedAmount.toLocaleString("vi-VN");
+			}
+		}
+
+		return {
+			name: initialData?.title || initialData?.name || "",
+			description: initialData?.description || "",
+			image: initialData?.image || null,
+			price: initialPrice,
+			convertedPrice: initialConvertedPrice,
+			exchangeRate: initialExchangeRate,
+			category: initialData?.category || "",
+			brand: initialData?.brand || "",
+			material: initialData?.material || "",
+			size: initialData?.size || "",
+			color: initialData?.color || "",
+			platform: initialData?.platform || "",
+			productLink: initialData?.productLink || "",
+			sellerInfo: {
+				name: initialData?.sellerInfo?.name || "",
+				phone: initialData?.sellerInfo?.phone || "",
+				email: initialData?.sellerInfo?.email || "",
+				address: initialData?.sellerInfo?.address || "",
+				storeLink: initialData?.sellerInfo?.storeLink || "",
+			},
+		};
 	});
 
 	const handleInputChange = (field: string, value: string) => {
+		// Skip convertedPrice as it's read-only and auto-calculated
+		if (field === "convertedPrice") {
+			return;
+		}
+
 		if (field.includes("sellerInfo.")) {
 			const sellerField = field.split(".")[1];
 			setFormData((prev) => ({
@@ -81,6 +109,47 @@ export default function ProductForm({
 				...prev,
 				[field]: value,
 			}));
+		}
+
+		// Auto convert price when price field changes
+		if (field === "price") {
+			if (value.trim() !== "") {
+				convertPrice(value);
+			} else {
+				// Clear converted price when price is empty
+				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+			}
+		}
+	};
+
+	// Mock API call to convert price
+	const convertPrice = async (priceString: string) => {
+		try {
+			// Extract number from price string (remove $, €, etc.)
+			const numericPrice = parseFloat(
+				priceString.replace(/[^0-9.]/g, "")
+			);
+
+			if (isNaN(numericPrice) || numericPrice <= 0) {
+				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+				return;
+			}
+
+			// Use exchange rate from state (from BE API or default)
+			const convertedAmount = Math.round(
+				numericPrice * formData.exchangeRate
+			);
+
+			// Format number with Vietnamese locale
+			const formattedPrice = convertedAmount.toLocaleString("vi-VN");
+
+			setFormData((prev) => ({
+				...prev,
+				convertedPrice: formattedPrice,
+			}));
+		} catch (error) {
+			console.log("Error converting price:", error);
+			setFormData((prev) => ({ ...prev, convertedPrice: "" }));
 		}
 	};
 
@@ -129,6 +198,7 @@ export default function ProductForm({
 			Alert.alert("Lỗi", "Vui lòng nhập giá sản phẩm");
 			return false;
 		}
+		// Converted price is auto-calculated, no need to validate manually
 		if (!formData.sellerInfo.name.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
 			return false;
@@ -211,7 +281,12 @@ export default function ProductForm({
 				{mode === "fromLink" && (
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>Link sản phẩm</Text>
-						<View style={[styles.inputContainer, styles.readOnlyContainer]}>
+						<View
+							style={[
+								styles.inputContainer,
+								styles.readOnlyContainer,
+							]}
+						>
 							<Ionicons
 								name="link-outline"
 								size={20}
@@ -297,29 +372,74 @@ export default function ProductForm({
 
 				{/* Price - Only show for fromLink mode */}
 				{mode === "fromLink" && (
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Giá sản phẩm <Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="cash-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.price}
-								onChangeText={(value) =>
-									handleInputChange("price", value)
-								}
-								placeholder="Nhập giá sản phẩm"
-								placeholderTextColor="#B0BEC5"
-								keyboardType="numeric"
-							/>
+					<>
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>
+								Giá sản phẩm{" "}
+								<Text style={styles.required}>*</Text>
+							</Text>
+							<View style={styles.inputContainer}>
+								<Ionicons
+									name="cash-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+								<TextInput
+									style={styles.textInput}
+									value={formData.price}
+									onChangeText={(value) =>
+										handleInputChange("price", value)
+									}
+									placeholder="Nhập giá sản phẩm (VD: $99.99)"
+									placeholderTextColor="#B0BEC5"
+									keyboardType="default"
+								/>
+							</View>
 						</View>
-					</View>
+
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>
+								Giá chuyển đổi (VNĐ){" "}
+								<Text style={styles.required}>*</Text>
+							</Text>
+							<View
+								style={[
+									styles.inputContainer,
+									styles.readOnlyContainer,
+								]}
+							>
+								<Ionicons
+									name="card-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+								<TextInput
+									style={[
+										styles.textInput,
+										styles.convertedPriceInput,
+									]}
+									value={formData.convertedPrice}
+									placeholder="Giá sẽ được tự động tính toán"
+									placeholderTextColor="#B0BEC5"
+									keyboardType="numeric"
+									editable={false}
+								/>
+								<Ionicons
+									name="lock-closed-outline"
+									size={16}
+									color="#999999"
+									style={styles.lockIcon}
+								/>
+							</View>
+							<Text style={styles.exchangeRateText}>
+								Tỉ giá hiện tại: 1$ ={" "}
+								{formData.exchangeRate.toLocaleString("vi-VN")}{" "}
+								VNĐ
+							</Text>
+						</View>
+					</>
 				)}
 
 				{/* Category */}
@@ -637,9 +757,20 @@ const styles = StyleSheet.create({
 		color: "#666666",
 		backgroundColor: "transparent",
 	},
+	convertedPriceInput: {
+		color: "#D32F2F", // Red color for converted price
+		backgroundColor: "transparent",
+		fontWeight: "600",
+	},
 	lockIcon: {
 		marginLeft: 8,
 		alignSelf: "flex-start",
 		marginTop: 2,
+	},
+	exchangeRateText: {
+		fontSize: 12,
+		color: "#999999",
+		marginTop: 4,
+		fontStyle: "italic",
 	},
 });

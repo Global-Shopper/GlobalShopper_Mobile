@@ -52,6 +52,7 @@ export default function WithLink({ navigation }) {
 					price: "$99.99",
 					image: "https://via.placeholder.com/150",
 					platform: "Unknown",
+					exchangeRate: 25000, // Tỉ giá hiện tại
 				};
 
 				if (url.includes("amazon")) {
@@ -60,6 +61,7 @@ export default function WithLink({ navigation }) {
 						price: "$1,199.00",
 						image: "https://via.placeholder.com/150",
 						platform: "Amazon",
+						exchangeRate: 25000,
 					};
 				} else if (url.includes("aliexpress")) {
 					mockData = {
@@ -67,6 +69,7 @@ export default function WithLink({ navigation }) {
 						price: "$29.99",
 						image: "https://via.placeholder.com/150",
 						platform: "AliExpress",
+						exchangeRate: 25000,
 					};
 				} else if (url.includes("ebay")) {
 					mockData = {
@@ -74,6 +77,7 @@ export default function WithLink({ navigation }) {
 						price: "$150.00",
 						image: "https://via.placeholder.com/150",
 						platform: "eBay",
+						exchangeRate: 25000,
 					};
 				}
 
@@ -183,6 +187,7 @@ export default function WithLink({ navigation }) {
 				image: firstProduct.data.image,
 				platform: firstProduct.data.platform,
 				productLink: firstProduct.link, // Truyền link gốc
+				exchangeRate: firstProduct.data.exchangeRate, // Truyền tỉ giá
 				// Add more fields as needed
 			},
 		});
