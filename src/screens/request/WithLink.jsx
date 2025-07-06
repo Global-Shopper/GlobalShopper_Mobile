@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import {
-	Alert,
-	ScrollView,
-	StyleSheet,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import LinkCard from "../../components/link-card";
 import { Text } from "../../components/ui/text";
@@ -27,23 +21,6 @@ export default function WithLink({ navigation }) {
 		} catch {
 			return false;
 		}
-	};
-
-	const isEcommerceUrl = (url) => {
-		// Only support these 7 e-commerce platforms
-		const supportedPlatforms = [
-			/aliexpress\./,
-			/amazon\./,
-			/asos\./,
-			/dhgate\./,
-			/ebay\./,
-			/gmarket\./,
-			/shein\./,
-		];
-
-		return supportedPlatforms.some((pattern) =>
-			pattern.test(url.toLowerCase())
-		);
 	};
 
 	const parseProductLink = async (link) => {
@@ -109,10 +86,6 @@ export default function WithLink({ navigation }) {
 
 	const handleAddLink = () => {
 		if (productLinks.length >= MAX_LINKS) {
-			Alert.alert(
-				"Giới hạn số lượng",
-				`Bạn chỉ có thể thêm tối đa ${MAX_LINKS} link sản phẩm.`
-			);
 			return;
 		}
 		setProductLinks([
@@ -157,18 +130,6 @@ export default function WithLink({ navigation }) {
 				return;
 			}
 
-			// Check if it's an ecommerce URL
-			if (!isEcommerceUrl(link)) {
-				newLinks[index] = {
-					link,
-					status: "error",
-					data: null,
-					error: "Link hợp lệ nhưng không phải link sản phẩm TMĐT. Chỉ hỗ trợ: Amazon, eBay, AliExpress, DHgate, ASOS, Shein, Gmarket",
-				};
-				setProductLinks(newLinks);
-				return;
-			}
-
 			// Try to parse the product data
 			const data = await parseProductLink(link);
 			newLinks[index] = {
@@ -183,10 +144,6 @@ export default function WithLink({ navigation }) {
 			switch (error.message) {
 				case "INVALID_URL":
 					errorMessage = "Link không hợp lệ (sai định dạng URL)";
-					break;
-				case "NOT_ECOMMERCE":
-					errorMessage =
-						"Link hợp lệ nhưng không phải link sản phẩm TMĐT. Chỉ hỗ trợ: Amazon, eBay, AliExpress, DHgate, ASOS, Shein, Gmarket";
 					break;
 				case "NO_DATA":
 					errorMessage =
@@ -212,34 +169,22 @@ export default function WithLink({ navigation }) {
 		);
 
 		if (validLinks.length === 0) {
-			Alert.alert("Lỗi", "Vui lòng nhập link sản phẩm hợp lệ");
 			return;
 		}
 
-		Alert.alert(
-			"Xác nhận kiểm tra",
-			`Bạn có muốn kiểm tra ${validLinks.length} sản phẩm này?`,
-			[
-				{ text: "Hủy", style: "cancel" },
-				{
-					text: "Kiểm tra",
-					onPress: () => {
-						// Handle check logic here
-						console.log("Check products:", validLinks);
-						Alert.alert(
-							"Thành công",
-							"Yêu cầu kiểm tra đã được gửi thành công",
-							[
-								{
-									text: "OK",
-									onPress: () => navigation.goBack(),
-								},
-							]
-						);
-					},
-				},
-			]
-		);
+		// Navigate to ProductDetails with the first valid product
+		// In real app, you might want to handle multiple products differently
+		const firstProduct = validLinks[0];
+		navigation.navigate("ProductDetails", {
+			mode: "fromLink",
+			initialData: {
+				title: firstProduct.data.title,
+				price: firstProduct.data.price,
+				image: firstProduct.data.image,
+				platform: firstProduct.data.platform,
+				// Add more fields as needed
+			},
+		});
 	};
 
 	return (
@@ -288,10 +233,9 @@ export default function WithLink({ navigation }) {
 							</Text>
 							<Text style={styles.instructionDesc}>
 								Dán link sản phẩm từ các trang thương mại điện
-								tử được hỗ trợ (Amazon, eBay, AliExpress,
-								DHgate, ASOS, Shein, Gmarket) để chúng tôi hỗ
-								trợ kiểm tra và mua hàng giúp bạn. Bạn có thể
-								thêm tối đa {MAX_LINKS} sản phẩm.
+								tử để chúng tôi hỗ trợ kiểm tra và mua hàng giúp
+								bạn. Bạn có thể thêm tối đa {MAX_LINKS} sản
+								phẩm.
 							</Text>
 						</View>
 					</View>
