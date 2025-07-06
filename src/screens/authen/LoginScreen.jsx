@@ -11,7 +11,6 @@ import {
 	StyleSheet,
 	Text,
 	TextInput,
-	ToastAndroid,
 	TouchableOpacity,
 	View,
 } from "react-native";
@@ -26,8 +25,8 @@ export default function LoginScreen({ navigation }) {
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
-	const [login] = useLoginMutation()
-	const dispatch = useDispatch()
+	const [login] = useLoginMutation();
+	const dispatch = useDispatch();
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -82,32 +81,35 @@ export default function LoginScreen({ navigation }) {
 
 		const values = {
 			email: email,
-			password: password
-		}
-		login(values).unwrap().then((res) => {
-        dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
-		ToastAndroid.show("Đăng nhập thành công",ToastAndroid.SHORT)
-		Alert.alert("Đăng nhập thành công")
-		navigation.reset({
-		index: 0,
-		routes: [{ name: 'Tabs' }],
-		});
-		})
-        .catch((e) => {
-          if (e.data?.errorCode === 1001) {
-            Alert.alert("Bạn cần phải xác nhận email")
-			navigation.navigate("OTPVerification", {
-				email: email,
+			password: password,
+		};
+		login(values)
+			.unwrap()
+			.then((res) => {
+				dispatch(
+					setUserInfo({ ...res?.user, accessToken: res?.token })
+				);
+				navigation.reset({
+					index: 0,
+					routes: [{ name: "Tabs" }],
+				});
+			})
+			.catch((e) => {
+				if (e.data?.errorCode === 1001) {
+					Alert.alert("Bạn cần phải xác nhận email");
+					navigation.navigate("OTPVerification", {
+						email: email,
+					});
+				} else {
+					Alert.alert(
+						e.data.message ||
+							"Đã có lỗi xảy ra. Vui lòng thử lại sau"
+					);
+				}
+			})
+			.finally(() => {
+				setIsLoading(false);
 			});
-          }
-          else {
-			Alert.alert(e.data.message || "Đã có lỗi xảy ra. Vui lòng thử lại sau")
-		  }
-
-        }).finally(()=>{
-			setIsLoading(false);
-		})
-
 	};
 
 	const handleForgotPassword = () => {
