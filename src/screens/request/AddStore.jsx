@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	KeyboardAvoidingView,
@@ -15,19 +16,11 @@ import StoreForm from "../../components/store-form";
 export default function AddStore({ navigation }) {
 	const [showInstructions, setShowInstructions] = useState(false);
 
-	const handleSubmit = (storeData) => {
-		// Store data saved successfully, navigate to ProductDetails
+	const handleAddProduct = () => {
+		// Navigate to add product screen
 		navigation.navigate("ProductDetails", {
 			mode: "manual",
-			initialData: {
-				sellerInfo: {
-					name: storeData.storeName,
-					phone: storeData.phoneNumber,
-					email: storeData.email,
-					address: storeData.storeAddress,
-					storeLink: storeData.shopLink,
-				},
-			},
+			storeData: null,
 		});
 	};
 
@@ -93,7 +86,27 @@ export default function AddStore({ navigation }) {
 					)}
 
 					{/* Store Form */}
-					<StoreForm onSubmit={handleSubmit} mode="manual" />
+					<StoreForm mode="manual" showSubmitButton={false} />
+
+					{/* Add Product Button */}
+					<TouchableOpacity
+						style={styles.addProductButton}
+						onPress={handleAddProduct}
+					>
+						<LinearGradient
+							colors={["#4FC3F7", "#29B6F6"]}
+							style={styles.addProductButtonGradient}
+						>
+							<Ionicons
+								name="add-circle-outline"
+								size={24}
+								color="#FFFFFF"
+							/>
+							<Text style={styles.addProductButtonText}>
+								Thêm sản phẩm
+							</Text>
+						</LinearGradient>
+					</TouchableOpacity>
 				</ScrollView>
 			</KeyboardAvoidingView>
 		</View>
@@ -103,7 +116,7 @@ export default function AddStore({ navigation }) {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#F5F5F5",
+		backgroundColor: "#f8f9fa",
 	},
 	keyboardView: {
 		flex: 1,
@@ -113,10 +126,12 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		flexGrow: 1,
+		paddingHorizontal: 20,
+		paddingTop: 10,
+		paddingBottom: 30,
 	},
 	helpButtonContainer: {
 		alignItems: "flex-end",
-		paddingHorizontal: 20,
 		paddingTop: 10,
 		paddingBottom: 5,
 	},
@@ -141,7 +156,6 @@ const styles = StyleSheet.create({
 		padding: 16,
 		flexDirection: "row",
 		alignItems: "flex-start",
-		marginHorizontal: 20,
 		marginBottom: 10,
 		borderWidth: 1,
 		borderColor: "#BBDEFB",
@@ -165,5 +179,29 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#1565C0",
 		lineHeight: 20,
+	},
+	addProductButton: {
+		marginTop: 20,
+		marginBottom: 30,
+		borderRadius: 12,
+		overflow: "hidden",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	addProductButtonGradient: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 24,
+	},
+	addProductButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
+		marginLeft: 8,
 	},
 });

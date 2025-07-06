@@ -11,8 +11,10 @@ import {
 
 interface StoreFormProps {
 	initialData?: any;
-	onSubmit: (storeData: any) => void;
+	onSubmit?: (storeData: any) => void;
+	onChange?: (storeData: any) => void;
 	mode?: "fromLink" | "manual";
+	showSubmitButton?: boolean;
 }
 
 interface StoreData {
@@ -26,7 +28,9 @@ interface StoreData {
 export default function StoreForm({
 	initialData,
 	onSubmit,
+	onChange,
 	mode = "manual",
+	showSubmitButton = true,
 }: StoreFormProps) {
 	const [formData, setFormData] = useState<StoreData>({
 		storeName: initialData?.storeName || "",
@@ -39,11 +43,17 @@ export default function StoreForm({
 	const [isEdited, setIsEdited] = useState(false);
 
 	const handleInputChange = (field: string, value: string) => {
-		setFormData((prev) => ({
-			...prev,
+		const newFormData = {
+			...formData,
 			[field]: value,
-		}));
+		};
+		setFormData(newFormData);
 		setIsEdited(true);
+
+		// Call onChange if provided (for ProductForm integration)
+		if (onChange) {
+			onChange(newFormData);
+		}
 	};
 
 	const validateEmail = (email: string) => {
@@ -65,25 +75,17 @@ export default function StoreForm({
 		if (!formData.storeName.trim()) {
 			return;
 		}
-		if (!formData.storeAddress.trim()) {
+		if (mode === "manual" && !formData.storeAddress.trim()) {
 			return;
 		}
-		if (!formData.phoneNumber.trim()) {
-			return;
-		}
-
-		// Validate phone number format
-		const phoneRegex = /^[0-9]{10,11}$/;
-		if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ""))) {
+		if (mode === "manual" && !formData.shopLink.trim()) {
 			return;
 		}
 
-		// For manual mode, validate email and shop link as required
-		if (mode === "manual") {
-			if (!formData.email.trim()) {
-				return;
-			}
-			if (!formData.shopLink.trim()) {
+		// Validate phone number format if provided
+		if (formData.phoneNumber.trim()) {
+			const phoneRegex = /^[0-9]{10,11}$/;
+			if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ""))) {
 				return;
 			}
 		}
@@ -98,175 +100,191 @@ export default function StoreForm({
 			return;
 		}
 
-		onSubmit(formData);
+		if (onSubmit) {
+			onSubmit(formData);
+		}
 	};
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.formContainer}>
-				{/* Store Information Section */}
-				<View style={styles.sectionHeader}>
-					<Text style={styles.sectionTitle}>Thông tin cửa hàng</Text>
-				</View>
+		<View style={styles.section}>
+			{/* Store Information Section */}
+			<View style={styles.sectionHeader}>
+				<Text style={styles.sectionTitle}>Thông tin cửa hàng</Text>
+			</View>
 
-				{/* Store Name */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Tên cửa hàng <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="storefront-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.storeName}
-							onChangeText={(value) =>
-								handleInputChange("storeName", value)
-							}
-							placeholder="Nhập tên cửa hàng"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
+			{/* Store Name */}
+			<View style={styles.inputGroup}>
+				<Text style={styles.label}>
+					{mode === "manual" ? "Tên cửa hàng" : "Tên người bán"}{" "}
+					<Text style={styles.required}>*</Text>
+				</Text>
+				<View style={styles.inputContainer}>
+					<Ionicons
+						name={
+							mode === "manual"
+								? "storefront-outline"
+								: "person-outline"
+						}
+						size={20}
+						color="#78909C"
+						style={styles.inputIcon}
+					/>
+					<TextInput
+						style={styles.textInput}
+						value={formData.storeName}
+						onChangeText={(value) =>
+							handleInputChange("storeName", value)
+						}
+						placeholder={
+							mode === "manual"
+								? "Nhập tên cửa hàng"
+								: "Nhập tên người bán"
+						}
+						placeholderTextColor="#B0BEC5"
+					/>
 				</View>
+			</View>
 
-				{/* Store Address */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Địa chỉ cửa hàng <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="location-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={[styles.textInput, styles.multilineInput]}
-							value={formData.storeAddress}
-							onChangeText={(value) =>
-								handleInputChange("storeAddress", value)
-							}
-							placeholder="Nhập địa chỉ cửa hàng"
-							placeholderTextColor="#B0BEC5"
-							multiline
-							numberOfLines={3}
-							textAlignVertical="top"
-						/>
-					</View>
-				</View>
-
-				{/* Contact Information Section */}
-				<View style={styles.sectionHeader}>
-					<Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
-				</View>
-
-				{/* Phone Number */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Số điện thoại <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="call-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.phoneNumber}
-							onChangeText={(value) =>
-								handleInputChange("phoneNumber", value)
-							}
-							placeholder="Nhập số điện thoại"
-							placeholderTextColor="#B0BEC5"
-							keyboardType="phone-pad"
-							maxLength={11}
-						/>
-					</View>
-				</View>
-
-				{/* Email */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Email{" "}
-						{mode === "manual" && (
+			{/* Only show address, phone, email for manual mode */}
+			{mode === "manual" && (
+				<>
+					{/* Store Address */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>
+							Địa chỉ cửa hàng{" "}
 							<Text style={styles.required}>*</Text>
-						)}
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="mail-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.email}
-							onChangeText={(value) =>
-								handleInputChange("email", value)
-							}
-							placeholder={
-								mode === "manual"
-									? "Nhập email"
-									: "Nhập email (tùy chọn)"
-							}
-							placeholderTextColor="#B0BEC5"
-							keyboardType="email-address"
-							autoCapitalize="none"
-						/>
+						</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="location-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={[
+									styles.textInput,
+									styles.multilineInput,
+								]}
+								value={formData.storeAddress}
+								onChangeText={(value) =>
+									handleInputChange("storeAddress", value)
+								}
+								placeholder="Nhập địa chỉ cửa hàng"
+								placeholderTextColor="#B0BEC5"
+								multiline
+								numberOfLines={3}
+								textAlignVertical="top"
+							/>
+						</View>
 					</View>
-					{formData.email && !validateEmail(formData.email) && (
-						<Text style={styles.errorText}>Email không hợp lệ</Text>
-					)}
-				</View>
 
-				{/* Shop Link */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Đường dẫn cửa hàng{" "}
-						{mode === "manual" && (
-							<Text style={styles.required}>*</Text>
-						)}
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="link-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={[styles.textInput, styles.multilineInput]}
-							value={formData.shopLink}
-							onChangeText={(value) =>
-								handleInputChange("shopLink", value)
-							}
-							placeholder={
-								mode === "manual"
-									? "Nhập link website/fanpage cửa hàng"
-									: "Nhập link website/fanpage cửa hàng (tùy chọn)"
-							}
-							placeholderTextColor="#B0BEC5"
-							autoCapitalize="none"
-							keyboardType="url"
-							multiline
-							numberOfLines={2}
-							textAlignVertical="top"
-						/>
+					{/* Contact Information Section */}
+					<View style={styles.sectionHeader}>
+						<Text style={styles.sectionTitle}>
+							Thông tin liên hệ
+						</Text>
 					</View>
-					{formData.shopLink && !validateUrl(formData.shopLink) && (
-						<Text style={styles.errorText}>Link không hợp lệ</Text>
-					)}
-				</View>
 
-				{/* Submit Button */}
+					{/* Phone Number */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Số điện thoại</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="call-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.phoneNumber}
+								onChangeText={(value) =>
+									handleInputChange("phoneNumber", value)
+								}
+								placeholder="Nhập số điện thoại (tùy chọn)"
+								placeholderTextColor="#B0BEC5"
+								keyboardType="phone-pad"
+								maxLength={11}
+							/>
+						</View>
+					</View>
+
+					{/* Email */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Email</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="mail-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.email}
+								onChangeText={(value) =>
+									handleInputChange("email", value)
+								}
+								placeholder="Nhập email (tùy chọn)"
+								placeholderTextColor="#B0BEC5"
+								keyboardType="email-address"
+								autoCapitalize="none"
+							/>
+						</View>
+						{formData.email && !validateEmail(formData.email) && (
+							<Text style={styles.errorText}>
+								Email không hợp lệ
+							</Text>
+						)}
+					</View>
+				</>
+			)}
+
+			{/* Shop Link - Always show */}
+			<View style={styles.inputGroup}>
+				<Text style={styles.label}>
+					{mode === "manual" ? "Đường dẫn cửa hàng" : "Link cửa hàng"}{" "}
+					{mode === "manual" && (
+						<Text style={styles.required}>*</Text>
+					)}
+				</Text>
+				<View style={styles.inputContainer}>
+					<Ionicons
+						name="link-outline"
+						size={20}
+						color="#78909C"
+						style={styles.inputIcon}
+					/>
+					<TextInput
+						style={[
+							styles.textInput,
+							mode === "manual" ? styles.multilineInput : null,
+						]}
+						value={formData.shopLink}
+						onChangeText={(value) =>
+							handleInputChange("shopLink", value)
+						}
+						placeholder={
+							mode === "manual"
+								? "Nhập link website/fanpage cửa hàng"
+								: "Nhập link cửa hàng (tùy chọn)"
+						}
+						placeholderTextColor="#B0BEC5"
+						autoCapitalize="none"
+						keyboardType="url"
+						multiline={mode === "manual"}
+						numberOfLines={mode === "manual" ? 2 : 1}
+						textAlignVertical={mode === "manual" ? "top" : "center"}
+					/>
+				</View>
+				{formData.shopLink && !validateUrl(formData.shopLink) && (
+					<Text style={styles.errorText}>Link không hợp lệ</Text>
+				)}
+			</View>
+
+			{/* Submit Button */}
+			{showSubmitButton && (
 				<TouchableOpacity
 					style={[
 						styles.submitButton,
@@ -289,38 +307,30 @@ export default function StoreForm({
 								isEdited && styles.submitButtonTextActive,
 							]}
 						>
-							Thêm sản phẩm
+							Thêm cửa hàng
 						</Text>
 					</LinearGradient>
 				</TouchableOpacity>
-			</View>
+			)}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		paddingHorizontal: 20,
-		paddingTop: 10,
-		paddingBottom: 30,
-		backgroundColor: "#f8f9fa",
-	},
-	formContainer: {
+	section: {
 		backgroundColor: "#FFFFFF",
 		borderRadius: 12,
 		padding: 20,
-		marginBottom: 20,
+		marginBottom: 16,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
+		shadowOpacity: 0.05,
 		shadowRadius: 8,
 		elevation: 2,
 	},
 	sectionHeader: {
-		marginTop: 10,
-		marginBottom: 10,
-		paddingBottom: 10,
+		marginBottom: 16,
+		paddingBottom: 8,
 		borderBottomWidth: 1,
 		borderBottomColor: "#E0E0E0",
 	},
@@ -330,7 +340,7 @@ const styles = StyleSheet.create({
 		color: "#1976D2",
 	},
 	inputGroup: {
-		marginBottom: 24,
+		marginBottom: 20,
 	},
 	label: {
 		fontSize: 16,
@@ -340,7 +350,6 @@ const styles = StyleSheet.create({
 	},
 	required: {
 		color: "#dc3545",
-		fontSize: 16,
 	},
 	inputContainer: {
 		flexDirection: "row",

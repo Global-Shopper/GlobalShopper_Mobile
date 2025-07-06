@@ -182,6 +182,7 @@ export default function WithLink({ navigation }) {
 				price: firstProduct.data.price,
 				image: firstProduct.data.image,
 				platform: firstProduct.data.platform,
+				productLink: firstProduct.link, // Truyền link gốc
 				// Add more fields as needed
 			},
 		});

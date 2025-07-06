@@ -10,6 +10,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import StoreForm from "./store-form";
 import { Text } from "./ui/text";
 
 interface ProductFormProps {
@@ -29,6 +30,7 @@ interface ProductData {
 	size: string;
 	color: string;
 	platform: string;
+	productLink: string;
 	sellerInfo: {
 		name: string;
 		phone: string;
@@ -54,6 +56,7 @@ export default function ProductForm({
 		size: initialData?.size || "",
 		color: initialData?.color || "",
 		platform: initialData?.platform || "",
+		productLink: initialData?.productLink || "",
 		sellerInfo: {
 			name: initialData?.sellerInfo?.name || "",
 			phone: initialData?.sellerInfo?.phone || "",
@@ -82,7 +85,7 @@ export default function ProductForm({
 	};
 
 	const pickImage = async () => {
-		// Tạm thời hiển thị alert, trong thực tế sẽ dùng expo-image-picker
+		// Tạm thời hiển thị alert
 		Alert.alert(
 			"Chọn hình ảnh",
 			"Tính năng chọn hình ảnh sẽ được triển khai với expo-image-picker",
@@ -102,6 +105,20 @@ export default function ProductForm({
 		);
 	};
 
+	const handleStoreChange = (storeData: any) => {
+		// Update seller info when store form changes
+		setFormData((prev) => ({
+			...prev,
+			sellerInfo: {
+				name: storeData.storeName,
+				phone: storeData.phoneNumber,
+				email: storeData.email,
+				address: storeData.storeAddress,
+				storeLink: storeData.shopLink,
+			},
+		}));
+	};
+
 	const validateForm = () => {
 		if (!formData.name.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập tên sản phẩm");
@@ -116,18 +133,10 @@ export default function ProductForm({
 			Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
 			return false;
 		}
-		if (!formData.sellerInfo.phone.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập số điện thoại người bán");
-			return false;
-		}
-		if (!formData.sellerInfo.address.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập địa chỉ người bán");
-			return false;
-		}
-		// For manual mode, validate all seller info fields
+
 		if (mode === "manual") {
-			if (!formData.sellerInfo.email.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập email người bán");
+			if (!formData.sellerInfo.address.trim()) {
+				Alert.alert("Lỗi", "Vui lòng nhập địa chỉ cửa hàng");
 				return false;
 			}
 			if (!formData.sellerInfo.storeLink.trim()) {
@@ -197,6 +206,42 @@ export default function ProductForm({
 						/>
 					</View>
 				</View>
+
+				{/* Product Link - Only show for fromLink mode */}
+				{mode === "fromLink" && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Link sản phẩm</Text>
+						<View style={[styles.inputContainer, styles.readOnlyContainer]}>
+							<Ionicons
+								name="link-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={[
+									styles.textInput,
+									styles.multilineInput,
+									styles.readOnlyInput,
+								]}
+								value={formData.productLink}
+								placeholder="Link sản phẩm từ trang web"
+								placeholderTextColor="#B0BEC5"
+								multiline
+								numberOfLines={2}
+								textAlignVertical="top"
+								editable={false}
+								selectTextOnFocus={false}
+							/>
+							<Ionicons
+								name="lock-closed-outline"
+								size={16}
+								color="#9E9E9E"
+								style={styles.lockIcon}
+							/>
+						</View>
+					</View>
+				)}
 
 				{/* Description */}
 				<View style={styles.inputGroup}>
@@ -415,151 +460,18 @@ export default function ProductForm({
 			</View>
 
 			{/* Seller Information */}
-			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>Thông tin người bán</Text>
-
-				{/* Seller Name */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Tên người bán <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="person-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.sellerInfo.name}
-							onChangeText={(value) =>
-								handleInputChange("sellerInfo.name", value)
-							}
-							placeholder="Nhập tên người bán"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Seller Phone */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Số điện thoại <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="call-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.sellerInfo.phone}
-							onChangeText={(value) =>
-								handleInputChange("sellerInfo.phone", value)
-							}
-							placeholder="Nhập số điện thoại"
-							placeholderTextColor="#B0BEC5"
-							keyboardType="phone-pad"
-						/>
-					</View>
-				</View>
-
-				{/* Seller Email */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Email{" "}
-						{mode === "manual" && (
-							<Text style={styles.required}>*</Text>
-						)}
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="mail-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.sellerInfo.email}
-							onChangeText={(value) =>
-								handleInputChange("sellerInfo.email", value)
-							}
-							placeholder={
-								mode === "manual"
-									? "Nhập email người bán"
-									: "Nhập email người bán (tùy chọn)"
-							}
-							placeholderTextColor="#B0BEC5"
-							keyboardType="email-address"
-							autoCapitalize="none"
-						/>
-					</View>
-				</View>
-
-				{/* Seller Address */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Địa chỉ <Text style={styles.required}>*</Text>
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="location-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={[styles.textInput, styles.multilineInput]}
-							value={formData.sellerInfo.address}
-							onChangeText={(value) =>
-								handleInputChange("sellerInfo.address", value)
-							}
-							placeholder="Nhập địa chỉ người bán"
-							placeholderTextColor="#B0BEC5"
-							multiline
-							numberOfLines={2}
-							textAlignVertical="top"
-						/>
-					</View>
-				</View>
-
-				{/* Store Link */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>
-						Link cửa hàng{" "}
-						{mode === "manual" && (
-							<Text style={styles.required}>*</Text>
-						)}
-					</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="link-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.sellerInfo.storeLink}
-							onChangeText={(value) =>
-								handleInputChange("sellerInfo.storeLink", value)
-							}
-							placeholder={
-								mode === "manual"
-									? "Nhập link cửa hàng"
-									: "Nhập link cửa hàng (tùy chọn)"
-							}
-							placeholderTextColor="#B0BEC5"
-							autoCapitalize="none"
-							keyboardType="url"
-						/>
-					</View>
-				</View>
-			</View>
+			<StoreForm
+				initialData={{
+					storeName: formData.sellerInfo.name,
+					phoneNumber: formData.sellerInfo.phone,
+					email: formData.sellerInfo.email,
+					storeAddress: formData.sellerInfo.address,
+					shopLink: formData.sellerInfo.storeLink,
+				}}
+				mode={mode}
+				onChange={handleStoreChange}
+				showSubmitButton={false}
+			/>
 
 			{/* Submit Button */}
 			<TouchableOpacity
@@ -716,5 +628,18 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		color: "#FFFFFF",
 		marginLeft: 8,
+	},
+	readOnlyContainer: {
+		backgroundColor: "#F5F5F5",
+		borderColor: "#D0D0D0",
+	},
+	readOnlyInput: {
+		color: "#666666",
+		backgroundColor: "transparent",
+	},
+	lockIcon: {
+		marginLeft: 8,
+		alignSelf: "flex-start",
+		marginTop: 2,
 	},
 });
