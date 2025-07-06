@@ -18,8 +18,9 @@ import NotiSetting from "../screens/profile/NotiSetting";
 import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
-import WithLink from "../screens/request/WithLink";
 import AddStore from "../screens/request/AddStore";
+import ProductDetails from "../screens/request/ProductDetails";
+import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
@@ -147,6 +148,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="AddStore"
 				component={AddStore}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ProductDetails"
+				component={ProductDetails}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
