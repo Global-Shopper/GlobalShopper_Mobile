@@ -39,8 +39,8 @@ export default function SignupScreen({ navigation }) {
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
 
-	const [register] = useRegisterMutation()
-	const dispatch = useDispatch()
+	const [register] = useRegisterMutation();
+	const dispatch = useDispatch();
 
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
@@ -94,11 +94,6 @@ export default function SignupScreen({ navigation }) {
 		});
 	}, [password]);
 
-	const validateEmail = (email) => {
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		return emailRegex.test(email);
-	};
-
 	const isPasswordValid =
 		passwordValidation.minLength && passwordValidation.hasLetterAndNumber;
 
@@ -125,11 +120,6 @@ export default function SignupScreen({ navigation }) {
 			Alert.alert("Lỗi", "Vui lòng nhập email");
 			return;
 		}
-
-		// if (!validateEmail(email)) {
-		// 	Alert.alert("Lỗi", "Email không hợp lệ");
-		// 	return;
-		// }
 
 		if (!gender) {
 			Alert.alert("Lỗi", "Vui lòng chọn giới tính");
@@ -162,31 +152,32 @@ export default function SignupScreen({ navigation }) {
 			password,
 			dateOfBirth: 0,
 			phone: "0912345678",
-			gender
-		}
-		regiserAccount(user)
+			gender,
+		};
+		regiserAccount(user);
 	};
 
 	const regiserAccount = (user) => {
 		try {
-			register(user).unwrap().then(res => {
-				console.log(res)
-				if (res.success) {
-					console.log("Register user")
-					navigation.navigate("OTPVerification", {
-					email: email,
-					});	
-				} else {
-					Alert.alert(res.message)
-				}
-			} )
+			register(user)
+				.unwrap()
+				.then((res) => {
+					console.log(res);
+					if (res.success) {
+						console.log("Register user");
+						navigation.navigate("OTPVerification", {
+							email: email,
+						});
+					} else {
+						Alert.alert(res.message);
+					}
+				});
 		} catch (error) {
-			Alert.alert(error.data.message)
+			Alert.alert(error.data.message);
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}
-
+	};
 
 	const handleLoginNavigation = () => {
 		navigation.navigate("Login");
