@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
 import {
 	ScrollView,
 	StatusBar,
@@ -9,26 +8,11 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useGetShippingAddressQuery } from "../../services/gshopApi";
 
 export default function MyAddress({ navigation }) {
-	const [addresses] = useState([
-		{
-			id: 1,
-			name: "Hoài Phương",
-			phone: "+84 123 456 789",
-			address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
-			isDefault: true,
-			addressType: "Nhà riêng",
-		},
-		{
-			id: 2,
-			name: "Hoài Phương",
-			phone: "+84 987 654 321",
-			address: "456 Đường DEF, Phường UVW, Quận 3, TP.HCM",
-			isDefault: false,
-			addressType: "Văn phòng",
-		},
-	]);
+
+	const {data: addresses = [], isLoading, isError} = useGetShippingAddressQuery()
 
 	const handleAddNewAddress = () => {
 		// Navigate to Add Address screen
@@ -50,7 +34,7 @@ export default function MyAddress({ navigation }) {
 	const renderAddressItem = (item) => (
 		<View key={item.id} style={styles.addressCard}>
 			{/* Default badge */}
-			{item.isDefault && (
+			{item.default && (
 				<View style={styles.defaultBadge}>
 					<Text style={styles.defaultText}>Mặc định</Text>
 				</View>
@@ -59,11 +43,14 @@ export default function MyAddress({ navigation }) {
 			{/* Name and Phone */}
 			<View style={styles.contactInfo}>
 				<Text style={styles.contactName}>{item.name}</Text>
-				<Text style={styles.contactPhone}> | {item.phone}</Text>
+				<Text style={styles.contactPhone}> | {item.phoneNumber}</Text>
 			</View>
 
 			{/* Address */}
-			<Text style={styles.addressText}>{item.address}</Text>
+			<Text style={styles.addressText}>{item.location}</Text>
+			<View style={styles.actionContainer}>
+				<Text style={styles.addressTag}>{item.tag}</Text>
+			</View>
 
 			{/* Action buttons */}
 			<View style={styles.actionContainer}>
@@ -265,6 +252,17 @@ const styles = StyleSheet.create({
 		color: "#546E7A",
 		lineHeight: 20,
 		marginBottom: 16,
+	},
+	addressTag: {
+		fontSize: 14,
+		color: "#546E7A",
+		lineHeight: 20,
+		marginBottom: 16,
+		backgroundColor: "#F0F8FF",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 12,
+
 	},
 	actionContainer: {
 		flexDirection: "row",

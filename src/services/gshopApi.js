@@ -5,6 +5,7 @@ import { axiosBaseQuery } from './baseRequest';
 //Lưu ý khi cho dev, cần phải sửa lại baseURL trong file baseRequest.js
 const gshopApi = createApi({
   reducerPath: 'gshopApi',
+  tagTypes: ['CustomerProfile', 'ShippingAddress'],
   baseQuery: axiosBaseQuery(), // Adjust base URL as needed
   endpoints: (builder) => ({
     login: builder.mutation({
@@ -93,8 +94,7 @@ const gshopApi = createApi({
     updateShippingAddress: builder.mutation({
       query: ({ id, ...data }) => ({
         data: data,
-        params: id,
-        url: endpoints.SHIPPING_ADDRESS,
+        url: endpoints.SHIPPING_ADDRESS + `/${id}`,
         method: 'PUT',
       }),
       invalidatesTags: ['ShippingAddress'],

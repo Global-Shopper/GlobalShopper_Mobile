@@ -12,22 +12,24 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useCreateShippingAddressMutation } from "../../services/gshopApi";
 
 export default function AddAddress({ navigation }) {
 	const [formData, setFormData] = useState({
-		fullName: "",
+		name: "",
 		phoneNumber: "",
 		houseNumber: "",
 		ward: "",
 		district: "",
 		city: "",
 		isDefault: false,
-		addressType: "Nhà riêng",
+		tag: "Nhà riêng",
 	});
 
 	const [isEdited, setIsEdited] = useState(false);
 
 	const addressTypeOptions = ["Nhà riêng", "Văn phòng"];
+	const [createShippingAddress] = useCreateShippingAddressMutation()
 
 	const handleInputChange = (field, value) => {
 		setFormData((prev) => ({
@@ -39,7 +41,7 @@ export default function AddAddress({ navigation }) {
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!formData.fullName.trim()) {
+		if (!formData.name.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
 			return;
 		}
@@ -71,21 +73,26 @@ export default function AddAddress({ navigation }) {
 		}
 
 		// call an API to save the address
-		const fullAddress = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
-		console.log("Saving address data:", {
+		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
+		const data = {
 			...formData,
-			fullAddress,
-		});
-
-		Alert.alert("Thành công", "Địa chỉ đã được thêm thành công", [
-			{
-				text: "OK",
-				onPress: () => {
-					setIsEdited(false);
-					navigation.goBack();
+			location,
+		}
+		console.log("Saving address data:", data);
+		createShippingAddress(data).unwrap().then(res => {
+			Alert.alert("Thành công", "Địa chỉ đã được thêm thành công", [
+				{
+					text: "OK",
+					onPress: () => {
+						setIsEdited(false);
+						navigation.goBack();
+					},
 				},
-			},
-		]);
+			]);
+		}).catch(err => {
+			Alert.alert("Lỗi", err.data.message);
+		})
+		
 	};
 
 	const showAddressTypePicker = () => {
@@ -95,7 +102,7 @@ export default function AddAddress({ navigation }) {
 			addressTypeOptions
 				.map((option) => ({
 					text: option,
-					onPress: () => handleInputChange("addressType", option),
+					onPress: () => handleInputChange("tag", option),
 				}))
 				.concat([
 					{
@@ -170,9 +177,9 @@ export default function AddAddress({ navigation }) {
 							/>
 							<TextInput
 								style={styles.textInput}
-								value={formData.fullName}
+								value={formData.name}
 								onChangeText={(value) =>
-									handleInputChange("fullName", value)
+									handleInputChange("name", value)
 								}
 								placeholder="Nhập họ và tên"
 								placeholderTextColor="#B0BEC5"
@@ -328,13 +335,13 @@ export default function AddAddress({ navigation }) {
 								style={[
 									styles.textInput,
 									{
-										color: formData.addressType
+										color: formData.tag
 											? "#263238"
 											: "#B0BEC5",
 									},
 								]}
 							>
-								{formData.addressType || "Chọn loại địa chỉ"}
+								{formData.tag || "Chọn loại địa chỉ"}
 							</Text>
 							<Ionicons
 								name="chevron-down"

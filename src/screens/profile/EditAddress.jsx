@@ -12,20 +12,23 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDeleteShippingAddressMutation, useUpdateShippingAddressMutation } from "../../services/gshopApi";
 
 export default function EditAddress({ navigation, route }) {
 	// Get address data from route params
 	const { addressData } = route.params || {};
+	const [updateShippingAddress] = useUpdateShippingAddressMutation()
+	const [deleteShippingAddress] = useDeleteShippingAddressMutation()
 
 	const [formData, setFormData] = useState({
-		fullName: "",
+		name: "",
 		phoneNumber: "",
 		houseNumber: "",
 		ward: "",
 		district: "",
 		city: "",
 		isDefault: false,
-		addressType: "Nhà riêng",
+		tag: "Nhà riêng",
 	});
 
 	const [isEdited, setIsEdited] = useState(false);
@@ -35,16 +38,16 @@ export default function EditAddress({ navigation, route }) {
 	useEffect(() => {
 		if (addressData) {
 			// Parse address string to extract components
-			const addressParts = addressData.address.split(", ");
+			const addressParts = addressData.location.split(", ");
 			const initial = {
-				fullName: addressData.name || "",
-				phoneNumber: addressData.phone?.replace("+84 ", "0") || "",
+				name: addressData.name || "",
+				phoneNumber: addressData.phoneNumber?.replace("+84 ", "0") || "",
 				houseNumber: addressParts[0] || "",
 				ward: addressParts[1] || "",
 				district: addressParts[2] || "",
 				city: addressParts[3] || "",
 				isDefault: addressData.isDefault || false,
-				addressType: addressData.addressType || "Nhà riêng",
+				tag: addressData.tag || "Nhà riêng",
 			};
 			setFormData(initial);
 		}
@@ -61,7 +64,7 @@ export default function EditAddress({ navigation, route }) {
 
 	const handleSave = () => {
 		// Validate required fields
-		if (!formData.fullName.trim()) {
+		if (!formData.name.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
 			return;
 		}
@@ -93,22 +96,29 @@ export default function EditAddress({ navigation, route }) {
 		}
 
 		// Here you would typically call an API to update the address
-		const fullAddress = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
-		console.log("Updating address data:", {
-			...formData,
-			fullAddress,
+		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
+		const data = {
 			id: addressData.id,
-		});
-
-		Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
-			{
-				text: "OK",
-				onPress: () => {
-					setIsEdited(false);
-					navigation.goBack();
+			...formData,
+			location: location,
+		}
+		updateShippingAddress(data).unwrap().then(res => {
+			Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
+				{
+					text: "OK",
+					onPress: () => {
+						setIsEdited(false);
+						navigation.goBack();
+					},
 				},
-			},
-		]);
+			]);
+		}).catch(err => {
+			console.log(err)
+			Alert.alert("Lỗi", err.data.message);
+		}).finally(() => {
+			setIsEdited(false);
+			navigation.goBack();
+		})
 	};
 
 	const showAddressTypePicker = () => {
@@ -118,7 +128,7 @@ export default function EditAddress({ navigation, route }) {
 			addressTypeOptions
 				.map((option) => ({
 					text: option,
-					onPress: () => handleInputChange("addressType", option),
+					onPress: () => handleInputChange("tag", option),
 				}))
 				.concat([
 					{
@@ -139,13 +149,21 @@ export default function EditAddress({ navigation, route }) {
 				text: "Xóa",
 				style: "destructive",
 				onPress: () => {
-					console.log("Deleting address:", addressData.id);
-					Alert.alert("Thành công", "Địa chỉ đã được xóa", [
-						{
-							text: "OK",
-							onPress: () => navigation.goBack(),
-						},
-					]);
+					deleteShippingAddress(addressData.id).unwrap().then(res => {
+						if(res.success) {
+							Alert.alert("Thành công",res.message || "Địa chỉ đã được xóa", [
+								{
+									text: "OK",
+									onPress: () => navigation.goBack(),
+								},
+							]);
+						} else {
+							Alert.alert("Lỗi", res.message);
+						}
+					}).catch(err => {	
+						console.log(err)
+						Alert.alert("Lỗi", err.data.message);
+					})
 				},
 			},
 		]);
@@ -215,9 +233,9 @@ export default function EditAddress({ navigation, route }) {
 							/>
 							<TextInput
 								style={styles.textInput}
-								value={formData.fullName}
+								value={formData.name}
 								onChangeText={(value) =>
-									handleInputChange("fullName", value)
+									handleInputChange("name", value)
 								}
 								placeholder="Nhập họ và tên"
 								placeholderTextColor="#B0BEC5"
