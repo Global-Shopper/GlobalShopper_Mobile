@@ -14,6 +14,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useLazyForgotPasswordQuery } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
@@ -24,6 +25,8 @@ export default function ForgotPasswordScreen({ navigation }) {
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
+
+	const [forgotPassword] = useLazyForgotPasswordQuery()
 
 	useEffect(() => {
 		// Logo breathing animation
@@ -85,13 +88,19 @@ export default function ForgotPasswordScreen({ navigation }) {
 
 		try {
 			// Simulate API call to send OTP
-			await new Promise((resolve) => setTimeout(resolve, 2000));
-
-			// Chuyển thẳng sang màn hình OTP Verification
+			const res = await forgotPassword({ email: email }).unwrap()
+			console.log(res)
+			if (res.success) {
+				Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
+				// Chuyển thẳng sang màn hình OTP Verification
 			navigation.navigate("OTPVerification", {
 				email: email,
 				type: "forgot-password", // Để phân biệt với OTP đăng ký
 			});
+			} else {
+				Alert.alert("Lỗi", res.message);
+			}
+			
 		} catch (_error) {
 			Alert.alert("Lỗi", "Không thể gửi mã OTP. Vui lòng thử lại sau.");
 		} finally {

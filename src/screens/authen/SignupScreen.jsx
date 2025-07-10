@@ -14,6 +14,8 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { useRegisterMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
@@ -36,6 +38,9 @@ export default function SignupScreen({ navigation }) {
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
+
+	const [register] = useRegisterMutation();
+	const dispatch = useDispatch();
 
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
@@ -89,11 +94,6 @@ export default function SignupScreen({ navigation }) {
 		});
 	}, [password]);
 
-	const validateEmail = (email) => {
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		return emailRegex.test(email);
-	};
-
 	const isPasswordValid =
 		passwordValidation.minLength && passwordValidation.hasLetterAndNumber;
 
@@ -118,11 +118,6 @@ export default function SignupScreen({ navigation }) {
 
 		if (!email.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập email");
-			return;
-		}
-
-		if (!validateEmail(email)) {
-			Alert.alert("Lỗi", "Email không hợp lệ");
 			return;
 		}
 
@@ -151,15 +146,37 @@ export default function SignupScreen({ navigation }) {
 			return;
 		}
 
-		setIsLoading(true);
+		const user = {
+			name: fullName,
+			email,
+			password,
+			dateOfBirth: 0,
+			phone: "0912345678",
+			gender,
+		};
+		regiserAccount(user);
+	};
 
-		// Simulate API call
-		setTimeout(() => {
+	const regiserAccount = (user) => {
+		try {
+			register(user)
+				.unwrap()
+				.then((res) => {
+					console.log(res);
+					if (res.success) {
+						console.log("Register user");
+						navigation.navigate("OTPVerification", {
+							email: email,
+						});
+					} else {
+						Alert.alert(res.message);
+					}
+				});
+		} catch (error) {
+			Alert.alert(error.data.message);
+		} finally {
 			setIsLoading(false);
-			navigation.navigate("OTPVerification", {
-				email: email,
-			});
-		}, 2000);
+		}
 	};
 
 	const handleLoginNavigation = () => {
@@ -234,9 +251,9 @@ export default function SignupScreen({ navigation }) {
 						<Text style={styles.genderLabel}>Giới tính</Text>
 						<View style={styles.genderOptions}>
 							{[
-								{ value: "male", label: "Nam" },
-								{ value: "female", label: "Nữ" },
-								{ value: "other", label: "Khác" },
+								{ value: "MALE", label: "Nam" },
+								{ value: "FEMALE", label: "Nữ" },
+								{ value: "OTHERS", label: "Khác" },
 							].map((option) => (
 								<TouchableOpacity
 									key={option.value}

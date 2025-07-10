@@ -14,6 +14,9 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../features/user";
+import { useLoginMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
@@ -22,6 +25,8 @@ export default function LoginScreen({ navigation }) {
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [login] = useLoginMutation();
+	const dispatch = useDispatch();
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -72,18 +77,39 @@ export default function LoginScreen({ navigation }) {
 			Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
 			return;
 		}
-
 		setIsLoading(true);
 
-		// Simulate API call
-		setTimeout(() => {
-			setIsLoading(false);
-			// Navigate to main app with BottomTab
-			navigation.reset({
-				index: 0,
-				routes: [{ name: "Tabs" }],
+		const values = {
+			email: email,
+			password: password,
+		};
+		login(values)
+			.unwrap()
+			.then((res) => {
+				dispatch(
+					setUserInfo({ ...res?.user, accessToken: res?.token })
+				);
+				navigation.reset({
+					index: 0,
+					routes: [{ name: "Tabs" }],
+				});
+			})
+			.catch((e) => {
+				if (e.data?.errorCode === 1001) {
+					Alert.alert("Bạn cần phải xác nhận email");
+					navigation.navigate("OTPVerification", {
+						email: email,
+					});
+				} else {
+					Alert.alert(
+						e.data.message ||
+							"Đã có lỗi xảy ra. Vui lòng thử lại sau"
+					);
+				}
+			})
+			.finally(() => {
+				setIsLoading(false);
 			});
-		}, 2000);
 	};
 
 	const handleForgotPassword = () => {

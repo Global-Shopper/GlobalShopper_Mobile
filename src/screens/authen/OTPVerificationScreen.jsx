@@ -12,12 +12,19 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { setUserInfo } from "../../features/user";
+import { useLazyResendOTPQuery, useVerifyOTPForgotPasswordMutation, useVerifyOTPMutation } from "../../services/gshopApi";
 
 export default function OTPVerificationScreen({ navigation, route }) {
 	const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [timer, setTimer] = useState(60);
 	const [canResend, setCanResend] = useState(false);
+	const [verifyOTP] = useVerifyOTPMutation()
+	const [resendOTP] = useLazyResendOTPQuery()
+	const [verifyOTPForgotPassword] = useVerifyOTPForgotPasswordMutation()
+	const dispatch = useDispatch()
 
 	// Get email and type from navigation params
 	const email = route?.params?.email || "your-email@example.com";
@@ -150,35 +157,28 @@ export default function OTPVerificationScreen({ navigation, route }) {
 		setIsLoading(true);
 
 		try {
-			// Simulate API call - replace with real API call
-			await new Promise((resolve, reject) => {
-				setTimeout(() => {
-					// "123456" as valid OTP, others as invalid
-					if (otpCode === "123456") {
-						resolve();
-					} else {
-						reject({
-							data: {
-								errorCode: "INVALID_OTP",
-								message: "OTP không hợp lệ hoặc đã hết hạn",
-							},
+			const data = {
+				email: email,
+				otp: otp.join('')
+			}
+			if (type === "signup") {
+				verifyOTP(data).unwrap().then(res => {
+					dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
+					navigation.reset({
+						index: 0,
+						routes: [{ name: 'Tabs' }],
 						});
-					}
-				}, 2000);
-			});
-
-			// Success case
+					})
+			}
 			if (type === "forgot-password") {
-				// For forgot password, navigate directly to reset password screen
-				navigation.navigate("ResetPassword", { email });
-			} else {
-				// For signup verification, show success message then go to login
-				Alert.alert("Thành công", content.successMessage, [
-					{
-						text: "OK",
-						onPress: () => navigation.navigate("Login"),
-					},
-				]);
+				verifyOTPForgotPassword(data).unwrap().then(res => {
+					if (res.resetPasswordToken) {
+						Alert.alert("Thành công", "Mã OTP đã được xác thực");
+						navigation.navigate("ResetPassword", { email: email , resetPasswordToken: res?.resetPasswordToken})
+					} else {
+						Alert.alert("Lỗi", res.message);
+					}
+				})
 			}
 		} catch (error) {
 			// Handle different error cases
@@ -219,9 +219,9 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
 		try {
 			// Simulate API call - replace with real API call
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-
-			Alert.alert("Đã gửi lại mã OTP", content.resendMessage);
+			resendOTP({email: email}).unwrap().then(res =>{
+				Alert.alert(res.message || "Đã xảy ra lỗi. Vui lòng thử lại!")
+			} )
 		} catch (_error) {
 			Alert.alert("Gửi lại OTP thất bại", "Vui lòng thử lại sau.");
 			// Reset timer on failure

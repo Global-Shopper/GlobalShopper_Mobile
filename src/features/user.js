@@ -3,9 +3,13 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
 	isLoggedIn: false,
 	accessToken: "",
-  refreshToken: "",
+  	refreshToken: "",
 	accessTokenExpired: false,
-	username: "",
+	name: "",
+	phone: "",
+	role: "",
+	avatar: "",
+	email: "",
 };
 
 const userSlice = createSlice({
@@ -27,6 +31,38 @@ const userSlice = createSlice({
     setRefreshToken(state, action) {
       state.refreshToken = action.payload;
     },
+		setName(state, action) {
+			state.name = action.payload;
+		},
+		setPhone(state, action) {
+			state.phone = action.payload;
+		},
+		setRole(state, action) {
+			state.role = action.payload;
+		},
+		setAvatar(state, action) {
+			state.avatar = action.payload;
+		},
+		setEmail(state, action) {
+			state.email = action.payload;
+		},
+		setUserInfo(state, action) {
+			const { name, phone, role, avatar, email, accessToken } = action.payload;
+			state.name = name || state.name;
+			state.phone = phone || state.phone;
+			state.role = role || state.role;
+			state.avatar = avatar || state.avatar;
+			state.email = email || state.email;
+			state.accessToken = accessToken || state.accessToken;
+			state.isLoggedIn = true;
+		},
+		setCustomerBaseInfo(state, action) {
+			const { name, phone, avatar, email } = action.payload;
+			state.name = name || state.name;
+			state.phone = phone || state.phone;
+			state.avatar = avatar || state.avatar;
+			state.email = email || state.email;
+		},
 		signout() {
 			return initialState
 		},
@@ -39,7 +75,15 @@ export const {
   setRefreshToken,
 	setAccessTokenExpired,
 	setUsername,
+	setName,
+	setPhone,
+	setRole,
+	setAvatar,
+	setEmail,
 	signout,
+	setUserInfo,
+	updateProfile,
+	setCustomerBaseInfo,
 } = userSlice.actions;
 
 export default userSlice.reducer;

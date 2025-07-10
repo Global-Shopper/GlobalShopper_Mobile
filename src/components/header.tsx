@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useSelector } from "react-redux";
 import { Text } from "./ui/text";
 
 interface HeaderProps {
@@ -43,6 +44,11 @@ export default function Header({
 }: HeaderProps) {
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
+	const email = useSelector((state) => state?.rootReducer?.user?.email)
+	const name = useSelector((state) => state?.rootReducer?.user?.name)
+	const avatarUrl = useSelector((state) => state?.rootReducer?.user?.avatar)
+
+	console.log(email,name)
 
 	return (
 		<LinearGradient
@@ -80,7 +86,7 @@ export default function Header({
 								activeOpacity={0.8}
 							>
 								<Image
-									source={{ uri: avatar }}
+									source={{ uri: avatarUrl }}
 									style={styles.avatar}
 									defaultSource={require("../assets/images/logo/logo-gshop-removebg.png")}
 								/>
@@ -97,10 +103,10 @@ export default function Header({
 						</View>
 						<View style={styles.greetingContainer}>
 							<Text style={styles.greetingText}>
-								Xin chào, {userName}
+								Xin chào, {name}
 							</Text>
 							<Text style={styles.subGreeting}>
-								{subtitle || userEmail}
+								{subtitle || email}
 							</Text>
 						</View>
 					</View>
