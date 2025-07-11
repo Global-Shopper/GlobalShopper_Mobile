@@ -13,6 +13,7 @@ interface StoreFormProps {
 	initialData?: any;
 	onSubmit?: (storeData: any) => void;
 	onChange?: (storeData: any) => void;
+	onDataChange?: (storeData: any) => void; // For parent component to get data
 	mode?: "fromLink" | "manual";
 	showSubmitButton?: boolean;
 }
@@ -29,6 +30,7 @@ export default function StoreForm({
 	initialData,
 	onSubmit,
 	onChange,
+	onDataChange,
 	mode = "manual",
 	showSubmitButton = true,
 }: StoreFormProps) {
@@ -53,6 +55,11 @@ export default function StoreForm({
 		// Call onChange if provided (for ProductForm integration)
 		if (onChange) {
 			onChange(newFormData);
+		}
+
+		// Call onDataChange if provided (for parent component to get data)
+		if (onDataChange) {
+			onDataChange(newFormData);
 		}
 	};
 

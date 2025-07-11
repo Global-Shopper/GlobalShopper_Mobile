@@ -16,7 +16,9 @@ import { Text } from "./ui/text";
 interface ProductFormProps {
 	initialData?: any;
 	mode: "fromLink" | "manual";
+	storeData?: any; // Store data from AddStore screen
 	onSubmit: (productData: any) => void;
+	onChange?: (productData: any) => void; // For real-time data sync
 }
 
 interface ProductData {
@@ -45,7 +47,9 @@ interface ProductData {
 export default function ProductForm({
 	initialData,
 	mode,
+	storeData,
 	onSubmit,
+	onChange,
 }: ProductFormProps) {
 	const [formData, setFormData] = useState<ProductData>(() => {
 		const initialPrice = initialData?.price || "";
@@ -80,11 +84,21 @@ export default function ProductForm({
 			platform: initialData?.platform || "",
 			productLink: initialData?.productLink || "",
 			sellerInfo: {
-				name: initialData?.sellerInfo?.name || "",
-				phone: initialData?.sellerInfo?.phone || "",
-				email: initialData?.sellerInfo?.email || "",
-				address: initialData?.sellerInfo?.address || "",
-				storeLink: initialData?.sellerInfo?.storeLink || "",
+				name:
+					storeData?.storeName || initialData?.sellerInfo?.name || "",
+				phone:
+					storeData?.phoneNumber ||
+					initialData?.sellerInfo?.phone ||
+					"",
+				email: storeData?.email || initialData?.sellerInfo?.email || "",
+				address:
+					storeData?.storeAddress ||
+					initialData?.sellerInfo?.address ||
+					"",
+				storeLink:
+					storeData?.shopLink ||
+					initialData?.sellerInfo?.storeLink ||
+					"",
 			},
 		};
 	});
@@ -95,61 +109,89 @@ export default function ProductForm({
 			return;
 		}
 
+		let newFormData = { ...formData };
+
 		if (field.includes("sellerInfo.")) {
 			const sellerField = field.split(".")[1];
-			setFormData((prev) => ({
-				...prev,
+			newFormData = {
+				...formData,
 				sellerInfo: {
-					...prev.sellerInfo,
+					...formData.sellerInfo,
 					[sellerField]: value,
 				},
-			}));
+			};
 		} else {
-			setFormData((prev) => ({
-				...prev,
+			newFormData = {
+				...formData,
 				[field]: value,
-			}));
+			};
+		}
+
+		setFormData(newFormData);
+
+		// Call onChange if provided for real-time sync
+		if (onChange) {
+			onChange(newFormData);
 		}
 
 		// Auto convert price when price field changes
 		if (field === "price") {
 			if (value.trim() !== "") {
-				convertPrice(value);
+				convertPrice(value, newFormData);
 			} else {
 				// Clear converted price when price is empty
-				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+				const updatedData = { ...newFormData, convertedPrice: "" };
+				setFormData(updatedData);
+				if (onChange) {
+					onChange(updatedData);
+				}
 			}
 		}
 	};
 
 	// Mock API call to convert price
-	const convertPrice = async (priceString: string) => {
+	const convertPrice = async (priceString: string, currentFormData?: any) => {
 		try {
 			// Extract number from price string (remove $, €, etc.)
 			const numericPrice = parseFloat(
 				priceString.replace(/[^0-9.]/g, "")
 			);
 
+			const formDataToUse = currentFormData || formData;
+
 			if (isNaN(numericPrice) || numericPrice <= 0) {
-				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+				const updatedData = { ...formDataToUse, convertedPrice: "" };
+				setFormData(updatedData);
+				if (onChange) {
+					onChange(updatedData);
+				}
 				return;
 			}
 
 			// Use exchange rate from state (from BE API or default)
 			const convertedAmount = Math.round(
-				numericPrice * formData.exchangeRate
+				numericPrice * formDataToUse.exchangeRate
 			);
 
 			// Format number with Vietnamese locale
 			const formattedPrice = convertedAmount.toLocaleString("vi-VN");
 
-			setFormData((prev) => ({
-				...prev,
+			const updatedData = {
+				...formDataToUse,
 				convertedPrice: formattedPrice,
-			}));
+			};
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
 		} catch (error) {
 			console.log("Error converting price:", error);
-			setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+			const formDataToUse = currentFormData || formData;
+			const updatedData = { ...formDataToUse, convertedPrice: "" };
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
 		}
 	};
 
@@ -163,10 +205,14 @@ export default function ProductForm({
 					text: "OK",
 					onPress: () => {
 						// Mock thêm một hình ảnh placeholder
-						setFormData((prev) => ({
-							...prev,
+						const updatedData = {
+							...formData,
 							image: "https://via.placeholder.com/150",
-						}));
+						};
+						setFormData(updatedData);
+						if (onChange) {
+							onChange(updatedData);
+						}
 					},
 				},
 				{ text: "Hủy", style: "cancel" },
@@ -176,8 +222,8 @@ export default function ProductForm({
 
 	const handleStoreChange = (storeData: any) => {
 		// Update seller info when store form changes
-		setFormData((prev) => ({
-			...prev,
+		const updatedData = {
+			...formData,
 			sellerInfo: {
 				name: storeData.storeName,
 				phone: storeData.phoneNumber,
@@ -185,7 +231,11 @@ export default function ProductForm({
 				address: storeData.storeAddress,
 				storeLink: storeData.shopLink,
 			},
-		}));
+		};
+		setFormData(updatedData);
+		if (onChange) {
+			onChange(updatedData);
+		}
 	};
 
 	const validateForm = () => {
@@ -199,7 +249,7 @@ export default function ProductForm({
 			return false;
 		}
 		// Converted price is auto-calculated, no need to validate manually
-		
+
 		// Only validate seller info for manual mode
 		if (mode === "manual") {
 			if (!formData.sellerInfo.name.trim()) {
@@ -580,8 +630,8 @@ export default function ProductForm({
 				)}
 			</View>
 
-			{/* Seller Information - Only show for manual mode */}
-			{mode === "manual" && (
+			{/* Seller Information - Hidden for manual mode since store info already entered in AddStore */}
+			{mode === "fromLink" && (
 				<StoreForm
 					initialData={{
 						storeName: formData.sellerInfo.name,
