@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
@@ -24,7 +25,7 @@ interface ProductFormProps {
 interface ProductData {
 	name: string;
 	description: string;
-	image: string | null;
+	images: string[]; // Changed from single image to array of images
 	price: string;
 	convertedPrice: string;
 	exchangeRate: number;
@@ -72,7 +73,7 @@ export default function ProductForm({
 		return {
 			name: initialData?.title || initialData?.name || "",
 			description: initialData?.description || "",
-			image: initialData?.image || null,
+			images: initialData?.image ? [initialData.image] : [], // Convert single image to array
 			price: initialPrice,
 			convertedPrice: initialConvertedPrice,
 			exchangeRate: initialExchangeRate,
@@ -196,28 +197,55 @@ export default function ProductForm({
 	};
 
 	const pickImage = async () => {
-		// Tạm thời hiển thị alert
-		Alert.alert(
-			"Chọn hình ảnh",
-			"Tính năng chọn hình ảnh sẽ được triển khai với expo-image-picker",
-			[
-				{
-					text: "OK",
-					onPress: () => {
-						// Mock thêm một hình ảnh placeholder
-						const updatedData = {
-							...formData,
-							image: "https://via.placeholder.com/150",
-						};
-						setFormData(updatedData);
-						if (onChange) {
-							onChange(updatedData);
-						}
-					},
-				},
-				{ text: "Hủy", style: "cancel" },
-			]
-		);
+		// Request permission
+		const permissionResult =
+			await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+		if (permissionResult.granted === false) {
+			Alert.alert(
+				"Quyền truy cập",
+				"Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
+			);
+			return;
+		}
+
+		// Check if max images reached
+		if (formData.images.length >= 4) {
+			Alert.alert("Giới hạn ảnh", "Bạn chỉ có thể thêm tối đa 4 ảnh");
+			return;
+		}
+
+		// Launch image picker
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
+
+		if (!result.canceled && result.assets && result.assets.length > 0) {
+			const newImageUri = result.assets[0].uri;
+			const updatedData = {
+				...formData,
+				images: [...formData.images, newImageUri],
+			};
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
+		}
+	};
+
+	const removeImage = (index: number) => {
+		const updatedImages = formData.images.filter((_, i) => i !== index);
+		const updatedData = {
+			...formData,
+			images: updatedImages,
+		};
+		setFormData(updatedData);
+		if (onChange) {
+			onChange(updatedData);
+		}
 	};
 
 	const handleStoreChange = (storeData: any) => {
@@ -394,31 +422,55 @@ export default function ProductForm({
 					</View>
 				</View>
 
-				{/* Product Image */}
+				{/* Product Images */}
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Hình ảnh sản phẩm</Text>
-					<TouchableOpacity
-						style={styles.imageContainer}
-						onPress={pickImage}
-					>
-						{formData.image ? (
-							<Image
-								source={{ uri: formData.image }}
-								style={styles.productImage}
-							/>
-						) : (
-							<View style={styles.imagePlaceholder}>
+					<Text style={styles.label}>
+						Hình ảnh sản phẩm (Tối đa 4 ảnh)
+					</Text>
+
+					{/* Images Grid */}
+					<View style={styles.imagesGrid}>
+						{formData.images.map((imageUri, index) => (
+							<View key={index} style={styles.imageItem}>
+								<Image
+									source={{ uri: imageUri }}
+									style={styles.gridImage}
+								/>
+								<TouchableOpacity
+									style={styles.removeImageButton}
+									onPress={() => removeImage(index)}
+								>
+									<Ionicons
+										name="close-circle"
+										size={24}
+										color="#FF5722"
+									/>
+								</TouchableOpacity>
+							</View>
+						))}
+
+						{/* Add Image Button */}
+						{formData.images.length < 4 && (
+							<TouchableOpacity
+								style={styles.addImageButton}
+								onPress={pickImage}
+							>
 								<Ionicons
-									name="camera-outline"
+									name="add-circle-outline"
 									size={32}
 									color="#78909C"
 								/>
-								<Text style={styles.imagePlaceholderText}>
-									Chọn hình ảnh
+								<Text style={styles.addImageText}>
+									Thêm ảnh
 								</Text>
-							</View>
+							</TouchableOpacity>
 						)}
-					</TouchableOpacity>
+					</View>
+
+					{/* Image count info */}
+					<Text style={styles.imageCountText}>
+						{formData.images.length}/4 ảnh
+					</Text>
 				</View>
 
 				{/* Price - Only show for fromLink mode */}
@@ -754,31 +806,6 @@ const styles = StyleSheet.create({
 		minHeight: 60,
 		textAlignVertical: "top",
 	},
-	imageContainer: {
-		borderWidth: 1,
-		borderColor: "#E0E0E0",
-		borderRadius: 8,
-		borderStyle: "dashed",
-		padding: 16,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#FAFAFA",
-		minHeight: 120,
-	},
-	productImage: {
-		width: 100,
-		height: 100,
-		borderRadius: 8,
-	},
-	imagePlaceholder: {
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	imagePlaceholderText: {
-		fontSize: 14,
-		color: "#78909C",
-		marginTop: 8,
-	},
 	submitButton: {
 		borderRadius: 12,
 		overflow: "hidden",
@@ -824,6 +851,59 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: "#999999",
 		marginTop: 4,
+		fontStyle: "italic",
+	},
+	imagesGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "flex-start",
+		gap: 12,
+	},
+	imageItem: {
+		position: "relative",
+		width: 80,
+		height: 80,
+	},
+	gridImage: {
+		width: 80,
+		height: 80,
+		borderRadius: 8,
+		backgroundColor: "#f0f0f0",
+	},
+	removeImageButton: {
+		position: "absolute",
+		top: -8,
+		right: -8,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 2,
+		elevation: 2,
+	},
+	addImageButton: {
+		width: 80,
+		height: 80,
+		borderWidth: 2,
+		borderColor: "#E0E0E0",
+		borderStyle: "dashed",
+		borderRadius: 8,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "#FAFAFA",
+	},
+	addImageText: {
+		fontSize: 12,
+		color: "#78909C",
+		marginTop: 4,
+		textAlign: "center",
+	},
+	imageCountText: {
+		fontSize: 12,
+		color: "#666",
+		marginTop: 8,
+		textAlign: "right",
 		fontStyle: "italic",
 	},
 });
