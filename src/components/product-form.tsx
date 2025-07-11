@@ -199,12 +199,13 @@ export default function ProductForm({
 			return false;
 		}
 		// Converted price is auto-calculated, no need to validate manually
-		if (!formData.sellerInfo.name.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
-			return false;
-		}
-
+		
+		// Only validate seller info for manual mode
 		if (mode === "manual") {
+			if (!formData.sellerInfo.name.trim()) {
+				Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
+				return false;
+			}
 			if (!formData.sellerInfo.address.trim()) {
 				Alert.alert("Lỗi", "Vui lòng nhập địa chỉ cửa hàng");
 				return false;
@@ -579,19 +580,21 @@ export default function ProductForm({
 				)}
 			</View>
 
-			{/* Seller Information */}
-			<StoreForm
-				initialData={{
-					storeName: formData.sellerInfo.name,
-					phoneNumber: formData.sellerInfo.phone,
-					email: formData.sellerInfo.email,
-					storeAddress: formData.sellerInfo.address,
-					shopLink: formData.sellerInfo.storeLink,
-				}}
-				mode={mode}
-				onChange={handleStoreChange}
-				showSubmitButton={false}
-			/>
+			{/* Seller Information - Only show for manual mode */}
+			{mode === "manual" && (
+				<StoreForm
+					initialData={{
+						storeName: formData.sellerInfo.name,
+						phoneNumber: formData.sellerInfo.phone,
+						email: formData.sellerInfo.email,
+						storeAddress: formData.sellerInfo.address,
+						shopLink: formData.sellerInfo.storeLink,
+					}}
+					mode={mode}
+					onChange={handleStoreChange}
+					showSubmitButton={false}
+				/>
+			)}
 
 			{/* Submit Button */}
 			<TouchableOpacity
