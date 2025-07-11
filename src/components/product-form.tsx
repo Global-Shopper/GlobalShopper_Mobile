@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Alert,
 	Image,
@@ -45,6 +45,59 @@ interface ProductData {
 	};
 }
 
+// Helper function to create initial form data
+function getInitialFormData(initialData: any, storeData: any, mode: string): ProductData {
+	const initialPrice = initialData?.price || "";
+	const initialExchangeRate = initialData?.exchangeRate || 25000;
+
+	// Calculate converted price if price is available
+	let initialConvertedPrice = "";
+	if (initialPrice && mode === "fromLink") {
+		const numericPrice = parseFloat(
+			initialPrice.replace(/[^0-9.]/g, "")
+		);
+		if (!isNaN(numericPrice) && numericPrice > 0) {
+			const convertedAmount = Math.round(
+				numericPrice * initialExchangeRate
+			);
+			initialConvertedPrice = convertedAmount.toLocaleString("vi-VN");
+		}
+	}
+
+	return {
+		name: initialData?.title || initialData?.name || "",
+		description: initialData?.description || "",
+		images: initialData?.images || (initialData?.image ? [initialData.image] : []),
+		price: initialPrice,
+		convertedPrice: initialConvertedPrice,
+		exchangeRate: initialExchangeRate,
+		category: initialData?.category || "",
+		brand: initialData?.brand || "",
+		material: initialData?.material || "",
+		size: initialData?.size || "",
+		color: initialData?.color || "",
+		platform: initialData?.platform || "",
+		productLink: initialData?.productLink || "",
+		sellerInfo: {
+			name:
+				storeData?.storeName || initialData?.sellerInfo?.name || "",
+			phone:
+				storeData?.phoneNumber ||
+				initialData?.sellerInfo?.phone ||
+				"",
+			email: storeData?.email || initialData?.sellerInfo?.email || "",
+			address:
+				storeData?.storeAddress ||
+				initialData?.sellerInfo?.address ||
+				"",
+			storeLink:
+				storeData?.shopLink ||
+				initialData?.sellerInfo?.storeLink ||
+				"",
+		},
+	};
+}
+
 export default function ProductForm({
 	initialData,
 	mode,
@@ -53,56 +106,14 @@ export default function ProductForm({
 	onChange,
 }: ProductFormProps) {
 	const [formData, setFormData] = useState<ProductData>(() => {
-		const initialPrice = initialData?.price || "";
-		const initialExchangeRate = initialData?.exchangeRate || 25000;
-
-		// Calculate converted price if price is available
-		let initialConvertedPrice = "";
-		if (initialPrice && mode === "fromLink") {
-			const numericPrice = parseFloat(
-				initialPrice.replace(/[^0-9.]/g, "")
-			);
-			if (!isNaN(numericPrice) && numericPrice > 0) {
-				const convertedAmount = Math.round(
-					numericPrice * initialExchangeRate
-				);
-				initialConvertedPrice = convertedAmount.toLocaleString("vi-VN");
-			}
-		}
-
-		return {
-			name: initialData?.title || initialData?.name || "",
-			description: initialData?.description || "",
-			images: initialData?.image ? [initialData.image] : [], // Convert single image to array
-			price: initialPrice,
-			convertedPrice: initialConvertedPrice,
-			exchangeRate: initialExchangeRate,
-			category: initialData?.category || "",
-			brand: initialData?.brand || "",
-			material: initialData?.material || "",
-			size: initialData?.size || "",
-			color: initialData?.color || "",
-			platform: initialData?.platform || "",
-			productLink: initialData?.productLink || "",
-			sellerInfo: {
-				name:
-					storeData?.storeName || initialData?.sellerInfo?.name || "",
-				phone:
-					storeData?.phoneNumber ||
-					initialData?.sellerInfo?.phone ||
-					"",
-				email: storeData?.email || initialData?.sellerInfo?.email || "",
-				address:
-					storeData?.storeAddress ||
-					initialData?.sellerInfo?.address ||
-					"",
-				storeLink:
-					storeData?.shopLink ||
-					initialData?.sellerInfo?.storeLink ||
-					"",
-			},
-		};
+		return getInitialFormData(initialData, storeData, mode);
 	});
+
+	// Update form data when initialData changes (when switching tabs)
+	useEffect(() => {
+		const newFormData = getInitialFormData(initialData, storeData, mode);
+		setFormData(newFormData);
+	}, [initialData, storeData, mode]);
 
 	const handleInputChange = (field: string, value: string) => {
 		// Skip convertedPrice as it's read-only and auto-calculated

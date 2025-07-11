@@ -40,23 +40,17 @@ export default function ProductDetails({ navigation, route }) {
 			return [{}]; // Start with one empty product
 		}
 	});
-	const [currentProductData, setCurrentProductData] = useState(null);
 
-	const saveCurrentProductData = (productData) => {
-		if (productData) {
-			const updatedProducts = [...allProducts];
-			updatedProducts[currentProductIndex] = productData;
-			setAllProducts(updatedProducts);
-		}
+	const handleProductDataChange = (productData) => {
+		// Save data real-time when user types
+		const updatedProducts = [...allProducts];
+		updatedProducts[currentProductIndex] = productData;
+		setAllProducts(updatedProducts);
 	};
 
 	const switchToProduct = (index) => {
-		// Save current product data before switching
-		if (currentProductData) {
-			saveCurrentProductData(currentProductData);
-		}
+		// No need to manually save since data is saved real-time via onChange
 		setCurrentProductIndex(index);
-		setCurrentProductData(null);
 	};
 
 	const handleSubmit = (productData) => {
@@ -191,12 +185,11 @@ export default function ProductDetails({ navigation, route }) {
 
 			{/* Product Form */}
 			<ProductForm
-				key={currentProductIndex} // Force re-render when switching products
 				initialData={allProducts[currentProductIndex]}
 				mode={mode}
 				storeData={storeData}
 				onSubmit={handleSubmit}
-				onChange={setCurrentProductData}
+				onChange={handleProductDataChange}
 			/>
 		</KeyboardAvoidingView>
 	);
