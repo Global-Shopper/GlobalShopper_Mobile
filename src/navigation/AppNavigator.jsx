@@ -6,6 +6,7 @@ import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
 import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
+import NotificationScreen from "../screens/notification/NotificationScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -128,6 +129,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="PolicyScreen"
 				component={PolicyScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="NotificationScreen"
+				component={NotificationScreen}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

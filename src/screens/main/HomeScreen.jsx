@@ -8,7 +8,7 @@ import QuickAccess from "../home/QuickAccess";
 
 export default function HomeScreen({ navigation }) {
 	const handleNotificationPress = () => {
-		console.log("Notification pressed");
+		navigation.navigate("NotificationScreen");
 	};
 
 	const handleChatPress = () => {
@@ -31,6 +31,7 @@ export default function HomeScreen({ navigation }) {
 				onNotificationPress={handleNotificationPress}
 				onChatPress={handleChatPress}
 				onAvatarPress={handleAvatarPress}
+				navigation={navigation}
 			/>
 
 			<ScrollView
