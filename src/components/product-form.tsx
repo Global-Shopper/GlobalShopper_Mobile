@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
 	Alert,
 	Image,
@@ -11,7 +11,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import StoreForm from "./store-form";
 import { Text } from "./ui/text";
 
 interface ProductFormProps {
@@ -36,7 +35,7 @@ interface ProductData {
 	color: string;
 	platform: string;
 	productLink: string;
-	sellerInfo: {
+	sellerInfo?: {
 		name: string;
 		phone: string;
 		email: string;
@@ -46,16 +45,18 @@ interface ProductData {
 }
 
 // Helper function to create initial form data
-function getInitialFormData(initialData: any, storeData: any, mode: string): ProductData {
+function getInitialFormData(
+	initialData: any,
+	storeData: any,
+	mode: string
+): ProductData {
 	const initialPrice = initialData?.price || "";
 	const initialExchangeRate = initialData?.exchangeRate || 25000;
 
 	// Calculate converted price if price is available
 	let initialConvertedPrice = "";
 	if (initialPrice && mode === "fromLink") {
-		const numericPrice = parseFloat(
-			initialPrice.replace(/[^0-9.]/g, "")
-		);
+		const numericPrice = parseFloat(initialPrice.replace(/[^0-9.]/g, ""));
 		if (!isNaN(numericPrice) && numericPrice > 0) {
 			const convertedAmount = Math.round(
 				numericPrice * initialExchangeRate
@@ -64,10 +65,12 @@ function getInitialFormData(initialData: any, storeData: any, mode: string): Pro
 		}
 	}
 
-	return {
+	const baseData: any = {
 		name: initialData?.title || initialData?.name || "",
 		description: initialData?.description || "",
-		images: initialData?.images || (initialData?.image ? [initialData.image] : []),
+		images:
+			initialData?.images ||
+			(initialData?.image ? [initialData.image] : []),
 		price: initialPrice,
 		convertedPrice: initialConvertedPrice,
 		exchangeRate: initialExchangeRate,
@@ -78,24 +81,25 @@ function getInitialFormData(initialData: any, storeData: any, mode: string): Pro
 		color: initialData?.color || "",
 		platform: initialData?.platform || "",
 		productLink: initialData?.productLink || "",
-		sellerInfo: {
-			name:
-				storeData?.storeName || initialData?.sellerInfo?.name || "",
+	};
+
+	// Only include sellerInfo in manual mode
+	if (mode === "manual") {
+		baseData.sellerInfo = {
+			name: storeData?.storeName || initialData?.sellerInfo?.name || "",
 			phone:
-				storeData?.phoneNumber ||
-				initialData?.sellerInfo?.phone ||
-				"",
+				storeData?.phoneNumber || initialData?.sellerInfo?.phone || "",
 			email: storeData?.email || initialData?.sellerInfo?.email || "",
 			address:
 				storeData?.storeAddress ||
 				initialData?.sellerInfo?.address ||
 				"",
 			storeLink:
-				storeData?.shopLink ||
-				initialData?.sellerInfo?.storeLink ||
-				"",
-		},
-	};
+				storeData?.shopLink || initialData?.sellerInfo?.storeLink || "",
+		};
+	}
+
+	return baseData;
 }
 
 export default function ProductForm({
@@ -123,7 +127,7 @@ export default function ProductForm({
 
 		let newFormData = { ...formData };
 
-		if (field.includes("sellerInfo.")) {
+		if (field.includes("sellerInfo.") && formData.sellerInfo) {
 			const sellerField = field.split(".")[1];
 			newFormData = {
 				...formData,
@@ -259,24 +263,6 @@ export default function ProductForm({
 		}
 	};
 
-	const handleStoreChange = (storeData: any) => {
-		// Update seller info when store form changes
-		const updatedData = {
-			...formData,
-			sellerInfo: {
-				name: storeData.storeName,
-				phone: storeData.phoneNumber,
-				email: storeData.email,
-				address: storeData.storeAddress,
-				storeLink: storeData.shopLink,
-			},
-		};
-		setFormData(updatedData);
-		if (onChange) {
-			onChange(updatedData);
-		}
-	};
-
 	const validateForm = () => {
 		if (!formData.name.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập tên sản phẩm");
@@ -289,21 +275,10 @@ export default function ProductForm({
 		}
 		// Converted price is auto-calculated, no need to validate manually
 
-		// Only validate seller info for manual mode
-		if (mode === "manual") {
-			if (!formData.sellerInfo.name.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
-				return false;
-			}
-			if (!formData.sellerInfo.address.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập địa chỉ cửa hàng");
-				return false;
-			}
-			if (!formData.sellerInfo.storeLink.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập link cửa hàng");
-				return false;
-			}
-		}
+		// No validation for seller info in either mode:
+		// - fromLink mode: Each product may come from different stores
+		// - manual mode: Store info already entered in AddStore
+
 		return true;
 	};
 
@@ -692,22 +667,6 @@ export default function ProductForm({
 					</View>
 				)}
 			</View>
-
-			{/* Seller Information - Hidden for manual mode since store info already entered in AddStore */}
-			{mode === "fromLink" && (
-				<StoreForm
-					initialData={{
-						storeName: formData.sellerInfo.name,
-						phoneNumber: formData.sellerInfo.phone,
-						email: formData.sellerInfo.email,
-						storeAddress: formData.sellerInfo.address,
-						shopLink: formData.sellerInfo.storeLink,
-					}}
-					mode={mode}
-					onChange={handleStoreChange}
-					showSubmitButton={false}
-				/>
-			)}
 
 			{/* Submit Button */}
 			<TouchableOpacity
