@@ -112,8 +112,8 @@ export default function ProductDetails({ navigation, route }) {
 				onBackPress={() => navigation.goBack()}
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			{/* Product Tabs - Show when multiple products OR manual mode */}

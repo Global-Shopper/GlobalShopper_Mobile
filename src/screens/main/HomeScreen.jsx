@@ -7,10 +7,6 @@ import PurchaseProcess from "../home/PurchaseProcess";
 import QuickAccess from "../home/QuickAccess";
 
 export default function HomeScreen({ navigation }) {
-	const handleNotificationPress = () => {
-		navigation.navigate("NotificationScreen");
-	};
-
 	const handleChatPress = () => {
 		console.log("Chat pressed");
 	};
@@ -28,7 +24,6 @@ export default function HomeScreen({ navigation }) {
 				avatar="https://github.com/shadcn.png"
 				notificationCount={3}
 				chatCount={3}
-				onNotificationPress={handleNotificationPress}
 				onChatPress={handleChatPress}
 				onAvatarPress={handleAvatarPress}
 				navigation={navigation}

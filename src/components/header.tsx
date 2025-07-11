@@ -60,11 +60,9 @@ export default function Header({
 		(state: any) => state?.rootReducer?.user?.avatar
 	);
 
-	// Default notification handler
+	// Default notification handler - always navigate to NotificationScreen
 	const handleNotificationPress = () => {
-		if (onNotificationPress) {
-			onNotificationPress();
-		} else if (navigation) {
+		if (navigation) {
 			navigation.navigate("NotificationScreen");
 		}
 	};

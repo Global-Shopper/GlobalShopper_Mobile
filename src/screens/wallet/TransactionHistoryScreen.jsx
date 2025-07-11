@@ -135,8 +135,8 @@ export default function TransactionHistoryScreen({ navigation }) {
 				onBackPress={() => navigation.goBack()}
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			{/* Tabs */}

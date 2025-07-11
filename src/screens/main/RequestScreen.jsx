@@ -125,9 +125,6 @@ export default function RequestScreen({ navigation }) {
 				title="Yêu cầu"
 				notificationCount={2}
 				chatCount={0}
-				onNotificationPress={() =>
-					navigation.navigate("NotificationScreen")
-				}
 				onChatPress={() => console.log("Chat pressed")}
 				navigation={navigation}
 			/>

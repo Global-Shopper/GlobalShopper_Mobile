@@ -23,10 +23,6 @@ export default function AccountScreen({ navigation }) {
 
 	const [chatNotificationCount] = useState(3); // Số tin nhắn chưa đọc
 
-	const handleNotificationPress = () => {
-		console.log("Notification pressed");
-	};
-
 	const handleChatPress = () => {
 		console.log("Chat pressed");
 	};
@@ -174,9 +170,9 @@ export default function AccountScreen({ navigation }) {
 				isVerified={user.isVerified}
 				notificationCount={3}
 				chatCount={chatNotificationCount}
-				onNotificationPress={handleNotificationPress}
 				onChatPress={handleChatPress}
 				onAvatarPress={handleAvatarPress}
+				navigation={navigation}
 			/>
 
 			<ScrollView
