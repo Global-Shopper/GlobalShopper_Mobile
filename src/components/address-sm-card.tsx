@@ -3,11 +3,12 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "./ui/text";
 
 interface AddressSmCardProps {
-	recipientName: string;
-	phone: string;
-	address: string;
+	recipientName?: string;
+	phone?: string;
+	address?: string;
 	isDefault?: boolean;
 	onEdit?: () => void;
+	isEmpty?: boolean;
 }
 
 export default function AddressSmCard({
@@ -16,7 +17,36 @@ export default function AddressSmCard({
 	address,
 	isDefault = false,
 	onEdit,
+	isEmpty = false,
 }: AddressSmCardProps) {
+	// If isEmpty or no data, show placeholder
+	if (isEmpty || (!recipientName && !phone && !address)) {
+		return (
+			<TouchableOpacity
+				style={styles.placeholderContainer}
+				onPress={onEdit}
+			>
+				<View style={styles.placeholderContent}>
+					<Ionicons
+						name="location-outline"
+						size={24}
+						color="#1976D2"
+					/>
+					<View style={styles.placeholderText}>
+						<Text style={styles.placeholderTitle}>
+							Chọn địa chỉ giao hàng
+						</Text>
+						<Text style={styles.placeholderSubtitle}>
+							Nhấn để chọn địa chỉ nhận hàng
+						</Text>
+					</View>
+					<Ionicons name="chevron-forward" size={20} color="#666" />
+				</View>
+			</TouchableOpacity>
+		);
+	}
+
+	// Normal address display
 	return (
 		<View style={styles.container}>
 			{/* Header */}
@@ -125,5 +155,33 @@ const styles = StyleSheet.create({
 		color: "#666",
 		lineHeight: 20,
 		marginLeft: 24,
+	},
+	// Placeholder styles
+	placeholderContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 2,
+		borderColor: "#E5E5E5",
+		borderStyle: "dashed",
+		padding: 16,
+		marginVertical: 8,
+	},
+	placeholderContent: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+	},
+	placeholderText: {
+		flex: 1,
+	},
+	placeholderTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1976D2",
+		marginBottom: 4,
+	},
+	placeholderSubtitle: {
+		fontSize: 14,
+		color: "#666",
 	},
 });
