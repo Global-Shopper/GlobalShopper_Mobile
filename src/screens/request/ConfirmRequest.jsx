@@ -22,13 +22,8 @@ export default function ConfirmRequest({ navigation, route }) {
 	const [note, setNote] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// State cho địa chỉ giao hàng - có thể được cập nhật từ AddressSelection
-	const [deliveryAddress, setDeliveryAddress] = useState({
-		recipientName: "Nguyễn Văn A",
-		phone: "0123 456 789",
-		address: "123 Đường ABC, Phường XYZ, Quận 1, TP. Hồ Chí Minh",
-		isDefault: true,
-	});
+	// State cho địa chỉ giao hàng - ban đầu sẽ null, user phải chọn từ MyAddress
+	const [deliveryAddress, setDeliveryAddress] = useState(null);
 
 	const handleEditAddress = () => {
 		// Navigate to MyAddress with custom title for address selection
@@ -50,6 +45,25 @@ export default function ConfirmRequest({ navigation, route }) {
 
 	const handleSubmitRequest = async () => {
 		if (isSubmitting) return;
+
+		// Kiểm tra địa chỉ giao hàng
+		if (!deliveryAddress) {
+			Alert.alert(
+				"Thiếu thông tin",
+				"Vui lòng chọn địa chỉ giao hàng trước khi gửi yêu cầu.",
+				[
+					{
+						text: "Chọn địa chỉ",
+						onPress: handleEditAddress,
+					},
+					{
+						text: "Hủy",
+						style: "cancel",
+					},
+				]
+			);
+			return;
+		}
 
 		Alert.alert(
 			"Xác nhận gửi yêu cầu",
@@ -127,13 +141,41 @@ export default function ConfirmRequest({ navigation, route }) {
 			>
 				{/* Địa chỉ giao hàng */}
 				<View style={styles.section}>
-					<AddressSmCard
-						recipientName={deliveryAddress.recipientName}
-						phone={deliveryAddress.phone}
-						address={deliveryAddress.address}
-						isDefault={deliveryAddress.isDefault}
-						onEdit={handleEditAddress}
-					/>
+					{deliveryAddress ? (
+						<AddressSmCard
+							recipientName={deliveryAddress.recipientName}
+							phone={deliveryAddress.phone}
+							address={deliveryAddress.address}
+							isDefault={deliveryAddress.isDefault}
+							onEdit={handleEditAddress}
+						/>
+					) : (
+						<TouchableOpacity
+							style={styles.addressPlaceholder}
+							onPress={handleEditAddress}
+						>
+							<View style={styles.placeholderContent}>
+								<Ionicons
+									name="location-outline"
+									size={24}
+									color="#1976D2"
+								/>
+								<View style={styles.placeholderText}>
+									<Text style={styles.placeholderTitle}>
+										Chọn địa chỉ giao hàng
+									</Text>
+									<Text style={styles.placeholderSubtitle}>
+										Nhấn để chọn địa chỉ nhận hàng
+									</Text>
+								</View>
+								<Ionicons
+									name="chevron-forward"
+									size={20}
+									color="#666"
+								/>
+							</View>
+						</TouchableOpacity>
+					)}
 				</View>
 
 				{/* Danh sách sản phẩm */}
@@ -415,5 +457,31 @@ const styles = StyleSheet.create({
 		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
+	},
+	addressPlaceholder: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 2,
+		borderColor: "#E5E5E5",
+		borderStyle: "dashed",
+		padding: 16,
+	},
+	placeholderContent: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+	},
+	placeholderText: {
+		flex: 1,
+	},
+	placeholderTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1976D2",
+		marginBottom: 4,
+	},
+	placeholderSubtitle: {
+		fontSize: 14,
+		color: "#666",
 	},
 });
