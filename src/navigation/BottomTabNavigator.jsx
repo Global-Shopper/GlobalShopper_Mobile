@@ -1,21 +1,44 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { View, Platform } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Platform, TouchableOpacity } from "react-native";
 import { Text } from "../components/ui/text";
 
 // Import screens
-import HomeScreen from "../screens/main/HomeScreen";
-import WalletScreen from "../screens/main/WalletScreen";
-import RequestScreen from "../screens/main/RequestScreen";
-import OrderScreen from "../screens/main/OrderScreen";
 import AccountScreen from "../screens/main/AccountScreen";
+import HomeScreen from "../screens/main/HomeScreen";
+import OrderScreen from "../screens/main/OrderScreen";
+import RequestScreen from "../screens/main/RequestScreen";
+import WalletScreen from "../screens/main/WalletScreen";
 
 // Create navigators
 const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator for main app screens
 const BottomTabNavigator = () => {
+	// Custom tab button component
+	const CustomTabButton = ({
+		focused,
+		children,
+		onPress,
+		accessibilityState,
+	}) => {
+		return (
+			<TouchableOpacity
+				onPress={onPress}
+				activeOpacity={0.7}
+				style={{
+					flex: 1,
+					alignItems: "center",
+					justifyContent: "center",
+					paddingVertical: 8,
+					paddingHorizontal: 16,
+				}}
+			>
+				{children}
+			</TouchableOpacity>
+		);
+	};
+
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
@@ -38,50 +61,12 @@ const BottomTabNavigator = () => {
 						iconName = focused ? "person" : "person-outline";
 					}
 
-					// Custom icon container with gradient background for active state
-					if (focused) {
-						return (
-							<View style={{
-								justifyContent: 'center',
-								alignItems: 'center',
-								marginBottom: 2,
-							}}>
-								<LinearGradient
-									colors={['#42A5F5', '#1976D2']}
-									start={{ x: 0, y: 0 }}
-									end={{ x: 1, y: 1 }}
-									style={{
-										width: 44,
-										height: 32,
-										borderRadius: 16,
-										justifyContent: 'center',
-										alignItems: 'center',
-										shadowColor: '#1976D2',
-										shadowOffset: {
-											width: 0,
-											height: 2,
-										},
-										shadowOpacity: 0.25,
-										shadowRadius: 4,
-										elevation: 5,
-									}}
-								>
-									<Ionicons name={iconName} size={size - 2} color="#FFFFFF" />
-								</LinearGradient>
-							</View>
-						);
-					}
-
 					return (
-						<View style={{
-							justifyContent: 'center',
-							alignItems: 'center',
-							marginBottom: 2,
-							width: 44,
-							height: 32,
-						}}>
-							<Ionicons name={iconName} size={size} color={color} />
-						</View>
+						<Ionicons
+							name={iconName}
+							size={focused ? size + 2 : size}
+							color={focused ? "#1976D2" : "#9CA3AF"}
+						/>
 					);
 				},
 				tabBarLabel: ({ focused, color }) => {
@@ -102,45 +87,55 @@ const BottomTabNavigator = () => {
 					return (
 						<Text
 							style={{
-								color: focused ? '#1976D2' : color,
+								color: focused ? "#1976D2" : "#9CA3AF",
 								fontSize: 10,
-								fontWeight: focused ? "600" : "500",
-								marginTop: 4,
-								textAlign: 'center',
-								paddingHorizontal: 2,
+								fontWeight: focused ? "700" : "500",
+								marginTop: 2,
+								textAlign: "center",
+								width: "100%",
 							}}
+							numberOfLines={1}
+							ellipsizeMode="tail"
 						>
 							{label}
 						</Text>
 					);
 				},
 				tabBarActiveTintColor: "#1976D2",
-				tabBarInactiveTintColor: "#9E9E9E",
+				tabBarInactiveTintColor: "#9CA3AF",
 				tabBarStyle: {
 					backgroundColor: "#FFFFFF",
-					borderTopWidth: 0,
 					paddingTop: 6,
-					paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-					height: Platform.OS === 'ios' ? 85 : 70,
-					shadowColor: "#000",
+					paddingBottom: Platform.OS === "ios" ? 28 : 8,
+					paddingHorizontal: 8,
+					height: Platform.OS === "ios" ? 90 : 70,
+					shadowColor: "#000000",
 					shadowOffset: {
 						width: 0,
-						height: -4,
+						height: -8,
 					},
-					shadowOpacity: 0.15,
-					shadowRadius: 12,
+					shadowOpacity: 0.1,
+					shadowRadius: 20,
 					elevation: 20,
-					borderTopLeftRadius: 20,
-					borderTopRightRadius: 20,
-					position: 'absolute',
+					borderTopLeftRadius: 28,
+					borderTopRightRadius: 28,
+					position: "absolute",
 					bottom: 0,
 					left: 0,
 					right: 0,
+					borderTopWidth: 0,
 				},
 				tabBarItemStyle: {
-					paddingVertical: 4,
-					marginHorizontal: 2,
+					flex: 1,
+					justifyContent: "center",
+					alignItems: "center",
+					marginHorizontal: 1,
+					paddingVertical: 6,
+					paddingHorizontal: 2,
+					borderRadius: 20,
+					minWidth: 60,
 				},
+				tabBarButton: (props) => <CustomTabButton {...props} />,
 				headerShown: false,
 			})}
 		>
@@ -149,7 +144,7 @@ const BottomTabNavigator = () => {
 				component={HomeScreen}
 				options={{
 					title: "Trang chủ",
-					tabBarBadge: null, // You can add notification badges here
+					tabBarBadge: null,
 				}}
 			/>
 			<Tab.Screen
@@ -166,10 +161,10 @@ const BottomTabNavigator = () => {
 					title: "Yêu cầu",
 					tabBarBadge: 3,
 					tabBarBadgeStyle: {
-						backgroundColor: '#FF5722',
-						color: '#FFFFFF',
+						backgroundColor: "#FF5722",
+						color: "#FFFFFF",
 						fontSize: 10,
-						fontWeight: '600',
+						fontWeight: "600",
 						minWidth: 18,
 						height: 18,
 						borderRadius: 9,
@@ -185,10 +180,10 @@ const BottomTabNavigator = () => {
 					title: "Đơn hàng",
 					tabBarBadge: 2,
 					tabBarBadgeStyle: {
-						backgroundColor: '#FF5722',
-						color: '#FFFFFF',
+						backgroundColor: "#FF5722",
+						color: "#FFFFFF",
 						fontSize: 10,
-						fontWeight: '600',
+						fontWeight: "600",
 						minWidth: 18,
 						height: 18,
 						borderRadius: 9,
