@@ -366,27 +366,13 @@ export default function ConfirmRequest({ navigation, route }) {
 						style={styles.submitButtonGradient}
 					>
 						{isSubmitting ? (
-							<>
-								<Ionicons
-									name="hourglass-outline"
-									size={20}
-									color="#fff"
-								/>
-								<Text style={styles.submitButtonText}>
-									Đang gửi...
-								</Text>
-							</>
+							<Text style={styles.submitButtonText}>
+								Đang gửi...
+							</Text>
 						) : (
-							<>
-								<Ionicons
-									name="send-outline"
-									size={20}
-									color="#fff"
-								/>
-								<Text style={styles.submitButtonText}>
-									Gửi yêu cầu
-								</Text>
-							</>
+							<Text style={styles.submitButtonText}>
+								Gửi yêu cầu
+							</Text>
 						)}
 					</LinearGradient>
 				</TouchableOpacity>
@@ -507,7 +493,8 @@ const styles = StyleSheet.create({
 		right: 0,
 		backgroundColor: "#fff",
 		paddingHorizontal: 12,
-		paddingVertical: 10,
+		paddingVertical: 16,
+		paddingBottom: 27,
 		borderTopWidth: 1,
 		borderTopColor: "#E5E5E5",
 		shadowColor: "#000",
@@ -524,11 +511,11 @@ const styles = StyleSheet.create({
 		opacity: 0.7,
 	},
 	submitButtonGradient: {
-		paddingVertical: 12,
+		paddingVertical: 17,
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
-		gap: 8,
+		gap: 10,
 	},
 	submitButtonText: {
 		color: "#fff",
