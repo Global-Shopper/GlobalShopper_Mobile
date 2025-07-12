@@ -6,6 +6,7 @@ import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
 import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
+import NotificationScreen from "../screens/notification/NotificationScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -19,7 +20,9 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import AddStore from "../screens/request/AddStore";
+import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
+import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
@@ -131,6 +134,11 @@ const AppNavigator = () => {
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
+				name="NotificationScreen"
+				component={NotificationScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
 				name="TransactionHistory"
 				component={TransactionHistoryScreen}
 				options={{ headerShown: false }}
@@ -153,6 +161,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ProductDetails"
 				component={ProductDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ConfirmRequest"
+				component={ConfirmRequest}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="SuccessConfirmationScreen"
+				component={SuccessConfirmationScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

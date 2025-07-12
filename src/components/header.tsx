@@ -25,6 +25,13 @@ interface HeaderProps {
 	// Back navigation support
 	showBackButton?: boolean;
 	onBackPress?: () => void;
+
+	// Navigation support
+	navigation?: any;
+
+	// Control visibility of icons
+	showNotificationIcon?: boolean;
+	showChatIcon?: boolean;
 }
 
 export default function Header({
@@ -41,14 +48,35 @@ export default function Header({
 	onAvatarPress,
 	showBackButton = false,
 	onBackPress,
+	navigation,
+	showNotificationIcon = true,
+	showChatIcon = true,
 }: HeaderProps) {
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
-	const email = useSelector((state) => state?.rootReducer?.user?.email)
-	const name = useSelector((state) => state?.rootReducer?.user?.name)
-	const avatarUrl = useSelector((state) => state?.rootReducer?.user?.avatar)
+	const email = useSelector((state: any) => state?.rootReducer?.user?.email);
+	const name = useSelector((state: any) => state?.rootReducer?.user?.name);
+	const avatarUrl = useSelector(
+		(state: any) => state?.rootReducer?.user?.avatar
+	);
 
-	console.log(email,name)
+	// Default notification handler - always navigate to NotificationScreen
+	const handleNotificationPress = () => {
+		if (navigation) {
+			navigation.navigate("NotificationScreen");
+		}
+	};
+
+	// Default chat handler
+	const handleChatPress = () => {
+		if (onChatPress) {
+			onChatPress();
+		} else {
+			console.log("Chat pressed - implement chat navigation");
+		}
+	};
+
+	console.log(email, name);
 
 	return (
 		<LinearGradient
@@ -114,46 +142,50 @@ export default function Header({
 
 				<View style={styles.headerRight}>
 					{/* Notification Icon */}
-					<TouchableOpacity
-						style={styles.notificationContainer}
-						onPress={onNotificationPress}
-						activeOpacity={0.7}
-					>
-						<Ionicons
-							name="notifications-outline"
-							size={24}
-							color="#FFFFFF"
-						/>
-						{notificationCount > 0 && (
-							<View style={styles.notificationBadge}>
-								<Text style={styles.notificationText}>
-									{notificationCount > 9
-										? "9+"
-										: notificationCount}
-								</Text>
-							</View>
-						)}
-					</TouchableOpacity>
+					{showNotificationIcon && (
+						<TouchableOpacity
+							style={styles.notificationContainer}
+							onPress={handleNotificationPress}
+							activeOpacity={0.7}
+						>
+							<Ionicons
+								name="notifications-outline"
+								size={24}
+								color="#FFFFFF"
+							/>
+							{notificationCount > 0 && (
+								<View style={styles.notificationBadge}>
+									<Text style={styles.notificationText}>
+										{notificationCount > 9
+											? "9+"
+											: notificationCount}
+									</Text>
+								</View>
+							)}
+						</TouchableOpacity>
+					)}
 
 					{/* Chat Icon */}
-					<TouchableOpacity
-						style={styles.chatIcon}
-						onPress={onChatPress}
-						activeOpacity={0.7}
-					>
-						<Ionicons
-							name="chatbubble-outline"
-							size={24}
-							color="#FFFFFF"
-						/>
-						{chatCount > 0 && (
-							<View style={styles.chatBadge}>
-								<Text style={styles.chatBadgeText}>
-									{chatCount > 9 ? "9+" : chatCount}
-								</Text>
-							</View>
-						)}
-					</TouchableOpacity>
+					{showChatIcon && (
+						<TouchableOpacity
+							style={styles.chatIcon}
+							onPress={handleChatPress}
+							activeOpacity={0.7}
+						>
+							<Ionicons
+								name="chatbubble-outline"
+								size={24}
+								color="#FFFFFF"
+							/>
+							{chatCount > 0 && (
+								<View style={styles.chatBadge}>
+									<Text style={styles.chatBadgeText}>
+										{chatCount > 9 ? "9+" : chatCount}
+									</Text>
+								</View>
+							)}
+						</TouchableOpacity>
+					)}
 				</View>
 			</View>
 		</LinearGradient>

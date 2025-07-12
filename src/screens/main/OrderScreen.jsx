@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
-export default function OrderScreen() {
+export default function OrderScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
 
 	const orders = [
@@ -202,8 +202,8 @@ export default function OrderScreen() {
 				title="Đơn hàng"
 				notificationCount={1}
 				chatCount={3}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			{/* Tabs */}

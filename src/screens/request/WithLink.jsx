@@ -176,20 +176,21 @@ export default function WithLink({ navigation }) {
 			return;
 		}
 
-		// Navigate to ProductDetails with the first valid product
-		// In real app, you might want to handle multiple products differently
-		const firstProduct = validLinks[0];
+		// Convert all valid products to format expected by ProductDetails
+		const products = validLinks.map((item) => ({
+			title: item.data.title,
+			price: item.data.price,
+			image: item.data.image,
+			platform: item.data.platform,
+			productLink: item.link, // Truyền link gốc
+			exchangeRate: item.data.exchangeRate, // Truyền tỉ giá
+			// Add more fields as needed
+		}));
+
+		// Navigate to ProductDetails with all valid products
 		navigation.navigate("ProductDetails", {
 			mode: "fromLink",
-			initialData: {
-				title: firstProduct.data.title,
-				price: firstProduct.data.price,
-				image: firstProduct.data.image,
-				platform: firstProduct.data.platform,
-				productLink: firstProduct.link, // Truyền link gốc
-				exchangeRate: firstProduct.data.exchangeRate, // Truyền tỉ giá
-				// Add more fields as needed
-			},
+			products: products,
 		});
 	};
 
@@ -202,8 +203,8 @@ export default function WithLink({ navigation }) {
 				onBackPress={() => navigation.goBack()}
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			{/* Help Button */}

@@ -15,12 +15,19 @@ import StoreForm from "../../components/store-form";
 
 export default function AddStore({ navigation }) {
 	const [showInstructions, setShowInstructions] = useState(false);
+	const [storeData, setStoreData] = useState(null);
+
+	const handleStoreDataChange = (data) => {
+		console.log("AddStore - Store data changed:", data);
+		setStoreData(data);
+	};
 
 	const handleAddProduct = () => {
-		// Navigate to add product screen
+		console.log("AddStore - Navigating with store data:", storeData);
+		// Navigate to add product screen with store data
 		navigation.navigate("ProductDetails", {
 			mode: "manual",
-			storeData: null,
+			storeData: storeData,
 		});
 	};
 
@@ -33,8 +40,8 @@ export default function AddStore({ navigation }) {
 				onBackPress={() => navigation.goBack()}
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			<KeyboardAvoidingView
@@ -86,7 +93,11 @@ export default function AddStore({ navigation }) {
 					)}
 
 					{/* Store Form */}
-					<StoreForm mode="manual" showSubmitButton={false} />
+					<StoreForm
+						mode="manual"
+						showSubmitButton={false}
+						onDataChange={handleStoreDataChange}
+					/>
 
 					{/* Add Product Button */}
 					<TouchableOpacity

@@ -53,8 +53,8 @@ export default function WalletScreen({ navigation }) {
 				title="Ví của tôi"
 				notificationCount={3}
 				chatCount={1}
-				onNotificationPress={() => console.log("Notification pressed")}
 				onChatPress={() => console.log("Chat pressed")}
+				navigation={navigation}
 			/>
 
 			<ScrollView
@@ -90,7 +90,7 @@ export default function WalletScreen({ navigation }) {
 					</Text>
 
 					<View style={styles.balanceActions}>
-						<TouchableOpacity 
+						<TouchableOpacity
 							style={styles.primaryActionButton}
 							onPress={() => navigation.navigate("TopUp")}
 						>
@@ -144,7 +144,9 @@ export default function WalletScreen({ navigation }) {
 							Giao dịch gần đây
 						</Text>
 						<TouchableOpacity
-							onPress={() => navigation.navigate("TransactionHistory")}
+							onPress={() =>
+								navigation.navigate("TransactionHistory")
+							}
 						>
 							<Text style={styles.viewAllText}>
 								Lịch sử giao dịch

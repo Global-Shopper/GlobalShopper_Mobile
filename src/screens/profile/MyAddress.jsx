@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { useGetShippingAddressQuery } from "../../services/gshopApi";
 
-export default function MyAddress({ navigation }) {
+export default function MyAddress({ navigation, route }) {
+	const { mode = "default", onSelectAddress } = route.params || {};
 
-	const {data: addresses = [], isLoading, isError} = useGetShippingAddressQuery()
+	const { data: addresses = [] } = useGetShippingAddressQuery();
 
 	const handleAddNewAddress = () => {
-		// Navigate to Add Address screen
 		navigation.navigate("AddAddress");
 	};
 
@@ -31,12 +31,54 @@ export default function MyAddress({ navigation }) {
 		console.log("Set as default:", addressId);
 	};
 
+	const handleSelectAddress = (address) => {
+		if (mode === "selection" && onSelectAddress) {
+			// Transform address data to match expected format
+			const formattedAddress = {
+				id: address.id,
+				recipientName: address.name,
+				phone: address.phoneNumber,
+				address: address.location,
+				isDefault: address.default,
+			};
+			onSelectAddress(formattedAddress);
+			navigation.goBack();
+		}
+	};
+
+	const getHeaderTitle = () => {
+		return mode === "selection"
+			? "Chọn địa chỉ nhận hàng"
+			: "Địa chỉ của tôi";
+	};
+
 	const renderAddressItem = (item) => (
-		<View key={item.id} style={styles.addressCard}>
+		<TouchableOpacity
+			key={item.id}
+			style={[
+				styles.addressCard,
+				mode === "selection" && styles.addressCardSelectable,
+			]}
+			onPress={() =>
+				mode === "selection" ? handleSelectAddress(item) : null
+			}
+			activeOpacity={mode === "selection" ? 0.7 : 1}
+		>
 			{/* Default badge */}
 			{item.default && (
 				<View style={styles.defaultBadge}>
 					<Text style={styles.defaultText}>Mặc định</Text>
+				</View>
+			)}
+
+			{/* Selection indicator for selection mode */}
+			{mode === "selection" && (
+				<View style={styles.selectionIndicator}>
+					<Ionicons
+						name="chevron-forward"
+						size={20}
+						color="#1976D2"
+					/>
 				</View>
 			)}
 
@@ -52,38 +94,44 @@ export default function MyAddress({ navigation }) {
 				<Text style={styles.addressTag}>{item.tag}</Text>
 			</View>
 
-			{/* Action buttons */}
-			<View style={styles.actionContainer}>
-				<TouchableOpacity
-					style={styles.actionButton}
-					onPress={() => handleEditAddress(item.id)}
-				>
-					<Ionicons name="create-outline" size={16} color="#1976D2" />
-					<Text style={styles.actionButtonText}>Chỉnh sửa</Text>
-				</TouchableOpacity>
-
-				{!item.isDefault && (
+			{/* Action buttons - Hide in selection mode */}
+			{mode !== "selection" && (
+				<View style={styles.actionContainer}>
 					<TouchableOpacity
-						style={[styles.actionButton, styles.defaultButton]}
-						onPress={() => handleSetDefault(item.id)}
+						style={styles.actionButton}
+						onPress={() => handleEditAddress(item.id)}
 					>
 						<Ionicons
-							name="checkmark-circle-outline"
+							name="create-outline"
 							size={16}
-							color="#4CAF50"
+							color="#1976D2"
 						/>
-						<Text
-							style={[
-								styles.actionButtonText,
-								{ color: "#4CAF50" },
-							]}
-						>
-							Đặt mặc định
-						</Text>
+						<Text style={styles.actionButtonText}>Chỉnh sửa</Text>
 					</TouchableOpacity>
-				)}
-			</View>
-		</View>
+
+					{!item.isDefault && (
+						<TouchableOpacity
+							style={[styles.actionButton, styles.defaultButton]}
+							onPress={() => handleSetDefault(item.id)}
+						>
+							<Ionicons
+								name="checkmark-circle-outline"
+								size={16}
+								color="#4CAF50"
+							/>
+							<Text
+								style={[
+									styles.actionButtonText,
+									{ color: "#4CAF50" },
+								]}
+							>
+								Đặt mặc định
+							</Text>
+						</TouchableOpacity>
+					)}
+				</View>
+			)}
+		</TouchableOpacity>
 	);
 
 	// Sort addresses to show default first
@@ -109,7 +157,7 @@ export default function MyAddress({ navigation }) {
 					>
 						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
 					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Địa chỉ của tôi</Text>
+					<Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
 					<View style={styles.placeholder} />
 				</View>
 			</LinearGradient>
@@ -218,6 +266,10 @@ const styles = StyleSheet.create({
 		shadowRadius: 3.84,
 		position: "relative",
 	},
+	addressCardSelectable: {
+		borderColor: "#E3F2FD",
+		backgroundColor: "#FAFAFA",
+	},
 	defaultBadge: {
 		position: "absolute",
 		top: 16,
@@ -262,7 +314,6 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 12,
-
 	},
 	actionContainer: {
 		flexDirection: "row",
@@ -327,5 +378,11 @@ const styles = StyleSheet.create({
 	addButtonSubtitle: {
 		fontSize: 13,
 		color: "#78909C",
+	},
+	selectionIndicator: {
+		position: "absolute",
+		top: 16,
+		right: 16,
+		zIndex: 1,
 	},
 });

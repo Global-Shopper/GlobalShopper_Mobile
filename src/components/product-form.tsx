@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Alert,
 	Image,
@@ -10,19 +11,20 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import StoreForm from "./store-form";
 import { Text } from "./ui/text";
 
 interface ProductFormProps {
 	initialData?: any;
 	mode: "fromLink" | "manual";
+	storeData?: any; // Store data from AddStore screen
 	onSubmit: (productData: any) => void;
+	onChange?: (productData: any) => void; // For real-time data sync
 }
 
 interface ProductData {
 	name: string;
 	description: string;
-	image: string | null;
+	images: string[]; // Changed from single image to array of images
 	price: string;
 	convertedPrice: string;
 	exchangeRate: number;
@@ -33,7 +35,7 @@ interface ProductData {
 	color: string;
 	platform: string;
 	productLink: string;
-	sellerInfo: {
+	sellerInfo?: {
 		name: string;
 		phone: string;
 		email: string;
@@ -42,52 +44,80 @@ interface ProductData {
 	};
 }
 
+// Helper function to create initial form data
+function getInitialFormData(
+	initialData: any,
+	storeData: any,
+	mode: string
+): ProductData {
+	const initialPrice = initialData?.price || "";
+	const initialExchangeRate = initialData?.exchangeRate || 25000;
+
+	// Calculate converted price if price is available
+	let initialConvertedPrice = "";
+	if (initialPrice && mode === "fromLink") {
+		const numericPrice = parseFloat(initialPrice.replace(/[^0-9.]/g, ""));
+		if (!isNaN(numericPrice) && numericPrice > 0) {
+			const convertedAmount = Math.round(
+				numericPrice * initialExchangeRate
+			);
+			initialConvertedPrice = convertedAmount.toLocaleString("vi-VN");
+		}
+	}
+
+	const baseData: any = {
+		name: initialData?.title || initialData?.name || "",
+		description: initialData?.description || "",
+		images:
+			initialData?.images ||
+			(initialData?.image ? [initialData.image] : []),
+		price: initialPrice,
+		convertedPrice: initialConvertedPrice,
+		exchangeRate: initialExchangeRate,
+		category: initialData?.category || "",
+		brand: initialData?.brand || "",
+		material: initialData?.material || "",
+		size: initialData?.size || "",
+		color: initialData?.color || "",
+		platform: initialData?.platform || "",
+		productLink: initialData?.productLink || "",
+	};
+
+	// Only include sellerInfo in manual mode
+	if (mode === "manual") {
+		baseData.sellerInfo = {
+			name: storeData?.storeName || initialData?.sellerInfo?.name || "",
+			phone:
+				storeData?.phoneNumber || initialData?.sellerInfo?.phone || "",
+			email: storeData?.email || initialData?.sellerInfo?.email || "",
+			address:
+				storeData?.storeAddress ||
+				initialData?.sellerInfo?.address ||
+				"",
+			storeLink:
+				storeData?.shopLink || initialData?.sellerInfo?.storeLink || "",
+		};
+	}
+
+	return baseData;
+}
+
 export default function ProductForm({
 	initialData,
 	mode,
+	storeData,
 	onSubmit,
+	onChange,
 }: ProductFormProps) {
 	const [formData, setFormData] = useState<ProductData>(() => {
-		const initialPrice = initialData?.price || "";
-		const initialExchangeRate = initialData?.exchangeRate || 25000;
-
-		// Calculate converted price if price is available
-		let initialConvertedPrice = "";
-		if (initialPrice && mode === "fromLink") {
-			const numericPrice = parseFloat(
-				initialPrice.replace(/[^0-9.]/g, "")
-			);
-			if (!isNaN(numericPrice) && numericPrice > 0) {
-				const convertedAmount = Math.round(
-					numericPrice * initialExchangeRate
-				);
-				initialConvertedPrice = convertedAmount.toLocaleString("vi-VN");
-			}
-		}
-
-		return {
-			name: initialData?.title || initialData?.name || "",
-			description: initialData?.description || "",
-			image: initialData?.image || null,
-			price: initialPrice,
-			convertedPrice: initialConvertedPrice,
-			exchangeRate: initialExchangeRate,
-			category: initialData?.category || "",
-			brand: initialData?.brand || "",
-			material: initialData?.material || "",
-			size: initialData?.size || "",
-			color: initialData?.color || "",
-			platform: initialData?.platform || "",
-			productLink: initialData?.productLink || "",
-			sellerInfo: {
-				name: initialData?.sellerInfo?.name || "",
-				phone: initialData?.sellerInfo?.phone || "",
-				email: initialData?.sellerInfo?.email || "",
-				address: initialData?.sellerInfo?.address || "",
-				storeLink: initialData?.sellerInfo?.storeLink || "",
-			},
-		};
+		return getInitialFormData(initialData, storeData, mode);
 	});
+
+	// Update form data when initialData changes (when switching tabs)
+	useEffect(() => {
+		const newFormData = getInitialFormData(initialData, storeData, mode);
+		setFormData(newFormData);
+	}, [initialData, storeData, mode]);
 
 	const handleInputChange = (field: string, value: string) => {
 		// Skip convertedPrice as it's read-only and auto-calculated
@@ -95,97 +125,142 @@ export default function ProductForm({
 			return;
 		}
 
-		if (field.includes("sellerInfo.")) {
+		let newFormData = { ...formData };
+
+		if (field.includes("sellerInfo.") && formData.sellerInfo) {
 			const sellerField = field.split(".")[1];
-			setFormData((prev) => ({
-				...prev,
+			newFormData = {
+				...formData,
 				sellerInfo: {
-					...prev.sellerInfo,
+					...formData.sellerInfo,
 					[sellerField]: value,
 				},
-			}));
+			};
 		} else {
-			setFormData((prev) => ({
-				...prev,
+			newFormData = {
+				...formData,
 				[field]: value,
-			}));
+			};
+		}
+
+		setFormData(newFormData);
+
+		// Call onChange if provided for real-time sync
+		if (onChange) {
+			onChange(newFormData);
 		}
 
 		// Auto convert price when price field changes
 		if (field === "price") {
 			if (value.trim() !== "") {
-				convertPrice(value);
+				convertPrice(value, newFormData);
 			} else {
 				// Clear converted price when price is empty
-				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+				const updatedData = { ...newFormData, convertedPrice: "" };
+				setFormData(updatedData);
+				if (onChange) {
+					onChange(updatedData);
+				}
 			}
 		}
 	};
 
 	// Mock API call to convert price
-	const convertPrice = async (priceString: string) => {
+	const convertPrice = async (priceString: string, currentFormData?: any) => {
 		try {
 			// Extract number from price string (remove $, €, etc.)
 			const numericPrice = parseFloat(
 				priceString.replace(/[^0-9.]/g, "")
 			);
 
+			const formDataToUse = currentFormData || formData;
+
 			if (isNaN(numericPrice) || numericPrice <= 0) {
-				setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+				const updatedData = { ...formDataToUse, convertedPrice: "" };
+				setFormData(updatedData);
+				if (onChange) {
+					onChange(updatedData);
+				}
 				return;
 			}
 
 			// Use exchange rate from state (from BE API or default)
 			const convertedAmount = Math.round(
-				numericPrice * formData.exchangeRate
+				numericPrice * formDataToUse.exchangeRate
 			);
 
 			// Format number with Vietnamese locale
 			const formattedPrice = convertedAmount.toLocaleString("vi-VN");
 
-			setFormData((prev) => ({
-				...prev,
+			const updatedData = {
+				...formDataToUse,
 				convertedPrice: formattedPrice,
-			}));
+			};
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
 		} catch (error) {
 			console.log("Error converting price:", error);
-			setFormData((prev) => ({ ...prev, convertedPrice: "" }));
+			const formDataToUse = currentFormData || formData;
+			const updatedData = { ...formDataToUse, convertedPrice: "" };
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
 		}
 	};
 
 	const pickImage = async () => {
-		// Tạm thời hiển thị alert
-		Alert.alert(
-			"Chọn hình ảnh",
-			"Tính năng chọn hình ảnh sẽ được triển khai với expo-image-picker",
-			[
-				{
-					text: "OK",
-					onPress: () => {
-						// Mock thêm một hình ảnh placeholder
-						setFormData((prev) => ({
-							...prev,
-							image: "https://via.placeholder.com/150",
-						}));
-					},
-				},
-				{ text: "Hủy", style: "cancel" },
-			]
-		);
+		// Request permission
+		const permissionResult =
+			await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+		if (permissionResult.granted === false) {
+			Alert.alert(
+				"Quyền truy cập",
+				"Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
+			);
+			return;
+		}
+
+		// Check if max images reached
+		if (formData.images.length >= 4) {
+			Alert.alert("Giới hạn ảnh", "Bạn chỉ có thể thêm tối đa 4 ảnh");
+			return;
+		}
+
+		// Launch image picker
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 0.8,
+		});
+
+		if (!result.canceled && result.assets && result.assets.length > 0) {
+			const newImageUri = result.assets[0].uri;
+			const updatedData = {
+				...formData,
+				images: [...formData.images, newImageUri],
+			};
+			setFormData(updatedData);
+			if (onChange) {
+				onChange(updatedData);
+			}
+		}
 	};
 
-	const handleStoreChange = (storeData: any) => {
-		// Update seller info when store form changes
-		setFormData((prev) => ({
-			...prev,
-			sellerInfo: {
-				name: storeData.storeName,
-				phone: storeData.phoneNumber,
-				email: storeData.email,
-				address: storeData.storeAddress,
-				storeLink: storeData.shopLink,
-			},
-		}));
+	const removeImage = (index: number) => {
+		const updatedImages = formData.images.filter((_, i) => i !== index);
+		const updatedData = {
+			...formData,
+			images: updatedImages,
+		};
+		setFormData(updatedData);
+		if (onChange) {
+			onChange(updatedData);
+		}
 	};
 
 	const validateForm = () => {
@@ -199,21 +274,11 @@ export default function ProductForm({
 			return false;
 		}
 		// Converted price is auto-calculated, no need to validate manually
-		if (!formData.sellerInfo.name.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập tên người bán");
-			return false;
-		}
 
-		if (mode === "manual") {
-			if (!formData.sellerInfo.address.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập địa chỉ cửa hàng");
-				return false;
-			}
-			if (!formData.sellerInfo.storeLink.trim()) {
-				Alert.alert("Lỗi", "Vui lòng nhập link cửa hàng");
-				return false;
-			}
-		}
+		// No validation for seller info in either mode:
+		// - fromLink mode: Each product may come from different stores
+		// - manual mode: Store info already entered in AddStore
+
 		return true;
 	};
 
@@ -343,31 +408,55 @@ export default function ProductForm({
 					</View>
 				</View>
 
-				{/* Product Image */}
+				{/* Product Images */}
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Hình ảnh sản phẩm</Text>
-					<TouchableOpacity
-						style={styles.imageContainer}
-						onPress={pickImage}
-					>
-						{formData.image ? (
-							<Image
-								source={{ uri: formData.image }}
-								style={styles.productImage}
-							/>
-						) : (
-							<View style={styles.imagePlaceholder}>
+					<Text style={styles.label}>
+						Hình ảnh sản phẩm (Tối đa 4 ảnh)
+					</Text>
+
+					{/* Images Grid */}
+					<View style={styles.imagesGrid}>
+						{formData.images.map((imageUri, index) => (
+							<View key={index} style={styles.imageItem}>
+								<Image
+									source={{ uri: imageUri }}
+									style={styles.gridImage}
+								/>
+								<TouchableOpacity
+									style={styles.removeImageButton}
+									onPress={() => removeImage(index)}
+								>
+									<Ionicons
+										name="close-circle"
+										size={24}
+										color="#FF5722"
+									/>
+								</TouchableOpacity>
+							</View>
+						))}
+
+						{/* Add Image Button */}
+						{formData.images.length < 4 && (
+							<TouchableOpacity
+								style={styles.addImageButton}
+								onPress={pickImage}
+							>
 								<Ionicons
-									name="camera-outline"
+									name="add-circle-outline"
 									size={32}
 									color="#78909C"
 								/>
-								<Text style={styles.imagePlaceholderText}>
-									Chọn hình ảnh
+								<Text style={styles.addImageText}>
+									Thêm ảnh
 								</Text>
-							</View>
+							</TouchableOpacity>
 						)}
-					</TouchableOpacity>
+					</View>
+
+					{/* Image count info */}
+					<Text style={styles.imageCountText}>
+						{formData.images.length}/4 ảnh
+					</Text>
 				</View>
 
 				{/* Price - Only show for fromLink mode */}
@@ -579,20 +668,6 @@ export default function ProductForm({
 				)}
 			</View>
 
-			{/* Seller Information */}
-			<StoreForm
-				initialData={{
-					storeName: formData.sellerInfo.name,
-					phoneNumber: formData.sellerInfo.phone,
-					email: formData.sellerInfo.email,
-					storeAddress: formData.sellerInfo.address,
-					shopLink: formData.sellerInfo.storeLink,
-				}}
-				mode={mode}
-				onChange={handleStoreChange}
-				showSubmitButton={false}
-			/>
-
 			{/* Submit Button */}
 			<TouchableOpacity
 				style={styles.submitButton}
@@ -701,31 +776,6 @@ const styles = StyleSheet.create({
 		minHeight: 60,
 		textAlignVertical: "top",
 	},
-	imageContainer: {
-		borderWidth: 1,
-		borderColor: "#E0E0E0",
-		borderRadius: 8,
-		borderStyle: "dashed",
-		padding: 16,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#FAFAFA",
-		minHeight: 120,
-	},
-	productImage: {
-		width: 100,
-		height: 100,
-		borderRadius: 8,
-	},
-	imagePlaceholder: {
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	imagePlaceholderText: {
-		fontSize: 14,
-		color: "#78909C",
-		marginTop: 8,
-	},
 	submitButton: {
 		borderRadius: 12,
 		overflow: "hidden",
@@ -771,6 +821,59 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: "#999999",
 		marginTop: 4,
+		fontStyle: "italic",
+	},
+	imagesGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "flex-start",
+		gap: 12,
+	},
+	imageItem: {
+		position: "relative",
+		width: 80,
+		height: 80,
+	},
+	gridImage: {
+		width: 80,
+		height: 80,
+		borderRadius: 8,
+		backgroundColor: "#f0f0f0",
+	},
+	removeImageButton: {
+		position: "absolute",
+		top: -8,
+		right: -8,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 2,
+		elevation: 2,
+	},
+	addImageButton: {
+		width: 80,
+		height: 80,
+		borderWidth: 2,
+		borderColor: "#E0E0E0",
+		borderStyle: "dashed",
+		borderRadius: 8,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "#FAFAFA",
+	},
+	addImageText: {
+		fontSize: 12,
+		color: "#78909C",
+		marginTop: 4,
+		textAlign: "center",
+	},
+	imageCountText: {
+		fontSize: 12,
+		color: "#666",
+		marginTop: 8,
+		textAlign: "right",
 		fontStyle: "italic",
 	},
 });
