@@ -22,6 +22,7 @@ import TermsScreen from "../screens/profile/TermsScreen";
 import AddStore from "../screens/request/AddStore";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
+import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
@@ -165,6 +166,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ConfirmRequest"
 				component={ConfirmRequest}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="SuccessConfirmationScreen"
+				component={SuccessConfirmationScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

@@ -66,51 +66,28 @@ export default function ConfirmRequest({ navigation, route }) {
 			return;
 		}
 
-		Alert.alert(
-			"Xác nhận gửi yêu cầu",
-			"Bạn có chắc chắn muốn gửi yêu cầu này?",
-			[
-				{
-					text: "Hủy",
-					style: "cancel",
-				},
-				{
-					text: "Gửi",
-					onPress: async () => {
-						setIsSubmitting(true);
-						try {
-							// TODO: Implement API call to submit request
-							await new Promise((resolve) =>
-								setTimeout(resolve, 2000)
-							); // Simulate API call
+		// Gửi yêu cầu trực tiếp
+		setIsSubmitting(true);
+		try {
+			// TODO: Implement API call to submit request
+			await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
 
-							Alert.alert(
-								"Thành công",
-								"Yêu cầu đã được gửi thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
-								[
-									{
-										text: "OK",
-										onPress: () => {
-											navigation.reset({
-												index: 0,
-												routes: [{ name: "Tabs" }],
-											});
-										},
-									},
-								]
-							);
-						} catch (_error) {
-							Alert.alert(
-								"Lỗi",
-								"Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại."
-							);
-						} finally {
-							setIsSubmitting(false);
-						}
-					},
-				},
-			]
-		);
+			// Navigate to success screen instead of showing alert
+			navigation.navigate("SuccessConfirmationScreen", {
+				requestId: "REQ" + Date.now(),
+				products,
+				storeData,
+				deliveryAddress,
+				note,
+			});
+		} catch (_error) {
+			Alert.alert(
+				"Lỗi",
+				"Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại."
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const totalProducts = products.length;
