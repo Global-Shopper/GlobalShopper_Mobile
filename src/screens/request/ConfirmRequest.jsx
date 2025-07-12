@@ -21,6 +21,7 @@ export default function ConfirmRequest({ navigation, route }) {
 
 	const [note, setNote] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 
 	const [deliveryAddress, setDeliveryAddress] = useState(null);
 
@@ -153,11 +154,6 @@ export default function ConfirmRequest({ navigation, route }) {
 				{/* Danh sách sản phẩm */}
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
-						<Ionicons
-							name="bag-outline"
-							size={20}
-							color="#1976D2"
-						/>
 						<Text style={styles.sectionTitle}>
 							Danh sách sản phẩm ({totalProducts} sản phẩm)
 						</Text>
@@ -177,6 +173,9 @@ export default function ConfirmRequest({ navigation, route }) {
 						/>
 					))}
 
+					{/* Đường kẻ ngang */}
+					<View style={styles.divider} />
+
 					{/* Tổng giá trị ước tính */}
 					<View style={styles.totalSection}>
 						<View style={styles.totalRow}>
@@ -188,39 +187,59 @@ export default function ConfirmRequest({ navigation, route }) {
 							</Text>
 						</View>
 						<Text style={styles.totalNote}>
-							*Giá cuối cùng có thể thay đổi tùy thuộc vào tỷ giá
-							và phí dịch vụ
+							*Giá cuối cùng có thể thay đổi tùy thuộc vào tỷ giá,
+							phí vận chuyển và phí dịch vụ
 						</Text>
 					</View>
 				</View>
 
 				{/* Ghi chú */}
 				<View style={styles.section}>
-					<View style={styles.sectionHeader}>
-						<Ionicons
-							name="chatbox-outline"
-							size={20}
-							color="#1976D2"
-						/>
-						<Text style={styles.sectionTitle}>
-							Ghi chú (tùy chọn)
-						</Text>
-					</View>
+					<TouchableOpacity
+						style={styles.noteHeader}
+						onPress={() => setIsNoteExpanded(!isNoteExpanded)}
+					>
+						<View style={styles.noteHeaderLeft}>
+							<Ionicons
+								name="chatbox-outline"
+								size={20}
+								color="#1976D2"
+							/>
+							<Text style={styles.sectionTitle}>
+								Lời nhắn (nếu có)
+							</Text>
+						</View>
+						<View style={styles.noteHeaderRight}>
+							<Ionicons
+								name={
+									isNoteExpanded
+										? "remove-circle-outline"
+										: "add-circle-outline"
+								}
+								size={22}
+								color="#1976D2"
+							/>
+						</View>
+					</TouchableOpacity>
 
-					<View style={styles.noteContainer}>
-						<TextInput
-							style={styles.noteInput}
-							placeholder="Nhập ghi chú cho yêu cầu của bạn..."
-							placeholderTextColor="#999"
-							value={note}
-							onChangeText={setNote}
-							multiline
-							numberOfLines={4}
-							textAlignVertical="top"
-							maxLength={500}
-						/>
-						<Text style={styles.charCount}>{note.length}/500</Text>
-					</View>
+					{isNoteExpanded && (
+						<View style={styles.noteContainer}>
+							<TextInput
+								style={styles.noteInput}
+								placeholder="Bạn có lưu ý gì đặc biệt không?"
+								placeholderTextColor="#999"
+								value={note}
+								onChangeText={setNote}
+								multiline
+								numberOfLines={4}
+								textAlignVertical="top"
+								maxLength={500}
+							/>
+							<Text style={styles.charCount}>
+								{note.length}/500
+							</Text>
+						</View>
+					)}
 				</View>
 
 				{/* Điều khoản */}
@@ -312,17 +331,17 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		padding: 16,
+		padding: 12,
 		paddingBottom: 100,
 	},
 	section: {
-		marginBottom: 20,
+		marginBottom: 16,
 	},
 	sectionHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 12,
-		gap: 8,
+		marginBottom: 8,
+		gap: 6,
 	},
 	sectionTitle: {
 		fontSize: 16,
@@ -331,15 +350,15 @@ const styles = StyleSheet.create({
 	},
 	totalSection: {
 		backgroundColor: "#F3F4F6",
-		padding: 16,
+		padding: 12,
 		borderRadius: 12,
-		marginTop: 12,
+		marginTop: 8,
 	},
 	totalRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 8,
+		marginBottom: 6,
 	},
 	totalLabel: {
 		fontSize: 15,
@@ -362,12 +381,23 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 		padding: 12,
+		marginTop: 0,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.05,
+		shadowRadius: 3,
+		elevation: 2,
 	},
 	noteInput: {
 		fontSize: 14,
 		color: "#333",
-		minHeight: 80,
+		minHeight: 100,
 		textAlignVertical: "top",
+		borderWidth: 1,
+		borderColor: "#F0F0F0",
+		borderRadius: 8,
+		padding: 10,
+		backgroundColor: "#FAFAFA",
 	},
 	charCount: {
 		fontSize: 12,
@@ -379,11 +409,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-start",
 		backgroundColor: "#F8F9FA",
-		padding: 16,
+		padding: 12,
 		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
-		gap: 8,
+		gap: 6,
 	},
 	termsText: {
 		fontSize: 13,
@@ -402,7 +432,7 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		backgroundColor: "#fff",
-		padding: 16,
+		padding: 12,
 		borderTopWidth: 1,
 		borderTopColor: "#E5E5E5",
 		shadowColor: "#000",
@@ -419,7 +449,7 @@ const styles = StyleSheet.create({
 		opacity: 0.7,
 	},
 	submitButtonGradient: {
-		paddingVertical: 16,
+		paddingVertical: 14,
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
@@ -429,5 +459,38 @@ const styles = StyleSheet.create({
 		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
+	},
+	divider: {
+		height: 1,
+		backgroundColor: "#E5E5E5",
+		marginVertical: 12,
+	},
+	noteHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		marginBottom: 4,
+	},
+	noteHeaderLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+		flex: 1,
+	},
+	noteHeaderRight: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	addText: {
+		fontSize: 14,
+		color: "#1976D2",
+		fontWeight: "500",
 	},
 });
