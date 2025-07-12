@@ -20,6 +20,10 @@ export default function ProductDetails({ navigation, route }) {
 		products = [],
 	} = route.params || {};
 
+	// Debug: Log received storeData
+	console.log("ProductDetails - Received storeData:", storeData);
+	console.log("ProductDetails - Mode:", mode);
+
 	// State for managing multiple products
 	const [currentProductIndex, setCurrentProductIndex] = useState(0);
 	const [allProducts, setAllProducts] = useState(() => {
@@ -54,7 +58,8 @@ export default function ProductDetails({ navigation, route }) {
 	};
 
 	const handleSubmit = (productData) => {
-		console.log("Product data submitted:", productData);
+		console.log("ProductDetails - Product data submitted:", productData);
+		console.log("ProductDetails - Store data being passed:", storeData);
 
 		// Update the current product data
 		const updatedProducts = [...allProducts];
@@ -63,6 +68,11 @@ export default function ProductDetails({ navigation, route }) {
 
 		// Navigate to ConfirmRequest with products data
 		navigation.navigate("ConfirmRequest", {
+			products: updatedProducts,
+			storeData,
+			mode,
+		});
+		console.log("ProductDetails - Navigated to ConfirmRequest with data:", {
 			products: updatedProducts,
 			storeData,
 			mode,

@@ -14,10 +14,11 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
+import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 
 export default function ConfirmRequest({ navigation, route }) {
-	const { products = [] } = route.params || {};
+	const { products = [], storeData = null } = route.params || {};
 
 	const [note, setNote] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -114,6 +115,22 @@ export default function ConfirmRequest({ navigation, route }) {
 
 	const totalProducts = products.length;
 
+	// Get unique store information for manual products
+	const manualProducts = products.filter(
+		(product) => product.mode === "manual"
+	);
+
+	// Use storeData from route params or fallback to product storeData
+	const storeInfo =
+		storeData ||
+		(manualProducts.length > 0 ? manualProducts[0].storeData : null);
+
+	// Debug: Log to check data structure
+	console.log("Manual products:", manualProducts);
+	console.log("Store info from route:", storeData);
+	console.log("Final store info:", storeInfo);
+	console.log("All products:", products);
+
 	// Only calculate total value for withLink products
 	const withLinkProducts = products.filter(
 		(product) => product.mode === "withLink" || product.mode !== "manual"
@@ -159,6 +176,26 @@ export default function ConfirmRequest({ navigation, route }) {
 						isEmpty={!deliveryAddress}
 					/>
 				</View>
+
+				{/* Thông tin cửa hàng - Show when storeData exists OR has manual products */}
+				{(storeData || manualProducts.length > 0) && (
+					<View style={styles.section}>
+						<StoreCard
+							storeName={storeInfo?.storeName || "Test Store"}
+							storeAddress={
+								storeInfo?.storeAddress ||
+								"123 Test Address, Test City"
+							}
+							phoneNumber={storeInfo?.phoneNumber || "0123456789"}
+							email={storeInfo?.email || "test@store.com"}
+							shopLink={
+								storeInfo?.shopLink || "https://teststore.com"
+							}
+							mode="manual"
+							showEditButton={false}
+						/>
+					</View>
+				)}
 
 				{/* Danh sách sản phẩm */}
 				<View style={styles.section}>
@@ -367,17 +404,18 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		padding: 12,
+		paddingHorizontal: 18,
+		paddingVertical: 8,
 		paddingBottom: 100,
 	},
 	section: {
-		marginBottom: 16,
+		marginBottom: 10,
 	},
 	sectionHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 8,
-		gap: 6,
+		marginBottom: 6,
+		gap: 4,
 	},
 	sectionTitle: {
 		fontSize: 16,
@@ -386,15 +424,15 @@ const styles = StyleSheet.create({
 	},
 	totalSection: {
 		backgroundColor: "#F3F4F6",
-		padding: 12,
-		borderRadius: 12,
-		marginTop: 8,
+		padding: 10,
+		borderRadius: 10,
+		marginTop: 6,
 	},
 	totalRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 6,
+		marginBottom: 4,
 	},
 	totalLabel: {
 		fontSize: 15,
@@ -413,10 +451,10 @@ const styles = StyleSheet.create({
 	},
 	noteContainer: {
 		backgroundColor: "#fff",
-		borderRadius: 12,
+		borderRadius: 10,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
-		padding: 12,
+		padding: 10,
 		marginTop: 0,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 1 },
@@ -427,26 +465,26 @@ const styles = StyleSheet.create({
 	noteInput: {
 		fontSize: 14,
 		color: "#333",
-		minHeight: 100,
+		minHeight: 80,
 		textAlignVertical: "top",
 		borderWidth: 1,
 		borderColor: "#F0F0F0",
 		borderRadius: 8,
-		padding: 10,
+		padding: 8,
 		backgroundColor: "#FAFAFA",
 	},
 	charCount: {
 		fontSize: 12,
 		color: "#999",
 		textAlign: "right",
-		marginTop: 8,
+		marginTop: 6,
 	},
 	termsContainer: {
 		flexDirection: "row",
 		alignItems: "flex-start",
 		backgroundColor: "#F8F9FA",
-		padding: 12,
-		borderRadius: 12,
+		padding: 10,
+		borderRadius: 10,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 		gap: 6,
@@ -468,7 +506,8 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		backgroundColor: "#fff",
-		padding: 12,
+		paddingHorizontal: 12,
+		paddingVertical: 10,
 		borderTopWidth: 1,
 		borderTopColor: "#E5E5E5",
 		shadowColor: "#000",
@@ -478,14 +517,14 @@ const styles = StyleSheet.create({
 		elevation: 5,
 	},
 	submitButton: {
-		borderRadius: 12,
+		borderRadius: 10,
 		overflow: "hidden",
 	},
 	submitButtonDisabled: {
 		opacity: 0.7,
 	},
 	submitButtonGradient: {
-		paddingVertical: 14,
+		paddingVertical: 12,
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
@@ -499,16 +538,16 @@ const styles = StyleSheet.create({
 	divider: {
 		height: 1,
 		backgroundColor: "#E5E5E5",
-		marginVertical: 12,
+		marginVertical: 8,
 	},
 	noteHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		paddingVertical: 8,
-		paddingHorizontal: 12,
+		paddingVertical: 6,
+		paddingHorizontal: 10,
 		backgroundColor: "#fff",
-		borderRadius: 12,
+		borderRadius: 10,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 		marginBottom: 4,
@@ -516,7 +555,7 @@ const styles = StyleSheet.create({
 	noteHeaderLeft: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: 6,
 		flex: 1,
 	},
 	noteHeaderRight: {

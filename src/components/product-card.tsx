@@ -18,7 +18,6 @@ interface ProductCardProps {
 	platform?: string;
 	productLink?: string;
 	quantity?: number;
-	status?: string;
 	mode?: "manual" | "withLink"; // Add mode to determine display style
 	sellerInfo?: {
 		name: string;
@@ -45,36 +44,9 @@ export default function ProductCard({
 	platform,
 	productLink,
 	quantity = 1,
-	status,
 	mode = "withLink",
 	sellerInfo,
 }: ProductCardProps) {
-	const getStatusColor = (status?: string) => {
-		switch (status) {
-			case "confirmed":
-				return "#4CAF50";
-			case "pending":
-				return "#FF9800";
-			case "cancelled":
-				return "#F44336";
-			default:
-				return "#666";
-		}
-	};
-
-	const getStatusText = (status?: string) => {
-		switch (status) {
-			case "confirmed":
-				return "Đã xác nhận";
-			case "pending":
-				return "Chờ xử lý";
-			case "cancelled":
-				return "Đã hủy";
-			default:
-				return "Mới";
-		}
-	};
-
 	return (
 		<View style={styles.container}>
 			<View style={styles.imageContainer}>
@@ -100,26 +72,6 @@ export default function ProductCard({
 					<Text style={styles.productName} numberOfLines={2}>
 						{name}
 					</Text>
-					{status && (
-						<View
-							style={[
-								styles.statusBadge,
-								{
-									backgroundColor:
-										getStatusColor(status) + "20",
-								},
-							]}
-						>
-							<Text
-								style={[
-									styles.statusText,
-									{ color: getStatusColor(status) },
-								]}
-							>
-								{getStatusText(status)}
-							</Text>
-						</View>
-					)}
 				</View>
 
 				{/* Product Description */}
@@ -334,23 +286,12 @@ const styles = StyleSheet.create({
 		color: "#333",
 		flex: 1,
 		lineHeight: 20,
-		marginRight: 8,
 	},
 	productDescription: {
 		fontSize: 13,
 		color: "#666",
 		lineHeight: 18,
 		marginBottom: 8,
-	},
-	statusBadge: {
-		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 12,
-		alignSelf: "flex-start",
-	},
-	statusText: {
-		fontSize: 11,
-		fontWeight: "600",
 	},
 	details: {
 		flexDirection: "row",

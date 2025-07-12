@@ -18,10 +18,12 @@ export default function AddStore({ navigation }) {
 	const [storeData, setStoreData] = useState(null);
 
 	const handleStoreDataChange = (data) => {
+		console.log("AddStore - Store data changed:", data);
 		setStoreData(data);
 	};
 
 	const handleAddProduct = () => {
+		console.log("AddStore - Navigating with store data:", storeData);
 		// Navigate to add product screen with store data
 		navigation.navigate("ProductDetails", {
 			mode: "manual",
