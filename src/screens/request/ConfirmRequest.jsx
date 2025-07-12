@@ -113,12 +113,21 @@ export default function ConfirmRequest({ navigation, route }) {
 	};
 
 	const totalProducts = products.length;
-	const totalValue = products.reduce((sum, product) => {
+
+	// Only calculate total value for withLink products
+	const withLinkProducts = products.filter(
+		(product) => product.mode === "withLink" || product.mode !== "manual"
+	);
+	const totalValue = withLinkProducts.reduce((sum, product) => {
+		if (product.mode === "manual") return sum; // Skip manual products
 		const price = parseFloat(
 			product.convertedPrice?.replace(/[^0-9]/g, "") || "0"
 		);
 		return sum + price;
 	}, 0);
+
+	// Check if there are any withLink products to show total section
+	const hasWithLinkProducts = withLinkProducts.length > 0 && totalValue > 0;
 
 	return (
 		<KeyboardAvoidingView
@@ -164,11 +173,36 @@ export default function ConfirmRequest({ navigation, route }) {
 							key={product.id || index}
 							id={product.id || index.toString()}
 							name={product.name || "Sản phẩm không tên"}
-							price={product.price || "0"}
-							convertedPrice={product.convertedPrice}
-							image={product.images?.[0]}
-							platform={product.platform}
+							description={product.description}
+							images={product.images}
+							price={
+								product.mode === "manual"
+									? ""
+									: product.price || ""
+							}
+							convertedPrice={
+								product.mode === "manual"
+									? ""
+									: product.convertedPrice
+							}
+							exchangeRate={
+								product.mode === "manual"
+									? undefined
+									: product.exchangeRate
+							}
 							category={product.category}
+							brand={product.brand}
+							material={product.material}
+							size={product.size}
+							color={product.color}
+							platform={product.platform}
+							productLink={product.productLink}
+							mode={
+								product.mode === "manual"
+									? "manual"
+									: "withLink"
+							}
+							sellerInfo={product.sellerInfo}
 							status="pending"
 						/>
 					))}
@@ -176,21 +210,23 @@ export default function ConfirmRequest({ navigation, route }) {
 					{/* Đường kẻ ngang */}
 					<View style={styles.divider} />
 
-					{/* Tổng giá trị ước tính */}
-					<View style={styles.totalSection}>
-						<View style={styles.totalRow}>
-							<Text style={styles.totalLabel}>
-								Tổng giá trị ước tính:
-							</Text>
-							<Text style={styles.totalValue}>
-								{totalValue.toLocaleString("vi-VN")} VNĐ
+					{/* Tổng giá trị ước tính - Only show for withLink products */}
+					{hasWithLinkProducts && (
+						<View style={styles.totalSection}>
+							<View style={styles.totalRow}>
+								<Text style={styles.totalLabel}>
+									Tổng giá trị ước tính:
+								</Text>
+								<Text style={styles.totalValue}>
+									{totalValue.toLocaleString("vi-VN")} VNĐ
+								</Text>
+							</View>
+							<Text style={styles.totalNote}>
+								*Giá cuối cùng có thể thay đổi tùy thuộc vào tỷ
+								giá, phí vận chuyển và phí dịch vụ
 							</Text>
 						</View>
-						<Text style={styles.totalNote}>
-							*Giá cuối cùng có thể thay đổi tùy thuộc vào tỷ giá,
-							phí vận chuyển và phí dịch vụ
-						</Text>
-					</View>
+					)}
 				</View>
 
 				{/* Ghi chú */}

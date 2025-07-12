@@ -5,25 +5,49 @@ import { Text } from "./ui/text";
 interface ProductCardProps {
 	id: string;
 	name: string;
+	description?: string;
+	images?: string[];
 	price: string;
 	convertedPrice?: string;
-	image?: string;
-	quantity?: number;
-	platform?: string;
+	exchangeRate?: number;
 	category?: string;
+	brand?: string;
+	material?: string;
+	size?: string;
+	color?: string;
+	platform?: string;
+	productLink?: string;
+	quantity?: number;
 	status?: string;
+	mode?: "manual" | "withLink"; // Add mode to determine display style
+	sellerInfo?: {
+		name: string;
+		phone: string;
+		email: string;
+		address: string;
+		storeLink: string;
+	};
 }
 
 export default function ProductCard({
 	id,
 	name,
+	description,
+	images,
 	price,
 	convertedPrice,
-	image,
-	quantity = 1,
-	platform,
+	exchangeRate,
 	category,
+	brand,
+	material,
+	size,
+	color,
+	platform,
+	productLink,
+	quantity = 1,
 	status,
+	mode = "withLink",
+	sellerInfo,
 }: ProductCardProps) {
 	const getStatusColor = (status?: string) => {
 		switch (status) {
@@ -54,9 +78,9 @@ export default function ProductCard({
 	return (
 		<View style={styles.container}>
 			<View style={styles.imageContainer}>
-				{image ? (
+				{images && images.length > 0 ? (
 					<Image
-						source={{ uri: image }}
+						source={{ uri: images[0] }}
 						style={styles.productImage}
 					/>
 				) : (
@@ -98,8 +122,16 @@ export default function ProductCard({
 					)}
 				</View>
 
+				{/* Product Description */}
+				{description && (
+					<Text style={styles.productDescription} numberOfLines={3}>
+						{description}
+					</Text>
+				)}
+
+				{/* Product Details */}
 				<View style={styles.details}>
-					{platform && (
+					{mode === "withLink" && platform && (
 						<View style={styles.tag}>
 							<Ionicons
 								name="storefront-outline"
@@ -119,18 +151,116 @@ export default function ProductCard({
 							<Text style={styles.tagText}>{category}</Text>
 						</View>
 					)}
+					{brand && (
+						<View style={styles.tag}>
+							<Ionicons
+								name="diamond-outline"
+								size={12}
+								color="#666"
+							/>
+							<Text style={styles.tagText}>{brand}</Text>
+						</View>
+					)}
+					{size && (
+						<View style={styles.tag}>
+							<Ionicons
+								name="resize-outline"
+								size={12}
+								color="#666"
+							/>
+							<Text style={styles.tagText}>Size: {size}</Text>
+						</View>
+					)}
+					{color && (
+						<View style={styles.tag}>
+							<Ionicons
+								name="color-palette-outline"
+								size={12}
+								color="#666"
+							/>
+							<Text style={styles.tagText}>{color}</Text>
+						</View>
+					)}
+					{material && (
+						<View style={styles.tag}>
+							<Ionicons
+								name="library-outline"
+								size={12}
+								color="#666"
+							/>
+							<Text style={styles.tagText}>{material}</Text>
+						</View>
+					)}
 				</View>
 
-				<View style={styles.priceSection}>
-					<View style={styles.priceRow}>
-						<Text style={styles.originalPrice}>{price}</Text>
-						{convertedPrice && (
-							<Text style={styles.convertedPrice}>
-								≈ {convertedPrice} VNĐ
+				{/* Seller Info for Manual Mode */}
+				{mode === "manual" && sellerInfo && (
+					<View style={styles.sellerSection}>
+						<View style={styles.sellerRow}>
+							<Ionicons
+								name="person-outline"
+								size={14}
+								color="#1976D2"
+							/>
+							<Text style={styles.sellerText} numberOfLines={1}>
+								{sellerInfo.name}
 							</Text>
-						)}
+						</View>
+						<View style={styles.sellerRow}>
+							<Ionicons
+								name="location-outline"
+								size={14}
+								color="#1976D2"
+							/>
+							<Text style={styles.sellerText} numberOfLines={1}>
+								{sellerInfo.address}
+							</Text>
+						</View>
 					</View>
-				</View>
+				)}
+
+				{/* Product Link for WithLink Mode */}
+				{mode === "withLink" && productLink && (
+					<View style={styles.linkSection}>
+						<Ionicons
+							name="link-outline"
+							size={14}
+							color="#1976D2"
+						/>
+						<Text style={styles.linkText} numberOfLines={1}>
+							{productLink}
+						</Text>
+					</View>
+				)}
+
+				{/* Price Section - Only show for withLink mode with valid price */}
+				{mode === "withLink" &&
+					price &&
+					price !== "0" &&
+					price !== "" &&
+					price.trim() !== "" && (
+						<View style={styles.priceSection}>
+							<View style={styles.priceRow}>
+								<Text style={styles.originalPrice}>
+									{price}
+								</Text>
+								{convertedPrice &&
+									convertedPrice !== "0" &&
+									convertedPrice !== "" &&
+									convertedPrice.trim() !== "" && (
+										<Text style={styles.convertedPrice}>
+											≈ {convertedPrice}
+										</Text>
+									)}
+							</View>
+							{exchangeRate && exchangeRate > 0 && (
+								<Text style={styles.exchangeRate}>
+									Tỷ giá:{" "}
+									{exchangeRate.toLocaleString("vi-VN")} VNĐ
+								</Text>
+							)}
+						</View>
+					)}
 			</View>
 		</View>
 	);
@@ -206,6 +336,12 @@ const styles = StyleSheet.create({
 		lineHeight: 20,
 		marginRight: 8,
 	},
+	productDescription: {
+		fontSize: 13,
+		color: "#666",
+		lineHeight: 18,
+		marginBottom: 8,
+	},
 	statusBadge: {
 		paddingHorizontal: 8,
 		paddingVertical: 4,
@@ -252,5 +388,43 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 		fontWeight: "600",
 		color: "#D32F2F",
+	},
+	exchangeRate: {
+		fontSize: 11,
+		color: "#999",
+		fontStyle: "italic",
+		marginTop: 2,
+	},
+	sellerSection: {
+		backgroundColor: "#F8F9FA",
+		padding: 8,
+		borderRadius: 8,
+		marginBottom: 8,
+		gap: 4,
+	},
+	sellerRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	sellerText: {
+		fontSize: 12,
+		color: "#333",
+		flex: 1,
+	},
+	linkSection: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#E3F2FD",
+		padding: 6,
+		borderRadius: 6,
+		marginBottom: 8,
+		gap: 6,
+	},
+	linkText: {
+		fontSize: 11,
+		color: "#1976D2",
+		flex: 1,
+		fontStyle: "italic",
 	},
 });
