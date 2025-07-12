@@ -16,7 +16,6 @@ export default function MyAddress({ navigation, route }) {
 	const { data: addresses = [] } = useGetShippingAddressQuery();
 
 	const handleAddNewAddress = () => {
-		// Navigate to Add Address screen
 		navigation.navigate("AddAddress");
 	};
 
@@ -168,20 +167,6 @@ export default function MyAddress({ navigation, route }) {
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Selection mode instruction */}
-				{mode === "selection" && (
-					<View style={styles.instructionContainer}>
-						<Ionicons
-							name="information-circle-outline"
-							size={20}
-							color="#1976D2"
-						/>
-						<Text style={styles.instructionText}>
-							Chọn địa chỉ nhận hàng cho đơn hàng của bạn
-						</Text>
-					</View>
-				)}
-
 				{/* Address List */}
 				<View style={styles.addressList}>
 					{sortedAddresses.map(renderAddressItem)}
@@ -399,21 +384,5 @@ const styles = StyleSheet.create({
 		top: 16,
 		right: 16,
 		zIndex: 1,
-	},
-	instructionContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-		backgroundColor: "#E3F2FD",
-		padding: 12,
-		marginHorizontal: 16,
-		marginBottom: 16,
-		borderRadius: 8,
-		gap: 8,
-	},
-	instructionText: {
-		flex: 1,
-		fontSize: 14,
-		color: "#1976D2",
-		fontWeight: "500",
 	},
 });
