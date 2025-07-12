@@ -19,10 +19,9 @@ export default function AddressSmCard({
 }: AddressSmCardProps) {
 	return (
 		<View style={styles.container}>
+			{/* Header */}
 			<View style={styles.header}>
-				<View style={styles.titleRow}>
-					<Ionicons name="location" size={18} color="#1976D2" />
-					<Text style={styles.title}>Địa chỉ giao hàng</Text>
+				<View style={styles.headerLeft}>
 					{isDefault && (
 						<View style={styles.defaultBadge}>
 							<Text style={styles.defaultText}>Mặc định</Text>
@@ -34,26 +33,27 @@ export default function AddressSmCard({
 						onPress={onEdit}
 						style={styles.editButton}
 					>
-						<Ionicons name="pencil" size={16} color="#666" />
+						<Ionicons
+							name="chevron-forward"
+							size={16}
+							color="#666"
+						/>
 					</TouchableOpacity>
 				)}
 			</View>
 
+			{/* Content */}
 			<View style={styles.content}>
-				<View style={styles.row}>
-					<Ionicons name="person" size={14} color="#666" />
+				{/* Name and Phone on same row */}
+				<View style={styles.namePhoneRow}>
+					<Ionicons name="location" size={16} color="#1976D2" />
 					<Text style={styles.recipientName}>{recipientName}</Text>
-				</View>
-
-				<View style={styles.row}>
-					<Ionicons name="call" size={14} color="#666" />
+					<Text style={styles.separator}>|</Text>
 					<Text style={styles.phone}>{phone}</Text>
 				</View>
 
-				<View style={styles.row}>
-					<Ionicons name="home" size={14} color="#666" />
-					<Text style={styles.address}>{address}</Text>
-				</View>
+				{/* Address */}
+				<Text style={styles.address}>{address}</Text>
 			</View>
 		</View>
 	);
@@ -77,25 +77,18 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 12,
+		marginBottom: 8,
+		minHeight: 20,
 	},
-	titleRow: {
-		flexDirection: "row",
-		alignItems: "center",
+	headerLeft: {
 		flex: 1,
-	},
-	title: {
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#1976D2",
-		marginLeft: 6,
 	},
 	defaultBadge: {
 		backgroundColor: "#E3F2FD",
 		paddingHorizontal: 8,
 		paddingVertical: 2,
 		borderRadius: 10,
-		marginLeft: 8,
+		alignSelf: "flex-start",
 	},
 	defaultText: {
 		fontSize: 10,
@@ -108,7 +101,7 @@ const styles = StyleSheet.create({
 	content: {
 		gap: 8,
 	},
-	row: {
+	namePhoneRow: {
 		flexDirection: "row",
 		alignItems: "center",
 		gap: 8,
@@ -117,17 +110,20 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: "600",
 		color: "#333",
-		flex: 1,
+	},
+	separator: {
+		fontSize: 14,
+		color: "#999",
+		fontWeight: "300",
 	},
 	phone: {
 		fontSize: 14,
 		color: "#666",
-		flex: 1,
 	},
 	address: {
 		fontSize: 14,
 		color: "#666",
-		flex: 1,
 		lineHeight: 20,
+		marginLeft: 24,
 	},
 });
