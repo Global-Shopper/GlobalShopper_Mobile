@@ -20,6 +20,7 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import AddStore from "../screens/request/AddStore";
+import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
@@ -159,6 +160,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ProductDetails"
 				component={ProductDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ConfirmRequest"
+				component={ConfirmRequest}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

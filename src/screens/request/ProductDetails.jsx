@@ -61,8 +61,8 @@ export default function ProductDetails({ navigation, route }) {
 		updatedProducts[currentProductIndex] = productData;
 		setAllProducts(updatedProducts);
 
-		// navigate về màn trước và truyền data
-		navigation.navigate("OrderConfirmation", {
+		// Navigate to ConfirmRequest with products data
+		navigation.navigate("ConfirmRequest", {
 			products: updatedProducts,
 			storeData,
 			mode,
