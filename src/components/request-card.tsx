@@ -7,7 +7,7 @@ interface RequestCardProps {
 		id: number;
 		code: string;
 		productCount: number;
-		status: "processing" | "quoted" | "cancelled";
+		status: "processing" | "quoted" | "confirmed" | "cancelled";
 		date: string;
 		createdAt: string;
 		type: "with_link" | "without_link";
@@ -27,6 +27,8 @@ export default function RequestCard({
 				return "#ff9800"; // Orange thay vì yellow để rõ hơn
 			case "quoted":
 				return "#28a745";
+			case "confirmed":
+				return "#1976D2"; // Blue for confirmed
 			case "cancelled":
 				return "#6c757d"; // Xám thay vì đỏ
 			default:
@@ -40,6 +42,8 @@ export default function RequestCard({
 				return "Đang xử lý";
 			case "quoted":
 				return "Đã báo giá";
+			case "confirmed":
+				return "Đã xác nhận";
 			case "cancelled":
 				return "Đã huỷ";
 			default:

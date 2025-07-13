@@ -23,6 +23,7 @@ import AddStore from "../screens/request/AddStore";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
 import RequestDetails from "../screens/request/RequestDetails";
+import RequestHistory from "../screens/request/RequestHistory";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
@@ -172,6 +173,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="RequestDetails"
 				component={RequestDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="RequestHistory"
+				component={RequestHistory}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

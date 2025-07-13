@@ -31,7 +31,7 @@ export default function RequestScreen({ navigation }) {
 			id: 3,
 			code: "REQ003",
 			productCount: 2,
-			status: "quoted",
+			status: "confirmed",
 			date: "2024-01-13",
 			createdAt: "13/01/2024 16:45",
 			type: "with_link",
@@ -39,6 +39,15 @@ export default function RequestScreen({ navigation }) {
 		{
 			id: 4,
 			code: "REQ004",
+			productCount: 2,
+			status: "quoted",
+			date: "2024-01-13",
+			createdAt: "13/01/2024 16:45",
+			type: "with_link",
+		},
+		{
+			id: 5,
+			code: "REQ005",
 			productCount: 5,
 			status: "cancelled",
 			date: "2024-01-12",
@@ -51,6 +60,7 @@ export default function RequestScreen({ navigation }) {
 		{ id: "all", label: "Tất cả", status: null },
 		{ id: "processing", label: "Đang xử lý", status: "processing" },
 		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
+		{ id: "confirmed", label: "Đã xác nhận", status: "confirmed" },
 		{ id: "cancelled", label: "Đã huỷ", status: "cancelled" },
 	];
 

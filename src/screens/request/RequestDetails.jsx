@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
+import QuotationCard from "../../components/quotation-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 
@@ -71,91 +72,13 @@ export default function RequestDetails({ navigation, route }) {
 				: null,
 	};
 
-	// Generate history based on request status
-	const getHistoryByStatus = (status) => {
-		const baseHistory = [
-			{
-				id: "1",
-				date: "15/01/2024 14:30",
-				action: "Tạo yêu cầu",
-				description: "Yêu cầu được tạo với 3 sản phẩm",
-				status: "completed",
-				isCurrent: false,
-			},
-		];
-
-		if (status === "processing") {
-			return [
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "processing",
-					isCurrent: true,
-				},
-				...baseHistory,
-			];
-		}
-
-		if (status === "quoted") {
-			return [
-				{
-					id: "3",
-					date: "16/01/2024 10:30",
-					action: "Đã báo giá",
-					description:
-						"Nhân viên đã gửi báo giá chi tiết cho yêu cầu",
-					status: "quoted",
-					isCurrent: true,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
-		}
-
-		if (status === "cancelled") {
-			return [
-				{
-					id: "3",
-					date: "16/01/2024 09:15",
-					action: "Đã hủy",
-					description:
-						"Yêu cầu đã được hủy theo yêu cầu của khách hàng",
-					status: "cancelled",
-					isCurrent: true,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
-		}
-
-		// Default case
-		return baseHistory;
-	};
-
-	// Add generated history to requestDetails
-	requestDetails.history = getHistoryByStatus(request?.status);
-
 	const getStatusColor = (status) => {
 		switch (status) {
 			case "processing":
 				return "#1976D2";
 			case "quoted":
+				return "#1976D2";
+			case "confirmed":
 				return "#1976D2";
 			case "cancelled":
 				return "#1976D2";
@@ -172,6 +95,8 @@ export default function RequestDetails({ navigation, route }) {
 				return "Đang xử lý";
 			case "quoted":
 				return "Đã báo giá";
+			case "confirmed":
+				return "Đã xác nhận";
 			case "cancelled":
 				return "Đã huỷ";
 			default:
@@ -190,19 +115,6 @@ export default function RequestDetails({ navigation, route }) {
 	const getRequestTypeText = (type) => {
 		return type === "with_link" ? "Có link sản phẩm" : "Không có link";
 	};
-
-	// Calculate total value for withLink products only
-	const withLinkProducts = requestDetails.products.filter(
-		(product) => product.mode === "withLink"
-	);
-	const totalValue = withLinkProducts.reduce((sum, product) => {
-		const price = parseFloat(
-			product.convertedPrice?.replace(/[^0-9]/g, "") || "0"
-		);
-		return sum + price;
-	}, 0);
-
-	const hasWithLinkProducts = withLinkProducts.length > 0 && totalValue > 0;
 
 	return (
 		<View style={styles.container}>
@@ -371,25 +283,26 @@ export default function RequestDetails({ navigation, route }) {
 
 					{/* Divider */}
 					<View style={styles.divider} />
-
-					{/* Total Value - Only show for withLink products */}
-					{hasWithLinkProducts && (
-						<View style={styles.totalSection}>
-							<View style={styles.totalRow}>
-								<Text style={styles.totalLabel}>
-									Tổng giá trị ước tính:
-								</Text>
-								<Text style={styles.totalValue}>
-									{totalValue.toLocaleString("vi-VN")} VNĐ
-								</Text>
-							</View>
-							<Text style={styles.totalNote}>
-								*Giá cuối cùng có thể thay đổi tùy thuộc vào tỷ
-								giá, phí vận chuyển và phí dịch vụ
-							</Text>
-						</View>
-					)}
 				</View>
+
+				{/* Quotation Card - Show only for quoted or confirmed requests */}
+				{(request.status === "quoted" ||
+					request.status === "confirmed") && (
+					<View style={styles.section}>
+						<QuotationCard
+							productPrice={1200000}
+							serviceFee={60000}
+							serviceFeePercent={5}
+							internationalShipping={200000}
+							importTax={120000}
+							domesticShipping={35000}
+							totalAmount={1615000}
+							additionalFees={undefined}
+							updatedTotalAmount={undefined}
+							isExpanded={true}
+						/>
+					</View>
+				)}
 
 				{/* Note Section */}
 				{requestDetails.note && (
@@ -431,79 +344,35 @@ export default function RequestDetails({ navigation, route }) {
 					</View>
 				)}
 
-				{/* Request History */}
+				{/* Request History - Show only view details button */}
 				<View style={styles.section}>
-					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionTitle}>Lịch sử yêu cầu</Text>
-					</View>
-
-					<View style={styles.historyContainer}>
-						{requestDetails.history.map((item, index) => (
-							<View
-								key={item.id}
-								style={[
-									styles.historyItem,
-									item.isCurrent && styles.currentHistoryItem,
-								]}
-							>
-								<View style={styles.historyLeft}>
-									<View
-										style={[
-											styles.historyDot,
-											{
-												backgroundColor: getStatusColor(
-													item.status
-												),
-											},
-											item.isCurrent &&
-												styles.currentHistoryDot,
-										]}
-									/>
-									{index <
-										requestDetails.history.length - 1 && (
-										<View style={styles.historyLine} />
-									)}
-								</View>
-								<View
-									style={[
-										styles.historyContent,
-										item.isCurrent &&
-											styles.currentHistoryContent,
-									]}
-								>
-									<View style={styles.historyHeader}>
-										<Text
-											style={[
-												styles.historyAction,
-												item.isCurrent &&
-													styles.currentHistoryAction,
-											]}
-										>
-											{item.action}
-										</Text>
-										<Text
-											style={[
-												styles.historyDate,
-												item.isCurrent &&
-													styles.currentHistoryDate,
-											]}
-										>
-											{item.date}
-										</Text>
-									</View>
-									<Text
-										style={[
-											styles.historyDescription,
-											item.isCurrent &&
-												styles.currentHistoryDescription,
-										]}
-									>
-										{item.description}
-									</Text>
-								</View>
-							</View>
-						))}
-					</View>
+					<TouchableOpacity
+						style={styles.historyViewButton}
+						onPress={() =>
+							navigation.navigate("RequestHistory", { request })
+						}
+					>
+						<View style={styles.historyViewLeft}>
+							<Ionicons
+								name="time-outline"
+								size={20}
+								color="#1976D2"
+							/>
+							<Text style={styles.historyViewTitle}>
+								Lịch sử yêu cầu
+							</Text>
+						</View>
+						<View style={styles.historyViewRight}>
+							<Text style={styles.viewDetailsText}>
+								Xem chi tiết
+							</Text>
+							<Ionicons
+								name="chevron-forward-outline"
+								size={20}
+								color="#1976D2"
+							/>
+						</View>
+					</TouchableOpacity>
 				</View>
 			</ScrollView>
 		</View>
@@ -689,10 +558,10 @@ const styles = StyleSheet.create({
 		color: "#333",
 		lineHeight: 20,
 	},
-	historyContainer: {
+	historyViewButton: {
 		backgroundColor: "#fff",
 		borderRadius: 12,
-		padding: 18,
+		padding: 16,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 		shadowColor: "#000",
@@ -700,97 +569,29 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.08,
 		shadowRadius: 4,
 		elevation: 3,
-	},
-	historyItem: {
-		flexDirection: "row",
-		marginBottom: 20,
-		paddingVertical: 4,
-	},
-	currentHistoryItem: {
-		backgroundColor: "#f0f8ff",
-		marginHorizontal: -12,
-		paddingHorizontal: 12,
-		paddingVertical: 12,
-		borderRadius: 10,
-		borderWidth: 1,
-		borderColor: "#e3f2fd",
-	},
-	historyLeft: {
-		alignItems: "center",
-		marginRight: 14,
-	},
-	historyDot: {
-		width: 12,
-		height: 12,
-		borderRadius: 6,
-		marginTop: 6,
-	},
-	currentHistoryDot: {
-		width: 16,
-		height: 16,
-		borderRadius: 8,
-		borderWidth: 3,
-		borderColor: "#ffffff",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.15,
-		shadowRadius: 3,
-		elevation: 3,
-	},
-	historyLine: {
-		width: 2,
-		flex: 1,
-		backgroundColor: "#e9ecef",
-		marginTop: 10,
-	},
-	historyContent: {
-		flex: 1,
-	},
-	currentHistoryContent: {
-		paddingLeft: 4,
-	},
-	historyHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "flex-start",
-		marginBottom: 6,
-		flexWrap: "wrap",
+		alignItems: "center",
 	},
-	historyAction: {
-		fontSize: 15,
-		fontWeight: "600",
-		color: "#333",
+	historyViewLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 		flex: 1,
 	},
-	currentHistoryAction: {
+	historyViewTitle: {
 		fontSize: 16,
-		fontWeight: "700",
-		color: "#1976D2",
-	},
-	currentBadge: {
-		fontSize: 12,
-		fontWeight: "500",
-		color: "#42A5F5",
-	},
-	historyDate: {
-		fontSize: 12,
-		color: "#6c757d",
-		fontWeight: "500",
-	},
-	currentHistoryDate: {
-		fontSize: 13,
-		color: "#1976D2",
 		fontWeight: "600",
+		color: "#333",
 	},
-	historyDescription: {
-		fontSize: 13,
-		color: "#666",
-		lineHeight: 19,
+	historyViewRight: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
 	},
-	currentHistoryDescription: {
+	viewDetailsText: {
 		fontSize: 14,
-		color: "#495057",
-		lineHeight: 20,
+		color: "#1976D2",
 		fontWeight: "500",
 	},
 });
