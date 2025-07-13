@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
+import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
 
 export default function RequestScreen({ navigation }) {
@@ -10,107 +11,62 @@ export default function RequestScreen({ navigation }) {
 	const requests = [
 		{
 			id: 1,
-			title: "Yêu cầu mua iPhone 15 Pro Max",
-			description:
-				"Cần mua iPhone 15 Pro Max 256GB màu xanh dương từ Apple Store Mỹ",
-			status: "sent",
-			priority: "high",
+			code: "REQ001",
+			productCount: 3,
+			status: "processing",
 			date: "2024-01-15",
-			category: "electronics",
+			createdAt: "15/01/2024 14:30",
+			type: "with_link",
 		},
 		{
 			id: 2,
-			title: "Yêu cầu mua giày Nike Air Max",
-			description: "Mua giày Nike Air Max 270 size 42 từ Nike Store Mỹ",
-			status: "checking",
-			priority: "medium",
+			code: "REQ002",
+			productCount: 1,
+			status: "processing",
 			date: "2024-01-14",
-			category: "fashion",
+			createdAt: "14/01/2024 09:15",
+			type: "without_link",
 		},
 		{
 			id: 3,
-			title: "Yêu cầu mua laptop MacBook Pro",
-			description: "MacBook Pro 16 inch M3 Pro 512GB từ Apple Store",
+			code: "REQ003",
+			productCount: 2,
 			status: "quoted",
-			priority: "high",
 			date: "2024-01-13",
-			category: "electronics",
+			createdAt: "13/01/2024 16:45",
+			type: "with_link",
 		},
 		{
 			id: 4,
-			title: "Yêu cầu mua túi Louis Vuitton",
-			description: "Túi Louis Vuitton Neverfull MM từ store chính hãng",
+			code: "REQ004",
+			productCount: 5,
 			status: "cancelled",
-			priority: "low",
 			date: "2024-01-12",
-			category: "fashion",
+			createdAt: "12/01/2024 11:20",
+			type: "without_link",
 		},
 	];
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
-		{ id: "sent", label: "Đã gửi yêu cầu", status: "sent" },
-		{ id: "checking", label: "Đang kiểm tra", status: "checking" },
+		{ id: "processing", label: "Đang xử lý", status: "processing" },
 		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
-		{ id: "cancelled", label: "Đã hủy yêu cầu", status: "cancelled" },
+		{ id: "cancelled", label: "Đã huỷ", status: "cancelled" },
 	];
 
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "sent":
-				return "#17a2b8";
-			case "checking":
-				return "#ffc107";
-			case "quoted":
-				return "#28a745";
-			case "cancelled":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
+	const handleRequestPress = (request) => {
+		console.log("Request pressed:", request.id);
+		// Navigate to request detail screen
 	};
 
-	const getStatusText = (status) => {
-		switch (status) {
-			case "sent":
-				return "Đã gửi yêu cầu";
-			case "checking":
-				return "Đang kiểm tra";
-			case "quoted":
-				return "Đã báo giá";
-			case "cancelled":
-				return "Đã hủy yêu cầu";
-			default:
-				return "Không xác định";
-		}
+	const handleRequestAccept = (request) => {
+		console.log("Accept request:", request.id);
+		// Handle accept request logic
 	};
 
-	const getPriorityIcon = (priority) => {
-		switch (priority) {
-			case "high":
-				return "arrow-up-circle";
-			case "medium":
-				return "remove-circle";
-			case "low":
-				return "arrow-down-circle";
-			default:
-				return "help-circle";
-		}
-	};
-
-	const getCategoryIcon = (category) => {
-		switch (category) {
-			case "electronics":
-				return "phone-portrait-outline";
-			case "fashion":
-				return "shirt-outline";
-			case "books":
-				return "book-outline";
-			case "home":
-				return "home-outline";
-			default:
-				return "bag-outline";
-		}
+	const handleRequestCancel = (request) => {
+		console.log("Cancel request:", request.id);
+		// Handle cancel request logic
 	};
 
 	const filteredRequests = requests.filter((request) => {
@@ -163,129 +119,13 @@ export default function RequestScreen({ navigation }) {
 				{/* Request List */}
 				<View style={styles.requestsList}>
 					{filteredRequests.map((request) => (
-						<TouchableOpacity
+						<RequestCard
 							key={request.id}
-							style={styles.requestCard}
-						>
-							<View style={styles.requestHeader}>
-								<View style={styles.requestInfo}>
-									<Ionicons
-										name={getCategoryIcon(request.category)}
-										size={24}
-										color="#007bff"
-									/>
-									<View style={styles.requestTitleContainer}>
-										<Text className="font-semibold">
-											{request.title}
-										</Text>
-										<Text className="text-sm text-muted-foreground">
-											{request.date}
-										</Text>
-									</View>
-								</View>
-
-								<View style={styles.requestMeta}>
-									<Ionicons
-										name={getPriorityIcon(request.priority)}
-										size={16}
-										color={
-											request.priority === "high"
-												? "#dc3545"
-												: request.priority === "medium"
-												? "#ffc107"
-												: "#28a745"
-										}
-									/>
-									<View
-										style={[
-											styles.statusBadge,
-											{
-												backgroundColor:
-													getStatusColor(
-														request.status
-													) + "20",
-											},
-										]}
-									>
-										<Text
-											style={[
-												styles.statusText,
-												{
-													color: getStatusColor(
-														request.status
-													),
-												},
-											]}
-										>
-											{getStatusText(request.status)}
-										</Text>
-									</View>
-								</View>
-							</View>
-
-							<Text className="text-sm text-muted-foreground mt-2 leading-5">
-								{request.description}
-							</Text>
-
-							<View style={styles.requestActions}>
-								<TouchableOpacity style={styles.actionButton}>
-									<Ionicons
-										name="eye-outline"
-										size={16}
-										color="#007bff"
-									/>
-									<Text className="text-blue-600 text-sm ml-1">
-										Xem chi tiết
-									</Text>
-								</TouchableOpacity>
-
-								{request.status === "sent" && (
-									<TouchableOpacity
-										style={styles.actionButton}
-									>
-										<Ionicons
-											name="create-outline"
-											size={16}
-											color="#28a745"
-										/>
-										<Text className="text-green-600 text-sm ml-1">
-											Chỉnh sửa
-										</Text>
-									</TouchableOpacity>
-								)}
-
-								{request.status === "quoted" && (
-									<TouchableOpacity
-										style={styles.actionButton}
-									>
-										<Ionicons
-											name="checkmark-circle-outline"
-											size={16}
-											color="#28a745"
-										/>
-										<Text className="text-green-600 text-sm ml-1">
-											Chấp nhận
-										</Text>
-									</TouchableOpacity>
-								)}
-
-								{(request.status === "sent" ||
-									request.status === "checking") && (
-									<TouchableOpacity
-										style={styles.actionButton}
-									>
-										<Ionicons
-											name="close-circle-outline"
-											size={16}
-											color="#dc3545"
-										/>
-										<Text className="text-red-600 text-sm ml-1">
-											Hủy yêu cầu
-										</Text>
-									</TouchableOpacity>
-								)}
-							</View>
-						</TouchableOpacity>
+							request={request}
+							onPress={() => handleRequestPress(request)}
+							onAccept={() => handleRequestAccept(request)}
+							onCancel={() => handleRequestCancel(request)}
+						/>
 					))}
 				</View>
 
@@ -358,59 +198,6 @@ const styles = StyleSheet.create({
 	},
 	requestsList: {
 		marginBottom: 20,
-	},
-	requestCard: {
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 12,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.05,
-		shadowRadius: 3,
-		elevation: 3,
-	},
-	requestHeader: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "flex-start",
-	},
-	requestInfo: {
-		flexDirection: "row",
-		alignItems: "center",
-		flex: 1,
-	},
-	requestTitleContainer: {
-		marginLeft: 12,
-		flex: 1,
-	},
-	requestMeta: {
-		alignItems: "flex-end",
-	},
-	statusBadge: {
-		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 12,
-		marginTop: 4,
-	},
-	statusText: {
-		fontSize: 12,
-		fontWeight: "600",
-	},
-	requestActions: {
-		flexDirection: "row",
-		marginTop: 12,
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: "#f0f0f0",
-	},
-	actionButton: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginRight: 16,
 	},
 	emptyState: {
 		alignItems: "center",
