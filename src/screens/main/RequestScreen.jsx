@@ -57,11 +57,7 @@ export default function RequestScreen({ navigation }) {
 	const handleRequestPress = (request) => {
 		console.log("Request pressed:", request.id);
 		// Navigate to request detail screen
-	};
-
-	const handleRequestAccept = (request) => {
-		console.log("Accept request:", request.id);
-		// Handle accept request logic
+		navigation.navigate("RequestDetails", { request });
 	};
 
 	const handleRequestCancel = (request) => {
@@ -123,7 +119,6 @@ export default function RequestScreen({ navigation }) {
 							key={request.id}
 							request={request}
 							onPress={() => handleRequestPress(request)}
-							onAccept={() => handleRequestAccept(request)}
 							onCancel={() => handleRequestCancel(request)}
 						/>
 					))}
