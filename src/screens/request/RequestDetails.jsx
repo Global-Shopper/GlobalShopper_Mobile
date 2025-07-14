@@ -253,17 +253,20 @@ export default function RequestDetails({ navigation, route }) {
 							description={product.description}
 							images={product.images}
 							price={
-								product.mode === "manual"
+								product.mode === "manual" ||
+								request.status === "processing"
 									? ""
 									: product.price || ""
 							}
 							convertedPrice={
-								product.mode === "manual"
+								product.mode === "manual" ||
+								request.status === "processing"
 									? ""
 									: product.convertedPrice
 							}
 							exchangeRate={
-								product.mode === "manual"
+								product.mode === "manual" ||
+								request.status === "processing"
 									? undefined
 									: product.exchangeRate
 							}
