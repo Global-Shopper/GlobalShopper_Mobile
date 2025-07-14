@@ -11,6 +11,7 @@ import { Text } from "../../components/ui/text";
 export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
 	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
+	const [isAcceptedQuotation, setIsAcceptedQuotation] = useState(false);
 
 	// Mock data
 	const requestDetails = {
@@ -129,7 +130,11 @@ export default function RequestDetails({ navigation, route }) {
 			<ScrollView
 				style={styles.scrollContainer}
 				showsVerticalScrollIndicator={false}
-				contentContainerStyle={styles.scrollContent}
+				contentContainerStyle={[
+					styles.scrollContent,
+					request.status === "quoted" &&
+						styles.scrollContentWithButton,
+				]}
 			>
 				{/* Request Card - Without product count */}
 				<View style={styles.section}>
@@ -199,6 +204,37 @@ export default function RequestDetails({ navigation, route }) {
 							</Text>
 						</View>
 					</View>
+				</View>
+
+				{/* Request History - Show only view details button */}
+				<View style={styles.section}>
+					<TouchableOpacity
+						style={styles.historyViewButton}
+						onPress={() =>
+							navigation.navigate("RequestHistory", { request })
+						}
+					>
+						<View style={styles.historyViewLeft}>
+							<Ionicons
+								name="time-outline"
+								size={20}
+								color="#1976D2"
+							/>
+							<Text style={styles.historyViewTitle}>
+								Lịch sử yêu cầu
+							</Text>
+						</View>
+						<View style={styles.historyViewRight}>
+							<Text style={styles.viewDetailsText}>
+								Xem chi tiết
+							</Text>
+							<Ionicons
+								name="chevron-forward-outline"
+								size={20}
+								color="#1976D2"
+							/>
+						</View>
+					</TouchableOpacity>
 				</View>
 
 				{/* Delivery Address */}
@@ -288,25 +324,6 @@ export default function RequestDetails({ navigation, route }) {
 					<View style={styles.divider} />
 				</View>
 
-				{/* Quotation Card - Show only for quoted or confirmed requests */}
-				{(request.status === "quoted" ||
-					request.status === "confirmed") && (
-					<View style={styles.section}>
-						<QuotationCard
-							productPrice={1200000}
-							serviceFee={60000}
-							serviceFeePercent={5}
-							internationalShipping={200000}
-							importTax={120000}
-							domesticShipping={35000}
-							totalAmount={1615000}
-							additionalFees={undefined}
-							updatedTotalAmount={undefined}
-							isExpanded={true}
-						/>
-					</View>
-				)}
-
 				{/* Note Section */}
 				{requestDetails.note && (
 					<View style={styles.section}>
@@ -347,37 +364,86 @@ export default function RequestDetails({ navigation, route }) {
 					</View>
 				)}
 
-				{/* Request History - Show only view details button */}
-				<View style={styles.section}>
+				{/* Quotation Card - Show only for quoted or confirmed requests */}
+				{(request.status === "quoted" ||
+					request.status === "confirmed") && (
+					<View style={styles.section}>
+						<QuotationCard
+							productPrice={1200000}
+							serviceFee={60000}
+							serviceFeePercent={5}
+							internationalShipping={200000}
+							importTax={120000}
+							domesticShipping={35000}
+							totalAmount={1615000}
+							additionalFees={undefined}
+							updatedTotalAmount={undefined}
+							isExpanded={true}
+						/>
+					</View>
+				)}
+
+				{/* Payment Agreement Checkbox - Show only for quoted requests */}
+				{request.status === "quoted" && (
+					<View style={styles.section}>
+						<View style={styles.checkboxContainer}>
+							<TouchableOpacity
+								style={[
+									styles.checkbox,
+									isAcceptedQuotation &&
+										styles.checkboxChecked,
+								]}
+								onPress={() =>
+									setIsAcceptedQuotation(!isAcceptedQuotation)
+								}
+								activeOpacity={0.7}
+							>
+								{isAcceptedQuotation && (
+									<Ionicons
+										name="checkmark"
+										size={16}
+										color="#FFFFFF"
+									/>
+								)}
+							</TouchableOpacity>
+							<Text style={styles.checkboxText}>
+								Tôi đồng ý với giá tạm thời này và chấp nhận phí
+								phát sinh (nếu có)
+							</Text>
+						</View>
+					</View>
+				)}
+			</ScrollView>
+
+			{/* Fixed Payment Button - Show only for quoted requests */}
+			{request.status === "quoted" && (
+				<View style={styles.fixedButtonContainer}>
 					<TouchableOpacity
-						style={styles.historyViewButton}
-						onPress={() =>
-							navigation.navigate("RequestHistory", { request })
-						}
+						style={[
+							styles.fixedPaymentButton,
+							!isAcceptedQuotation &&
+								styles.fixedPaymentButtonDisabled,
+						]}
+						onPress={() => {
+							if (isAcceptedQuotation) {
+								navigation.navigate("PaymentMethod");
+							}
+						}}
+						disabled={!isAcceptedQuotation}
+						activeOpacity={0.7}
 					>
-						<View style={styles.historyViewLeft}>
-							<Ionicons
-								name="time-outline"
-								size={20}
-								color="#1976D2"
-							/>
-							<Text style={styles.historyViewTitle}>
-								Lịch sử yêu cầu
-							</Text>
-						</View>
-						<View style={styles.historyViewRight}>
-							<Text style={styles.viewDetailsText}>
-								Xem chi tiết
-							</Text>
-							<Ionicons
-								name="chevron-forward-outline"
-								size={20}
-								color="#1976D2"
-							/>
-						</View>
+						<Text
+							style={[
+								styles.fixedPaymentButtonText,
+								!isAcceptedQuotation &&
+									styles.fixedPaymentButtonTextDisabled,
+							]}
+						>
+							Thanh toán
+						</Text>
 					</TouchableOpacity>
 				</View>
-			</ScrollView>
+			)}
 		</View>
 	);
 }
@@ -392,8 +458,11 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		paddingHorizontal: 18,
-		paddingVertical: 8,
+		paddingVertical: 5,
 		paddingBottom: 30,
+	},
+	scrollContentWithButton: {
+		paddingBottom: 1,
 	},
 	section: {
 		marginBottom: 10,
@@ -596,5 +665,71 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#1976D2",
 		fontWeight: "500",
+	},
+	checkboxContainer: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		gap: 12,
+		paddingHorizontal: 18,
+		paddingVertical: 16,
+	},
+	checkbox: {
+		width: 20,
+		height: 20,
+		borderRadius: 4,
+		borderWidth: 2,
+		borderColor: "#D0D5DD",
+		backgroundColor: "#FFFFFF",
+		alignItems: "center",
+		justifyContent: "center",
+		marginTop: 2, // Align with text
+	},
+	checkboxChecked: {
+		backgroundColor: "#1976D2",
+		borderColor: "#1976D2",
+	},
+	checkboxText: {
+		fontSize: 14,
+		color: "#333",
+		lineHeight: 20,
+		flex: 1,
+	},
+	fixedButtonContainer: {
+		backgroundColor: "#fff",
+		paddingHorizontal: 18,
+		paddingVertical: 27,
+		borderTopWidth: 1,
+		borderTopColor: "#E5E5E5",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+	fixedPaymentButton: {
+		backgroundColor: "#1976D2",
+		borderRadius: 10,
+		paddingVertical: 16,
+		paddingHorizontal: 20,
+		alignItems: "center",
+		justifyContent: "center",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	fixedPaymentButtonDisabled: {
+		backgroundColor: "#E0E0E0",
+		shadowOpacity: 0,
+		elevation: 0,
+	},
+	fixedPaymentButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	fixedPaymentButtonTextDisabled: {
+		color: "#9E9E9E",
 	},
 });
