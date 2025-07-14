@@ -50,8 +50,13 @@ export default function ConfirmQuotation({ navigation, route }) {
 				"Payment confirmed with method:",
 				selectedPaymentMethod
 			);
-			// You can navigate to payment processing screen or show success message
-			navigation.goBack();
+
+			// Navigate to success payment screen
+			navigation.navigate("SuccessPaymentScreen", {
+				paymentMethod: selectedPaymentMethod,
+				amount: "1,615,000 VNĐ",
+				requestId: request?.id || "REQ001",
+			});
 		}
 	};
 

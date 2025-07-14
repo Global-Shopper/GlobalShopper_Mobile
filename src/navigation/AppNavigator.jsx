@@ -7,6 +7,7 @@ import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import NotificationScreen from "../screens/notification/NotificationScreen";
+import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -174,6 +175,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ConfirmQuotation"
 				component={ConfirmQuotation}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="SuccessPaymentScreen"
+				component={SuccessPaymentScreen}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
