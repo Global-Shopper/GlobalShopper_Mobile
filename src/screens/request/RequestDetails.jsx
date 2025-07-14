@@ -426,7 +426,9 @@ export default function RequestDetails({ navigation, route }) {
 						]}
 						onPress={() => {
 							if (isAcceptedQuotation) {
-								navigation.navigate("PaymentMethod");
+								navigation.navigate("ConfirmQuotation", {
+									request,
+								});
 							}
 						}}
 						disabled={!isAcceptedQuotation}

@@ -20,6 +20,7 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import AddStore from "../screens/request/AddStore";
+import ConfirmQuotation from "../screens/request/ConfirmQuotation";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
 import RequestDetails from "../screens/request/RequestDetails";
@@ -168,6 +169,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ConfirmRequest"
 				component={ConfirmRequest}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ConfirmQuotation"
+				component={ConfirmQuotation}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
