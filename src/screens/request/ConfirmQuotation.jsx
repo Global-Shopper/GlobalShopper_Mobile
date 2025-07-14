@@ -61,6 +61,10 @@ export default function ConfirmQuotation({ navigation, route }) {
 				title="Xác nhận thanh toán"
 				showBackButton={true}
 				onBackPress={() => navigation.goBack()}
+				notificationCount={3}
+				onNotificationPress={() =>
+					navigation.navigate("NotificationScreen")
+				}
 			/>
 
 			<ScrollView
