@@ -9,6 +9,7 @@ interface AddressSmCardProps {
 	isDefault?: boolean;
 	onEdit?: () => void;
 	isEmpty?: boolean;
+	showEditButton?: boolean;
 }
 
 export default function AddressSmCard({
@@ -18,6 +19,7 @@ export default function AddressSmCard({
 	isDefault = false,
 	onEdit,
 	isEmpty = false,
+	showEditButton = true,
 }: AddressSmCardProps) {
 	// If isEmpty or no data, show placeholder
 	if (isEmpty || (!recipientName && !phone && !address)) {
@@ -58,7 +60,7 @@ export default function AddressSmCard({
 						</View>
 					)}
 				</View>
-				{onEdit && (
+				{onEdit && showEditButton && (
 					<TouchableOpacity
 						onPress={onEdit}
 						style={styles.editButton}

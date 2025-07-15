@@ -7,6 +7,7 @@ import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import NotificationScreen from "../screens/notification/NotificationScreen";
+import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -20,8 +21,11 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import AddStore from "../screens/request/AddStore";
+import ConfirmQuotation from "../screens/request/ConfirmQuotation";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
+import RequestDetails from "../screens/request/RequestDetails";
+import RequestHistory from "../screens/request/RequestHistory";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
@@ -166,6 +170,26 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ConfirmRequest"
 				component={ConfirmRequest}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ConfirmQuotation"
+				component={ConfirmQuotation}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="SuccessPaymentScreen"
+				component={SuccessPaymentScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="RequestDetails"
+				component={RequestDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="RequestHistory"
+				component={RequestHistory}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
