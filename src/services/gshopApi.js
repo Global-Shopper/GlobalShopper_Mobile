@@ -5,7 +5,7 @@ import { axiosBaseQuery } from './baseRequest';
 //Lưu ý khi cho dev, cần phải sửa lại baseURL trong file baseRequest.js
 const gshopApi = createApi({
   reducerPath: 'gshopApi',
-  tagTypes: ['CustomerProfile', 'ShippingAddress'],
+  tagTypes: ['CustomerProfile', 'ShippingAddress', 'PurchaseRequest'],
   baseQuery: axiosBaseQuery(), // Adjust base URL as needed
   endpoints: (builder) => ({
     login: builder.mutation({
@@ -19,6 +19,20 @@ const gshopApi = createApi({
       query: (data) => ({
         data: data,
         url: endpoints.REGISTER,
+        method: 'POST',
+      }),
+    }),
+    changeEmail: builder.mutation({
+      query: (newEmail) => ({
+        params: newEmail,
+        url: endpoints.CHANGE_EMAIL,
+        method: 'POST',
+      }),
+    }),
+    verifyChangeEmail: builder.mutation({
+      query: (data) => ({
+        params: data,
+        url: endpoints.VERIFY_CHANGE_EMAIL,
         method: 'POST',
       }),
     }),
@@ -53,7 +67,7 @@ const gshopApi = createApi({
         url: `${endpoints.CUSTOMER_PROFILE}/current-information`,
         method: 'GET',
       }),
-      invalidatesTags: ['CustomerProfile'],
+      providesTags: ['CustomerProfile'],
     }),
     updateCustomerProfile: builder.mutation({
       query: (data) => ({
@@ -61,7 +75,15 @@ const gshopApi = createApi({
         url: endpoints.CUSTOMER_PROFILE,
         method: 'PUT',
       }),
-      providesTags: ['CustomerProfile'],
+      invalidatesTags: ['CustomerProfile'],
+    }),
+    uploadAvatar: builder.mutation({
+      query: (formData) => ({
+        data: formData,
+        url: endpoints.UPLOAD_AVATAR,
+        method: 'POST',
+      }),
+      invalidatesTags: ['CustomerProfile'],
     }),
     resetPassword: builder.mutation({
       query: (data) => ({
@@ -94,7 +116,7 @@ const gshopApi = createApi({
     updateShippingAddress: builder.mutation({
       query: ({ id, ...data }) => ({
         data: data,
-        url: endpoints.SHIPPING_ADDRESS + `/${id}`,
+        url: `${endpoints.SHIPPING_ADDRESS}/${id}`,
         method: 'PUT',
       }),
       invalidatesTags: ['ShippingAddress'],
@@ -115,9 +137,54 @@ const gshopApi = createApi({
     }),
     changePassword: builder.mutation({
       query: (data) => ({
-        params: data,
+        data: data,
         url: endpoints.CHANGE_PASSWORD,
         method: 'PUT',
+      }),
+    }),
+    getPurchaseRequest: builder.query({
+      query: (data) => ({
+        params: data,
+        url: endpoints.PURCHASE_REQUEST,
+        method: 'GET',
+      }),
+      providesTags: ['PurchaseRequest'],
+    }),
+    createWithLinkPurchaseRequest: builder.mutation({
+      query: (data) => ({
+        data: data,
+        url: endpoints.WITH_LINK_PURCHASE_REQUEST,
+        method: 'POST',
+      }),
+      invalidatesTags: ['PurchaseRequest'],
+    }),
+    createWithoutLinkPurchaseRequest: builder.mutation({
+      query: (data) => ({
+        data: data,
+        url: endpoints.WITHOUT_LINK_PURCHASE_REQUEST,
+        method: 'POST',
+      }),
+      invalidatesTags: ['PurchaseRequest'],
+    }),
+    getWallet: builder.query({
+      query: () => ({
+        url: endpoints.WALLET,
+        method: 'GET',
+      }),
+      providesTags: ['Wallet'],
+    }),
+    depositWallet: builder.mutation({
+      query: (data) => ({
+        data: data,
+        url: endpoints.WALLET,
+        method: 'POST',
+      }),
+    }),
+    checkPayment: builder.query({
+      query: (data) => ({
+        params: data,
+        url: endpoints.CHECKPAYMENT,
+        method: 'GET',
       }),
     }),
   }),
@@ -130,6 +197,8 @@ export const {
   useLazyForgotPasswordQuery,
   useResetPasswordMutation,
   useRegisterMutation,
+  useChangeEmailMutation,
+  useVerifyChangeEmailMutation,
   useVerifyOTPForgotPasswordMutation,
   useCreateShippingAddressMutation,
   useUpdateShippingAddressMutation,
@@ -139,6 +208,13 @@ export const {
   useGetCustomerInfoQuery,
   useUpdateCustomerProfileMutation,
   useDefaultShippingAddressMutation,
+  useUploadAvatarMutation,
+  useGetPurchaseRequestQuery,
+  useCreateWithLinkPurchaseRequestMutation,
+  useCreateWithoutLinkPurchaseRequestMutation,
+  useGetWalletQuery,
+  useDepositWalletMutation,
+  useLazyCheckPaymentQuery
 } = gshopApi;
 
 export default gshopApi;
