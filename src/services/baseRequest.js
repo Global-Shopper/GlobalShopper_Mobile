@@ -90,6 +90,15 @@ const setUpInterceptor = (store) => {
 				}
 			}
 
+			// Debug logging for purchase request
+			if (config.url?.includes("purchase-request")) {
+				console.log("=== AXIOS REQUEST DEBUG ===");
+				console.log("URL:", config.baseURL + config.url);
+				console.log("Method:", config.method);
+				console.log("Headers:", config.headers);
+				console.log("Data:", JSON.stringify(config.data, null, 2));
+			}
+
 			if (config.data) {
 				// Check if data is FormData (React Native)
 				if (config.data instanceof FormData) {

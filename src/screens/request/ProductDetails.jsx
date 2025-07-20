@@ -60,6 +60,14 @@ export default function ProductDetails({ navigation, route }) {
 	const handleSubmit = (productData) => {
 		console.log("ProductDetails - Product data submitted:", productData);
 		console.log("ProductDetails - Store data being passed:", storeData);
+		console.log(
+			"ProductDetails - Store data keys:",
+			storeData ? Object.keys(storeData) : "null"
+		);
+		console.log(
+			"ProductDetails - Store data storeName:",
+			storeData?.storeName
+		);
 
 		// Update the current product data
 		const updatedProducts = [...allProducts];

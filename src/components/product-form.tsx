@@ -33,6 +33,7 @@ interface ProductData {
 	material: string;
 	size: string;
 	color: string;
+	quantity: number | string; // Allow string for temporary editing
 	platform: string;
 	productLink: string;
 	sellerInfo?: {
@@ -79,6 +80,7 @@ function getInitialFormData(
 		material: initialData?.material || "",
 		size: initialData?.size || "",
 		color: initialData?.color || "",
+		quantity: initialData?.quantity || "", // Default empty, let user input
 		platform: initialData?.platform || "",
 		productLink: initialData?.productLink || "",
 	};
@@ -119,7 +121,7 @@ export default function ProductForm({
 		setFormData(newFormData);
 	}, [initialData, storeData, mode]);
 
-	const handleInputChange = (field: string, value: string) => {
+	const handleInputChange = (field: string, value: string | number) => {
 		// Skip convertedPrice as it's read-only and auto-calculated
 		if (field === "convertedPrice") {
 			return;
@@ -151,7 +153,7 @@ export default function ProductForm({
 		}
 
 		// Auto convert price when price field changes
-		if (field === "price") {
+		if (field === "price" && typeof value === "string") {
 			if (value.trim() !== "") {
 				convertPrice(value, newFormData);
 			} else {
@@ -284,7 +286,22 @@ export default function ProductForm({
 
 	const handleSubmit = () => {
 		if (!validateForm()) return;
-		onSubmit(formData);
+
+		// Ensure quantity is a valid number when submitting (default to 1 if empty)
+		let finalQuantity = 1; // Default
+		if (formData.quantity !== "" && formData.quantity !== undefined) {
+			finalQuantity =
+				typeof formData.quantity === "string"
+					? parseInt(formData.quantity) || 1
+					: formData.quantity;
+		}
+
+		const submissionData = {
+			...formData,
+			quantity: finalQuantity,
+		};
+
+		onSubmit(submissionData);
 	};
 
 	return (
@@ -637,6 +654,60 @@ export default function ProductForm({
 							}
 							placeholder="Nhập màu sắc"
 							placeholderTextColor="#B0BEC5"
+						/>
+					</View>
+				</View>
+
+				{/* Quantity */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Số lượng</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="basket-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.textInput}
+							value={formData.quantity?.toString() || ""}
+							onChangeText={(value) => {
+								// Allow empty string temporarily for editing
+								if (value === "") {
+									handleInputChange("quantity", "");
+									return;
+								}
+
+								// Only allow numbers
+								const cleanValue = value.replace(/[^0-9]/g, "");
+								if (cleanValue === "") {
+									handleInputChange("quantity", "");
+									return;
+								}
+
+								const numValue = parseInt(cleanValue);
+								if (!isNaN(numValue) && numValue > 0) {
+									handleInputChange("quantity", numValue);
+								}
+							}}
+							onBlur={() => {
+								// When user finishes editing, validate only if they entered something
+								if (
+									formData.quantity !== "" &&
+									formData.quantity !== undefined
+								) {
+									const currentQuantity =
+										typeof formData.quantity === "string"
+											? parseInt(formData.quantity) || 0
+											: formData.quantity;
+									if (currentQuantity < 1) {
+										handleInputChange("quantity", 1);
+									}
+								}
+							}}
+							placeholder="Nhập số lượng"
+							placeholderTextColor="#B0BEC5"
+							keyboardType="numeric"
 						/>
 					</View>
 				</View>

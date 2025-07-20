@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
+	Alert,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -24,7 +25,36 @@ export default function AddStore({ navigation }) {
 
 	const handleAddProduct = () => {
 		console.log("AddStore - Navigating with store data:", storeData);
+
+		// Validate store data before navigation
+		if (!storeData) {
+			Alert.alert(
+				"Thiếu thông tin",
+				"Vui lòng điền thông tin cửa hàng trước khi thêm sản phẩm."
+			);
+			return;
+		}
+
+		if (!storeData.storeName?.trim()) {
+			Alert.alert("Thiếu thông tin", "Vui lòng nhập tên cửa hàng.");
+			return;
+		}
+
+		if (!storeData.storeAddress?.trim()) {
+			Alert.alert("Thiếu thông tin", "Vui lòng nhập địa chỉ cửa hàng.");
+			return;
+		}
+
+		if (!storeData.shopLink?.trim()) {
+			Alert.alert("Thiếu thông tin", "Vui lòng nhập link cửa hàng.");
+			return;
+		}
+
 		// Navigate to add product screen with store data
+		console.log("AddStore - Navigating with storeData:", storeData);
+		console.log("AddStore - StoreData keys:", Object.keys(storeData));
+		console.log("AddStore - StoreData values:", Object.values(storeData));
+
 		navigation.navigate("ProductDetails", {
 			mode: "manual",
 			storeData: storeData,
