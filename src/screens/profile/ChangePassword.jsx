@@ -1,24 +1,29 @@
-import React, { useState } from "react";
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	StyleSheet,
-	StatusBar,
-	TextInput,
-	Alert,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import {
+	ActivityIndicator,
+	Alert,
+	ScrollView,
+	StatusBar,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import { useChangePasswordMutation } from "../../services/gshopApi";
 
 export default function ChangePassword({ navigation }) {
+	// API hooks
+	const [changePassword, { isLoading: isChangingPassword }] =
+		useChangePasswordMutation();
 	const [formData, setFormData] = useState({
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
 	});
-	
+
 	const [showPassword, setShowPassword] = useState({
 		current: false,
 		new: false,
@@ -28,24 +33,24 @@ export default function ChangePassword({ navigation }) {
 	const [errors, setErrors] = useState({});
 
 	const handleInputChange = (field, value) => {
-		setFormData(prev => ({
+		setFormData((prev) => ({
 			...prev,
-			[field]: value
+			[field]: value,
 		}));
-		
+
 		// Clear error when user starts typing
 		if (errors[field]) {
-			setErrors(prev => ({
+			setErrors((prev) => ({
 				...prev,
-				[field]: null
+				[field]: null,
 			}));
 		}
 	};
 
 	const togglePasswordVisibility = (field) => {
-		setShowPassword(prev => ({
+		setShowPassword((prev) => ({
 			...prev,
-			[field]: !prev[field]
+			[field]: !prev[field],
 		}));
 	};
 
@@ -77,19 +82,55 @@ export default function ChangePassword({ navigation }) {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleChangePassword = () => {
+	const handleChangePassword = async () => {
 		if (validateForm()) {
-			// Here you would implement the actual password change logic
-			Alert.alert(
-				"Thành công",
-				"Mật khẩu đã được thay đổi thành công!",
-				[
-					{
-						text: "OK",
-						onPress: () => navigation.goBack()
-					}
-				]
-			);
+			try {
+				// Prepare data for API
+				const changePasswordData = {
+					oldPassword: formData.currentPassword,
+					newPassword: formData.newPassword,
+				};
+
+				console.log("=== CHANGE PASSWORD DEBUG ===");
+				console.log("Change password data:", changePasswordData);
+				console.log("API endpoint: PUT /auth/change-password");
+
+				const response = await changePassword(
+					changePasswordData
+				).unwrap();
+
+				console.log("Change password response:", response);
+
+				Alert.alert(
+					"Thành công",
+					"Mật khẩu đã được thay đổi thành công!",
+					[
+						{
+							text: "OK",
+							onPress: () => {
+								// Clear form data
+								setFormData({
+									currentPassword: "",
+									newPassword: "",
+									confirmPassword: "",
+								});
+								navigation.goBack();
+							},
+						},
+					]
+				);
+			} catch (error) {
+				console.error("Change password error:", error);
+				console.error("Error status:", error?.status);
+				console.error("Error data:", error?.data);
+				console.error("Error message:", error?.message);
+
+				const errorMessage =
+					error?.data?.message ||
+					error?.message ||
+					"Có lỗi xảy ra khi thay đổi mật khẩu";
+				Alert.alert("Lỗi", errorMessage);
+			}
 		}
 	};
 
@@ -104,25 +145,53 @@ export default function ChangePassword({ navigation }) {
 				{label}
 				{required && <Text style={styles.required}> *</Text>}
 			</Text>
-			<View style={[
-				styles.inputContainer,
-				errors[field] && styles.inputError
-			]}>
+			<View
+				style={[
+					styles.inputContainer,
+					errors[field] && styles.inputError,
+				]}
+			>
 				<TextInput
 					style={styles.textInput}
 					placeholder={placeholder}
 					placeholderTextColor="#B0BEC5"
 					value={formData[field]}
 					onChangeText={(value) => handleInputChange(field, value)}
-					secureTextEntry={!showPassword[field === 'currentPassword' ? 'current' : field === 'newPassword' ? 'new' : 'confirm']}
+					secureTextEntry={
+						!showPassword[
+							field === "currentPassword"
+								? "current"
+								: field === "newPassword"
+								? "new"
+								: "confirm"
+						]
+					}
 					autoCapitalize="none"
 				/>
 				<TouchableOpacity
 					style={styles.eyeButton}
-					onPress={() => togglePasswordVisibility(field === 'currentPassword' ? 'current' : field === 'newPassword' ? 'new' : 'confirm')}
+					onPress={() =>
+						togglePasswordVisibility(
+							field === "currentPassword"
+								? "current"
+								: field === "newPassword"
+								? "new"
+								: "confirm"
+						)
+					}
 				>
 					<Ionicons
-						name={showPassword[field === 'currentPassword' ? 'current' : field === 'newPassword' ? 'new' : 'confirm'] ? "eye-off" : "eye"}
+						name={
+							showPassword[
+								field === "currentPassword"
+									? "current"
+									: field === "newPassword"
+									? "new"
+									: "confirm"
+							]
+								? "eye-off"
+								: "eye"
+						}
 						size={20}
 						color="#78909C"
 					/>
@@ -189,37 +258,77 @@ export default function ChangePassword({ navigation }) {
 				{/* Password Requirements */}
 				<View style={styles.requirementsContainer}>
 					<View style={styles.requirementsHeader}>
-						<Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
-						<Text style={styles.requirementsTitle}>Yêu cầu mật khẩu</Text>
+						<Ionicons
+							name="shield-checkmark"
+							size={20}
+							color="#4CAF50"
+						/>
+						<Text style={styles.requirementsTitle}>
+							Yêu cầu mật khẩu
+						</Text>
 					</View>
 					<View style={styles.requirementsList}>
 						<View style={styles.requirementItem}>
-							<Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-							<Text style={styles.requirementText}>Ít nhất 6 ký tự</Text>
+							<Ionicons
+								name="checkmark-circle"
+								size={16}
+								color="#4CAF50"
+							/>
+							<Text style={styles.requirementText}>
+								Ít nhất 6 ký tự
+							</Text>
 						</View>
 						<View style={styles.requirementItem}>
-							<Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-							<Text style={styles.requirementText}>Khác với mật khẩu hiện tại</Text>
+							<Ionicons
+								name="checkmark-circle"
+								size={16}
+								color="#4CAF50"
+							/>
+							<Text style={styles.requirementText}>
+								Khác với mật khẩu hiện tại
+							</Text>
 						</View>
 						<View style={styles.requirementItem}>
-							<Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-							<Text style={styles.requirementText}>Nên chứa chữ hoa, chữ thường và số</Text>
+							<Ionicons
+								name="checkmark-circle"
+								size={16}
+								color="#4CAF50"
+							/>
+							<Text style={styles.requirementText}>
+								Nên chứa chữ hoa, chữ thường và số
+							</Text>
 						</View>
 					</View>
 				</View>
 
 				{/* Change Password Button */}
 				<TouchableOpacity
-					style={styles.changeButton}
+					style={[
+						styles.changeButton,
+						isChangingPassword && styles.changeButtonDisabled,
+					]}
 					onPress={handleChangePassword}
 					activeOpacity={0.8}
+					disabled={isChangingPassword}
 				>
 					<LinearGradient
-						colors={["#4CAF50", "#45A049"]}
+						colors={
+							isChangingPassword
+								? ["#CCCCCC", "#AAAAAA"]
+								: ["#4CAF50", "#45A049"]
+						}
 						style={styles.changeButtonGradient}
 					>
-						<Ionicons name="key" size={20} color="#FFFFFF" />
-						<Text style={styles.changeButtonText}>Thay đổi mật khẩu</Text>
+						{isChangingPassword ? (
+							<ActivityIndicator size="small" color="#FFFFFF" />
+						) : (
+							<Ionicons name="key" size={20} color="#FFFFFF" />
+						)}
+						<Text style={styles.changeButtonText}>
+							{isChangingPassword
+								? "Đang thay đổi..."
+								: "Thay đổi mật khẩu"}
+						</Text>
 					</LinearGradient>
 				</TouchableOpacity>
 			</ScrollView>
@@ -362,6 +471,10 @@ const styles = StyleSheet.create({
 		},
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
+	},
+	changeButtonDisabled: {
+		elevation: 1,
+		shadowOpacity: 0.1,
 	},
 	changeButtonGradient: {
 		flexDirection: "row",
