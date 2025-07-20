@@ -4,57 +4,17 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
+import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
 
 export default function RequestScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
-
-	const requests = [
-		{
-			id: 1,
-			code: "REQ001",
-			productCount: 3,
-			status: "processing",
-			date: "2024-01-15",
-			createdAt: "15/01/2024 14:30",
-			type: "with_link",
-		},
-		{
-			id: 2,
-			code: "REQ002",
-			productCount: 1,
-			status: "processing",
-			date: "2024-01-14",
-			createdAt: "14/01/2024 09:15",
-			type: "without_link",
-		},
-		{
-			id: 3,
-			code: "REQ003",
-			productCount: 2,
-			status: "confirmed",
-			date: "2024-01-13",
-			createdAt: "13/01/2024 16:45",
-			type: "with_link",
-		},
-		{
-			id: 4,
-			code: "REQ004",
-			productCount: 2,
-			status: "quoted",
-			date: "2024-01-13",
-			createdAt: "13/01/2024 16:45",
-			type: "with_link",
-		},
-		{
-			id: 5,
-			code: "REQ005",
-			productCount: 5,
-			status: "cancelled",
-			date: "2024-01-12",
-			createdAt: "12/01/2024 11:20",
-			type: "without_link",
-		},
-	];
+	const [currentPage, setCurrentPage] = useState(0)
+	const [pageSize, setPageSize] = useState(3)
+	const {data: requests} = useGetPurchaseRequestQuery({
+		page: currentPage,
+		size: pageSize,
+		type: "assigned"
+	})
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
@@ -75,10 +35,7 @@ export default function RequestScreen({ navigation }) {
 		// Handle cancel request logic
 	};
 
-	const filteredRequests = requests.filter((request) => {
-		if (activeTab === "all") return true;
-		return request.status === activeTab;
-	});
+	const filteredRequests = requests?.content || []
 
 	return (
 		<View style={styles.container}>
@@ -124,7 +81,23 @@ export default function RequestScreen({ navigation }) {
 			>
 				{/* Request List */}
 				<View style={styles.requestsList}>
-					{filteredRequests.map((request) => (
+					{filteredRequests?.length === 0 && (
+						<View style={styles.emptyState}>
+							<Ionicons
+								name="document-outline"
+								size={64}
+								color="#ccc"
+							/>
+							<Text className="text-lg font-medium text-muted-foreground mt-4">
+								Không có yêu cầu nào
+							</Text>
+							<Text className="text-sm text-muted-foreground text-center mt-2">
+								Tạo yêu cầu mới để được hỗ trợ
+							</Text>
+						</View>
+					)}
+
+					{filteredRequests?.map((request) => (
 						<RequestCard
 							key={request.id}
 							request={request}
@@ -134,21 +107,7 @@ export default function RequestScreen({ navigation }) {
 					))}
 				</View>
 
-				{filteredRequests.length === 0 && (
-					<View style={styles.emptyState}>
-						<Ionicons
-							name="document-outline"
-							size={64}
-							color="#ccc"
-						/>
-						<Text className="text-lg font-medium text-muted-foreground mt-4">
-							Không có yêu cầu nào
-						</Text>
-						<Text className="text-sm text-muted-foreground text-center mt-2">
-							Tạo yêu cầu mới để được hỗ trợ
-						</Text>
-					</View>
-				)}
+				
 			</ScrollView>
 
 			{/* Floating Action Button */}

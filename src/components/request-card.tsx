@@ -7,10 +7,11 @@ interface RequestCardProps {
 		id: number;
 		code: string;
 		productCount: number;
-		status: "processing" | "quoted" | "confirmed" | "cancelled";
-		date: string;
+		status: "SENT" | "QUOTED" | "CHECKING" | "CANCELLED";
+		date: number;
 		createdAt: string;
-		type: "with_link" | "without_link";
+		requestType: "ONLINE" | "OFFLINE";
+		requestItems: []
 	};
 	onPress?: () => void;
 	onCancel?: () => void;
@@ -23,13 +24,13 @@ export default function RequestCard({
 }: RequestCardProps) {
 	const getStatusColor = (status: string) => {
 		switch (status) {
-			case "processing":
+			case "SENT":
 				return "#ff9800"; // Orange thay vì yellow để rõ hơn
-			case "quoted":
+			case "QUOTED":
 				return "#28a745";
-			case "confirmed":
+			case "CHECKING":
 				return "#1976D2"; // Blue for confirmed
-			case "cancelled":
+			case "CANCELLED":
 				return "#6c757d"; // Xám thay vì đỏ
 			default:
 				return "#6c757d";
@@ -38,13 +39,13 @@ export default function RequestCard({
 
 	const getStatusText = (status: string) => {
 		switch (status) {
-			case "processing":
+			case "SENT":
 				return "Đang xử lý";
-			case "quoted":
+			case "QUOTED":
 				return "Đã báo giá";
-			case "confirmed":
+			case "CHECKING":
 				return "Đã xác nhận";
-			case "cancelled":
+			case "CANCELLED":
 				return "Đã huỷ";
 			default:
 				return "Không xác định";
@@ -65,7 +66,7 @@ export default function RequestCard({
 				styles.requestCard,
 				{
 					borderLeftWidth: 4,
-					borderLeftColor: getRequestTypeBorderColor(request.type),
+					borderLeftColor: getRequestTypeBorderColor(request.requestType),
 				},
 			]}
 			onPress={onPress}
@@ -75,16 +76,16 @@ export default function RequestCard({
 				<View style={styles.leftSection}>
 					<View style={styles.requestTypeContainer}>
 						<Ionicons
-							name={getRequestTypeIcon(request.type)}
+							name={getRequestTypeIcon(request.requestType)}
 							size={18}
-							color={getRequestTypeBorderColor(request.type)}
+							color={getRequestTypeBorderColor(request.requestType)}
 						/>
 					</View>
 
 					<View style={styles.requestInfo}>
-						<Text style={styles.requestCode}>#{request.code}</Text>
+						<Text style={styles.requestCode}>#{request.code || "Yêu cầu mua hàng"}</Text>
 						<Text style={styles.createdDate}>
-							{request.createdAt}
+							{new Date(Number(request.createdAt)).toLocaleDateString("vi-VN")} - {new Date(Number(request.createdAt)).toLocaleTimeString(["vi-VN"], { hour: "2-digit", minute: "2-digit" })}
 						</Text>
 					</View>
 				</View>
@@ -119,7 +120,7 @@ export default function RequestCard({
 						Số lượng sản phẩm:
 					</Text>
 					<Text style={styles.productCountValue}>
-						{request.productCount}
+						{request.requestItems?.length}
 					</Text>
 				</View>
 			</View>
