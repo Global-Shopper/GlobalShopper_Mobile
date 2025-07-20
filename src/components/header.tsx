@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { useSelector } from "react-redux";
+import { Alert, Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { setAvatar } from "../features/user";
+import { useUploadAvatarMutation } from "../services/gshopApi";
 import { Text } from "./ui/text";
 
 interface HeaderProps {
@@ -54,11 +57,220 @@ export default function Header({
 }: HeaderProps) {
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
+	const dispatch = useDispatch();
 	const email = useSelector((state: any) => state?.rootReducer?.user?.email);
 	const name = useSelector((state: any) => state?.rootReducer?.user?.name);
 	const avatarUrl = useSelector(
 		(state: any) => state?.rootReducer?.user?.avatar
 	);
+
+	// Upload avatar mutation
+	const [uploadAvatar, { isLoading: isUploadingAvatar }] =
+		useUploadAvatarMutation();
+
+	// Request permission for camera/gallery access
+	const requestPermission = async () => {
+		const { status } =
+			await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (status !== "granted") {
+			Alert.alert(
+				"Permission Required",
+				"Sorry, we need camera roll permissions to upload your avatar.",
+				[{ text: "OK" }]
+			);
+			return false;
+		}
+		return true;
+	};
+
+	// Handle avatar upload
+	const handleAvatarUpload = async () => {
+		try {
+			const hasPermission = await requestPermission();
+			if (!hasPermission) return;
+
+			// Show options: Camera or Gallery
+			Alert.alert("Upload Avatar", "Choose an option", [
+				{
+					text: "Camera",
+					onPress: () => pickImage("camera"),
+				},
+				{
+					text: "Gallery",
+					onPress: () => pickImage("library"),
+				},
+				{
+					text: "Cancel",
+					style: "cancel",
+				},
+			]);
+		} catch (error) {
+			console.error("Avatar upload error:", error);
+			Alert.alert("Error", "Failed to upload avatar");
+		}
+	};
+
+	// Pick image from camera or library
+	const pickImage = async (source: "camera" | "library") => {
+		try {
+			let result;
+
+			if (source === "camera") {
+				const cameraPermission =
+					await ImagePicker.requestCameraPermissionsAsync();
+				if (cameraPermission.status !== "granted") {
+					Alert.alert(
+						"Permission Required",
+						"Camera permission is required"
+					);
+					return;
+				}
+				result = await ImagePicker.launchCameraAsync({
+					mediaTypes: ImagePicker.MediaTypeOptions.Images,
+					allowsEditing: true,
+					aspect: [1, 1],
+					quality: 0.8,
+				});
+			} else {
+				result = await ImagePicker.launchImageLibraryAsync({
+					mediaTypes: ImagePicker.MediaTypeOptions.Images,
+					allowsEditing: true,
+					aspect: [1, 1],
+					quality: 0.8,
+				});
+			}
+
+			if (!result.canceled && result.assets[0]) {
+				await uploadAvatarImage(result.assets[0]);
+			}
+		} catch (error) {
+			console.error("Pick image error:", error);
+			Alert.alert("Error", "Failed to pick image");
+		}
+	};
+
+	// Upload the selected image
+	const uploadAvatarImage = async (asset: any) => {
+		try {
+			// Create FormData for file upload
+			const formData = new FormData();
+
+			// Get file extension from URI or default to jpg
+			const uriParts = asset.uri.split(".");
+			const fileExtension = uriParts[uriParts.length - 1] || "jpg";
+			const fileName = `avatar_${Date.now()}.${fileExtension}`;
+
+			formData.append("file", {
+				uri: asset.uri,
+				type: asset.mimeType || `image/${fileExtension}`,
+				name: fileName,
+			} as any);
+
+			console.log("FormData created:", formData);
+			console.log(
+				"FormData instanceof FormData:",
+				formData instanceof FormData
+			);
+			console.log("Uploading avatar with data:", {
+				uri: asset.uri,
+				type: asset.mimeType || `image/${fileExtension}`,
+				name: fileName,
+			});
+
+			// Upload avatar using RTK Query
+			const response = await uploadAvatar(formData).unwrap();
+
+			console.log(
+				"Full upload response:",
+				JSON.stringify(response, null, 2)
+			);
+			console.log("Response keys:", Object.keys(response || {}));
+
+			// Try multiple possible response formats
+			let newAvatarUrl = null;
+
+			// Check various possible response structures
+			if (response?.url) {
+				newAvatarUrl = response.url;
+				console.log("Found URL in response.url:", newAvatarUrl);
+			} else if (response?.data?.url) {
+				newAvatarUrl = response.data.url;
+				console.log("Found URL in response.data.url:", newAvatarUrl);
+			} else if (response?.avatarUrl) {
+				newAvatarUrl = response.avatarUrl;
+				console.log("Found URL in response.avatarUrl:", newAvatarUrl);
+			} else if (response?.data?.avatarUrl) {
+				newAvatarUrl = response.data.avatarUrl;
+				console.log(
+					"Found URL in response.data.avatarUrl:",
+					newAvatarUrl
+				);
+			} else if (response?.data?.avatar) {
+				newAvatarUrl = response.data.avatar;
+				console.log("Found URL in response.data.avatar:", newAvatarUrl);
+			} else if (response?.avatar) {
+				newAvatarUrl = response.avatar;
+				console.log("Found URL in response.avatar:", newAvatarUrl);
+			} else if (response?.image) {
+				newAvatarUrl = response.image;
+				console.log("Found URL in response.image:", newAvatarUrl);
+			} else if (response?.imageUrl) {
+				newAvatarUrl = response.imageUrl;
+				console.log("Found URL in response.imageUrl:", newAvatarUrl);
+			} else if (response?.fileUrl) {
+				newAvatarUrl = response.fileUrl;
+				console.log("Found URL in response.fileUrl:", newAvatarUrl);
+			} else if (typeof response === "string") {
+				newAvatarUrl = response;
+				console.log("Response is string URL:", newAvatarUrl);
+			}
+
+			if (newAvatarUrl) {
+				dispatch(setAvatar(newAvatarUrl));
+				Alert.alert("Thành công", "Cập nhật ảnh đại diện thành công!");
+			} else {
+				console.log(
+					"No avatar URL found in response. Full response:",
+					response
+				);
+				Alert.alert(
+					"Thông báo",
+					"Upload thành công nhưng không nhận được URL ảnh. Vui lòng thử lại sau."
+				);
+			}
+		} catch (error: any) {
+			console.error("Upload avatar error:", error);
+			const errorMessage =
+				error?.data?.message ||
+				error?.message ||
+				"Có lỗi xảy ra khi tải lên ảnh";
+			Alert.alert("Lỗi", errorMessage);
+		}
+	};
+
+	// Handle avatar press - either custom onAvatarPress or upload functionality
+	const handleAvatarPress = () => {
+		if (onAvatarPress) {
+			// Show custom options with upload option
+			Alert.alert("Thay đổi ảnh đại diện", "Chọn nguồn ảnh:", [
+				{
+					text: "Hủy",
+					style: "cancel",
+				},
+				{
+					text: "Camera",
+					onPress: () => pickImage("camera"),
+				},
+				{
+					text: "Thư viện ảnh",
+					onPress: () => pickImage("library"),
+				},
+			]);
+		} else {
+			// Default behavior: allow avatar upload
+			handleAvatarUpload();
+		}
+	};
 
 	// Default notification handler - always navigate to NotificationScreen
 	const handleNotificationPress = () => {
@@ -110,14 +322,37 @@ export default function Header({
 					<View style={styles.headerLeft}>
 						<View style={styles.avatarContainer}>
 							<TouchableOpacity
-								onPress={onAvatarPress}
+								onPress={handleAvatarPress}
 								activeOpacity={0.8}
+								disabled={isUploadingAvatar}
 							>
 								<Image
-									source={{ uri: avatarUrl }}
-									style={styles.avatar}
-									defaultSource={require("../assets/images/logo/logo-gshop-removebg.png")}
+									source={
+										avatarUrl && avatarUrl.trim() !== ""
+											? { uri: avatarUrl }
+											: require("../assets/images/logo/logo-gshop-removebg.png")
+									}
+									style={[
+										styles.avatar,
+										isUploadingAvatar &&
+											styles.avatarLoading,
+									]}
+									onError={(error) => {
+										console.log(
+											"Avatar load error:",
+											error
+										);
+									}}
 								/>
+								{isUploadingAvatar && (
+									<View style={styles.uploadingOverlay}>
+										<Ionicons
+											name="camera"
+											size={20}
+											color="#FFFFFF"
+										/>
+									</View>
+								)}
 							</TouchableOpacity>
 							{isVerified && (
 								<View style={styles.verifiedBadge}>
@@ -233,6 +468,20 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		borderWidth: 2,
 		borderColor: "rgba(255, 255, 255, 0.3)",
+	},
+	avatarLoading: {
+		opacity: 0.6,
+	},
+	uploadingOverlay: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		borderRadius: 24,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	verifiedBadge: {
 		position: "absolute",

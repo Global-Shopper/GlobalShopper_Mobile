@@ -82,6 +82,7 @@ const gshopApi = createApi({
         data: formData,
         url: endpoints.UPLOAD_AVATAR,
         method: 'POST',
+        // Don't set Content-Type, let axios handle it for FormData
       }),
       invalidatesTags: ['CustomerProfile'],
     }),
