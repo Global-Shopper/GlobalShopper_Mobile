@@ -182,6 +182,7 @@ const gshopApi = createApi({
 				url: endpoints.WALLET,
 				method: "POST",
 			}),
+			invalidatesTags: ["Wallet"],
 		}),
 		checkPayment: builder.query({
 			query: (data) => ({
@@ -189,6 +190,7 @@ const gshopApi = createApi({
 				url: endpoints.CHECKPAYMENT,
 				method: "GET",
 			}),
+			invalidatesTags: ["Wallet"],
 		}),
 	}),
 });

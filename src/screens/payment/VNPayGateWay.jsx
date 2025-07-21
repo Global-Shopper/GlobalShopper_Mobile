@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 
-const VNPayGateWay = ({ navigation, route }) => {
+const VNPayGateWay = ({ route }) => {
   // Get the URL from navigation params (route.params.url)
   const url = route?.params?.url
   const [loading, setLoading] = useState(true)
-
+  console.log(route)
   return (
     <View style={{ flex: 1 }}>
       {loading && (

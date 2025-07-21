@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from 'expo-linking';
 import { useState } from "react";
 import {
 	Alert,
@@ -15,6 +16,7 @@ import { Text } from "../../components/ui/text";
 import { useDepositWalletMutation } from "../../services/gshopApi";
 
 export default function TopUpScreen({ navigation }) {
+	console.log(Linking.createURL('/'))
 	const [deposit, { isLoading: isDepositLoading }] = useDepositWalletMutation();
 	const [selectedAmount, setSelectedAmount] = useState(null);
 	const [customAmount, setCustomAmount] = useState("");
@@ -80,10 +82,10 @@ export default function TopUpScreen({ navigation }) {
 				{
 					text: "Xác nhận",
 					onPress: () => {
-						deposit(selectedAmount).unwrap()
+						deposit({balance: selectedAmount || customAmount, redirectUri: `${Linking.createURL('/')}wallet`}).unwrap()
 						.then((res) => {
 							console.log(res)
-							navigation.navigate("VNPayGateway", {url: res.url});
+							navigation.navigate("VNPayGateWay", {url: res.url});
 						})
 						.catch((error) => {
 							console.log(error);

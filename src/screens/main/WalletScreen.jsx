@@ -1,21 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useGetWalletQuery } from "../../services/gshopApi";
 
-import { useRoute } from '@react-navigation/native';
-
 export default function WalletScreen({ navigation }) {
-	const { data: wallet, isLoading: isWalletLoading } = useGetWalletQuery()
+	const { data: wallet, isLoading: isWalletLoading, refetch } = useGetWalletQuery()
 	const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-	const route = useRoute();
 
-	useEffect(() => {
-		console.log('VNPayGateWay URL:', route?.path);
-	}, [route?.path]);
+	useFocusEffect(
+		useCallback(() => {
+			refetch();
+		}, [refetch])
+	);
 
 	const formatCurrency = (amount) => {
 		return new Intl.NumberFormat("vi-VN", {

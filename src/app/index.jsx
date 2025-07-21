@@ -17,7 +17,7 @@ LogBox.ignoreLogs([
 setUpInterceptor(store);
 
 const linking = {
-  prefixes: [Linking.createURL('')],
+  prefixes: [Linking.createURL('/')],
   config: {
     screens: {
       Tabs: {
@@ -30,7 +30,6 @@ const linking = {
 };
 
 export default function App() {
-	console.log(Linking.createURL('/'))
 	return (
 		<Provider store={store}>
 			<PersistGate loading={null} persistor={persistor}>
