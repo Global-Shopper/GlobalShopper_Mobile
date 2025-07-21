@@ -8,6 +8,7 @@ import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import NotificationScreen from "../screens/notification/NotificationScreen";
 import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
+import VNPayGateWay from "../screens/payment/VNPayGateWay";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -150,6 +151,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="TopUp"
 				component={TopUpScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="VNPayGateway"
+				component={VNPayGateWay}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

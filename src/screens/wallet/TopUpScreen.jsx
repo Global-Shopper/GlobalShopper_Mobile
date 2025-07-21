@@ -12,8 +12,10 @@ import {
 } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { useDepositWalletMutation } from "../../services/gshopApi";
 
 export default function TopUpScreen({ navigation }) {
+	const [deposit, { isLoading: isDepositLoading }] = useDepositWalletMutation();
 	const [selectedAmount, setSelectedAmount] = useState(null);
 	const [customAmount, setCustomAmount] = useState("");
 	const [selectedMethod, setSelectedMethod] = useState(null);
@@ -78,10 +80,13 @@ export default function TopUpScreen({ navigation }) {
 				{
 					text: "Xác nhận",
 					onPress: () => {
-						// Handle top up logic here
-						console.log("Top up:", {
-							amount,
-							method: selectedMethod,
+						deposit(selectedAmount).unwrap()
+						.then((res) => {
+							console.log(res)
+							navigation.navigate("VNPayGateway", {url: res.url});
+						})
+						.catch((error) => {
+							console.log(error);
 						});
 						navigation.goBack();
 					},

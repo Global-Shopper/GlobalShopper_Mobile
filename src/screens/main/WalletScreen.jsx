@@ -4,9 +4,10 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { useGetWalletQuery } from "../../services/gshopApi";
 
 export default function WalletScreen({ navigation }) {
-	const [balance] = useState(2500000);
+	const { data: wallet, isLoading: isWalletLoading } = useGetWalletQuery()
 	const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
 	const formatCurrency = (amount) => {
@@ -85,7 +86,7 @@ export default function WalletScreen({ navigation }) {
 
 					<Text style={styles.balanceAmount}>
 						{isBalanceVisible
-							? formatCurrency(balance)
+							? formatCurrency(wallet?.balance)
 							: "●●●●●●●●"}
 					</Text>
 
