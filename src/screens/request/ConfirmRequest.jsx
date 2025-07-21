@@ -124,64 +124,71 @@ export default function ConfirmRequest({ navigation, route }) {
 			console.log("email:", storeData?.email);
 			console.log("shopLink:", storeData?.shopLink);
 
-		// Chuẩn bị contactInfo từ sellerInfo của product đầu tiên (vì tất cả products cùng 1 seller trong manual mode)
-		const contactInfo = [];
-		const firstProduct = products[0];
-		
-		console.log("=== CHECKING SELLER INFO ===");
-		console.log("First product:", firstProduct);
-		console.log("First product sellerInfo:", firstProduct?.sellerInfo);
+			// Chuẩn bị contactInfo từ sellerInfo của product đầu tiên (vì tất cả products cùng 1 seller trong manual mode)
+			const contactInfo = [];
+			const firstProduct = products[0];
 
-		if (firstProduct?.sellerInfo) {
-			const seller = firstProduct.sellerInfo;
-			
-			// Tên cửa hàng (bắt buộc)
-			if (seller.name?.trim()) {
-				contactInfo.push(`Tên cửa hàng: ${seller.name.trim()}`);
-			}
-			
-			// Các thông tin tùy chọn
-			if (seller.address?.trim()) {
-				contactInfo.push(`Địa chỉ: ${seller.address.trim()}`);
-			}
-			if (seller.phone?.trim()) {
-				contactInfo.push(`Số điện thoại: ${seller.phone.trim()}`);
-			}
-			if (seller.email?.trim()) {
-				contactInfo.push(`Email: ${seller.email.trim()}`);
-			}
-			if (seller.storeLink?.trim()) {
-				contactInfo.push(`Link shop: ${seller.storeLink.trim()}`);
-			}
-		}
+			console.log("=== CHECKING SELLER INFO ===");
+			console.log("First product:", firstProduct);
+			console.log("First product sellerInfo:", firstProduct?.sellerInfo);
 
-		// Fallback: Nếu không có sellerInfo, sử dụng storeData
-		if (contactInfo.length === 0) {
-			console.log("No sellerInfo found, using storeData as fallback");
-			
-			if (storeData?.storeName?.trim()) {
-				contactInfo.push(`Tên cửa hàng: ${storeData.storeName.trim()}`);
-			}
-			if (storeData?.storeAddress?.trim()) {
-				contactInfo.push(`Địa chỉ: ${storeData.storeAddress.trim()}`);
-			}
-			if (storeData?.phoneNumber?.trim()) {
-				contactInfo.push(`Số điện thoại: ${storeData.phoneNumber.trim()}`);
-			}
-			if (storeData?.email?.trim()) {
-				contactInfo.push(`Email: ${storeData.email.trim()}`);
-			}
-			if (storeData?.shopLink?.trim()) {
-				contactInfo.push(`Link shop: ${storeData.shopLink.trim()}`);
-			}
-		}
+			if (firstProduct?.sellerInfo) {
+				const seller = firstProduct.sellerInfo;
 
-		// Test với contactInfo cứng để đảm bảo backend nhận được (backup)
-		const hardcodedContactInfo = [
-			"Test Store Name",
-			"Test Store Address", 
-			"Test Phone: 0123456789",
-		];			console.log("=== CONTACT INFO PREPARED ===");
+				// Tên cửa hàng (bắt buộc)
+				if (seller.name?.trim()) {
+					contactInfo.push(`Tên cửa hàng: ${seller.name.trim()}`);
+				}
+
+				// Các thông tin tùy chọn
+				if (seller.address?.trim()) {
+					contactInfo.push(`Địa chỉ: ${seller.address.trim()}`);
+				}
+				if (seller.phone?.trim()) {
+					contactInfo.push(`Số điện thoại: ${seller.phone.trim()}`);
+				}
+				if (seller.email?.trim()) {
+					contactInfo.push(`Email: ${seller.email.trim()}`);
+				}
+				if (seller.storeLink?.trim()) {
+					contactInfo.push(`Link shop: ${seller.storeLink.trim()}`);
+				}
+			}
+
+			// Fallback: Nếu không có sellerInfo, sử dụng storeData
+			if (contactInfo.length === 0) {
+				console.log("No sellerInfo found, using storeData as fallback");
+
+				if (storeData?.storeName?.trim()) {
+					contactInfo.push(
+						`Tên cửa hàng: ${storeData.storeName.trim()}`
+					);
+				}
+				if (storeData?.storeAddress?.trim()) {
+					contactInfo.push(
+						`Địa chỉ: ${storeData.storeAddress.trim()}`
+					);
+				}
+				if (storeData?.phoneNumber?.trim()) {
+					contactInfo.push(
+						`Số điện thoại: ${storeData.phoneNumber.trim()}`
+					);
+				}
+				if (storeData?.email?.trim()) {
+					contactInfo.push(`Email: ${storeData.email.trim()}`);
+				}
+				if (storeData?.shopLink?.trim()) {
+					contactInfo.push(`Link shop: ${storeData.shopLink.trim()}`);
+				}
+			}
+
+			// Test với contactInfo cứng để đảm bảo backend nhận được (backup)
+			const hardcodedContactInfo = [
+				"Test Store Name",
+				"Test Store Address",
+				"Test Phone: 0123456789",
+			];
+			console.log("=== CONTACT INFO PREPARED ===");
 			console.log("contactInfo array:", contactInfo);
 			console.log("contactInfo length:", contactInfo.length);
 

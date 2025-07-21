@@ -7,11 +7,22 @@ interface RequestCardProps {
 		id: number;
 		code: string;
 		productCount: number;
-		status: "SENT" | "QUOTED" | "CHECKING" | "CANCELLED";
+		status:
+			| "sent"
+			| "checking"
+			| "quoted"
+			| "confirmed"
+			| "cancelled"
+			| "insufficient";
 		date: number;
 		createdAt: string;
 		requestType: "ONLINE" | "OFFLINE";
-		requestItems: []
+		requestItems: {
+			productName?: string;
+			name?: string;
+			[key: string]: any;
+		}[];
+		contactInfo?: string[];
 	};
 	onPress?: () => void;
 	onCancel?: () => void;
@@ -22,31 +33,118 @@ export default function RequestCard({
 	onPress,
 	onCancel,
 }: RequestCardProps) {
+	const getRequestTitle = (request: any) => {
+		console.log("=== REQUEST TITLE DEBUG ===");
+		console.log("Request Type:", request.requestType);
+		console.log("Request contactInfo:", request.contactInfo);
+		console.log("Request requestItems:", request.requestItems);
+
+		// Nếu là request ONLINE (có link), hiển thị ID
+		if (request.requestType === "ONLINE") {
+			console.log("Using ONLINE logic - showing ID");
+			return `#${request.id || request.code || "N/A"}`;
+		}
+
+		// Nếu là request OFFLINE hoặc không phải ONLINE (không có link), hiển thị tên cửa hàng từ contact info trước
+		if (request.requestType !== "ONLINE") {
+			console.log(
+				"Using OFFLINE/NON-ONLINE logic - checking contactInfo first"
+			);
+
+			// Ưu tiên 1: Lấy tên cửa hàng từ contactInfo trước
+			if (request.contactInfo && request.contactInfo.length > 0) {
+				console.log("Found contactInfo:", request.contactInfo);
+
+				// Tìm tên cửa hàng trong contactInfo với nhiều pattern khác nhau
+				const storeNameInfo = request.contactInfo.find(
+					(info: string) =>
+						info.includes("Tên cửa hàng:") ||
+						info.includes("Store name:") ||
+						info.includes("Shop name:") ||
+						info.includes("Cửa hàng:") ||
+						info.includes("Tên shop:")
+				);
+
+				if (storeNameInfo) {
+					const storeName = storeNameInfo
+						.replace("Tên cửa hàng:", "")
+						.replace("Store name:", "")
+						.replace("Shop name:", "")
+						.replace("Cửa hàng:", "")
+						.replace("Tên shop:", "")
+						.trim();
+					console.log("Found store name:", storeName);
+					return storeName;
+				}
+
+				// Nếu không có tên cửa hàng, lấy info đầu tiên (có thể chính là tên cửa hàng)
+				console.log(
+					"No store name pattern found, using first contactInfo:",
+					request.contactInfo[0]
+				);
+				return request.contactInfo[0];
+			}
+
+			console.log("No contactInfo found, checking requestItems");
+
+			// Ưu tiên 2: Nếu không có contactInfo, mới lấy tên sản phẩm từ requestItems
+			if (request.requestItems && request.requestItems.length > 0) {
+				const firstItem = request.requestItems[0];
+				console.log("Found requestItems, first item:", firstItem);
+
+				if (firstItem.productName) {
+					console.log("Using productName:", firstItem.productName);
+					return firstItem.productName;
+				}
+				if (firstItem.name) {
+					console.log("Using name:", firstItem.name);
+					return firstItem.name;
+				}
+			}
+
+			// Fallback: hiển thị "Yêu cầu không có link"
+			console.log("Using fallback: Yêu cầu không có link");
+			return "Yêu cầu không có link";
+		}
+
+		// Default fallback
+		console.log("Using default fallback - showing ID");
+		return `#${request.id || request.code || "N/A"}`;
+	};
+
 	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "SENT":
-				return "#ff9800"; // Orange thay vì yellow để rõ hơn
-			case "QUOTED":
-				return "#28a745";
-			case "CHECKING":
-				return "#1976D2"; // Blue for confirmed
-			case "CANCELLED":
-				return "#6c757d"; // Xám thay vì đỏ
+		switch (status?.toLowerCase()) {
+			case "sent":
+				return "#28a745"; // Green for sent
+			case "checking":
+				return "#17a2b8"; // Teal for checking
+			case "quoted":
+				return "#ffc107"; // Yellow for quoted
+			case "confirmed":
+				return "#007bff"; // Blue for confirmed
+			case "cancelled":
+				return "#dc3545"; // Red for cancelled
+			case "insufficient":
+				return "#fd7e14"; // Orange for insufficient
 			default:
 				return "#6c757d";
 		}
 	};
 
 	const getStatusText = (status: string) => {
-		switch (status) {
-			case "SENT":
+		switch (status?.toLowerCase()) {
+			case "sent":
+				return "Đã gửi";
+			case "checking":
 				return "Đang xử lý";
-			case "QUOTED":
+			case "quoted":
 				return "Đã báo giá";
-			case "CHECKING":
+			case "confirmed":
 				return "Đã xác nhận";
-			case "CANCELLED":
-				return "Đã huỷ";
+			case "cancelled":
+				return "Đã hủy";
+			case "insufficient":
+				return "Cập nhật";
 			default:
 				return "Không xác định";
 		}
@@ -66,7 +164,9 @@ export default function RequestCard({
 				styles.requestCard,
 				{
 					borderLeftWidth: 4,
-					borderLeftColor: getRequestTypeBorderColor(request.requestType),
+					borderLeftColor: getRequestTypeBorderColor(
+						request.requestType
+					),
 				},
 			]}
 			onPress={onPress}
@@ -78,14 +178,27 @@ export default function RequestCard({
 						<Ionicons
 							name={getRequestTypeIcon(request.requestType)}
 							size={18}
-							color={getRequestTypeBorderColor(request.requestType)}
+							color={getRequestTypeBorderColor(
+								request.requestType
+							)}
 						/>
 					</View>
 
 					<View style={styles.requestInfo}>
-						<Text style={styles.requestCode}>#{request.code || "Yêu cầu mua hàng"}</Text>
+						<Text style={styles.requestCode}>
+							{getRequestTitle(request)}
+						</Text>
 						<Text style={styles.createdDate}>
-							{new Date(Number(request.createdAt)).toLocaleDateString("vi-VN")} - {new Date(Number(request.createdAt)).toLocaleTimeString(["vi-VN"], { hour: "2-digit", minute: "2-digit" })}
+							{new Date(
+								Number(request.createdAt)
+							).toLocaleDateString("vi-VN")}{" "}
+							-{" "}
+							{new Date(
+								Number(request.createdAt)
+							).toLocaleTimeString(["vi-VN"], {
+								hour: "2-digit",
+								minute: "2-digit",
+							})}
 						</Text>
 					</View>
 				</View>

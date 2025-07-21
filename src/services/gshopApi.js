@@ -146,12 +146,51 @@ const gshopApi = createApi({
 			}),
 		}),
 		getPurchaseRequest: builder.query({
-			query: (data) => ({
-				params: data,
-				url: endpoints.PURCHASE_REQUEST,
-				method: "GET",
-			}),
+			query: (params = {}) => {
+				return {
+					params: params,
+					url: endpoints.PURCHASE_REQUEST,
+					method: "GET",
+				};
+			},
 			providesTags: ["PurchaseRequest"],
+			transformResponse: (response, meta, arg) => {
+				// Handle different response structures
+				if (response) {
+					// If response has data property
+					if (response.data) {
+						return response.data;
+					}
+					// If response is direct content
+					return response;
+				}
+
+				return { content: [], totalElements: 0, totalPages: 0 };
+			},
+		}),
+		getPurchaseRequestById: builder.query({
+			query: (id) => {
+				return {
+					url: `${endpoints.PURCHASE_REQUEST}/${id}`,
+					method: "GET",
+				};
+			},
+			providesTags: (result, error, id) => [
+				{ type: "PurchaseRequest", id },
+			],
+			transformResponse: (response, meta, arg) => {
+				// Handle different response structures
+				if (response) {
+					// If response has data property
+					if (response.data) {
+						return response.data;
+					}
+					// If response is direct content
+					return response;
+				}
+
+				return null;
+			},
 		}),
 		createWithLinkPurchaseRequest: builder.mutation({
 			query: (data) => ({
@@ -213,6 +252,7 @@ export const {
 	useDefaultShippingAddressMutation,
 	useUploadAvatarMutation,
 	useGetPurchaseRequestQuery,
+	useGetPurchaseRequestByIdQuery,
 	useCreateWithLinkPurchaseRequestMutation,
 	useCreateWithoutLinkPurchaseRequestMutation,
 	useGetWalletQuery,
