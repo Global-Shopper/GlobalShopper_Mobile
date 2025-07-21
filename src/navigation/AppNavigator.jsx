@@ -8,7 +8,6 @@ import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import NotificationScreen from "../screens/notification/NotificationScreen";
 import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
-import VNPayGateWay from "../screens/payment/VNPayGateWay";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
 import ChangePassword from "../screens/profile/ChangePassword";
@@ -34,6 +33,7 @@ import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
+
 //Lưu ý các navigator phải được import vào đây và được sử dụng trong hàm AppNavigator
 const AppNavigator = () => {
 	return (
@@ -151,11 +151,6 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="TopUp"
 				component={TopUpScreen}
-				options={{ headerShown: false }}
-			/>
-			<Stack.Screen
-				name="VNPayGateway"
-				component={VNPayGateWay}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
