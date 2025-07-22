@@ -5,7 +5,7 @@ import { axiosBaseQuery } from "./baseRequest";
 //Lưu ý khi cho dev, cần phải sửa lại baseURL trong file baseRequest.js
 const gshopApi = createApi({
 	reducerPath: "gshopApi",
-	tagTypes: ["CustomerProfile", "ShippingAddress", "PurchaseRequest"],
+	tagTypes: ["CustomerProfile", "ShippingAddress", "PurchaseRequest", "Wallet"],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
 		login: builder.mutation({
@@ -221,6 +221,7 @@ const gshopApi = createApi({
 				url: endpoints.WALLET,
 				method: "POST",
 			}),
+			invalidatesTags: ["Wallet"],
 		}),
 		checkPayment: builder.query({
 			query: (data) => ({
@@ -228,6 +229,7 @@ const gshopApi = createApi({
 				url: endpoints.CHECKPAYMENT,
 				method: "GET",
 			}),
+			invalidatesTags: ["Wallet"],
 		}),
 	}),
 });
