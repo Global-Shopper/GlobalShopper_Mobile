@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
 import {
 	ScrollView,
 	StatusBar,
@@ -9,11 +10,36 @@ import {
 	View,
 } from "react-native";
 import { useGetShippingAddressQuery } from "../../services/gshopApi";
+import { resolveName } from "../../services/vnGeoAPI";
 
 export default function MyAddress({ navigation, route }) {
 	const { mode = "default", onSelectAddress } = route.params || {};
 
 	const { data: addresses = [] } = useGetShippingAddressQuery();
+	const [wardNames, setWardNames] = useState({});
+
+	useEffect(() => {
+		const fetchWardNames = async () => {
+			const namesMap = {};
+			for (const address of addresses) {
+				if (!wardNames[address.wardCode]) {
+					try {
+						await resolveName(address.wardCode).then(res => {
+							namesMap[address.wardCode] = res.full_name;
+						});
+						
+					} catch (error) {
+						namesMap[address.wardCode] = "";
+					}
+				}
+			}
+			setWardNames((prev) => ({ ...prev, ...namesMap }));
+		};
+	
+		if (addresses.length > 0) {
+			fetchWardNames()
+		}
+	}, [addresses]);
 
 	const handleAddNewAddress = () => {
 		navigation.navigate("AddAddress");
@@ -89,7 +115,13 @@ export default function MyAddress({ navigation, route }) {
 			</View>
 
 			{/* Address */}
-			<Text style={styles.addressText}>{item.location}</Text>
+			<Text style={styles.addressText}
+				numberOfLines={1}
+				ellipsizeMode="tail"
+			>
+				{item.addressLine}, {wardNames[item.wardCode] || ""}
+				{wardNames[item.wardCode] && `, ${wardNames[item.wardCode]}`}
+			</Text>
 			<View style={styles.actionContainer}>
 				<Text style={styles.addressTag}>{item.tag}</Text>
 			</View>

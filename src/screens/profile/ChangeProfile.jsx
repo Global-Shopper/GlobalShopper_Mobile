@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+	ActivityIndicator,
 	Alert,
 	ScrollView,
 	StatusBar,
@@ -11,17 +12,94 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSelector } from "react-redux";
+import {
+	useGetCustomerInfoQuery,
+	useUpdateCustomerProfileMutation,
+} from "../../services/gshopApi";
 
 export default function ChangeProfile({ navigation }) {
+	// Get user data from Redux
+	const reduxUser = useSelector((state) => state?.rootReducer?.user);
+
+	// API hooks
+	const {
+		data: profileData,
+		isLoading: isLoadingProfile,
+		error: profileError,
+	} = useGetCustomerInfoQuery();
+	const [updateProfile, { isLoading: isUpdating }] =
+		useUpdateCustomerProfileMutation();
+
 	const [formData, setFormData] = useState({
-		fullName: "Hoài Phương",
-		gender: "Nữ",
-		birthDate: "13/01/2003",
-		phone: "+84 123 456 789",
-		email: "hoaiphuong1328@gmail.com",
+		fullName: "",
+		gender: "",
+		birthDate: "",
+		phone: "",
 	});
 
 	const [isEdited, setIsEdited] = useState(false);
+	const [initialData, setInitialData] = useState({});
+
+	// Load user data when component mounts or data changes
+	useEffect(() => {
+		if (profileData) {
+			// Convert timestamp to DD/MM/YYYY format for display
+			let displayBirthDate = "";
+			if (profileData.dateOfBirth) {
+				try {
+					const dateObj = new Date(profileData.dateOfBirth);
+					if (!isNaN(dateObj.getTime())) {
+						const day = dateObj
+							.getDate()
+							.toString()
+							.padStart(2, "0");
+						const month = (dateObj.getMonth() + 1)
+							.toString()
+							.padStart(2, "0");
+						const year = dateObj.getFullYear();
+						displayBirthDate = `${day}/${month}/${year}`;
+					}
+				} catch (error) {
+					console.log("Error converting date:", error);
+				}
+			}
+
+			// Convert gender from backend to display format
+			let displayGender = "";
+			if (profileData.gender === "MALE") displayGender = "Nam";
+			else if (profileData.gender === "FEMALE") displayGender = "Nữ";
+			else if (profileData.gender === "OTHER") displayGender = "Khác";
+			else displayGender = profileData.gender || "";
+
+			const userData = {
+				fullName:
+					profileData.name ||
+					profileData.fullName ||
+					reduxUser?.name ||
+					"",
+				gender: displayGender,
+				birthDate: displayBirthDate,
+				phone:
+					profileData.phone ||
+					profileData.phoneNumber ||
+					reduxUser?.phone ||
+					"",
+			};
+			setFormData(userData);
+			setInitialData(userData);
+		} else if (reduxUser) {
+			// Fallback to Redux data if API data not available
+			const userData = {
+				fullName: reduxUser.name || "",
+				gender: "",
+				birthDate: "",
+				phone: reduxUser.phone || "",
+			};
+			setFormData(userData);
+			setInitialData(userData);
+		}
+	}, [profileData, reduxUser]);
 
 	const genderOptions = ["Nam", "Nữ", "Khác"];
 
@@ -30,21 +108,19 @@ export default function ChangeProfile({ navigation }) {
 			...prev,
 			[field]: value,
 		}));
-		setIsEdited(true);
+
+		// Check if any field has been changed from initial data
+		const newFormData = { ...formData, [field]: value };
+		const hasChanges = Object.keys(newFormData).some(
+			(key) => newFormData[key] !== initialData[key]
+		);
+		setIsEdited(hasChanges);
 	};
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		// Validate required fields
 		if (!formData.fullName.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
-			return;
-		}
-		if (!formData.birthDate.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập ngày sinh");
-			return;
-		}
-		if (!formData.email.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập email");
 			return;
 		}
 		if (!formData.phone.trim()) {
@@ -52,18 +128,104 @@ export default function ChangeProfile({ navigation }) {
 			return;
 		}
 
-		// Here you would typically call an API to save the data
-		console.log("Saving profile data:", formData);
+		// Phone validation (basic)
+		const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
+		if (!phoneRegex.test(formData.phone)) {
+			Alert.alert("Lỗi", "Số điện thoại không hợp lệ");
+			return;
+		}
 
-		Alert.alert("Thành công", "Thông tin tài khoản đã được cập nhật", [
-			{
-				text: "OK",
-				onPress: () => {
-					setIsEdited(false);
-					navigation.goBack();
+		try {
+			// Convert date format to Unix timestamp (long)
+			let convertedBirthDate = null;
+			if (formData.birthDate && formData.birthDate.trim()) {
+				if (formData.birthDate.includes("/")) {
+					// Convert DD/MM/YYYY to Date object
+					const [day, month, year] = formData.birthDate.split("/");
+					if (day && month && year && year.length === 4) {
+						const dateObj = new Date(
+							parseInt(year),
+							parseInt(month) - 1,
+							parseInt(day)
+						);
+						if (!isNaN(dateObj.getTime())) {
+							convertedBirthDate = dateObj.getTime(); // Unix timestamp in milliseconds
+						}
+					}
+				} else if (formData.birthDate.includes("-")) {
+					// Handle YYYY-MM-DD format
+					const dateObj = new Date(formData.birthDate);
+					if (!isNaN(dateObj.getTime())) {
+						convertedBirthDate = dateObj.getTime(); // Unix timestamp in milliseconds
+					}
+				}
+			}
+
+			// Convert gender to English if needed
+			let convertedGender = formData.gender;
+			if (formData.gender === "Nam") convertedGender = "MALE";
+			else if (formData.gender === "Nữ") convertedGender = "FEMALE";
+			else if (formData.gender === "Khác") convertedGender = "OTHER";
+
+			// Prepare data for API (adjust field names based on backend expectations)
+			const updateData = {
+				name: formData.fullName.trim(),
+				phone: formData.phone.replace(/[\s\-()]/g, ""), // Remove spaces, dashes, parentheses
+			};
+
+			// Only add optional fields if they have values
+			if (convertedGender && convertedGender !== "") {
+				updateData.gender = convertedGender;
+			}
+			if (convertedBirthDate !== null) {
+				updateData.dateOfBirth = convertedBirthDate;
+			}
+
+			console.log("=== API UPDATE DEBUG ===");
+			console.log("Form data:", formData);
+			console.log(
+				"Converted birth date (timestamp):",
+				convertedBirthDate
+			);
+			console.log(
+				"Converted birth date (readable):",
+				convertedBirthDate
+					? new Date(convertedBirthDate).toISOString()
+					: "null"
+			);
+			console.log("Converted gender:", convertedGender);
+			console.log("Update data sending to API:", updateData);
+			console.log("API endpoint: PUT /customer");
+
+			const response = await updateProfile(updateData).unwrap();
+
+			console.log("Profile update response:", response);
+
+			Alert.alert("Thành công", "Thông tin tài khoản đã được cập nhật", [
+				{
+					text: "OK",
+					onPress: () => {
+						setIsEdited(false);
+						setInitialData(formData); // Update initial data to current data
+						navigation.goBack();
+					},
 				},
-			},
-		]);
+			]);
+		} catch (error) {
+			console.error("Profile update error:", error);
+			console.error("Error status:", error?.status);
+			console.error("Error data:", error?.data);
+			console.error("Error message:", error?.message);
+
+			const errorMessage =
+				error?.data?.message ||
+				error?.message ||
+				"Có lỗi xảy ra khi cập nhật thông tin";
+			Alert.alert(
+				"Lỗi",
+				`${errorMessage}\n\nStatus: ${error?.status || "Unknown"}`
+			);
+		}
 	};
 
 	const showGenderPicker = () => {
@@ -83,6 +245,90 @@ export default function ChangeProfile({ navigation }) {
 				])
 		);
 	};
+
+	// Show loading screen while fetching profile data
+	if (isLoadingProfile) {
+		return (
+			<View style={styles.container}>
+				<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+				<LinearGradient
+					colors={["#42A5F5", "#1976D2"]}
+					style={styles.header}
+				>
+					<View style={styles.headerContent}>
+						<TouchableOpacity
+							onPress={() => navigation.goBack()}
+							style={styles.backButton}
+						>
+							<Ionicons
+								name="arrow-back"
+								size={24}
+								color="#FFFFFF"
+							/>
+						</TouchableOpacity>
+						<Text style={styles.headerTitle}>
+							Chỉnh sửa thông tin
+						</Text>
+						<View style={styles.saveButton}>
+							<Text style={styles.saveButtonText}>Lưu</Text>
+						</View>
+					</View>
+				</LinearGradient>
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#1976D2" />
+					<Text style={styles.loadingText}>
+						Đang tải thông tin...
+					</Text>
+				</View>
+			</View>
+		);
+	}
+
+	// Show error state if profile loading failed
+	if (profileError) {
+		return (
+			<View style={styles.container}>
+				<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+				<LinearGradient
+					colors={["#42A5F5", "#1976D2"]}
+					style={styles.header}
+				>
+					<View style={styles.headerContent}>
+						<TouchableOpacity
+							onPress={() => navigation.goBack()}
+							style={styles.backButton}
+						>
+							<Ionicons
+								name="arrow-back"
+								size={24}
+								color="#FFFFFF"
+							/>
+						</TouchableOpacity>
+						<Text style={styles.headerTitle}>
+							Chỉnh sửa thông tin
+						</Text>
+						<View style={styles.saveButton}>
+							<Text style={styles.saveButtonText}>Lưu</Text>
+						</View>
+					</View>
+				</LinearGradient>
+				<View style={styles.errorContainer}>
+					<Ionicons name="alert-circle" size={48} color="#dc3545" />
+					<Text style={styles.errorText}>
+						Không thể tải thông tin tài khoản
+					</Text>
+					<TouchableOpacity
+						style={styles.retryButton}
+						onPress={() => {
+							// RTK Query will automatically refetch
+						}}
+					>
+						<Text style={styles.retryButtonText}>Thử lại</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
 
 	return (
 		<View style={styles.container}>
@@ -107,16 +353,20 @@ export default function ChangeProfile({ navigation }) {
 							styles.saveButton,
 							isEdited && styles.saveButtonActive,
 						]}
-						disabled={!isEdited}
+						disabled={!isEdited || isUpdating}
 					>
-						<Text
-							style={[
-								styles.saveButtonText,
-								isEdited && styles.saveButtonTextActive,
-							]}
-						>
-							Lưu
-						</Text>
+						{isUpdating ? (
+							<ActivityIndicator size="small" color="#1976D2" />
+						) : (
+							<Text
+								style={[
+									styles.saveButtonText,
+									isEdited && styles.saveButtonTextActive,
+								]}
+							>
+								Lưu
+							</Text>
+						)}
 					</TouchableOpacity>
 				</View>
 			</LinearGradient>
@@ -233,32 +483,6 @@ export default function ChangeProfile({ navigation }) {
 							/>
 						</View>
 					</View>
-
-					{/* Email */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Email <Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="mail-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.email}
-								onChangeText={(value) =>
-									handleInputChange("email", value)
-								}
-								placeholder="Nhập địa chỉ email"
-								placeholderTextColor="#B0BEC5"
-								keyboardType="email-address"
-								autoCapitalize="none"
-							/>
-						</View>
-					</View>
 				</View>
 			</ScrollView>
 		</View>
@@ -363,5 +587,43 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: "#263238",
 		paddingVertical: 4,
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#F5F5F5",
+		paddingHorizontal: 20,
+	},
+	loadingText: {
+		marginTop: 16,
+		fontSize: 16,
+		color: "#666",
+		textAlign: "center",
+	},
+	errorContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#F5F5F5",
+		paddingHorizontal: 20,
+	},
+	errorText: {
+		marginTop: 16,
+		fontSize: 16,
+		color: "#dc3545",
+		textAlign: "center",
+		marginBottom: 20,
+	},
+	retryButton: {
+		backgroundColor: "#1976D2",
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		borderRadius: 8,
+	},
+	retryButtonText: {
+		color: "#FFFFFF",
+		fontWeight: "600",
+		fontSize: 16,
 	},
 });

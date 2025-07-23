@@ -8,6 +8,7 @@
     "scheme": "globalshoppermobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true
     },
@@ -16,6 +17,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.globalshopper.globalshoppermobile",
       "edgeToEdgeEnabled": true
     },
     "web": {

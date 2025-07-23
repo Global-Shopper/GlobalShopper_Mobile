@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
+	ActivityIndicator,
 	Alert,
 	KeyboardAvoidingView,
 	Platform,
@@ -16,12 +17,16 @@ import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
+import { useCreateWithoutLinkPurchaseRequestMutation } from "../../services/gshopApi";
 
 export default function ConfirmRequest({ navigation, route }) {
 	const { products = [], storeData = null } = route.params || {};
 
+	// API hooks
+	const [createWithoutLinkRequest, { isLoading: isCreatingRequest }] =
+		useCreateWithoutLinkPurchaseRequestMutation();
+
 	const [note, setNote] = useState("");
-	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 
 	const [deliveryAddress, setDeliveryAddress] = useState(null);
@@ -45,7 +50,7 @@ export default function ConfirmRequest({ navigation, route }) {
 	};
 
 	const handleSubmitRequest = async () => {
-		if (isSubmitting) return;
+		if (isCreatingRequest) return;
 
 		// Kiểm tra địa chỉ giao hàng
 		if (!deliveryAddress) {
@@ -66,27 +71,231 @@ export default function ConfirmRequest({ navigation, route }) {
 			return;
 		}
 
-		// Gửi yêu cầu trực tiếp
-		setIsSubmitting(true);
-		try {
-			// TODO: Implement API call to submit request
-			await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+		// Kiểm tra thông tin cửa hàng
+		if (!storeData || !storeData.storeName?.trim()) {
+			Alert.alert(
+				"Thiếu thông tin",
+				"Thông tin cửa hàng không đầy đủ. Vui lòng quay lại kiểm tra tên cửa hàng.",
+				[{ text: "OK" }]
+			);
+			return;
+		}
 
-			// Navigate to success screen instead of showing alert
+		// Cho phép tạo request với chỉ có tên cửa hàng (bỏ validation quá khắt khe)
+		console.log("=== STORE DATA VALIDATION ===");
+		console.log("storeData.storeName:", storeData.storeName);
+		console.log("storeData.storeAddress:", storeData.storeAddress);
+		console.log("storeData.phoneNumber:", storeData.phoneNumber);
+		console.log("storeData.email:", storeData.email);
+		console.log("storeData.shopLink:", storeData.shopLink);
+
+		// Kiểm tra sản phẩm
+		if (!products || products.length === 0) {
+			Alert.alert(
+				"Thiếu thông tin",
+				"Chưa có sản phẩm nào. Vui lòng thêm sản phẩm trước khi gửi yêu cầu.",
+				[{ text: "OK" }]
+			);
+			return;
+		}
+
+		// Kiểm tra sản phẩm có tên không
+		const productsWithoutName = products.filter((p) => !p.name?.trim());
+		if (productsWithoutName.length > 0) {
+			Alert.alert(
+				"Thiếu thông tin",
+				"Một số sản phẩm chưa có tên. Vui lòng kiểm tra lại.",
+				[{ text: "OK" }]
+			);
+			return;
+		}
+
+		try {
+			console.log("=== DEBUG STORE DATA ===");
+			console.log("storeData:", storeData);
+			console.log("storeData type:", typeof storeData);
+			console.log(
+				"storeData keys:",
+				storeData ? Object.keys(storeData) : "null"
+			);
+			console.log("storeName:", storeData?.storeName);
+			console.log("storeAddress:", storeData?.storeAddress);
+			console.log("phoneNumber:", storeData?.phoneNumber);
+			console.log("email:", storeData?.email);
+			console.log("shopLink:", storeData?.shopLink);
+
+			// Chuẩn bị contactInfo từ sellerInfo của product đầu tiên (vì tất cả products cùng 1 seller trong manual mode)
+			const contactInfo = [];
+			const firstProduct = products[0];
+
+			console.log("=== CHECKING SELLER INFO ===");
+			console.log("First product:", firstProduct);
+			console.log("First product sellerInfo:", firstProduct?.sellerInfo);
+
+			if (firstProduct?.sellerInfo) {
+				const seller = firstProduct.sellerInfo;
+
+				// Tên cửa hàng (bắt buộc)
+				if (seller.name?.trim()) {
+					contactInfo.push(`Tên cửa hàng: ${seller.name.trim()}`);
+				}
+
+				// Các thông tin tùy chọn
+				if (seller.address?.trim()) {
+					contactInfo.push(`Địa chỉ: ${seller.address.trim()}`);
+				}
+				if (seller.phone?.trim()) {
+					contactInfo.push(`Số điện thoại: ${seller.phone.trim()}`);
+				}
+				if (seller.email?.trim()) {
+					contactInfo.push(`Email: ${seller.email.trim()}`);
+				}
+				if (seller.storeLink?.trim()) {
+					contactInfo.push(`Link shop: ${seller.storeLink.trim()}`);
+				}
+			}
+
+			// Fallback: Nếu không có sellerInfo, sử dụng storeData
+			if (contactInfo.length === 0) {
+				console.log("No sellerInfo found, using storeData as fallback");
+
+				if (storeData?.storeName?.trim()) {
+					contactInfo.push(
+						`Tên cửa hàng: ${storeData.storeName.trim()}`
+					);
+				}
+				if (storeData?.storeAddress?.trim()) {
+					contactInfo.push(
+						`Địa chỉ: ${storeData.storeAddress.trim()}`
+					);
+				}
+				if (storeData?.phoneNumber?.trim()) {
+					contactInfo.push(
+						`Số điện thoại: ${storeData.phoneNumber.trim()}`
+					);
+				}
+				if (storeData?.email?.trim()) {
+					contactInfo.push(`Email: ${storeData.email.trim()}`);
+				}
+				if (storeData?.shopLink?.trim()) {
+					contactInfo.push(`Link shop: ${storeData.shopLink.trim()}`);
+				}
+			}
+
+			// Test với contactInfo cứng để đảm bảo backend nhận được (backup)
+			const hardcodedContactInfo = [
+				"Test Store Name",
+				"Test Store Address",
+				"Test Phone: 0123456789",
+			];
+			console.log("=== CONTACT INFO PREPARED ===");
+			console.log("contactInfo array:", contactInfo);
+			console.log("contactInfo length:", contactInfo.length);
+
+			// Chuẩn bị requestItems từ products
+			const requestItems = products.map((product) => {
+				// Tạo variants array chứa các thông tin không có field riêng
+				const variants = [];
+				if (product.color?.trim()) {
+					variants.push(`Màu sắc: ${product.color.trim()}`);
+				}
+				if (product.size?.trim()) {
+					variants.push(`Kích cỡ: ${product.size.trim()}`);
+				}
+				if (product.material?.trim()) {
+					variants.push(`Chất liệu: ${product.material.trim()}`);
+				}
+				if (product.brand?.trim()) {
+					variants.push(`Thương hiệu: ${product.brand.trim()}`);
+				}
+				if (product.category?.trim()) {
+					variants.push(`Danh mục: ${product.category.trim()}`);
+				}
+				if (product.origin?.trim()) {
+					variants.push(`Xuất sứ: ${product.origin.trim()}`);
+				}
+
+				return {
+					productName: product.name?.trim() || "Sản phẩm",
+					productURL: product.productLink?.trim() || "",
+					variants: variants,
+					images: product.images || [],
+					quantity: parseInt(product.quantity) || 1,
+					description: product.description?.trim() || "",
+				};
+			});
+
+			// Tạo request data theo đúng cấu trúc API
+			const requestData = {
+				shippingAddressId: deliveryAddress.id,
+				contactInfo:
+					contactInfo.length > 0 ? contactInfo : hardcodedContactInfo, // Use hardcoded if contactInfo is empty
+				requestItems: requestItems,
+			};
+
+			// Thêm note nếu có
+			if (note.trim()) {
+				requestData.note = note.trim();
+			}
+
+			console.log("=== CREATE WITHOUT LINK REQUEST ===");
+			console.log("Original contactInfo:", contactInfo);
+			console.log("Hardcoded contactInfo:", hardcodedContactInfo);
+			console.log("Final contactInfo used:", requestData.contactInfo);
+			console.log("Request items:", requestItems);
+			console.log("Full request data:");
+			console.log(JSON.stringify(requestData, null, 2));
+
+			// Gọi API
+			const response = await createWithoutLinkRequest(
+				requestData
+			).unwrap();
+
+			console.log("Create request response:", response);
+
+			// Navigate to success screen with response data
 			navigation.navigate("SuccessConfirmationScreen", {
-				requestId: "REQ" + Date.now(),
+				requestId:
+					response?.requestId || response?.id || "REQ" + Date.now(),
 				products,
 				storeData,
 				deliveryAddress,
 				note,
+				requestData: response,
 			});
-		} catch (_error) {
+		} catch (error) {
+			console.error("=== CREATE REQUEST API ERROR ===");
+			console.error("Full error object:", error);
+			console.error("Error status:", error?.status);
+			console.error("Error data:", error?.data);
+			console.error("Error message:", error?.message);
+			console.error("Error response:", error?.response);
+			console.error("Error config:", error?.config);
+
+			// More detailed error message handling
+			let errorMessage =
+				"Có lỗi xảy ra khi tạo yêu cầu. Vui lòng thử lại.";
+
+			if (error?.data) {
+				if (typeof error.data === "string") {
+					errorMessage = error.data;
+				} else if (error.data.message) {
+					errorMessage = error.data.message;
+				} else if (error.data.error) {
+					errorMessage = error.data.error;
+				} else {
+					errorMessage = JSON.stringify(error.data);
+				}
+			} else if (error?.message) {
+				errorMessage = error.message;
+			}
+
+			console.error("Final error message:", errorMessage);
+
 			Alert.alert(
 				"Lỗi",
-				"Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại."
+				`${errorMessage}\n\nStatus: ${error?.status || "Unknown"}`
 			);
-		} finally {
-			setIsSubmitting(false);
 		}
 	};
 
@@ -327,14 +536,14 @@ export default function ConfirmRequest({ navigation, route }) {
 				<TouchableOpacity
 					style={[
 						styles.submitButton,
-						isSubmitting && styles.submitButtonDisabled,
+						isCreatingRequest && styles.submitButtonDisabled,
 					]}
 					onPress={handleSubmitRequest}
-					disabled={isSubmitting}
+					disabled={isCreatingRequest}
 				>
 					<LinearGradient
 						colors={
-							isSubmitting
+							isCreatingRequest
 								? ["#ccc", "#999"]
 								: ["#42A5F5", "#1976D2"]
 						}
@@ -342,10 +551,13 @@ export default function ConfirmRequest({ navigation, route }) {
 						end={{ x: 1, y: 1 }}
 						style={styles.submitButtonGradient}
 					>
-						{isSubmitting ? (
-							<Text style={styles.submitButtonText}>
-								Đang gửi...
-							</Text>
+						{isCreatingRequest ? (
+							<>
+								<ActivityIndicator size="small" color="#fff" />
+								<Text style={styles.submitButtonText}>
+									Đang gửi...
+								</Text>
+							</>
 						) : (
 							<Text style={styles.submitButtonText}>
 								Gửi yêu cầu

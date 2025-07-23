@@ -8,15 +8,19 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function AccountScreen({ navigation }) {
+	// Get user data from Redux
+	const reduxUser = useSelector((state) => state?.rootReducer?.user);
+
 	const [user] = useState({
-		name: "Hoài Phương",
-		email: "hoaiphuong1328@gmail.com",
+		name: reduxUser?.name,
+		email: reduxUser?.email,
 		phone: "+84 123 456 789",
-		avatar: "https://github.com/shadcn.png",
+		avatar: reduxUser?.avatar,
 		memberSince: "2023",
 		isVerified: true,
 	});
@@ -25,23 +29,6 @@ export default function AccountScreen({ navigation }) {
 
 	const handleChatPress = () => {
 		console.log("Chat pressed");
-	};
-
-	const handleAvatarPress = () => {
-		Alert.alert("Thay đổi ảnh đại diện", "Chọn nguồn ảnh:", [
-			{
-				text: "Hủy",
-				style: "cancel",
-			},
-			{
-				text: "Thư viện ảnh",
-				onPress: () => console.log("Open photo library"),
-			},
-			{
-				text: "Chụp ảnh",
-				onPress: () => console.log("Open camera"),
-			},
-		]);
 	};
 
 	// Stats để hiển thị tổng quan nhanh
@@ -171,7 +158,6 @@ export default function AccountScreen({ navigation }) {
 				notificationCount={3}
 				chatCount={chatNotificationCount}
 				onChatPress={handleChatPress}
-				onAvatarPress={handleAvatarPress}
 				navigation={navigation}
 			/>
 

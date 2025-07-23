@@ -1,31 +1,59 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
+import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
+import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 
 export default function RequestHistory({ navigation, route }) {
 	const { request } = route.params || {};
+	const requestId = request?.id;
 
-	// Generate history based on request status
-	const getHistoryByStatus = (status) => {
+	// Fetch request details from API
+	const {
+		data: requestDetail,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useGetPurchaseRequestByIdQuery(requestId, {
+		skip: !requestId, // Skip if no request ID
+		refetchOnMountOrArgChange: true,
+	});
+
+	console.log("=== REQUEST HISTORY DEBUG ===");
+	console.log("Request ID:", requestId);
+	console.log("Request detail from API:", requestDetail);
+	console.log("Original request:", request);
+	console.log("Is loading:", isLoading);
+	console.log("Is error:", isError);
+	console.log("Error:", error);
+
+	// Use API data if available, fallback to route params
+	const currentRequest = requestDetail || request;
+
+	// Generate history based on request status from API or fallback data
+	const getHistoryByStatus = (status, requestData) => {
+		// Base history from API if available
 		const baseHistory = [
 			{
 				id: "1",
-				date: "15/01/2024 14:30",
-				action: "Tạo yêu cầu",
-				description: "Yêu cầu được tạo với 3 sản phẩm",
+				date: requestData?.createdAt || "15/01/2024 14:30",
+				action: "Đã gửi",
+				description: "Yêu cầu được tạo và gửi thành công",
 				status: "completed",
-				isCurrent: false,
+				isCurrent: status === "sent",
 			},
 		];
 
-		if (status === "processing") {
+		if (status === "checking") {
 			return [
 				{
 					id: "2",
-					date: "15/01/2024 15:45",
+					date: requestData?.updatedAt || "15/01/2024 15:45",
 					action: "Đang xử lý",
 					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "processing",
+					status: "checking",
 					isCurrent: true,
 				},
 				...baseHistory,
@@ -36,7 +64,7 @@ export default function RequestHistory({ navigation, route }) {
 			return [
 				{
 					id: "4",
-					date: "17/01/2024 14:20",
+					date: requestData?.updatedAt || "17/01/2024 14:20",
 					action: "Đã xác nhận",
 					description: "Khách hàng đã xác nhận báo giá và thanh toán",
 					status: "confirmed",
@@ -67,7 +95,7 @@ export default function RequestHistory({ navigation, route }) {
 			return [
 				{
 					id: "3",
-					date: "16/01/2024 10:30",
+					date: requestData?.updatedAt || "16/01/2024 10:30",
 					action: "Đã báo giá",
 					description:
 						"Nhân viên đã gửi báo giá chi tiết cho yêu cầu",
@@ -90,7 +118,7 @@ export default function RequestHistory({ navigation, route }) {
 			return [
 				{
 					id: "3",
-					date: "16/01/2024 09:15",
+					date: requestData?.updatedAt || "16/01/2024 09:15",
 					action: "Đã hủy",
 					description:
 						"Yêu cầu đã được hủy theo yêu cầu của khách hàng",
@@ -109,24 +137,62 @@ export default function RequestHistory({ navigation, route }) {
 			];
 		}
 
-		// Default case
+		if (status === "insufficient") {
+			return [
+				{
+					id: "3",
+					date: requestData?.updatedAt || "16/01/2024 09:30",
+					action: "Cập nhật",
+					description:
+						"Yêu cầu cần cập nhật thêm thông tin hoặc thanh toán",
+					status: "insufficient",
+					isCurrent: true,
+				},
+				{
+					id: "2",
+					date: "15/01/2024 15:45",
+					action: "Đang xử lý",
+					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
+					status: "completed",
+					isCurrent: false,
+				},
+				...baseHistory,
+			];
+		}
+
+		// Default case for sent status
+		if (status === "sent") {
+			return baseHistory.map((item) => ({
+				...item,
+				isCurrent: true,
+				status: "sent",
+			}));
+		}
+
 		return baseHistory;
 	};
 
-	const requestHistory = getHistoryByStatus(request?.status);
+	const requestHistory = getHistoryByStatus(
+		currentRequest?.status,
+		currentRequest
+	);
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "processing":
-				return "#1976D2";
+			case "sent":
+				return "#28a745"; // Green for sent
+			case "checking":
+				return "#17a2b8"; // Teal for checking
 			case "quoted":
-				return "#1976D2";
+				return "#ffc107"; // Yellow for quoted
 			case "confirmed":
-				return "#1976D2";
+				return "#007bff"; // Blue for confirmed
 			case "cancelled":
-				return "#1976D2";
+				return "#dc3545"; // Red for cancelled
+			case "insufficient":
+				return "#fd7e14"; // Orange for insufficient
 			case "completed":
-				return "#6c757d";
+				return "#6c757d"; // Gray for completed steps
 			default:
 				return "#6c757d";
 		}
@@ -147,85 +213,143 @@ export default function RequestHistory({ navigation, route }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Request Info */}
-				<View style={styles.requestInfoSection}>
-					<View style={styles.requestInfoCard}>
-						<Text style={styles.requestCode}>#{request?.code}</Text>
-						<Text style={styles.requestDate}>
-							Tạo ngày: {request?.createdAt}
+				{/* Loading State */}
+				{isLoading && (
+					<View style={styles.loadingState}>
+						<Ionicons
+							name="reload-outline"
+							size={64}
+							color="#ccc"
+						/>
+						<Text style={styles.loadingText}>
+							Đang tải lịch sử yêu cầu...
 						</Text>
 					</View>
-				</View>
+				)}
 
-				{/* History Timeline */}
-				<View style={styles.historySection}>
-					<View style={styles.historyContainer}>
-						{requestHistory.map((item, index) => (
-							<View
-								key={item.id}
-								style={[
-									styles.historyItem,
-									item.isCurrent && styles.currentHistoryItem,
-								]}
-							>
-								<View style={styles.historyLeft}>
+				{/* Error State */}
+				{isError && (
+					<View style={styles.errorState}>
+						<Ionicons
+							name="warning-outline"
+							size={64}
+							color="#dc3545"
+						/>
+						<Text style={styles.errorTitle}>Có lỗi xảy ra</Text>
+						<Text style={styles.errorMessage}>
+							{error?.data?.message ||
+								error?.message ||
+								"Không thể tải lịch sử yêu cầu"}
+						</Text>
+						<TouchableOpacity
+							style={styles.retryButton}
+							onPress={() => refetch()}
+						>
+							<Text style={styles.retryButtonText}>Thử lại</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+
+				{/* Content */}
+				{!isLoading && !isError && (
+					<>
+						{/* Request Info */}
+						<View style={styles.requestInfoSection}>
+							<View style={styles.requestInfoCard}>
+								{/* Title is now handled by RequestCard, so remove this line */}
+								<Text style={styles.requestDate}>
+									Tạo ngày:{" "}
+									{currentRequest?.createdAt ||
+										"Không có thông tin"}
+								</Text>
+
+								{/* Hiển thị số lượng sản phẩm */}
+								<RequestCard request={currentRequest} />
+
+								{currentRequest?.note && (
+									<Text style={styles.requestNote}>
+										Ghi chú: {currentRequest.note}
+									</Text>
+								)}
+							</View>
+						</View>
+
+						{/* History Timeline */}
+						<View style={styles.historySection}>
+							<View style={styles.historyContainer}>
+								{requestHistory.map((item, index) => (
 									<View
+										key={item.id}
 										style={[
-											styles.historyDot,
-											{
-												backgroundColor: getStatusColor(
-													item.status
-												),
-											},
+											styles.historyItem,
 											item.isCurrent &&
-												styles.currentHistoryDot,
-										]}
-									/>
-									{index < requestHistory.length - 1 && (
-										<View style={styles.historyLine} />
-									)}
-								</View>
-								<View
-									style={[
-										styles.historyContent,
-										item.isCurrent &&
-											styles.currentHistoryContent,
-									]}
-								>
-									<View style={styles.historyHeader}>
-										<Text
-											style={[
-												styles.historyAction,
-												item.isCurrent &&
-													styles.currentHistoryAction,
-											]}
-										>
-											{item.action}
-										</Text>
-										<Text
-											style={[
-												styles.historyDate,
-												item.isCurrent &&
-													styles.currentHistoryDate,
-											]}
-										>
-											{item.date}
-										</Text>
-									</View>
-									<Text
-										style={[
-											styles.historyDescription,
-											item.isCurrent &&
-												styles.currentHistoryDescription,
+												styles.currentHistoryItem,
 										]}
 									>
-										{item.description}
-									</Text>
-								</View>
+										<View style={styles.historyLeft}>
+											<View
+												style={[
+													styles.historyDot,
+													{
+														backgroundColor:
+															getStatusColor(
+																item.status
+															),
+													},
+													item.isCurrent &&
+														styles.currentHistoryDot,
+												]}
+											/>
+											{index <
+												requestHistory.length - 1 && (
+												<View
+													style={styles.historyLine}
+												/>
+											)}
+										</View>
+										<View
+											style={[
+												styles.historyContent,
+												item.isCurrent &&
+													styles.currentHistoryContent,
+											]}
+										>
+											<View style={styles.historyHeader}>
+												<Text
+													style={[
+														styles.historyAction,
+														item.isCurrent &&
+															styles.currentHistoryAction,
+													]}
+												>
+													{item.action}
+												</Text>
+												<Text
+													style={[
+														styles.historyDate,
+														item.isCurrent &&
+															styles.currentHistoryDate,
+													]}
+												>
+													{item.date}
+												</Text>
+											</View>
+											<Text
+												style={[
+													styles.historyDescription,
+													item.isCurrent &&
+														styles.currentHistoryDescription,
+												]}
+											>
+												{item.description}
+											</Text>
+										</View>
+									</View>
+								))}
 							</View>
-						))}
-					</View>
-				</View>
+						</View>
+					</>
+				)}
 			</ScrollView>
 		</View>
 	);
@@ -272,6 +396,59 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#6c757d",
 		fontWeight: "500",
+	},
+	requestQuantity: {
+		fontSize: 14,
+		color: "#28a745",
+		fontWeight: "600",
+		marginTop: 4,
+	},
+	requestNote: {
+		fontSize: 14,
+		color: "#495057",
+		fontWeight: "500",
+		marginTop: 8,
+		fontStyle: "italic",
+	},
+	loadingState: {
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 60,
+	},
+	loadingText: {
+		fontSize: 16,
+		color: "#6c757d",
+		marginTop: 16,
+	},
+	errorState: {
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 60,
+	},
+	errorTitle: {
+		fontSize: 18,
+		fontWeight: "600",
+		color: "#dc3545",
+		marginTop: 16,
+	},
+	errorMessage: {
+		fontSize: 14,
+		color: "#6c757d",
+		textAlign: "center",
+		marginTop: 8,
+		marginHorizontal: 20,
+	},
+	retryButton: {
+		backgroundColor: "#007bff",
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		borderRadius: 8,
+		marginTop: 16,
+	},
+	retryButtonText: {
+		color: "#ffffff",
+		fontSize: 16,
+		fontWeight: "600",
 	},
 	historySection: {
 		flex: 1,

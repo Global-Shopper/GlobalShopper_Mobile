@@ -33,6 +33,8 @@ interface ProductData {
 	material: string;
 	size: string;
 	color: string;
+	quantity: number | string; // Allow string for temporary editing
+	origin: string; // Added origin field
 	platform: string;
 	productLink: string;
 	sellerInfo?: {
@@ -79,6 +81,8 @@ function getInitialFormData(
 		material: initialData?.material || "",
 		size: initialData?.size || "",
 		color: initialData?.color || "",
+		quantity: initialData?.quantity || "", // Default empty, let user input
+		origin: initialData?.origin || "", // Added origin field
 		platform: initialData?.platform || "",
 		productLink: initialData?.productLink || "",
 	};
@@ -119,7 +123,7 @@ export default function ProductForm({
 		setFormData(newFormData);
 	}, [initialData, storeData, mode]);
 
-	const handleInputChange = (field: string, value: string) => {
+	const handleInputChange = (field: string, value: string | number) => {
 		// Skip convertedPrice as it's read-only and auto-calculated
 		if (field === "convertedPrice") {
 			return;
@@ -151,7 +155,7 @@ export default function ProductForm({
 		}
 
 		// Auto convert price when price field changes
-		if (field === "price") {
+		if (field === "price" && typeof value === "string") {
 			if (value.trim() !== "") {
 				convertPrice(value, newFormData);
 			} else {
@@ -284,7 +288,22 @@ export default function ProductForm({
 
 	const handleSubmit = () => {
 		if (!validateForm()) return;
-		onSubmit(formData);
+
+		// Ensure quantity is a valid number when submitting (default to 1 if empty)
+		let finalQuantity = 1; // Default
+		if (formData.quantity !== "" && formData.quantity !== undefined) {
+			finalQuantity =
+				typeof formData.quantity === "string"
+					? parseInt(formData.quantity) || 1
+					: formData.quantity;
+		}
+
+		const submissionData = {
+			...formData,
+			quantity: finalQuantity,
+		};
+
+		onSubmit(submissionData);
 	};
 
 	return (
@@ -337,6 +356,58 @@ export default function ProductForm({
 								handleInputChange("name", value)
 							}
 							placeholder="Nhập tên sản phẩm"
+							placeholderTextColor="#B0BEC5"
+						/>
+					</View>
+				</View>
+
+				{/* Product URL - Show for manual mode (editable) */}
+				{mode === "manual" && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Link sản phẩm</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="link-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={[
+									styles.textInput,
+									styles.multilineInput,
+								]}
+								value={formData.productLink}
+								onChangeText={(value) =>
+									handleInputChange("productLink", value)
+								}
+								placeholder="Nhập link sản phẩm (tùy chọn)"
+								placeholderTextColor="#B0BEC5"
+								multiline
+								numberOfLines={2}
+								textAlignVertical="top"
+							/>
+						</View>
+					</View>
+				)}
+
+				{/* Origin */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Xuất sứ</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="location-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.textInput}
+							value={formData.origin}
+							onChangeText={(value) =>
+								handleInputChange("origin", value)
+							}
+							placeholder="Nhập xuất sứ (VD: Việt Nam, Trung Quốc...)"
 							placeholderTextColor="#B0BEC5"
 						/>
 					</View>
@@ -531,27 +602,29 @@ export default function ProductForm({
 					</>
 				)}
 
-				{/* Category */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Phân loại / Danh mục</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="list-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.category}
-							onChangeText={(value) =>
-								handleInputChange("category", value)
-							}
-							placeholder="Nhập danh mục sản phẩm"
-							placeholderTextColor="#B0BEC5"
-						/>
+				{/* Category - Hidden */}
+				{false && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Phân loại / Danh mục</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="list-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.category}
+								onChangeText={(value) =>
+									handleInputChange("category", value)
+								}
+								placeholder="Nhập danh mục sản phẩm"
+								placeholderTextColor="#B0BEC5"
+							/>
+						</View>
 					</View>
-				</View>
+				)}
 
 				{/* Brand */}
 				<View style={styles.inputGroup}>
@@ -637,6 +710,60 @@ export default function ProductForm({
 							}
 							placeholder="Nhập màu sắc"
 							placeholderTextColor="#B0BEC5"
+						/>
+					</View>
+				</View>
+
+				{/* Quantity */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Số lượng</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="basket-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.textInput}
+							value={formData.quantity?.toString() || ""}
+							onChangeText={(value) => {
+								// Allow empty string temporarily for editing
+								if (value === "") {
+									handleInputChange("quantity", "");
+									return;
+								}
+
+								// Only allow numbers
+								const cleanValue = value.replace(/[^0-9]/g, "");
+								if (cleanValue === "") {
+									handleInputChange("quantity", "");
+									return;
+								}
+
+								const numValue = parseInt(cleanValue);
+								if (!isNaN(numValue) && numValue > 0) {
+									handleInputChange("quantity", numValue);
+								}
+							}}
+							onBlur={() => {
+								// When user finishes editing, validate only if they entered something
+								if (
+									formData.quantity !== "" &&
+									formData.quantity !== undefined
+								) {
+									const currentQuantity =
+										typeof formData.quantity === "string"
+											? parseInt(formData.quantity) || 0
+											: formData.quantity;
+									if (currentQuantity < 1) {
+										handleInputChange("quantity", 1);
+									}
+								}
+							}}
+							placeholder="Nhập số lượng"
+							placeholderTextColor="#B0BEC5"
+							keyboardType="numeric"
 						/>
 					</View>
 				</View>

@@ -4,68 +4,56 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
+import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
 
 export default function RequestScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
-
-	const requests = [
-		{
-			id: 1,
-			code: "REQ001",
-			productCount: 3,
-			status: "processing",
-			date: "2024-01-15",
-			createdAt: "15/01/2024 14:30",
-			type: "with_link",
-		},
-		{
-			id: 2,
-			code: "REQ002",
-			productCount: 1,
-			status: "processing",
-			date: "2024-01-14",
-			createdAt: "14/01/2024 09:15",
-			type: "without_link",
-		},
-		{
-			id: 3,
-			code: "REQ003",
-			productCount: 2,
-			status: "confirmed",
-			date: "2024-01-13",
-			createdAt: "13/01/2024 16:45",
-			type: "with_link",
-		},
-		{
-			id: 4,
-			code: "REQ004",
-			productCount: 2,
-			status: "quoted",
-			date: "2024-01-13",
-			createdAt: "13/01/2024 16:45",
-			type: "with_link",
-		},
-		{
-			id: 5,
-			code: "REQ005",
-			productCount: 5,
-			status: "cancelled",
-			date: "2024-01-12",
-			createdAt: "12/01/2024 11:20",
-			type: "without_link",
-		},
-	];
+	const [currentPage, setCurrentPage] = useState(0);
+	const [pageSize] = useState(10); // Remove setPageSize since it's not used
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
-		{ id: "processing", label: "Đang xử lý", status: "processing" },
+		{ id: "sent", label: "Đã gửi", status: "sent" },
+		{ id: "checking", label: "Đang xử lý", status: "checking" },
 		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
 		{ id: "confirmed", label: "Đã xác nhận", status: "confirmed" },
-		{ id: "cancelled", label: "Đã huỷ", status: "cancelled" },
+		{ id: "cancelled", label: "Đã hủy", status: "cancelled" },
+		{ id: "insufficient", label: "Cập nhật", status: "insufficient" },
 	];
 
+	// Prepare API params based on active tab
+	const getAPIParams = () => {
+		const baseParams = {
+			page: currentPage,
+			size: pageSize,
+		};
+
+		// Add status filter if not "all"
+		if (activeTab !== "all") {
+			const selectedTab = tabs.find((tab) => tab.id === activeTab);
+			if (selectedTab?.status) {
+				baseParams.status = selectedTab.status.toUpperCase(); // API có thể yêu cầu uppercase
+			}
+		}
+
+		return baseParams;
+	};
+
+	const {
+		data: requests,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useGetPurchaseRequestQuery(getAPIParams(), {
+		// Refetch when activeTab changes
+		refetchOnMountOrArgChange: true,
+		// Skip if user not authenticated
+		skip: false,
+	});
+
 	const handleRequestPress = (request) => {
-		console.log("Request pressed:", request.id);
+		console.log("Request pressed:", request);
 		// Navigate to request detail screen
 		navigation.navigate("RequestDetails", { request });
 	};
@@ -73,12 +61,60 @@ export default function RequestScreen({ navigation }) {
 	const handleRequestCancel = (request) => {
 		console.log("Cancel request:", request.id);
 		// Handle cancel request logic
+		// TODO: Implement cancel request API
 	};
 
-	const filteredRequests = requests.filter((request) => {
-		if (activeTab === "all") return true;
-		return request.status === activeTab;
-	});
+	const handleTabChange = (tabId) => {
+		setActiveTab(tabId);
+		setCurrentPage(0); // Reset to first page when changing tabs
+	};
+
+	const handleTestAPI = () => {
+		refetch();
+	};
+
+	// Filter requests based on active tab (fallback client-side filtering)
+	const getFilteredRequests = () => {
+		// Try different possible response structures
+		let allRequests = [];
+
+		if (requests) {
+			// Check common API response patterns
+			if (requests.content) {
+				allRequests = requests.content;
+			} else if (requests.data) {
+				allRequests = Array.isArray(requests.data)
+					? requests.data
+					: requests.data.content || [];
+			} else if (Array.isArray(requests)) {
+				allRequests = requests;
+			} else {
+				//console.log("Unknown response structure:", requests);
+				allRequests = [];
+			}
+		}
+
+		if (activeTab === "all") {
+			return allRequests;
+		}
+
+		const selectedTab = tabs.find((tab) => tab.id === activeTab);
+		if (selectedTab?.status) {
+			return allRequests.filter((request) => {
+				const requestStatus = request.status?.toLowerCase();
+				const targetStatus = selectedTab.status.toLowerCase();
+				console.log(`Filtering: ${requestStatus} === ${targetStatus}`);
+				return requestStatus === targetStatus;
+			});
+		}
+
+		return allRequests;
+	};
+
+	const filteredRequests = getFilteredRequests();
+
+	console.log("Filtered requests final:", filteredRequests);
+	console.log("Filtered requests count:", filteredRequests?.length);
 
 	return (
 		<View style={styles.container}>
@@ -101,7 +137,7 @@ export default function RequestScreen({ navigation }) {
 								styles.tab,
 								activeTab === tab.id && styles.activeTab,
 							]}
-							onPress={() => setActiveTab(tab.id)}
+							onPress={() => handleTabChange(tab.id)}
 						>
 							<Text
 								style={[
@@ -122,37 +158,90 @@ export default function RequestScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Request List */}
-				<View style={styles.requestsList}>
-					{filteredRequests.map((request) => (
-						<RequestCard
-							key={request.id}
-							request={request}
-							onPress={() => handleRequestPress(request)}
-							onCancel={() => handleRequestCancel(request)}
-						/>
-					))}
-				</View>
-
-				{filteredRequests.length === 0 && (
-					<View style={styles.emptyState}>
+				{/* Loading State */}
+				{isLoading && (
+					<View style={styles.loadingState}>
 						<Ionicons
-							name="document-outline"
+							name="reload-outline"
 							size={64}
 							color="#ccc"
 						/>
 						<Text className="text-lg font-medium text-muted-foreground mt-4">
-							Không có yêu cầu nào
+							Đang tải dữ liệu...
+						</Text>
+					</View>
+				)}
+
+				{/* Error State */}
+				{isError && (
+					<View style={styles.errorState}>
+						<Ionicons
+							name="warning-outline"
+							size={64}
+							color="#dc3545"
+						/>
+						<Text className="text-lg font-medium text-red-600 mt-4">
+							Có lỗi xảy ra
 						</Text>
 						<Text className="text-sm text-muted-foreground text-center mt-2">
-							Tạo yêu cầu mới để được hỗ trợ
+							{error?.data?.message ||
+								error?.message ||
+								"Không thể tải dữ liệu"}
 						</Text>
+						<TouchableOpacity
+							style={styles.retryButton}
+							onPress={() => refetch()}
+						>
+							<Text style={styles.retryButtonText}>Thử lại</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[
+								styles.retryButton,
+								{ backgroundColor: "#28a745", marginTop: 8 },
+							]}
+							onPress={handleTestAPI}
+						>
+							<Text style={styles.retryButtonText}>Test API</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+
+				{/* Request List */}
+				{!isLoading && !isError && (
+					<View style={styles.requestsList}>
+						{filteredRequests?.length === 0 && (
+							<View style={styles.emptyState}>
+								<Ionicons
+									name="document-outline"
+									size={64}
+									color="#ccc"
+								/>
+								<Text className="text-lg font-medium text-muted-foreground mt-4">
+									Không có yêu cầu nào
+								</Text>
+								<Text className="text-sm text-muted-foreground text-center mt-2">
+									Tạo yêu cầu mới để được hỗ trợ
+								</Text>
+							</View>
+						)}
+
+						{filteredRequests?.map((request) => (
+							<RequestCard
+								key={request.id}
+								request={request}
+								onPress={() => handleRequestPress(request)}
+								onCancel={() => handleRequestCancel(request)}
+							/>
+						))}
 					</View>
 				)}
 			</ScrollView>
 
 			{/* Floating Action Button */}
-			<TouchableOpacity style={styles.fab}>
+			<TouchableOpacity
+				style={styles.fab}
+				onPress={() => navigation.navigate("WithLink")}
+			>
 				<Ionicons name="add" size={24} color="#ffffff" />
 			</TouchableOpacity>
 		</View>
@@ -208,6 +297,28 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		paddingVertical: 60,
+	},
+	loadingState: {
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 60,
+	},
+	errorState: {
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 60,
+	},
+	retryButton: {
+		backgroundColor: "#007bff",
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		borderRadius: 8,
+		marginTop: 16,
+	},
+	retryButtonText: {
+		color: "#ffffff",
+		fontSize: 16,
+		fontWeight: "600",
 	},
 	fab: {
 		position: "absolute",

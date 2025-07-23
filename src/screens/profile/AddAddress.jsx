@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Alert,
 	ScrollView,
@@ -12,7 +12,9 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import BottomPicker from "../../components/BottomPicker";
 import { useCreateShippingAddressMutation } from "../../services/gshopApi";
+import { getDistricts, getProvinces, getWards } from "../../services/vnGeoAPI";
 
 export default function AddAddress({ navigation }) {
 	const [formData, setFormData] = useState({
@@ -21,10 +23,51 @@ export default function AddAddress({ navigation }) {
 		houseNumber: "",
 		ward: "",
 		district: "",
-		city: "",
+		province: "",
 		isDefault: false,
 		tag: "Nhà riêng",
 	});
+
+	const [picker, setPicker] = useState(null); 
+
+	const [provinces, setProvinces] = useState([]);
+	const [districts, setDistricts] = useState([]);
+	const [wards, setWards] = useState([]);
+
+	const [provinceId, setProvinceId] = useState('');
+	const [districtId, setDistrictId] = useState('');
+	const [wardId, setWardId] = useState('');
+
+	const openProvincePicker = () => setPicker('province');
+	const openDistrictPicker  = () => districts.length && setPicker('district');
+	const openWardPicker      = () => wards.length && setPicker('ward');
+	const closePicker         = () => setPicker(null);
+
+	useEffect(() => {
+		getProvinces().then(setProvinces).catch(console.error);
+	}, []);
+
+	useEffect(() => {
+		if (provinceId) {
+			getDistricts(provinceId).then(setDistricts).catch(console.error);
+			handleInputChange('district', '');
+			handleInputChange('ward', '');
+			setWards([]);
+		} else {
+			setDistricts([]);
+			setWards([]);
+		}
+	}, [provinceId]);
+
+	useEffect(() => {
+		if (districtId) {
+			getWards(districtId).then(setWards).catch(console.error);
+			handleInputChange('ward', '');
+			setWardId('');
+		} else {
+			setWards([]);
+		}
+	}, [districtId]);
 
 	const [isEdited, setIsEdited] = useState(false);
 
@@ -67,16 +110,23 @@ export default function AddAddress({ navigation }) {
 			Alert.alert("Lỗi", "Vui lòng nhập quận/huyện");
 			return;
 		}
-		if (!formData.city.trim()) {
+		if (!formData.province.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập tỉnh/thành phố");
 			return;
 		}
 
 		// call an API to save the address
-		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
+		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.province}`;
 		const data = {
-			...formData,
 			location,
+			provinceCode: provinceId,
+			districtCode: districtId,
+			wardCode: wardId,
+			addressLine: formData.houseNumber,
+			name: formData.name,
+			phoneNumber: formData.phoneNumber,
+			tag: formData.tag,
+			isDefault: formData.isDefault,
 		}
 		console.log("Saving address data:", data);
 		createShippingAddress(data).unwrap().then(res => {
@@ -112,6 +162,21 @@ export default function AddAddress({ navigation }) {
 				])
 		);
 	};
+
+	const chooseProvince = (item) => {
+		setProvinceId(item.id);
+		handleInputChange('province', item.full_name);
+	  };
+	  
+	  const chooseDistrict = (item) => {
+		setDistrictId(item.id);
+		handleInputChange('district', item.full_name);
+	  };
+	  
+	  const chooseWard = (item) => {
+		setWardId(item.id);
+		handleInputChange('ward', item.full_name);
+	  };
 
 	return (
 		<View style={styles.container}>
@@ -245,10 +310,52 @@ export default function AddAddress({ navigation }) {
 						</View>
 					</View>
 
-					{/* Phường/Xã */}
+
+					{/* Tỉnh / Thành phố */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Tỉnh/Thành phố <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity style={styles.inputContainer} onPress={openProvincePicker}>
+						<Text style={styles.textInput}>
+							{formData.province || 'Chọn tỉnh / thành phố'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Quận / Huyện */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Quận/Huyện <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity
+						style={styles.inputContainer}
+						onPress={openDistrictPicker}
+						disabled={!provinceId}
+					>
+						<Text style={styles.textInput}>
+						{formData.district || 'Chọn quận / huyện'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Phường / Xã */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Phường/Xã <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity
+						style={styles.inputContainer}
+						onPress={openWardPicker}
+						disabled={!districtId}
+					>
+						<Text style={styles.textInput}>
+						{formData.ward || 'Chọn phường / xã'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Loại địa chỉ */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>
-							Phường/Xã <Text style={styles.required}>*</Text>
+							Loại địa chỉ <Text style={styles.required}>*</Text>
 						</Text>
 						<View style={styles.inputContainer}>
 							<Ionicons
@@ -259,96 +366,16 @@ export default function AddAddress({ navigation }) {
 							/>
 							<TextInput
 								style={styles.textInput}
-								value={formData.ward}
+								value={formData.tag}
 								onChangeText={(value) =>
-									handleInputChange("ward", value)
+									handleInputChange("tag", value)
 								}
-								placeholder="Nhập phường/xã"
+								placeholder="Chọn loại địa chỉ"
 								placeholderTextColor="#B0BEC5"
+								keyboardType="default"
+								maxLength={100}
 							/>
 						</View>
-					</View>
-
-					{/* Quận/Huyện */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Quận/Huyện <Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="business-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.district}
-								onChangeText={(value) =>
-									handleInputChange("district", value)
-								}
-								placeholder="Nhập quận/huyện"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-
-					{/* Tỉnh/Thành phố */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Tỉnh/Thành phố{" "}
-							<Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="map-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.city}
-								onChangeText={(value) =>
-									handleInputChange("city", value)
-								}
-								placeholder="Nhập tỉnh/thành phố"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-
-					{/* Loại địa chỉ */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Loại địa chỉ</Text>
-						<TouchableOpacity
-							style={styles.inputContainer}
-							onPress={showAddressTypePicker}
-						>
-							<Ionicons
-								name="briefcase-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<Text
-								style={[
-									styles.textInput,
-									{
-										color: formData.tag
-											? "#263238"
-											: "#B0BEC5",
-									},
-								]}
-							>
-								{formData.tag || "Chọn loại địa chỉ"}
-							</Text>
-							<Ionicons
-								name="chevron-down"
-								size={20}
-								color="#78909C"
-							/>
-						</TouchableOpacity>
 					</View>
 
 					{/* Đặt làm mặc định */}
@@ -382,6 +409,31 @@ export default function AddAddress({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<BottomPicker
+				visible={!!picker}
+				title={
+					picker === 'province'
+					? 'Chọn Tỉnh / Thành phố'
+					: picker === 'district'
+					? 'Chọn Quận / Huyện'
+					: 'Chọn Phường / Xã'
+				}
+				data={
+					picker === 'province'
+					? provinces
+					: picker === 'district'
+					? districts
+					: wards
+				}
+				onSelect={
+					picker === 'province'
+					? chooseProvince
+					: picker === 'district'
+					? chooseDistrict
+					: chooseWard
+				}
+				onClose={() => setPicker(null)}
+				/>
 		</View>
 	);
 }
@@ -527,5 +579,5 @@ const styles = StyleSheet.create({
 	switchSubtitle: {
 		fontSize: 13,
 		color: "#78909C",
-	},
+	}
 });

@@ -10,9 +10,12 @@ import {
 	Text,
 	TextInput,
 	TouchableOpacity,
-	View,
+	View
 } from "react-native";
 import { useDeleteShippingAddressMutation, useUpdateShippingAddressMutation } from "../../services/gshopApi";
+
+import BottomPicker from "../../components/BottomPicker";
+import { getDistricts, getProvinces, getWards, resolveName } from "../../services/vnGeoAPI";
 
 export default function EditAddress({ navigation, route }) {
 	// Get address data from route params
@@ -26,7 +29,7 @@ export default function EditAddress({ navigation, route }) {
 		houseNumber: "",
 		ward: "",
 		district: "",
-		city: "",
+		province: "",
 		isDefault: false,
 		tag: "Nhà riêng",
 	});
@@ -35,23 +38,114 @@ export default function EditAddress({ navigation, route }) {
 
 	const addressTypeOptions = ["Nhà riêng", "Văn phòng"];
 
+	const [picker, setPicker] = useState(null); 
+	const [provinces, setProvinces] = useState([]);
+	const [districts, setDistricts] = useState([]);
+	const [wards, setWards] = useState([]);
+	const [provinceId, setProvinceId] = useState(addressData?.provinceCode);
+	const [districtId, setDistrictId] = useState(addressData?.districtCode);
+	const [wardId, setWardId] = useState(addressData?.wardCode);
+	const openProvincePicker = () => setPicker('province');
+	const openDistrictPicker  = () => districts.length && setPicker('district');
+	const openWardPicker      = () => wards.length && setPicker('ward');
+	const closePicker         = () => setPicker(null);
+	const [isInit, setIsInit] = useState(true);
+
 	useEffect(() => {
-		if (addressData) {
-			// Parse address string to extract components
-			const addressParts = addressData.location.split(", ");
-			const initial = {
-				name: addressData.name || "",
-				phoneNumber: addressData.phoneNumber?.replace("+84 ", "0") || "",
-				houseNumber: addressParts[0] || "",
-				ward: addressParts[1] || "",
-				district: addressParts[2] || "",
-				city: addressParts[3] || "",
-				isDefault: addressData.isDefault || false,
-				tag: addressData.tag || "Nhà riêng",
-			};
-			setFormData(initial);
+		getProvinces().then(setProvinces).catch(console.error);
+	}, []);
+
+	useEffect(() => {
+		if (provinceId) {
+			getDistricts(provinceId).then(
+				(res) => {
+					setDistricts(res);
+					if (isInit) {
+						setWards([]);
+						return;
+					} else {
+						handleInputChange('district', '');
+						handleInputChange('ward', '');
+						setDistrictId('');
+						setWardId('');
+					}
+				}
+			).catch(console.error);
+			
+		} else {
+			setDistricts([]);
+			setWards([]);
 		}
-	}, [addressData]);
+	}, [provinceId])
+
+	useEffect(() => {
+		if (districtId) {
+			getWards(districtId).then(
+				(res) => {
+					setWards(res);
+					if (isInit) {
+						setWards([]);
+						return;
+					} else {
+						handleInputChange('ward', '');
+						setWardId('');
+					}
+				}
+			).catch(console.error);
+		} else {
+			setWards([]);
+		}
+	}, [districtId])
+
+	useEffect(() => {
+		if (isInit) {
+			setIsInit(false);
+		}
+	}, [wardId])
+
+
+	const chooseProvince = (item) => {
+		setProvinceId(item.id);
+		setDistrictId('');
+		handleInputChange('province', item.full_name);
+	  };
+	  
+	  const chooseDistrict = (item) => {
+		setDistrictId(item.id);
+		setWardId('');
+		handleInputChange('district', item.full_name);
+	  };
+	  
+	  const chooseWard = (item) => {
+		setWardId(item.id);
+		handleInputChange('ward', item.full_name);
+	  };
+	  useEffect(() => {
+		if (!addressData) return;
+	  
+		// IIFE async trong useEffect
+		(async () => {
+		  try {
+			// Lấy tên đầy đủ “Phường…, Quận…, Tỉnh…”
+			const { full_name } = await resolveName(addressData.wardCode);
+			const [ward = "", district = "", province = ""] = full_name.split(", ").map(s => s.trim());
+	  
+			setFormData({
+			  name:        addressData.name           ?? "",
+			  phoneNumber: addressData.phoneNumber?.replace("+84 ", "0") ?? "",
+			  houseNumber: addressData.addressLine    ?? "",
+			  ward,
+			  district,
+			  province,
+			  isDefault:   addressData.isDefault      ?? false,
+			  tag:         addressData.tag            ?? "Nhà riêng",
+			});
+		  } catch (err) {
+			console.warn("resolveName failed:", err);
+		  }
+		})();
+	
+	  }, [addressData]);
 
 	const handleInputChange = (field, value) => {
 		setFormData((prev) => ({
@@ -82,25 +176,32 @@ export default function EditAddress({ navigation, route }) {
 			Alert.alert("Lỗi", "Vui lòng nhập số nhà");
 			return;
 		}
-		if (!formData.ward.trim()) {
+		if (!wardId.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập phường/xã");
 			return;
 		}
-		if (!formData.district.trim()) {
+		if (!districtId.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập quận/huyện");
 			return;
 		}
-		if (!formData.city.trim()) {
+		if (!provinceId.trim()) {
 			Alert.alert("Lỗi", "Vui lòng nhập tỉnh/thành phố");
 			return;
 		}
 
 		// Here you would typically call an API to update the address
-		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.city}`;
+		const location = `${formData.houseNumber}, ${formData.ward}, ${formData.district}, ${formData.province}`;
 		const data = {
 			id: addressData.id,
-			...formData,
-			location: location,
+			location,
+			provinceCode: provinceId,
+			districtCode: districtId,
+			wardCode: wardId,
+			addressLine: formData.houseNumber,
+			name: formData.name,
+			phoneNumber: formData.phoneNumber,
+			tag: formData.tag,
+			isDefault: formData.isDefault,
 		}
 		updateShippingAddress(data).unwrap().then(res => {
 			Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
@@ -301,10 +402,51 @@ export default function EditAddress({ navigation, route }) {
 						</View>
 					</View>
 
-					{/* Phường/Xã */}
+					{/* Tỉnh / Thành phố */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Tỉnh/Thành phố <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity style={styles.inputContainer} onPress={openProvincePicker}>
+						<Text style={styles.textInput}>
+							{formData.province || 'Chọn tỉnh / thành phố'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Quận / Huyện */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Quận/Huyện <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity
+						style={styles.inputContainer}
+						onPress={openDistrictPicker}
+						disabled={!provinceId}
+					>
+						<Text style={styles.textInput}>
+						{formData.district || 'Chọn quận / huyện'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Phường / Xã */}
+					<View style={styles.inputGroup}>
+					<Text style={styles.label}>Phường/Xã <Text style={styles.required}>*</Text></Text>
+					<TouchableOpacity
+						style={styles.inputContainer}
+						onPress={openWardPicker}
+						disabled={!districtId}
+					>
+						<Text style={styles.textInput}>
+						{formData.ward || 'Chọn phường / xã'}
+						</Text>
+						<Ionicons name="chevron-down" size={20} color="#78909C" />
+					</TouchableOpacity>
+					</View>
+
+					{/* Loại địa chỉ */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>
-							Phường/Xã <Text style={styles.required}>*</Text>
+							Loại địa chỉ <Text style={styles.required}>*</Text>
 						</Text>
 						<View style={styles.inputContainer}>
 							<Ionicons
@@ -315,96 +457,16 @@ export default function EditAddress({ navigation, route }) {
 							/>
 							<TextInput
 								style={styles.textInput}
-								value={formData.ward}
+								value={formData.tag}
 								onChangeText={(value) =>
-									handleInputChange("ward", value)
+									handleInputChange("tag", value)
 								}
-								placeholder="Nhập phường/xã"
+								placeholder="Chọn loại địa chỉ"
 								placeholderTextColor="#B0BEC5"
+								keyboardType="default"
+								maxLength={100}
 							/>
 						</View>
-					</View>
-
-					{/* Quận/Huyện */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Quận/Huyện <Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="business-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.district}
-								onChangeText={(value) =>
-									handleInputChange("district", value)
-								}
-								placeholder="Nhập quận/huyện"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-
-					{/* Tỉnh/Thành phố */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Tỉnh/Thành phố{" "}
-							<Text style={styles.required}>*</Text>
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="map-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.city}
-								onChangeText={(value) =>
-									handleInputChange("city", value)
-								}
-								placeholder="Nhập tỉnh/thành phố"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-
-					{/* Loại địa chỉ */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Loại địa chỉ</Text>
-						<TouchableOpacity
-							style={styles.inputContainer}
-							onPress={showAddressTypePicker}
-						>
-							<Ionicons
-								name="briefcase-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<Text
-								style={[
-									styles.textInput,
-									{
-										color: formData.addressType
-											? "#263238"
-											: "#B0BEC5",
-									},
-								]}
-							>
-								{formData.addressType || "Chọn loại địa chỉ"}
-							</Text>
-							<Ionicons
-								name="chevron-down"
-								size={20}
-								color="#78909C"
-							/>
-						</TouchableOpacity>
 					</View>
 
 					{/* Đặt làm mặc định */}
@@ -455,6 +517,31 @@ export default function EditAddress({ navigation, route }) {
 					)}
 				</View>
 			</ScrollView>
+			<BottomPicker
+				visible={!!picker}
+				title={
+					picker === 'province'
+					? 'Chọn Tỉnh / Thành phố'
+					: picker === 'district'
+					? 'Chọn Quận / Huyện'
+					: 'Chọn Phường / Xã'
+				}
+				data={
+					picker === 'province'
+					? provinces
+					: picker === 'district'
+					? districts
+					: wards
+				}
+				onSelect={
+					picker === 'province'
+					? chooseProvince
+					: picker === 'district'
+					? chooseDistrict
+					: chooseWard
+				}
+				onClose={() => setPicker(null)}
+				/>
 		</View>
 	);
 }

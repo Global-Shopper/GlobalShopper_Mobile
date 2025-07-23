@@ -2,7 +2,9 @@ const endpoints = {
   LOGIN: '/auth/login',
   REGISTER: '/auth/register',
   VERIFY_OTP: '/auth/verify-otp',
+  VERIFY_CHANGE_EMAIL: '/auth/verify-otp-and-change-email',
   RESEND_OTP: '/auth/resend-otp',
+  CHANGE_EMAIL: '/auth/change-email',
   RESET_PASSWORD: '/auth/forgot-password/reset',
   FORGOT_PASSWORD: '/auth/forgot-password',
   VERIFY_OTP_FORGOT_PASSWORD: '/auth/forgot-password/verify',
@@ -10,7 +12,11 @@ const endpoints = {
   DEFAULT_SHIPPING_ADDRESS: '/shipping-address/default',
   CHANGE_PASSWORD: '/auth/change-password',
   CUSTOMER_PROFILE: '/customer',
+  UPLOAD_AVATAR: '/customer/avatar',
+  PURCHASE_REQUEST: '/purchase-request',
+  WITH_LINK_PURCHASE_REQUEST: '/purchase-request/online-request',
+  WITHOUT_LINK_PURCHASE_REQUEST: '/purchase-request/offline-request',
+  WALLET: '/wallet',
+  CHECKPAYMENT: '/wallet/check-payment-vnpay',
 }
 export default endpoints
-
-

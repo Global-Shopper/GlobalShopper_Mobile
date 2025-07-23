@@ -1,13 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { useGetWalletQuery } from "../../services/gshopApi";
 
 export default function WalletScreen({ navigation }) {
-	const [balance] = useState(2500000);
+	const { data: wallet, isLoading: isWalletLoading, refetch } = useGetWalletQuery()
 	const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+
+	useFocusEffect(
+		useCallback(() => {
+			refetch();
+		}, [refetch])
+	);
 
 	const formatCurrency = (amount) => {
 		return new Intl.NumberFormat("vi-VN", {
@@ -85,8 +93,8 @@ export default function WalletScreen({ navigation }) {
 
 					<Text style={styles.balanceAmount}>
 						{isBalanceVisible
-							? formatCurrency(balance)
-							: "●●●●●●●●"}
+							? formatCurrency(wallet?.balance)
+							: "*******"}
 					</Text>
 
 					<View style={styles.balanceActions}>
