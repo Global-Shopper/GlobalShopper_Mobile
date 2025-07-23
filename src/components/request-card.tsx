@@ -23,6 +23,14 @@ interface RequestCardProps {
 			[key: string]: any;
 		}[];
 		contactInfo?: string[];
+		subRequests?: {
+			contactInfo?: string[];
+			requestItems?: {
+				quantity?: number | string;
+				[key: string]: any;
+			}[];
+			[key: string]: any;
+		}[];
 	};
 	onPress?: () => void;
 	onCancel?: () => void;
@@ -45,17 +53,74 @@ export default function RequestCard({
 			return `#${request.id || request.code || "N/A"}`;
 		}
 
-		// Nếu là request OFFLINE hoặc không phải ONLINE (không có link), hiển thị tên cửa hàng từ contact info trước
+		// Nếu là request OFFLINE từ subRequests nếu requestItems rỗng
 		if (request.requestType !== "ONLINE") {
 			console.log(
-				"Using OFFLINE/NON-ONLINE logic - checking contactInfo first"
+				"Using OFFLINE/NON-ONLINE logic - checking subRequests and sub-request contactInfo"
 			);
 
-			// Ưu tiên 1: Lấy tên cửa hàng từ contactInfo trước
-			if (request.contactInfo && request.contactInfo.length > 0) {
-				console.log("Found contactInfo:", request.contactInfo);
+			let storeName = null;
+			let quantity = 0;
 
-				// Tìm tên cửa hàng trong contactInfo với nhiều pattern khác nhau
+			//lấy từ subRequests nếu có
+			if (
+				Array.isArray(request.subRequests) &&
+				request.subRequests.length > 0
+			) {
+				const firstSub = request.subRequests[0];
+				if (
+					firstSub &&
+					Array.isArray(firstSub.contactInfo) &&
+					firstSub.contactInfo.length > 0
+				) {
+					const storeNameInfo = firstSub.contactInfo.find(
+						(info: string) =>
+							info.includes("Tên cửa hàng:") ||
+							info.includes("Store name:") ||
+							info.includes("Shop name:") ||
+							info.includes("Cửa hàng:") ||
+							info.includes("Tên shop:")
+					);
+					if (storeNameInfo) {
+						storeName = storeNameInfo
+							.replace("Tên cửa hàng:", "")
+							.replace("Store name:", "")
+							.replace("Shop name:", "")
+							.replace("Cửa hàng:", "")
+							.replace("Tên shop:", "")
+							.trim();
+						console.log(
+							"Found store name in subRequests[0]:",
+							storeName
+						);
+					} else {
+						storeName = firstSub.contactInfo[0];
+						console.log(
+							"No store name pattern found in subRequests[0], using first contactInfo:",
+							storeName
+						);
+					}
+				}
+				// Lấy quantity từ requestItems
+				if (
+					Array.isArray(firstSub.requestItems) &&
+					firstSub.requestItems.length > 0
+				) {
+					const firstProduct = firstSub.requestItems[0];
+					quantity = parseInt(firstProduct.quantity) || 0;
+					console.log(
+						"Quantity from subRequests[0].requestItems[0]:",
+						quantity
+					);
+				}
+			}
+
+			// Nếu không có subRequests
+			if (
+				!storeName &&
+				request.contactInfo &&
+				request.contactInfo.length > 0
+			) {
 				const storeNameInfo = request.contactInfo.find(
 					(info: string) =>
 						info.includes("Tên cửa hàng:") ||
@@ -64,47 +129,48 @@ export default function RequestCard({
 						info.includes("Cửa hàng:") ||
 						info.includes("Tên shop:")
 				);
-
 				if (storeNameInfo) {
-					const storeName = storeNameInfo
+					storeName = storeNameInfo
 						.replace("Tên cửa hàng:", "")
 						.replace("Store name:", "")
 						.replace("Shop name:", "")
 						.replace("Cửa hàng:", "")
 						.replace("Tên shop:", "")
 						.trim();
-					console.log("Found store name:", storeName);
-					return storeName;
+					console.log(
+						"Found store name in main contactInfo:",
+						storeName
+					);
+				} else {
+					storeName = request.contactInfo[0];
+					console.log(
+						"No store name pattern found in main contactInfo, using first contactInfo:",
+						storeName
+					);
 				}
-
-				// Nếu không có tên cửa hàng, lấy info đầu tiên (có thể chính là tên cửa hàng)
-				console.log(
-					"No store name pattern found, using first contactInfo:",
-					request.contactInfo[0]
-				);
-				return request.contactInfo[0];
 			}
 
-			console.log("No contactInfo found, checking requestItems");
-
-			// Ưu tiên 2: Nếu không có contactInfo, mới lấy tên sản phẩm từ requestItems
-			if (request.requestItems && request.requestItems.length > 0) {
+			if (
+				!storeName &&
+				request.requestItems &&
+				request.requestItems.length > 0
+			) {
 				const firstItem = request.requestItems[0];
-				console.log("Found requestItems, first item:", firstItem);
-
-				if (firstItem.productName) {
-					console.log("Using productName:", firstItem.productName);
-					return firstItem.productName;
-				}
-				if (firstItem.name) {
-					console.log("Using name:", firstItem.name);
-					return firstItem.name;
+				if (firstItem.storeName) {
+					storeName = firstItem.storeName;
+					console.log("Using storeName from item:", storeName);
+				} else if (firstItem.shopName) {
+					storeName = firstItem.shopName;
+					console.log("Using shopName from item:", storeName);
 				}
 			}
 
-			// Fallback: hiển thị "Yêu cầu không có link"
-			console.log("Using fallback: Yêu cầu không có link");
-			return "Yêu cầu không có link";
+			if (!storeName) {
+				storeName = "Cửa hàng không xác định";
+				console.log("Using fallback: Cửa hàng không xác định");
+			}
+
+			return storeName;
 		}
 
 		// Default fallback
@@ -115,17 +181,17 @@ export default function RequestCard({
 	const getStatusColor = (status: string) => {
 		switch (status?.toLowerCase()) {
 			case "sent":
-				return "#28a745"; // Green for sent
+				return "#28a745";
 			case "checking":
-				return "#17a2b8"; // Teal for checking
+				return "#17a2b8";
 			case "quoted":
-				return "#ffc107"; // Yellow for quoted
+				return "#ffc107";
 			case "confirmed":
-				return "#007bff"; // Blue for confirmed
+				return "#007bff";
 			case "cancelled":
-				return "#dc3545"; // Red for cancelled
+				return "#dc3545";
 			case "insufficient":
-				return "#fd7e14"; // Orange for insufficient
+				return "#fd7e14";
 			default:
 				return "#6c757d";
 		}
@@ -233,7 +299,31 @@ export default function RequestCard({
 						Số lượng sản phẩm:
 					</Text>
 					<Text style={styles.productCountValue}>
-						{request.requestItems?.length}
+						{(() => {
+							// Tổng số lượng sản phẩm
+							const sumQuantity = (items: any[] | undefined) => {
+								if (!Array.isArray(items)) return 0;
+								return items.reduce((total, item) => {
+									const qty = parseInt(item.quantity) || 0;
+									return total + qty;
+								}, 0);
+							};
+							if (
+								Array.isArray(request.requestItems) &&
+								request.requestItems.length > 0
+							) {
+								return sumQuantity(request.requestItems);
+							} else if (
+								Array.isArray(request.subRequests) &&
+								request.subRequests.length > 0
+							) {
+								const firstSub = request.subRequests[0];
+								if (Array.isArray(firstSub.requestItems)) {
+									return sumQuantity(firstSub.requestItems);
+								}
+							}
+							return 0;
+						})()}
 					</Text>
 				</View>
 			</View>

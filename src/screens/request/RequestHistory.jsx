@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
+import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 
@@ -30,86 +31,6 @@ export default function RequestHistory({ navigation, route }) {
 
 	// Use API data if available, fallback to route params
 	const currentRequest = requestDetail || request;
-
-	// Function to get appropriate title based on request type
-	const getRequestTitle = (request) => {
-		console.log("=== REQUEST HISTORY TITLE DEBUG ===");
-		console.log("Request Type:", request?.requestType);
-		console.log("Request contactInfo:", request?.contactInfo);
-		console.log("Request requestItems:", request?.requestItems);
-
-		// Nếu là request ONLINE (có link), hiển thị ID
-		if (request?.requestType === "ONLINE") {
-			console.log("Using ONLINE logic - showing ID");
-			return `#${request.id || request.code || "N/A"}`;
-		}
-
-		// Nếu là request OFFLINE hoặc không phải ONLINE (không có link), hiển thị tên cửa hàng từ contact info trước
-		if (request?.requestType !== "ONLINE") {
-			console.log(
-				"Using OFFLINE/NON-ONLINE logic - checking contactInfo first"
-			);
-
-			// Ưu tiên 1: Lấy tên cửa hàng từ contactInfo trước
-			if (request.contactInfo && request.contactInfo.length > 0) {
-				console.log("Found contactInfo:", request.contactInfo);
-
-				// Tìm tên cửa hàng trong contactInfo với nhiều pattern khác nhau
-				const storeNameInfo = request.contactInfo.find(
-					(info) =>
-						info.includes("Tên cửa hàng:") ||
-						info.includes("Store name:") ||
-						info.includes("Shop name:") ||
-						info.includes("Cửa hàng:") ||
-						info.includes("Tên shop:")
-				);
-
-				if (storeNameInfo) {
-					const storeName = storeNameInfo
-						.replace("Tên cửa hàng:", "")
-						.replace("Store name:", "")
-						.replace("Shop name:", "")
-						.replace("Cửa hàng:", "")
-						.replace("Tên shop:", "")
-						.trim();
-					console.log("Found store name:", storeName);
-					return storeName;
-				}
-
-				// Nếu không có tên cửa hàng, lấy info đầu tiên (có thể chính là tên cửa hàng)
-				console.log(
-					"No store name pattern found, using first contactInfo:",
-					request.contactInfo[0]
-				);
-				return request.contactInfo[0];
-			}
-
-			console.log("No contactInfo found, checking requestItems");
-
-			// Ưu tiên 2: Nếu không có contactInfo, mới lấy tên sản phẩm từ requestItems
-			if (request.requestItems && request.requestItems.length > 0) {
-				const firstItem = request.requestItems[0];
-				console.log("Found requestItems, first item:", firstItem);
-
-				if (firstItem.productName) {
-					console.log("Using productName:", firstItem.productName);
-					return firstItem.productName;
-				}
-				if (firstItem.name) {
-					console.log("Using name:", firstItem.name);
-					return firstItem.name;
-				}
-			}
-
-			// Fallback: hiển thị "Yêu cầu không có link"
-			console.log("Using fallback: Yêu cầu không có link");
-			return "Yêu cầu không có link";
-		}
-
-		// Default fallback
-		console.log("Using default fallback - showing ID");
-		return `#${request?.id || request?.code || "N/A"}`;
-	};
 
 	// Generate history based on request status from API or fallback data
 	const getHistoryByStatus = (status, requestData) => {
@@ -335,14 +256,16 @@ export default function RequestHistory({ navigation, route }) {
 						{/* Request Info */}
 						<View style={styles.requestInfoSection}>
 							<View style={styles.requestInfoCard}>
-								<Text style={styles.requestCode}>
-									{getRequestTitle(currentRequest)}
-								</Text>
+								{/* Title is now handled by RequestCard, so remove this line */}
 								<Text style={styles.requestDate}>
 									Tạo ngày:{" "}
 									{currentRequest?.createdAt ||
 										"Không có thông tin"}
 								</Text>
+
+								{/* Hiển thị số lượng sản phẩm */}
+								<RequestCard request={currentRequest} />
+
 								{currentRequest?.note && (
 									<Text style={styles.requestNote}>
 										Ghi chú: {currentRequest.note}
@@ -473,6 +396,12 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#6c757d",
 		fontWeight: "500",
+	},
+	requestQuantity: {
+		fontSize: 14,
+		color: "#28a745",
+		fontWeight: "600",
+		marginTop: 4,
 	},
 	requestNote: {
 		fontSize: 14,
