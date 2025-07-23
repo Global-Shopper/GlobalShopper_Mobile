@@ -5,7 +5,12 @@ import { axiosBaseQuery } from "./baseRequest";
 //Lưu ý khi cho dev, cần phải sửa lại baseURL trong file baseRequest.js
 const gshopApi = createApi({
 	reducerPath: "gshopApi",
-	tagTypes: ["CustomerProfile", "ShippingAddress", "PurchaseRequest", "Wallet"],
+	tagTypes: [
+		"CustomerProfile",
+		"ShippingAddress",
+		"PurchaseRequest",
+		"Wallet",
+	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
 		login: builder.mutation({
@@ -208,6 +213,13 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["PurchaseRequest"],
 		}),
+		getPurchaseRequestDetail: builder.query({
+			query: (id) => ({
+				url: `${endpoints.PURCHASE_REQUEST}/${id}`,
+				method: "GET",
+			}),
+			providesTags: ["PurchaseRequest"],
+		}),
 		getWallet: builder.query({
 			query: () => ({
 				url: endpoints.WALLET,
@@ -230,6 +242,13 @@ const gshopApi = createApi({
 				method: "GET",
 			}),
 			invalidatesTags: ["Wallet"],
+		}),
+		transactionHistory: builder.query({
+			query: (data) => ({
+				params: data,
+				url: endpoints.TRANSACTION_HISTORY,
+				method: "GET",
+			}),
 		}),
 	}),
 });
@@ -260,6 +279,8 @@ export const {
 	useGetWalletQuery,
 	useDepositWalletMutation,
 	useLazyCheckPaymentQuery,
+	useGetPurchaseRequestDetailQuery,
+	useTransactionHistoryQuery,
 } = gshopApi;
 
 export default gshopApi;
