@@ -243,7 +243,7 @@ export default function RequestCard({
 					<View style={styles.requestTypeContainer}>
 						<Ionicons
 							name={getRequestTypeIcon(request.requestType)}
-							size={18}
+							size={26}
 							color={getRequestTypeBorderColor(
 								request.requestType
 							)}
@@ -328,30 +328,7 @@ export default function RequestCard({
 				</View>
 			</View>
 
-			{/* Actions Section */}
-			<View style={styles.requestActions}>
-				<TouchableOpacity
-					style={styles.viewDetailButton}
-					onPress={onPress}
-				>
-					<Ionicons name="eye-outline" size={14} color="#007bff" />
-					<Text style={styles.viewDetailText}>Chi tiết</Text>
-				</TouchableOpacity>
-
-				{onCancel && (
-					<TouchableOpacity
-						style={styles.cancelButton}
-						onPress={onCancel}
-					>
-						<Ionicons
-							name="close-circle-outline"
-							size={14}
-							color="#dc3545"
-						/>
-						<Text style={styles.cancelButtonText}>Hủy</Text>
-					</TouchableOpacity>
-				)}
-			</View>
+			{/* Actions Section removed as per user request */}
 		</TouchableOpacity>
 	);
 }
@@ -383,12 +360,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	requestTypeContainer: {
-		backgroundColor: "#f8f9fa",
+		// backgroundColor: "#f8f9fa", // Removed background
 		borderRadius: 10,
 		padding: 6,
 		marginRight: 10,
-		borderWidth: 1,
-		borderColor: "#e9ecef",
+		// borderWidth: 1, // Removed border
+		// borderColor: "#e9ecef",
 	},
 	requestInfo: {
 		flex: 1,
