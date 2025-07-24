@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
 	ActivityIndicator,
 	ScrollView,
@@ -12,8 +12,8 @@ import {
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import {
-	useGetWalletQuery,
 	useCurrentUserTransactionsQuery,
+	useGetWalletQuery,
 } from "../../services/gshopApi";
 
 export default function WalletScreen({ navigation }) {
@@ -49,9 +49,15 @@ export default function WalletScreen({ navigation }) {
 			return transactions;
 		} else if (transactions?.data && Array.isArray(transactions.data)) {
 			return transactions.data;
-		} else if (transactions?.content && Array.isArray(transactions.content)) {
+		} else if (
+			transactions?.content &&
+			Array.isArray(transactions.content)
+		) {
 			return transactions.content;
-		} else if (transactions?.transactions && Array.isArray(transactions.transactions)) {
+		} else if (
+			transactions?.transactions &&
+			Array.isArray(transactions.transactions)
+		) {
 			return transactions.transactions;
 		}
 		return [];
@@ -86,25 +92,19 @@ export default function WalletScreen({ navigation }) {
 			} else if (typeof dateString === "number") {
 				// Handle both timestamp (ms) and Unix timestamp (seconds)
 				d = new Date(
-					dateString > 10000000000
-						? dateString
-						: dateString * 1000
+					dateString > 10000000000 ? dateString : dateString * 1000
 				);
 			} else {
 				d = new Date();
 			}
 
 			if (!isNaN(d.getTime())) {
-				dateStr = `${d
-					.getDate()
-					.toString()
-					.padStart(2, "0")}/${(d.getMonth() + 1)
+				dateStr = `${d.getDate().toString().padStart(2, "0")}/${(
+					d.getMonth() + 1
+				)
 					.toString()
 					.padStart(2, "0")}/${d.getFullYear()}`;
-				timeStr = `${d
-					.getHours()
-					.toString()
-					.padStart(2, "0")}:${d
+				timeStr = `${d.getHours().toString().padStart(2, "0")}:${d
 					.getMinutes()
 					.toString()
 					.padStart(2, "0")}`;
