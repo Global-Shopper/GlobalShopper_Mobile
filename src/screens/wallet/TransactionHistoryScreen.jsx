@@ -23,6 +23,7 @@ export default function TransactionHistoryScreen({ navigation }) {
 	// Simple user change detection - refetch when user email changes
 	const currentUser = useSelector((state) => state?.rootReducer?.user);
 	const previousUserRef = useRef(null);
+	const [isUserChanging, setIsUserChanging] = useState(false);
 
 	useEffect(() => {
 		const currentUserEmail = currentUser?.email;
@@ -33,7 +34,11 @@ export default function TransactionHistoryScreen({ navigation }) {
 			console.log(
 				`🔄 User changed: ${previousUserRef.current} -> ${currentUserEmail}, refetching transactions`
 			);
-			refetch();
+			setIsUserChanging(true);
+			setActiveTab("all"); // Reset tab to "all" when user changes
+			refetch().finally(() => {
+				setIsUserChanging(false);
+			});
 		}
 		previousUserRef.current = currentUserEmail;
 	}, [currentUser?.email, refetch]);
@@ -169,8 +174,8 @@ export default function TransactionHistoryScreen({ navigation }) {
 
 	const filteredTransactions = getFilteredTransactions();
 
-	// Loading state
-	if (isLoading) {
+	// Loading state (including when user is changing)
+	if (isLoading || isUserChanging) {
 		return (
 			<View
 				style={[
@@ -180,7 +185,9 @@ export default function TransactionHistoryScreen({ navigation }) {
 			>
 				<ActivityIndicator size="large" color="#1976D2" />
 				<Text style={{ marginTop: 16, color: "#1976D2" }}>
-					Đang tải lịch sử giao dịch...
+					{isUserChanging
+						? "Đang cập nhật"
+						: "Đang tải lịch sử giao dịch..."}
 				</Text>
 			</View>
 		);
