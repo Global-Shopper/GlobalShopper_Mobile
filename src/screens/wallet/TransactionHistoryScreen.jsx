@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	ScrollView,
@@ -7,6 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useCurrentUserTransactionsQuery } from "../../services/gshopApi";
@@ -17,6 +19,31 @@ export default function TransactionHistoryScreen({ navigation }) {
 	// Fetch transaction data from API
 	const { data, isLoading, isError, error, refetch } =
 		useCurrentUserTransactionsQuery();
+
+	// Simple user change detection - refetch when user email changes
+	const currentUser = useSelector((state) => state?.rootReducer?.user);
+	const previousUserRef = useRef(null);
+
+	useEffect(() => {
+		const currentUserEmail = currentUser?.email;
+		if (
+			previousUserRef.current &&
+			previousUserRef.current !== currentUserEmail
+		) {
+			console.log(
+				`🔄 User changed: ${previousUserRef.current} -> ${currentUserEmail}, refetching transactions`
+			);
+			refetch();
+		}
+		previousUserRef.current = currentUserEmail;
+	}, [currentUser?.email, refetch]);
+
+	// Refetch when screen focuses
+	useFocusEffect(
+		useCallback(() => {
+			refetch();
+		}, [refetch])
+	);
 
 	const formatCurrency = (amount) => {
 		return new Intl.NumberFormat("vi-VN", {
