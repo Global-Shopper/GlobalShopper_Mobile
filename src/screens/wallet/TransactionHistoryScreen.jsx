@@ -109,10 +109,8 @@ export default function TransactionHistoryScreen({ navigation }) {
 
 	const getStatusText = (status) => {
 		switch ((status || "").toLowerCase()) {
-			case "completed":
 			case "success":
 				return "Hoàn thành";
-			case "processing":
 			case "pending":
 				return "Đang xử lý";
 			case "fail":
