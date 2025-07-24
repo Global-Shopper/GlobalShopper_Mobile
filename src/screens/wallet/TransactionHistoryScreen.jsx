@@ -1,11 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { useCurrentUserTransactionsQuery } from "../../services/gshopApi";
 
 export default function TransactionHistoryScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
+
+	// Fetch transaction data from API
+	const { data, isLoading, isError, error, refetch } =
+		useCurrentUserTransactionsQuery();
 
 	const formatCurrency = (amount) => {
 		return new Intl.NumberFormat("vi-VN", {
@@ -14,110 +25,118 @@ export default function TransactionHistoryScreen({ navigation }) {
 		}).format(amount);
 	};
 
-	const allTransactions = [
-		{
-			id: 1,
-			type: "deposit",
-			amount: 500000,
-			description: "Nạp tiền qua ngân hàng",
-			date: "15/01/2024",
-			time: "14:30",
-			status: "completed",
-			icon: "add-circle",
-			color: "#4CAF50",
-		},
-		{
-			id: 2,
-			type: "payment",
-			amount: -150000,
-			description: "Thanh toán đơn hàng #1234",
-			date: "14/01/2024",
-			time: "10:15",
-			status: "completed",
-			icon: "card",
-			color: "#2196F3",
-		},
-		{
-			id: 3,
-			type: "withdrawal",
-			amount: -200000,
-			description: "Rút tiền về tài khoản",
-			date: "13/01/2024",
-			time: "16:45",
-			status: "processing",
-			icon: "arrow-up-circle",
-			color: "#FF9800",
-		},
-		{
-			id: 4,
-			type: "refund",
-			amount: 75000,
-			description: "Hoàn tiền đơn hàng #1230",
-			date: "12/01/2024",
-			time: "09:20",
-			status: "completed",
-			icon: "refresh-circle",
-			color: "#9C27B0",
-		},
-		{
-			id: 5,
-			type: "deposit",
-			amount: 1000000,
-			description: "Nạp tiền qua ví điện tử",
-			date: "11/01/2024",
-			time: "11:30",
-			status: "completed",
-			icon: "add-circle",
-			color: "#4CAF50",
-		},
-		{
-			id: 6,
-			type: "payment",
-			amount: -300000,
-			description: "Thanh toán đơn hàng #1228",
-			date: "10/01/2024",
-			time: "15:10",
-			status: "completed",
-			icon: "card",
-			color: "#2196F3",
-		},
-	];
+	// Icon mapping for transaction types
+	const iconMap = {
+		deposit: { icon: "add-circle", color: "#4CAF50" },
+		payment: { icon: "card", color: "#2196F3" },
+		withdrawal: { icon: "arrow-up-circle", color: "#FF9800" },
+		refund: { icon: "refresh-circle", color: "#9C27B0" },
+		// Alternative naming
+		topup: { icon: "add-circle", color: "#4CAF50" },
+		purchase: { icon: "card", color: "#2196F3" },
+		withdraw: { icon: "arrow-up-circle", color: "#FF9800" },
+		cashback: { icon: "refresh-circle", color: "#9C27B0" },
+		commission: { icon: "trending-up", color: "#4CAF50" },
+		fee: { icon: "remove-circle", color: "#F44336" },
+	};
+
+	// Transform API data
+	const allTransactions = (() => {
+		// Handle different possible response formats
+		let transactions = [];
+
+		if (Array.isArray(data)) {
+			transactions = data;
+		} else if (data?.data && Array.isArray(data.data)) {
+			transactions = data.data;
+		} else if (data?.content && Array.isArray(data.content)) {
+			transactions = data.content;
+		} else if (data?.transactions && Array.isArray(data.transactions)) {
+			transactions = data.transactions;
+		}
+
+		return transactions.map((item) => {
+			const mapped = {
+				...item,
+				type: (item.type || item.transactionType || "").toLowerCase(),
+				status: (
+					item.status ||
+					item.transactionStatus ||
+					""
+				).toLowerCase(),
+				description:
+					item.description ||
+					item.note ||
+					item.remarks ||
+					`Giao dịch ${item.type || "không xác định"}`,
+				amount: item.amount || item.value || item.total || 0,
+				createdAt:
+					item.createdAt ||
+					item.createAt ||
+					item.timestamp ||
+					item.date ||
+					Date.now(),
+			};
+			return mapped;
+		});
+	})();
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", type: null },
-		{ id: "deposit", label: "Nạp tiền", type: "deposit" },
-		{ id: "payment", label: "Thanh toán", type: "payment" },
-		{ id: "withdrawal", label: "Rút tiền", type: "withdrawal" },
-		{ id: "refund", label: "Hoàn tiền", type: "refund" },
+		{ id: "deposit", label: "Nạp tiền", type: ["deposit", "topup"] },
+		{ id: "payment", label: "Thanh toán", type: ["payment", "purchase"] },
+		{
+			id: "withdrawal",
+			label: "Rút tiền",
+			type: ["withdrawal", "withdraw"],
+		},
+		{ id: "refund", label: "Hoàn tiền", type: ["refund", "cashback"] },
 	];
 
 	const getFilteredTransactions = () => {
 		if (activeTab === "all") return allTransactions;
-		return allTransactions.filter(
-			(transaction) => transaction.type === activeTab
-		);
+
+		const selectedTab = tabs.find((tab) => tab.id === activeTab);
+		if (!selectedTab || !selectedTab.type) return allTransactions;
+
+		return allTransactions.filter((transaction) => {
+			if (Array.isArray(selectedTab.type)) {
+				return selectedTab.type.includes(transaction.type);
+			}
+			return transaction.type === selectedTab.type;
+		});
 	};
 
 	const getStatusText = (status) => {
-		switch (status) {
+		switch ((status || "").toLowerCase()) {
 			case "completed":
+			case "success":
 				return "Hoàn thành";
 			case "processing":
+			case "pending":
 				return "Đang xử lý";
 			case "failed":
+			case "failure":
 				return "Thất bại";
+			case "cancelled":
+				return "Đã huỷ";
 			default:
-				return "Không xác định";
+				return status || "Không xác định";
 		}
 	};
 
 	const getStatusColor = (status) => {
-		switch (status) {
+		switch ((status || "").toLowerCase()) {
 			case "completed":
+			case "success":
 				return "#4CAF50";
 			case "processing":
+			case "pending":
 				return "#FF9800";
 			case "failed":
+			case "failure":
+				return "#F44336";
+			case "cancelled":
 				return "#F44336";
 			default:
 				return "#6c757d";
@@ -125,6 +144,64 @@ export default function TransactionHistoryScreen({ navigation }) {
 	};
 
 	const filteredTransactions = getFilteredTransactions();
+
+	// Loading state
+	if (isLoading) {
+		return (
+			<View
+				style={[
+					styles.container,
+					{ justifyContent: "center", alignItems: "center" },
+				]}
+			>
+				<ActivityIndicator size="large" color="#1976D2" />
+				<Text style={{ marginTop: 16, color: "#1976D2" }}>
+					Đang tải lịch sử giao dịch...
+				</Text>
+			</View>
+		);
+	}
+
+	// Show error banner but still show data if available
+	const showErrorBanner = isError && allTransactions.length === 0;
+
+	if (showErrorBanner) {
+		return (
+			<View
+				style={[
+					styles.container,
+					{ justifyContent: "center", alignItems: "center" },
+				]}
+			>
+				<Text
+					style={{
+						color: "#dc3545",
+						fontSize: 16,
+						fontWeight: "600",
+					}}
+				>
+					Không thể tải lịch sử giao dịch
+				</Text>
+				<Text style={{ color: "#6c757d", marginTop: 8 }}>
+					{error?.data?.message || error?.message || "Có lỗi xảy ra"}
+				</Text>
+				<TouchableOpacity
+					style={{
+						marginTop: 20,
+						backgroundColor: "#1976D2",
+						paddingHorizontal: 24,
+						paddingVertical: 12,
+						borderRadius: 8,
+					}}
+					onPress={refetch}
+				>
+					<Text style={{ color: "#fff", fontWeight: "600" }}>
+						Thử lại
+					</Text>
+				</TouchableOpacity>
+			</View>
+		);
+	}
 
 	return (
 		<View style={styles.container}>
@@ -138,6 +215,22 @@ export default function TransactionHistoryScreen({ navigation }) {
 				onChatPress={() => console.log("Chat pressed")}
 				navigation={navigation}
 			/>
+
+			{/* Error banner if there's an error but still have data */}
+			{isError && allTransactions.length > 0 && (
+				<View
+					style={{
+						backgroundColor: "#fff3cd",
+						padding: 12,
+						margin: 16,
+						borderRadius: 8,
+					}}
+				>
+					<Text style={{ color: "#856404", fontSize: 14 }}>
+						⚠️ Có lỗi khi tải dữ liệu, hiển thị dữ liệu cũ
+					</Text>
+				</View>
+			)}
 
 			{/* Tabs */}
 			<View style={styles.tabContainer}>
@@ -173,92 +266,144 @@ export default function TransactionHistoryScreen({ navigation }) {
 			>
 				{filteredTransactions.length > 0 ? (
 					<View style={styles.transactionsList}>
-						{filteredTransactions.map((transaction) => (
-							<TouchableOpacity
-								key={transaction.id}
-								style={styles.transactionCard}
-								activeOpacity={0.7}
-							>
-								<View style={styles.transactionLeft}>
-									<View
-										style={[
-											styles.transactionIcon,
-											{
-												backgroundColor: `${transaction.color}20`,
-											},
-										]}
-									>
-										<Ionicons
-											name={transaction.icon}
-											size={24}
-											color={transaction.color}
-										/>
-									</View>
-									<View style={styles.transactionInfo}>
-										<Text
-											style={
-												styles.transactionDescription
-											}
+						{filteredTransactions.map((transaction) => {
+							const iconInfo = iconMap[transaction.type] || {
+								icon: "card",
+								color: "#2196F3",
+							};
+
+							// Parse date/time from createdAt (multiple formats supported)
+							let dateStr = "";
+							let timeStr = "";
+							if (transaction.createdAt) {
+								let d;
+								// Try different date formats
+								if (typeof transaction.createdAt === "string") {
+									d = new Date(transaction.createdAt);
+								} else if (
+									typeof transaction.createdAt === "number"
+								) {
+									// Handle both timestamp (ms) and Unix timestamp (seconds)
+									d = new Date(
+										transaction.createdAt > 10000000000
+											? transaction.createdAt
+											: transaction.createdAt * 1000
+									);
+								} else {
+									d = new Date();
+								}
+
+								if (!isNaN(d.getTime())) {
+									dateStr = `${d
+										.getDate()
+										.toString()
+										.padStart(2, "0")}/${(d.getMonth() + 1)
+										.toString()
+										.padStart(2, "0")}/${d.getFullYear()}`;
+									timeStr = `${d
+										.getHours()
+										.toString()
+										.padStart(2, "0")}:${d
+										.getMinutes()
+										.toString()
+										.padStart(2, "0")}`;
+								}
+							}
+
+							return (
+								<TouchableOpacity
+									key={transaction.id}
+									style={styles.transactionCard}
+									activeOpacity={0.7}
+								>
+									<View style={styles.transactionLeft}>
+										<View
+											style={[
+												styles.transactionIcon,
+												{
+													backgroundColor: `${iconInfo.color}20`,
+												},
+											]}
 										>
-											{transaction.description}
-										</Text>
-										<View style={styles.transactionDetails}>
+											<Ionicons
+												name={iconInfo.icon}
+												size={24}
+												color={iconInfo.color}
+											/>
+										</View>
+										<View style={styles.transactionInfo}>
 											<Text
-												style={styles.transactionDate}
+												style={
+													styles.transactionDescription
+												}
 											>
-												{transaction.date} •{" "}
-												{transaction.time}
+												{transaction.description}
 											</Text>
 											<View
-												style={styles.statusContainer}
+												style={
+													styles.transactionDetails
+												}
 											>
+												<Text
+													style={
+														styles.transactionDate
+													}
+												>
+													{dateStr} • {timeStr}
+												</Text>
 												<View
-													style={[
-														styles.statusDot,
-														{
-															backgroundColor:
-																getStatusColor(
+													style={
+														styles.statusContainer
+													}
+												>
+													<View
+														style={[
+															styles.statusDot,
+															{
+																backgroundColor:
+																	getStatusColor(
+																		transaction.status
+																	),
+															},
+														]}
+													/>
+													<Text
+														style={[
+															styles.statusText,
+															{
+																color: getStatusColor(
 																	transaction.status
 																),
-														},
-													]}
-												/>
-												<Text
-													style={[
-														styles.statusText,
-														{
-															color: getStatusColor(
-																transaction.status
-															),
-														},
-													]}
-												>
-													{getStatusText(
-														transaction.status
-													)}
-												</Text>
+															},
+														]}
+													>
+														{getStatusText(
+															transaction.status
+														)}
+													</Text>
+												</View>
 											</View>
 										</View>
 									</View>
-								</View>
-								<Text
-									style={[
-										styles.transactionAmount,
-										{
-											color:
-												transaction.amount > 0
-													? "#4CAF50"
-													: "#F44336",
-										},
-									]}
-								>
-									{transaction.amount > 0 ? "+" : ""}
-									{formatCurrency(
-										Math.abs(transaction.amount)
-									)}
-								</Text>
-							</TouchableOpacity>
-						))}
+									<Text
+										style={[
+											styles.transactionAmount,
+											{
+												color:
+													transaction.amount > 0
+														? "#4CAF50"
+														: "#F44336",
+											},
+										]}
+									>
+										{transaction.amount > 0 ? "+" : ""}
+										{formatCurrency(
+											Math.abs(transaction.amount)
+										)}
+									</Text>
+								</TouchableOpacity>
+							);
+						})}
 					</View>
 				) : (
 					<View style={styles.emptyContainer}>

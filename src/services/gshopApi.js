@@ -250,6 +250,18 @@ const gshopApi = createApi({
 				method: "GET",
 			}),
 		}),
+		currentUserTransactions: builder.query({
+			query: () => ({
+				url: endpoints.TRANSACTION_HISTORY,
+				method: "GET",
+				params: {
+					direction: "DESC",
+					page: 0,
+					size: 50
+				}
+			}),
+			providesTags: ["Wallet"],
+		}),
 	}),
 });
 
@@ -281,6 +293,7 @@ export const {
 	useLazyCheckPaymentQuery,
 	useGetPurchaseRequestDetailQuery,
 	useTransactionHistoryQuery,
+	useCurrentUserTransactionsQuery,
 } = gshopApi;
 
 export default gshopApi;
