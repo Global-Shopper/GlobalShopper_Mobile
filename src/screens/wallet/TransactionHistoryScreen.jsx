@@ -115,8 +115,7 @@ export default function TransactionHistoryScreen({ navigation }) {
 			case "processing":
 			case "pending":
 				return "Đang xử lý";
-			case "failed":
-			case "failure":
+			case "fail":
 				return "Thất bại";
 			case "cancelled":
 				return "Đã huỷ";
