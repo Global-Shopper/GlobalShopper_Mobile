@@ -1,20 +1,39 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useCallback, useState } from "react";
+import {
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
-import { useGetWalletQuery } from "../../services/gshopApi";
+import {
+	useCurrentUserTransactionsQuery,
+	useGetWalletQuery,
+} from "../../services/gshopApi";
 
 export default function WalletScreen({ navigation }) {
-	const { data: wallet, isLoading: isWalletLoading, refetch } = useGetWalletQuery()
+	const {
+		data: wallet,
+		isLoading: isWalletLoading,
+		refetch,
+	} = useGetWalletQuery();
+	const {
+		data: transactions,
+		isLoading: isTransactionsLoading,
+		refetch: refetchTransactions,
+	} = useCurrentUserTransactionsQuery();
 	const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
 	useFocusEffect(
 		useCallback(() => {
 			refetch();
-		}, [refetch])
+			refetchTransactions();
+		}, [refetch, refetchTransactions])
 	);
 
 	const formatCurrency = (amount) => {
@@ -24,35 +43,108 @@ export default function WalletScreen({ navigation }) {
 		}).format(amount);
 	};
 
-	const recentTransactions = [
-		{
-			id: 1,
-			type: "income",
-			amount: 500000,
-			description: "Nạp tiền",
-			date: "Hôm nay",
-			icon: "add-circle",
-			color: "#4CAF50",
-		},
-		{
-			id: 2,
-			type: "expense",
-			amount: -50000,
-			description: "Phí dịch vụ",
-			date: "Hôm qua",
-			icon: "remove-circle",
-			color: "#F44336",
-		},
-		{
-			id: 3,
-			type: "income",
-			amount: 750000,
-			description: "Hoàn tiền đơn #1234",
-			date: "2 ngày trước",
-			icon: "refresh-circle",
-			color: "#FF9800",
-		},
-	];
+	// Get recent transactions (latest 3)
+	const getTransactionsArray = () => {
+		if (Array.isArray(transactions)) {
+			return transactions;
+		} else if (transactions?.data && Array.isArray(transactions.data)) {
+			return transactions.data;
+		} else if (
+			transactions?.content &&
+			Array.isArray(transactions.content)
+		) {
+			return transactions.content;
+		} else if (
+			transactions?.transactions &&
+			Array.isArray(transactions.transactions)
+		) {
+			return transactions.transactions;
+		}
+		return [];
+	};
+
+	const recentTransactions = getTransactionsArray().slice(0, 3);
+
+	// Format transaction data for display
+	const formatTransactionIcon = (type) => {
+		switch (type) {
+			case "DEPOSIT":
+				return { icon: "add-circle", color: "#4CAF50" };
+			case "WITHDRAWAL":
+				return { icon: "remove-circle", color: "#F44336" };
+			case "REFUND":
+				return { icon: "refresh-circle", color: "#FF9800" };
+			case "SERVICE_FEE":
+				return { icon: "card", color: "#FF5722" };
+			default:
+				return { icon: "swap-horizontal", color: "#9C27B0" };
+		}
+	};
+
+	const formatTransactionDate = (dateString) => {
+		let dateStr = "";
+		let timeStr = "";
+		if (dateString) {
+			let d;
+			// Try different date formats
+			if (typeof dateString === "string") {
+				d = new Date(dateString);
+			} else if (typeof dateString === "number") {
+				// Handle both timestamp (ms) and Unix timestamp (seconds)
+				d = new Date(
+					dateString > 10000000000 ? dateString : dateString * 1000
+				);
+			} else {
+				d = new Date();
+			}
+
+			if (!isNaN(d.getTime())) {
+				dateStr = `${d.getDate().toString().padStart(2, "0")}/${(
+					d.getMonth() + 1
+				)
+					.toString()
+					.padStart(2, "0")}/${d.getFullYear()}`;
+				timeStr = `${d.getHours().toString().padStart(2, "0")}:${d
+					.getMinutes()
+					.toString()
+					.padStart(2, "0")}`;
+			}
+		}
+		return { dateStr, timeStr };
+	};
+
+	const getStatusText = (status) => {
+		switch ((status || "").toLowerCase()) {
+			case "success":
+				return "Hoàn thành";
+			case "pending":
+				return "Đang xử lý";
+			case "fail":
+				return "Thất bại";
+			case "cancelled":
+				return "Đã huỷ";
+			default:
+				return status || "Không xác định";
+		}
+	};
+
+	const getStatusColor = (status) => {
+		switch ((status || "").toLowerCase()) {
+			case "completed":
+			case "success":
+				return "#4CAF50";
+			case "processing":
+			case "pending":
+				return "#FF9800";
+			case "failed":
+			case "failure":
+				return "#F44336";
+			case "cancelled":
+				return "#F44336";
+			default:
+				return "#6c757d";
+		}
+	};
 
 	return (
 		<View style={styles.container}>
@@ -64,7 +156,6 @@ export default function WalletScreen({ navigation }) {
 				onChatPress={() => console.log("Chat pressed")}
 				navigation={navigation}
 			/>
-
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
@@ -162,56 +253,131 @@ export default function WalletScreen({ navigation }) {
 						</TouchableOpacity>
 					</View>
 
-					{recentTransactions.map((transaction, index) => (
-						<View
-							key={transaction.id}
-							style={[
-								styles.transactionItem,
-								index === recentTransactions.length - 1 && {
-									borderBottomWidth: 0,
-								},
-							]}
-						>
-							<View style={styles.transactionLeft}>
+					{isTransactionsLoading ? (
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="small" color="#42A5F5" />
+							<Text style={styles.loadingText}>Đang tải...</Text>
+						</View>
+					) : recentTransactions.length === 0 ? (
+						<View style={styles.emptyContainer}>
+							<Ionicons
+								name="receipt-outline"
+								size={48}
+								color="#ccc"
+							/>
+							<Text style={styles.emptyText}>
+								Chưa có giao dịch nào
+							</Text>
+						</View>
+					) : (
+						recentTransactions.map((transaction, index) => {
+							const iconData = formatTransactionIcon(
+								transaction.type
+							);
+							const { dateStr, timeStr } = formatTransactionDate(
+								transaction.createdAt
+							);
+							return (
 								<View
+									key={transaction.id}
 									style={[
-										styles.transactionIcon,
-										{
-											backgroundColor: `${transaction.color}20`,
+										styles.transactionItem,
+										index ===
+											recentTransactions.length - 1 && {
+											borderBottomWidth: 0,
 										},
 									]}
 								>
-									<Ionicons
-										name={transaction.icon}
-										size={20}
-										color={transaction.color}
-									/>
-								</View>
-								<View style={styles.transactionInfo}>
-									<Text style={styles.transactionDescription}>
-										{transaction.description}
+									<View style={styles.transactionLeft}>
+										<View
+											style={[
+												styles.transactionIcon,
+												{
+													backgroundColor: `${iconData.color}20`,
+												},
+											]}
+										>
+											<Ionicons
+												name={iconData.icon}
+												size={24}
+												color={iconData.color}
+											/>
+										</View>
+										<View style={styles.transactionInfo}>
+											<Text
+												style={
+													styles.transactionDescription
+												}
+											>
+												{transaction.description ||
+													transaction.type}
+											</Text>
+											<View
+												style={
+													styles.transactionDetails
+												}
+											>
+												<Text
+													style={
+														styles.transactionDate
+													}
+												>
+													{dateStr} • {timeStr}
+												</Text>
+												<View
+													style={
+														styles.statusContainer
+													}
+												>
+													<View
+														style={[
+															styles.statusDot,
+															{
+																backgroundColor:
+																	getStatusColor(
+																		transaction.status
+																	),
+															},
+														]}
+													/>
+													<Text
+														style={[
+															styles.statusText,
+															{
+																color: getStatusColor(
+																	transaction.status
+																),
+															},
+														]}
+													>
+														{getStatusText(
+															transaction.status
+														)}
+													</Text>
+												</View>
+											</View>
+										</View>
+									</View>
+									<Text
+										style={[
+											styles.transactionAmount,
+											{
+												color:
+													transaction.amount > 0
+														? "#4CAF50"
+														: "#F44336",
+											},
+										]}
+									>
+										{transaction.amount > 0 ? "+" : ""}
+										{formatCurrency(
+											Math.abs(transaction.amount)
+										)}
 									</Text>
-									<Text style={styles.transactionDate}>
-										{transaction.date}
-									</Text>
 								</View>
-							</View>
-							<Text
-								style={[
-									styles.transactionAmount,
-									{
-										color:
-											transaction.type === "income"
-												? "#4CAF50"
-												: "#F44336",
-									},
-								]}
-							>
-								{transaction.type === "income" ? "+" : ""}
-								{formatCurrency(Math.abs(transaction.amount))}
-							</Text>
-						</View>
-					))}
+							);
+						})
+					)}
 				</View>
 
 				{/* Quick Info */}
@@ -409,17 +575,56 @@ const styles = StyleSheet.create({
 	},
 	transactionDescription: {
 		fontSize: 16,
-		fontWeight: "500",
+		fontWeight: "600",
 		color: "#1a1a1a",
-		marginBottom: 2,
+		marginBottom: 4,
+	},
+	transactionDetails: {
+		flexDirection: "column",
+		gap: 4,
 	},
 	transactionDate: {
 		fontSize: 14,
 		color: "#6c757d",
 	},
+	statusContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	statusDot: {
+		width: 6,
+		height: 6,
+		borderRadius: 3,
+		marginRight: 6,
+	},
+	statusText: {
+		fontSize: 12,
+		fontWeight: "500",
+	},
 	transactionAmount: {
-		fontSize: 16,
-		fontWeight: "600",
+		fontSize: 18,
+		fontWeight: "700",
+		textAlign: "right",
+	},
+	loadingContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 20,
+	},
+	loadingText: {
+		marginLeft: 8,
+		fontSize: 14,
+		color: "#6c757d",
+	},
+	emptyContainer: {
+		alignItems: "center",
+		paddingVertical: 30,
+	},
+	emptyText: {
+		fontSize: 14,
+		color: "#6c757d",
+		marginTop: 8,
 	},
 	quickInfoContainer: {
 		marginTop: 10,

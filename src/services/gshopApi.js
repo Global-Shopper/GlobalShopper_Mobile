@@ -243,13 +243,7 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["Wallet"],
 		}),
-		transactionHistory: builder.query({
-			query: (data) => ({
-				params: data,
-				url: endpoints.TRANSACTION_HISTORY,
-				method: "GET",
-			}),
-		}),
+
 		currentUserTransactions: builder.query({
 			query: () => ({
 				url: endpoints.TRANSACTION_HISTORY,
@@ -257,8 +251,8 @@ const gshopApi = createApi({
 				params: {
 					direction: "DESC",
 					page: 0,
-					size: 50
-				}
+					size: 50,
+				},
 			}),
 			providesTags: ["Wallet"],
 		}),
