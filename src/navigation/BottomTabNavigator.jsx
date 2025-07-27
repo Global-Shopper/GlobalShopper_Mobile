@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Alert, Platform, TouchableOpacity } from "react-native";
+import { Platform, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { Text } from "../components/ui/text";
 
@@ -8,6 +8,7 @@ import { Text } from "../components/ui/text";
 import AccountScreen from "../screens/main/AccountScreen";
 import GuestAccountScreen from "../screens/main/GuestAccountScreen";
 import GuestHomeScreen from "../screens/main/GuestHomeScreen";
+import GuestScreen from "../screens/main/GuestScreen";
 import HomeScreen from "../screens/main/HomeScreen";
 import OrderScreen from "../screens/main/OrderScreen";
 import RequestScreen from "../screens/main/RequestScreen";
@@ -22,22 +23,19 @@ const BottomTabNavigator = ({ navigation }) => {
 	const user = useSelector((state) => state?.rootReducer?.user);
 	const isGuest = !user || !user.token;
 
-	// Handle guest access to protected tabs
-	const handleGuestAccess = (tabName) => {
-		Alert.alert(
-			"Yêu cầu đăng nhập",
-			`Bạn cần đăng nhập để sử dụng tính năng ${tabName}`,
-			[
-				{
-					text: "Hủy",
-					style: "cancel",
-				},
-				{
-					text: "Đăng nhập",
-					onPress: () => navigation.navigate("Login"),
-				},
-			]
+	// Guest screen component with tab info
+	const createGuestScreen = (tabName, tabIcon) => {
+		const GuestScreenComponent = (props) => (
+			<GuestScreen
+				{...props}
+				route={{
+					...props.route,
+					params: { tabName, tabIcon },
+				}}
+			/>
 		);
+		GuestScreenComponent.displayName = `GuestScreen_${tabName}`;
+		return GuestScreenComponent;
 	};
 	// Custom tab button component
 	const CustomTabButton = ({
@@ -173,22 +171,22 @@ const BottomTabNavigator = ({ navigation }) => {
 			/>
 			<Tab.Screen
 				name="Wallet"
-				component={WalletScreen}
+				component={
+					isGuest
+						? createGuestScreen("Ví tiền", "wallet-outline")
+						: WalletScreen
+				}
 				options={{
 					title: "Ví tiền",
-				}}
-				listeners={{
-					tabPress: (e) => {
-						if (isGuest) {
-							e.preventDefault();
-							handleGuestAccess("Ví tiền");
-						}
-					},
 				}}
 			/>
 			<Tab.Screen
 				name="Request"
-				component={RequestScreen}
+				component={
+					isGuest
+						? createGuestScreen("Yêu cầu", "document-text-outline")
+						: RequestScreen
+				}
 				options={{
 					title: "Yêu cầu",
 					tabBarBadge: 3,
@@ -204,18 +202,14 @@ const BottomTabNavigator = ({ navigation }) => {
 						marginTop: 2,
 					},
 				}}
-				listeners={{
-					tabPress: (e) => {
-						if (isGuest) {
-							e.preventDefault();
-							handleGuestAccess("Yêu cầu");
-						}
-					},
-				}}
 			/>
 			<Tab.Screen
 				name="Order"
-				component={OrderScreen}
+				component={
+					isGuest
+						? createGuestScreen("Đơn hàng", "bag-handle-outline")
+						: OrderScreen
+				}
 				options={{
 					title: "Đơn hàng",
 					tabBarBadge: 2,
@@ -229,14 +223,6 @@ const BottomTabNavigator = ({ navigation }) => {
 						borderRadius: 9,
 						marginLeft: 8,
 						marginTop: 2,
-					},
-				}}
-				listeners={{
-					tabPress: (e) => {
-						if (isGuest) {
-							e.preventDefault();
-							handleGuestAccess("Đơn hàng");
-						}
 					},
 				}}
 			/>
