@@ -1,59 +1,179 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	Image,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import { Text } from "../../components/ui/text";
 
 export default function GuestHomeScreen({ navigation }) {
-	const handleLoginPress = () => {
-		navigation.navigate("Login");
-	};
+	// Truy cập nhanh cho guest
+	const quickAccess = [
+		{
+			id: 1,
+			title: "Hỗ trợ",
+			icon: "headset-outline",
+			color: "#42A5F5",
+			action: () => console.log("Navigate to support"),
+		},
+		{
+			id: 2,
+			title: "Hướng dẫn",
+			icon: "book-outline",
+			color: "#42A5F5",
+			action: () => navigation.navigate("FAQScreen"),
+		},
+		{
+			id: 3,
+			title: "Thông tin thuế",
+			icon: "receipt-outline",
+			color: "#42A5F5",
+			action: () => console.log("Navigate to tax info"),
+		},
+		{
+			id: 4,
+			title: "Tính phí",
+			icon: "calculator-outline",
+			color: "#42A5F5",
+			action: () => console.log("Navigate to fee calculator"),
+		},
+	];
 
-	const handleRegisterPress = () => {
-		navigation.navigate("Signup");
-	};
-
+	// Dịch vụ nổi bật
 	const featuredServices = [
 		{
 			id: 1,
-			title: "Mua hàng từ link",
-			description: "Dán link sản phẩm, chúng tôi mua hộ",
+			title: "Mua hộ hàng từ mọi sàn thương mại điện tử",
+			subtitle: "",
+			icon: "bag-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 2,
+			title: "Nhận order từ nước ngoài về Việt Nam nhanh chóng",
+			subtitle: "",
+			icon: "airplane-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 3,
+			title: "Báo giá minh bạch, không phí ẩn",
+			subtitle: "",
+			icon: "receipt-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 4,
+			title: "Theo dõi đơn hàng dễ dàng, giao tận nơi",
+			subtitle: "",
+			icon: "location-outline",
+			color: "#42A5F5",
+		},
+	];
+
+	// Sàn thương mại
+	const marketplaces = [
+		{
+			id: 1,
+			name: "Ali Express",
+			image: require("../../assets/images/ecommerce/aliexpress-logo.png"),
+		},
+		{
+			id: 2,
+			name: "Amazon",
+			image: require("../../assets/images/ecommerce/amazon-logo.png"),
+		},
+		{
+			id: 3,
+			name: "ASOS",
+			image: require("../../assets/images/ecommerce/asos-logo.png"),
+		},
+		{
+			id: 4,
+			name: "DH Gate",
+			image: require("../../assets/images/ecommerce/dhgate-logo.png"),
+		},
+		{
+			id: 5,
+			name: "Ebay",
+			image: require("../../assets/images/ecommerce/ebay-logo.png"),
+		},
+		{
+			id: 6,
+			name: "Gmarket",
+			image: require("../../assets/images/ecommerce/gmarket-logo.png"),
+		},
+		{
+			id: 7,
+			name: "Shein",
+			image: require("../../assets/images/ecommerce/shein-logo.png"),
+		},
+	];
+
+	// Lý do chọn chúng tôi
+	const whyChooseUs = [
+		{
+			id: 1,
+			title: "Giá cả cạnh tranh",
+			subtitle: "Tiết kiệm tới 30% so với mua trực tiếp",
+			icon: "pricetag-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 2,
+			title: "Vận chuyển an toàn",
+			subtitle: "Bảo hiểm 100% hàng hóa",
+			icon: "shield-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 3,
+			title: "Hỗ trợ 24/7",
+			subtitle: "Tư vấn miễn phí mọi lúc",
+			icon: "time-outline",
+			color: "#42A5F5",
+		},
+		{
+			id: 4,
+			title: "Quy trình minh bạch",
+			subtitle: "Theo dõi đơn hàng realtime",
+			icon: "eye-outline",
+			color: "#42A5F5",
+		},
+	];
+
+	// Các bước sử dụng dịch vụ
+	const serviceSteps = [
+		{
+			id: 1,
+			title: "Gửi link sản phẩm",
+			description: "Copy link sản phẩm từ bất kỳ sàn nào",
 			icon: "link-outline",
 			color: "#42A5F5",
 		},
 		{
 			id: 2,
-			title: "Tìm kiếm sản phẩm",
-			description: "Hỗ trợ tìm kiếm sản phẩm theo yêu cầu",
-			icon: "search-outline",
-			color: "#FF9800",
+			title: "Nhận báo giá",
+			description: "Nhận báo giá chi tiết và minh bạch",
+			icon: "document-text-outline",
+			color: "#BBDEFB",
 		},
 		{
 			id: 3,
-			title: "Vận chuyển nhanh",
-			description: "Giao hàng tận nơi, an toàn",
-			icon: "rocket-outline",
-			color: "#4CAF50",
-		},
-	];
-
-	const popularStores = [
-		{
-			id: 1,
-			name: "Taobao",
-			logo: "🛒",
-			description: "Mua sắm từ Taobao với giá tốt nhất",
+			title: "Xác nhận đơn hàng",
+			description: "Thanh toán và xác nhận mua hàng",
+			icon: "checkmark-circle-outline",
+			color: "#90CAF9",
 		},
 		{
-			id: 2,
-			name: "Tmall",
-			logo: "🏪",
-			description: "Thương hiệu chính hãng từ Tmall",
-		},
-		{
-			id: 3,
-			name: "1688",
-			logo: "🏭",
-			description: "Nguồn hàng sỉ trực tiếp từ nhà máy",
+			id: 4,
+			title: "Giao hàng về tay bạn",
+			description: "Nhận hàng tại nhà một cách an toàn",
+			icon: "home-outline",
+			color: "#42A5F5",
 		},
 	];
 
@@ -69,18 +189,38 @@ export default function GuestHomeScreen({ navigation }) {
 				>
 					<View style={styles.headerContent}>
 						<View style={styles.headerLeft}>
-							<Text style={styles.welcomeText}>Chào mừng đến với</Text>
+							<Text style={styles.welcomeText}>
+								Chào mừng đến với
+							</Text>
 							<Text style={styles.appName}>Global Shopper</Text>
 							<Text style={styles.subtitle}>
-								Dịch vụ mua hàng Trung Quốc uy tín
+								Mua hàng quốc tế chưa bao giờ dễ hơn đến thế
 							</Text>
 						</View>
-						<TouchableOpacity
-							style={styles.notificationButton}
-							onPress={() => console.log("Notification pressed")}
-						>
-							<Ionicons name="notifications-outline" size={24} color="#fff" />
-						</TouchableOpacity>
+						<View style={styles.headerIcons}>
+							<TouchableOpacity
+								style={styles.iconButton}
+								onPress={() => console.log("Chat pressed")}
+							>
+								<Ionicons
+									name="chatbubble-outline"
+									size={24}
+									color="#fff"
+								/>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.iconButton}
+								onPress={() =>
+									console.log("Notification pressed")
+								}
+							>
+								<Ionicons
+									name="notifications-outline"
+									size={24}
+									color="#fff"
+								/>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</LinearGradient>
 			</View>
@@ -90,99 +230,345 @@ export default function GuestHomeScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Login/Register Actions */}
-				<View style={styles.authSection}>
-					<Text style={styles.authTitle}>
-						Đăng nhập để trải nghiệm đầy đủ
-					</Text>
-					<Text style={styles.authSubtitle}>
-						Quản lý đơn hàng, theo dõi vận chuyển và nhiều tính năng khác
-					</Text>
-					
-					<View style={styles.authButtons}>
-						<TouchableOpacity
-							style={styles.loginButton}
-							onPress={handleLoginPress}
-						>
-							<LinearGradient
-								colors={["#42A5F5", "#1976D2"]}
-								start={{ x: 0, y: 0 }}
-								end={{ x: 1, y: 1 }}
-								style={styles.buttonGradient}
-							>
-								<Text style={styles.loginButtonText}>Đăng nhập</Text>
-							</LinearGradient>
-						</TouchableOpacity>
-						
-						<TouchableOpacity
-							style={styles.registerButton}
-							onPress={handleRegisterPress}
-						>
-							<Text style={styles.registerButtonText}>Đăng ký ngay</Text>
-						</TouchableOpacity>
+				{/* Quick Access */}
+				<View style={styles.quickAccessSection}>
+					<View style={styles.quickAccessContainer}>
+						<Text style={styles.sectionTitle}>Truy cập nhanh</Text>
+						<View style={styles.quickAccessRow}>
+							{quickAccess.map((item) => (
+								<TouchableOpacity
+									key={item.id}
+									style={styles.quickAccessItem}
+									onPress={item.action}
+									activeOpacity={0.7}
+								>
+									<View
+										style={[
+											styles.quickAccessIcon,
+											{
+												backgroundColor: `${item.color}20`,
+											},
+										]}
+									>
+										<Ionicons
+											name={item.icon}
+											size={24}
+											color={item.color}
+										/>
+									</View>
+									<Text style={styles.quickAccessText}>
+										{item.title}
+									</Text>
+								</TouchableOpacity>
+							))}
+						</View>
 					</View>
 				</View>
 
 				{/* Featured Services */}
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Dịch vụ nổi bật</Text>
-					<View style={styles.servicesGrid}>
-						{featuredServices.map((service) => (
-							<View key={service.id} style={styles.serviceCard}>
-								<View style={[styles.serviceIcon, { backgroundColor: `${service.color}20` }]}>
-									<Ionicons
-										name={service.icon}
-										size={32}
-										color={service.color}
-									/>
+					<View style={styles.featuredServicesContainer}>
+						<Text style={styles.sectionTitle}>Dịch vụ nổi bật</Text>
+						<View style={styles.featuredServicesGrid}>
+							{featuredServices.map((service) => (
+								<TouchableOpacity
+									key={service.id}
+									style={styles.featuredServiceCard}
+									activeOpacity={0.8}
+								>
+									<View style={styles.featuredServiceContent}>
+										<View
+											style={[
+												styles.featuredServiceIcon,
+												{
+													backgroundColor: `${service.color}15`,
+												},
+											]}
+										>
+											<Ionicons
+												name={service.icon}
+												size={24}
+												color={service.color}
+											/>
+										</View>
+										<View
+											style={styles.featuredServiceText}
+										>
+											<Text
+												style={
+													styles.featuredServiceTitle
+												}
+											>
+												{service.title}
+											</Text>
+											<Text
+												style={
+													styles.featuredServiceSubtitle
+												}
+											>
+												{service.subtitle}
+											</Text>
+										</View>
+									</View>
+								</TouchableOpacity>
+							))}
+						</View>
+					</View>
+				</View>
+
+				{/* Service Steps */}
+				<View style={styles.section}>
+					<View style={styles.stepsContainer}>
+						<Text style={styles.sectionTitle}>
+							Các bước sử dụng dịch vụ
+						</Text>
+						{serviceSteps.map((step, index) => (
+							<View key={step.id} style={styles.stepItem}>
+								<View style={styles.stepContent}>
+									<View
+										style={[
+											styles.stepIconContainer,
+											{
+												backgroundColor: `${step.color}20`,
+											},
+										]}
+									>
+										<Text style={styles.stepNumber}>
+											{step.id}
+										</Text>
+									</View>
+									<View style={styles.stepInfo}>
+										<Text style={styles.stepTitle}>
+											{step.title}
+										</Text>
+										<Text style={styles.stepDescription}>
+											{step.description}
+										</Text>
+									</View>
 								</View>
-								<Text style={styles.serviceTitle}>{service.title}</Text>
-								<Text style={styles.serviceDescription}>
-									{service.description}
-								</Text>
+								{index < serviceSteps.length - 1 && (
+									<View style={styles.stepConnector}>
+										<View style={styles.stepLine} />
+									</View>
+								)}
 							</View>
 						))}
 					</View>
 				</View>
 
-				{/* Popular Stores */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Kênh mua hàng phổ biến</Text>
-					{popularStores.map((store) => (
-						<View key={store.id} style={styles.storeCard}>
-							<View style={styles.storeInfo}>
-								<Text style={styles.storeLogo}>{store.logo}</Text>
-								<View style={styles.storeDetails}>
-									<Text style={styles.storeName}>{store.name}</Text>
-									<Text style={styles.storeDescription}>
-										{store.description}
-									</Text>
-								</View>
+				{/* CTA Login */}
+				<View style={styles.ctaSection}>
+					<View style={styles.ctaContainer}>
+						<View style={styles.ctaContent}>
+							<View style={styles.ctaTextContainer}>
+								<Text style={styles.ctaTitle}>
+									Bắt đầu trải nghiệm mua hàng dễ dàng
+								</Text>
+								<Text style={styles.ctaSubtitle}>
+									Đăng nhập để theo dõi đơn hàng và nhận hỗ
+									trợ nhanh chóng
+								</Text>
 							</View>
-							<Ionicons name="chevron-forward" size={20} color="#ccc" />
+							<TouchableOpacity
+								style={styles.ctaLoginButton}
+								onPress={() => navigation.navigate("Login")}
+							>
+								<Text style={styles.ctaLoginText}>
+									Đăng nhập
+								</Text>
+							</TouchableOpacity>
 						</View>
-					))}
+					</View>
 				</View>
 
-				{/* Benefits */}
+				{/* How We Help You Buy */}
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Tại sao chọn chúng tôi?</Text>
-					<View style={styles.benefitsContainer}>
-						<View style={styles.benefitItem}>
-							<Ionicons name="shield-checkmark" size={24} color="#4CAF50" />
-							<Text style={styles.benefitText}>Uy tín, đảm bảo chất lượng</Text>
+					<View style={styles.helpBuyContainer}>
+						<Text style={styles.sectionTitle}>
+							Chúng tôi giúp bạn mua hàng
+						</Text>
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={
+								styles.purchaseScrollContainer
+							}
+							snapToInterval={300}
+							snapToAlignment="start"
+							decelerationRate="fast"
+						>
+							{/* Step 1: Create Request */}
+							<View style={styles.purchaseStep}>
+								<View style={styles.stepCard}>
+									<View style={styles.stepIcon}>
+										<Ionicons
+											name="add-circle-outline"
+											size={48}
+											color="#42A5F5"
+										/>
+									</View>
+									<Text style={styles.purchaseStepTitle}>
+										Tạo yêu cầu
+									</Text>
+									<Text
+										style={styles.purchaseStepDescription}
+									>
+										Click &ldquo;Tạo yêu cầu&rdquo; để nhận
+										được báo giá tốt nhất
+									</Text>
+									<TouchableOpacity style={styles.stepButton}>
+										<Text style={styles.stepButtonText}>
+											Tạo ngay
+										</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+
+							{/* Step 2: Marketplaces */}
+							<View style={styles.purchaseStep}>
+								<View style={styles.stepCard}>
+									<Text style={styles.purchaseStepTitle}>
+										Các sàn thương mại
+									</Text>
+									<Text
+										style={styles.purchaseStepDescription}
+									>
+										Chúng tôi giúp bạn mua hàng tại các sàn
+										thương mại điện tử nổi tiếng
+									</Text>
+									<View style={styles.marketplaceContainer}>
+										{marketplaces
+											.slice(0, 6)
+											.map((marketplace, index) => (
+												<View
+													key={marketplace.id}
+													style={
+														styles.marketplaceItem
+													}
+												>
+													<Image
+														source={
+															marketplace.image
+														}
+														style={
+															styles.marketplaceImage
+														}
+														resizeMode="contain"
+													/>
+													<Text
+														style={
+															styles.marketplaceName
+														}
+													>
+														{marketplace.name}
+													</Text>
+												</View>
+											))}
+									</View>
+								</View>
+							</View>
+
+							{/* Step 3: Guide */}
+							<View style={styles.purchaseStep}>
+								<View style={styles.stepCard}>
+									<View style={styles.stepIcon}>
+										<Ionicons
+											name="book-outline"
+											size={48}
+											color="#4CAF50"
+										/>
+									</View>
+									<Text style={styles.purchaseStepTitle}>
+										Hướng dẫn đơn giản
+									</Text>
+									<Text
+										style={styles.purchaseStepDescription}
+									>
+										Hướng dẫn bạn tạo yêu cầu chỉ vài bước
+										đơn giản
+									</Text>
+									<TouchableOpacity style={styles.stepButton}>
+										<Text style={styles.stepButtonText}>
+											Xem ngay!
+										</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</View>
+
+				{/* Why Choose Us */}
+				<View style={styles.section}>
+					<View style={styles.whyChooseContainer}>
+						<Text style={styles.sectionTitle}>
+							Tại sao chọn chúng tôi
+						</Text>
+						<View style={styles.whyChooseGrid}>
+							{whyChooseUs.map((reason) => (
+								<View key={reason.id} style={styles.reasonCard}>
+									<View style={styles.reasonIcon}>
+										<Ionicons
+											name={reason.icon}
+											size={24}
+											color="#42A5F5"
+										/>
+									</View>
+									<Text style={styles.reasonTitle}>
+										{reason.title}
+									</Text>
+									<Text style={styles.reasonSubtitle}>
+										{reason.subtitle}
+									</Text>
+								</View>
+							))}
 						</View>
-						<View style={styles.benefitItem}>
-							<Ionicons name="flash" size={24} color="#FF9800" />
-							<Text style={styles.benefitText}>Giao hàng nhanh chóng</Text>
+					</View>
+				</View>
+
+				{/* Security Banner */}
+				<View style={styles.section}>
+					<View style={styles.securityBanner}>
+						<View style={styles.securityContent}>
+							<View style={styles.securityIconContainer}>
+								<Ionicons
+									name="shield-checkmark"
+									size={32}
+									color="#4CAF50"
+								/>
+							</View>
+							<View style={styles.securityTextContainer}>
+								<Text style={styles.securityTitle}>
+									Bảo đảm an toàn thông tin
+								</Text>
+								<Text style={styles.securityDescription}>
+									Thông tin khách hàng được mã hóa và bảo mật
+									100%. Chúng tôi cam kết không chia sẻ dữ
+									liệu cá nhân của bạn với bên thứ ba.
+								</Text>
+							</View>
 						</View>
-						<View style={styles.benefitItem}>
-							<Ionicons name="card" size={24} color="#42A5F5" />
-							<Text style={styles.benefitText}>Thanh toán an toàn</Text>
-						</View>
-						<View style={styles.benefitItem}>
-							<Ionicons name="headset" size={24} color="#9C27B0" />
-							<Text style={styles.benefitText}>Hỗ trợ 24/7</Text>
+						<View style={styles.securityFeatures}>
+							<View style={styles.securityFeature}>
+								<Ionicons
+									name="eye-off"
+									size={16}
+									color="#4CAF50"
+								/>
+								<Text style={styles.securityFeatureText}>
+									Không chia sẻ dữ liệu
+								</Text>
+							</View>
+							<View style={styles.securityFeature}>
+								<Ionicons
+									name="checkmark-circle"
+									size={16}
+									color="#4CAF50"
+								/>
+								<Text style={styles.securityFeatureText}>
+									Tuân thủ quy định
+								</Text>
+							</View>
 						</View>
 					</View>
 				</View>
@@ -194,14 +580,16 @@ export default function GuestHomeScreen({ navigation }) {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#f8f9fa",
+		backgroundColor: "#f8fafc",
 	},
 	guestHeader: {
 		paddingTop: 50,
 	},
 	headerGradient: {
-		paddingHorizontal: 20,
-		paddingVertical: 20,
+		paddingHorizontal: 24,
+		paddingVertical: 24,
+		borderBottomLeftRadius: 28,
+		borderBottomRightRadius: 28,
 	},
 	headerContent: {
 		flexDirection: "row",
@@ -213,21 +601,30 @@ const styles = StyleSheet.create({
 	},
 	welcomeText: {
 		fontSize: 14,
-		color: "#E3F2FD",
+		color: "rgba(255, 255, 255, 0.8)",
 		marginBottom: 4,
+		fontWeight: "500",
 	},
 	appName: {
-		fontSize: 24,
-		fontWeight: "bold",
+		fontSize: 28,
+		fontWeight: "700",
 		color: "#fff",
-		marginBottom: 4,
+		marginBottom: 6,
+		letterSpacing: 0.5,
 	},
 	subtitle: {
-		fontSize: 14,
-		color: "#E3F2FD",
+		fontSize: 15,
+		color: "rgba(255, 255, 255, 0.85)",
+		lineHeight: 20,
 	},
-	notificationButton: {
-		padding: 8,
+	headerIcons: {
+		flexDirection: "row",
+		gap: 16,
+	},
+	iconButton: {
+		padding: 10,
+		borderRadius: 12,
+		backgroundColor: "rgba(255, 255, 255, 0.15)",
 	},
 	content: {
 		flex: 1,
@@ -291,109 +688,490 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	section: {
-		marginHorizontal: 20,
-		marginBottom: 24,
+		marginHorizontal: 16,
+		marginBottom: 12,
+	},
+	quickAccessSection: {
+		marginHorizontal: 16,
+		marginBottom: 12,
+		marginTop: 20,
 	},
 	sectionTitle: {
-		fontSize: 20,
-		fontWeight: "600",
-		color: "#1a1a1a",
-		marginBottom: 16,
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#1e293b",
+		marginBottom: 12,
+		textAlign: "left",
+		letterSpacing: 0.2,
 	},
-	servicesGrid: {
+
+	// Quick Access Styles
+	quickAccessContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 4,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	quickAccessRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		gap: 6,
+	},
+	quickAccessItem: {
+		backgroundColor: "transparent",
+		borderRadius: 12,
+		padding: 12,
+		alignItems: "center",
+		flex: 1,
+	},
+	quickAccessIcon: {
+		width: 40,
+		height: 40,
+		borderRadius: 12,
+		justifyContent: "center",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	quickAccessText: {
+		fontSize: 11,
+		fontWeight: "600",
+		color: "#334155",
+		textAlign: "center",
+		lineHeight: 14,
+	},
+
+	// Featured Services Styles
+	featuredServicesContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginHorizontal: 2,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 4,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	featuredServicesGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		gap: 12,
+		justifyContent: "space-between",
 	},
-	serviceCard: {
-		flex: 1,
-		minWidth: "30%",
-		backgroundColor: "#fff",
-		padding: 16,
+	featuredServiceCard: {
+		width: "48%",
+		backgroundColor: "#f8fafc",
 		borderRadius: 12,
+		marginBottom: 10,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	featuredServiceContent: {
+		padding: 14,
+		flexDirection: "row",
+		alignItems: "flex-start",
+	},
+	featuredServiceIcon: {
+		width: 36,
+		height: 36,
+		borderRadius: 10,
+		justifyContent: "center",
 		alignItems: "center",
+		marginRight: 10,
+		marginTop: 2,
+	},
+	featuredServiceText: {
+		flex: 1,
+	},
+	featuredServiceTitle: {
+		fontSize: 13,
+		fontWeight: "600",
+		color: "#1e293b",
+		marginBottom: 4,
+		lineHeight: 16,
+	},
+	featuredServiceSubtitle: {
+		fontSize: 11,
+		color: "#64748b",
+		lineHeight: 14,
+		fontWeight: "500",
+	},
+
+	// Service Steps Styles
+	stepsContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 20,
+		padding: 24,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.12,
+		shadowRadius: 16,
+		elevation: 8,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	stepItem: {
+		position: "relative",
+	},
+	stepContent: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 4,
+	},
+	stepIconContainer: {
+		width: 48,
+		height: 48,
+		borderRadius: 16,
+		justifyContent: "center",
+		alignItems: "center",
+		marginRight: 20,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	stepNumber: {
+		fontSize: 20,
+		fontWeight: "800",
+		color: "#42A5F5",
+	},
+	stepInfo: {
+		flex: 1,
+	},
+	stepTitle: {
+		fontSize: 17,
+		fontWeight: "700",
+		color: "#1e293b",
+		marginBottom: 6,
+		textAlign: "left",
+		letterSpacing: 0.2,
+	},
+	stepDescription: {
+		fontSize: 14,
+		color: "#64748b",
+		lineHeight: 20,
+		textAlign: "left",
+		fontWeight: "500",
+	},
+	stepConnector: {
+		position: "absolute",
+		left: 28,
+		top: 70,
+		bottom: -20,
+		width: 3,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	stepLine: {
+		width: 3,
+		height: "100%",
+		backgroundColor: "#cbd5e1",
+		borderRadius: 2,
+	},
+
+	// Purchase Steps Styles
+	helpBuyContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 20,
+		padding: 24,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.12,
+		shadowRadius: 16,
+		elevation: 8,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	purchaseScrollContainer: {
+		paddingHorizontal: 6,
+	},
+	purchaseStep: {
+		width: 290,
+		marginHorizontal: 1,
+	},
+	stepCard: {
+		backgroundColor: "#f8fafc",
+		borderRadius: 20,
+		padding: 20,
+		height: 280,
+		position: "relative",
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.08,
+		shadowRadius: 12,
+		elevation: 6,
+	},
+	stepIcon: {
+		alignItems: "center",
+		marginBottom: 12,
+		paddingVertical: 4,
+	},
+	stepButton: {
+		backgroundColor: "#42A5F5",
+		paddingVertical: 16,
+		paddingHorizontal: 20,
+		borderRadius: 16,
+		alignSelf: "stretch",
+		position: "absolute",
+		bottom: 20,
+		left: 20,
+		right: 20,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.3,
+		shadowRadius: 12,
+		elevation: 8,
+	},
+	stepButtonText: {
+		color: "#fff",
+		fontSize: 16,
+		fontWeight: "700",
+		textAlign: "center",
+		letterSpacing: 0.3,
+	},
+	purchaseStepTitle: {
+		fontSize: 19,
+		fontWeight: "800",
+		color: "#1e293b",
+		textAlign: "center",
+		lineHeight: 24,
+		letterSpacing: 0.2,
+	},
+	purchaseStepDescription: {
+		fontSize: 13,
+		color: "#64748b",
+		textAlign: "center",
+		lineHeight: 18,
+		flex: 1,
+		fontWeight: "400",
+	},
+	marketplaceContainer: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginTop: -8,
+		flex: 1,
+	},
+	marketplaceItem: {
+		width: "30%",
+		alignItems: "center",
+		marginBottom: 4,
+		paddingVertical: 4,
+		paddingHorizontal: 4,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
+		shadowOpacity: 0.08,
 		shadowRadius: 4,
 		elevation: 2,
 	},
-	serviceIcon: {
-		width: 64,
-		height: 64,
-		borderRadius: 32,
+	marketplaceImage: {
+		width: 32,
+		height: 32,
+		marginBottom: 3,
+		borderRadius: 8,
+	},
+	marketplaceName: {
+		fontSize: 11,
+		color: "#334155",
+		textAlign: "center",
+		fontWeight: "600",
+		lineHeight: 13,
+	},
+
+	// Why Choose Us Styles
+	whyChooseContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 4,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	whyChooseGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "space-between",
+		gap: 10,
+	},
+	reasonCard: {
+		backgroundColor: "#f8fafc",
+		borderRadius: 12,
+		padding: 14,
+		width: "48%",
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	reasonIcon: {
+		width: 44,
+		height: 44,
+		borderRadius: 12,
 		justifyContent: "center",
 		alignItems: "center",
-		marginBottom: 12,
+		marginBottom: 10,
+		backgroundColor: "#42A5F520",
 	},
-	serviceTitle: {
+	reasonTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#1a1a1a",
-		textAlign: "center",
-		marginBottom: 4,
+		color: "#1e293b",
+		marginBottom: 6,
+		letterSpacing: 0.1,
 	},
-	serviceDescription: {
-		fontSize: 12,
-		color: "#6c757d",
-		textAlign: "center",
-		lineHeight: 16,
+	reasonSubtitle: {
+		fontSize: 11,
+		color: "#64748b",
+		lineHeight: 14,
+		fontWeight: "500",
 	},
-	storeCard: {
-		backgroundColor: "#fff",
-		padding: 16,
-		borderRadius: 12,
+
+	// CTA Styles
+	ctaSection: {
+		marginHorizontal: 16,
 		marginBottom: 12,
+	},
+	ctaContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	ctaContent: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
 	},
-	storeInfo: {
-		flexDirection: "row",
-		alignItems: "center",
+	ctaTextContainer: {
 		flex: 1,
-	},
-	storeLogo: {
-		fontSize: 32,
 		marginRight: 16,
 	},
-	storeDetails: {
-		flex: 1,
-	},
-	storeName: {
+	ctaTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#1a1a1a",
-		marginBottom: 4,
+		color: "#1e293b",
+		marginBottom: 6,
+		letterSpacing: 0.1,
 	},
-	storeDescription: {
-		fontSize: 14,
-		color: "#6c757d",
+	ctaSubtitle: {
+		fontSize: 13,
+		color: "#64748b",
+		lineHeight: 18,
+		fontWeight: "500",
 	},
-	benefitsContainer: {
-		backgroundColor: "#fff",
-		padding: 20,
+	ctaLoginButton: {
+		backgroundColor: "#42A5F5",
+		paddingVertical: 12,
+		paddingHorizontal: 20,
 		borderRadius: 12,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
+		minWidth: 100,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 4,
 	},
-	benefitItem: {
+	ctaLoginText: {
+		color: "#fff",
+		fontSize: 14,
+		fontWeight: "600",
+		textAlign: "center",
+		letterSpacing: 0.2,
+	},
+
+	// Security Banner Styles
+	securityBanner: {
+		backgroundColor: "#fff",
+		borderRadius: 16,
+		padding: 16,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		shadowColor: "#22c55e",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	securityContent: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		marginBottom: 12,
+	},
+	securityIconContainer: {
+		marginRight: 12,
+		marginTop: 2,
+	},
+	securityTextContainer: {
+		flex: 1,
+	},
+	securityTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1e293b",
+		marginBottom: 6,
+		letterSpacing: 0.1,
+	},
+	securityDescription: {
+		fontSize: 13,
+		color: "#64748b",
+		lineHeight: 18,
+		fontWeight: "500",
+	},
+	securityFeatures: {
+		flexDirection: "row",
+		justifyContent: "space-around",
+		paddingTop: 12,
+		borderTopWidth: 1,
+		borderTopColor: "#e2e8f0",
+	},
+	securityFeature: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 16,
+		flex: 1,
+		justifyContent: "center",
+		paddingVertical: 2,
 	},
-	benefitText: {
-		fontSize: 16,
-		color: "#1a1a1a",
-		marginLeft: 12,
-		fontWeight: "500",
+	securityFeatureText: {
+		fontSize: 11,
+		color: "#22c55e",
+		fontWeight: "600",
+		marginLeft: 4,
+		letterSpacing: 0.1,
 	},
 });
