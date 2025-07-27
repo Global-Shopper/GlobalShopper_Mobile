@@ -37,11 +37,16 @@ const Stack = createStackNavigator();
 
 //Lưu ý các navigator phải được import vào đây và được sử dụng trong hàm AppNavigator
 const AppNavigator = () => {
+	// Wrapper component để pass navigation prop
+	const TabsScreen = ({ navigation }) => (
+		<BottomTabNavigator navigation={navigation} />
+	);
+
 	return (
 		<Stack.Navigator initialRouteName="Splash">
 			<Stack.Screen
 				name="Tabs"
-				component={BottomTabNavigator}
+				component={TabsScreen}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

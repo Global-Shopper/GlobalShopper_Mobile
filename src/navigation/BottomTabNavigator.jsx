@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Platform, TouchableOpacity } from "react-native";
+import { useSelector } from "react-redux";
 import { Text } from "../components/ui/text";
 
 // Import screens
 import AccountScreen from "../screens/main/AccountScreen";
+import GuestAccountScreen from "../screens/main/GuestAccountScreen";
+import GuestHomeScreen from "../screens/main/GuestHomeScreen";
+import GuestScreen from "../screens/main/GuestScreen";
 import HomeScreen from "../screens/main/HomeScreen";
 import OrderScreen from "../screens/main/OrderScreen";
 import RequestScreen from "../screens/main/RequestScreen";
@@ -14,7 +18,25 @@ import WalletScreen from "../screens/main/WalletScreen";
 const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator for main app screens
-const BottomTabNavigator = () => {
+const BottomTabNavigator = ({ navigation }) => {
+	// Check if user is logged in
+	const user = useSelector((state) => state?.rootReducer?.user);
+	const isGuest = !user || !user.token;
+
+	// Guest screen component with tab info
+	const createGuestScreen = (tabName, tabIcon) => {
+		const GuestScreenComponent = (props) => (
+			<GuestScreen
+				{...props}
+				route={{
+					...props.route,
+					params: { tabName, tabIcon },
+				}}
+			/>
+		);
+		GuestScreenComponent.displayName = `GuestScreen_${tabName}`;
+		return GuestScreenComponent;
+	};
 	// Custom tab button component
 	const CustomTabButton = ({
 		focused,
@@ -141,7 +163,7 @@ const BottomTabNavigator = () => {
 		>
 			<Tab.Screen
 				name="Home"
-				component={HomeScreen}
+				component={isGuest ? GuestHomeScreen : HomeScreen}
 				options={{
 					title: "Trang chủ",
 					tabBarBadge: null,
@@ -149,14 +171,22 @@ const BottomTabNavigator = () => {
 			/>
 			<Tab.Screen
 				name="Wallet"
-				component={WalletScreen}
+				component={
+					isGuest
+						? createGuestScreen("Ví tiền", "wallet-outline")
+						: WalletScreen
+				}
 				options={{
 					title: "Ví tiền",
 				}}
 			/>
 			<Tab.Screen
 				name="Request"
-				component={RequestScreen}
+				component={
+					isGuest
+						? createGuestScreen("Yêu cầu", "document-text-outline")
+						: RequestScreen
+				}
 				options={{
 					title: "Yêu cầu",
 					tabBarBadge: 3,
@@ -175,7 +205,11 @@ const BottomTabNavigator = () => {
 			/>
 			<Tab.Screen
 				name="Order"
-				component={OrderScreen}
+				component={
+					isGuest
+						? createGuestScreen("Đơn hàng", "bag-handle-outline")
+						: OrderScreen
+				}
 				options={{
 					title: "Đơn hàng",
 					tabBarBadge: 2,
@@ -194,7 +228,7 @@ const BottomTabNavigator = () => {
 			/>
 			<Tab.Screen
 				name="Account"
-				component={AccountScreen}
+				component={isGuest ? GuestAccountScreen : AccountScreen}
 				options={{
 					title: "Tài khoản",
 				}}

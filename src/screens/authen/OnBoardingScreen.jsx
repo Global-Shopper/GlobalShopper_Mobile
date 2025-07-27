@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import {
 	Animated,
@@ -6,7 +8,6 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Onboarding from "react-native-onboarding-swiper";
 
 const Button = ({ label, ...props }) => (
@@ -53,7 +54,8 @@ const FloatingImage = ({ source }) => {
 					useNativeDriver: true,
 				}),
 			])
-		).start();		}, [animation]);
+		).start();
+	}, [animation]);
 
 	return (
 		<Animated.Image
@@ -65,11 +67,23 @@ const FloatingImage = ({ source }) => {
 };
 
 const OnboardingScreen = ({ navigation }) => {
+	// Hàm lưu trạng thái đã xem onboarding
+	const handleOnboardingComplete = async () => {
+		try {
+			await AsyncStorage.setItem("@hasOnboarded", "true");
+			// Chuyển đến app chính, user có thể dùng như guest hoặc đăng nhập
+			navigation.replace("Tabs");
+		} catch (error) {
+			console.log("Error saving onboarding status:", error);
+			navigation.replace("Tabs");
+		}
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<Onboarding
-				onSkip={() => navigation.replace("Login")}
-				onDone={() => navigation.replace("Login")}
+				onSkip={handleOnboardingComplete}
+				onDone={handleOnboardingComplete}
 				SkipButtonComponent={(props) => (
 					<Button label="Dừng" {...props} />
 				)}
