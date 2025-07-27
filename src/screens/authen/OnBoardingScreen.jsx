@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Onboarding from "react-native-onboarding-swiper";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Button = ({ label, ...props }) => (
 	<TouchableOpacity style={styles.button} {...props}>
@@ -65,11 +66,22 @@ const FloatingImage = ({ source }) => {
 };
 
 const OnboardingScreen = ({ navigation }) => {
+	// Hàm lưu trạng thái đã xem onboarding
+	const handleOnboardingComplete = async () => {
+		try {
+			await AsyncStorage.setItem('@hasOnboarded', 'true');
+			navigation.replace("Login");
+		} catch (error) {
+			console.log('Error saving onboarding status:', error);
+			navigation.replace("Login");
+		}
+	};
+
 	return (
 		<View style={styles.wrapper}>
 			<Onboarding
-				onSkip={() => navigation.replace("Login")}
-				onDone={() => navigation.replace("Login")}
+				onSkip={handleOnboardingComplete}
+				onDone={handleOnboardingComplete}
 				SkipButtonComponent={(props) => (
 					<Button label="Dừng" {...props} />
 				)}
