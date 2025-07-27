@@ -8,13 +8,15 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { signout } from "../../features/user";
 
 export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
 	const reduxUser = useSelector((state) => state?.rootReducer?.user);
+	const dispatch = useDispatch();
 
 	const [user] = useState({
 		name: reduxUser?.name,
@@ -136,7 +138,9 @@ export default function AccountScreen({ navigation }) {
 					text: "Đăng xuất",
 					style: "destructive",
 					onPress: () => {
-						// Clear user data and navigate to login
+						// Clear user data from Redux
+						dispatch(signout());
+						// Navigate to login screen
 						navigation.reset({
 							index: 0,
 							routes: [{ name: "Login" }],

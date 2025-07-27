@@ -21,7 +21,7 @@ const Tab = createBottomTabNavigator();
 const BottomTabNavigator = ({ navigation }) => {
 	// Check if user is logged in
 	const user = useSelector((state) => state?.rootReducer?.user);
-	const isGuest = !user || !user.token;
+	const isGuest = !user || !user.accessToken;
 
 	// Guest screen component with tab info
 	const createGuestScreen = (tabName, tabIcon) => {
