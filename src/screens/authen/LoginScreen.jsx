@@ -125,6 +125,15 @@ export default function LoginScreen({ navigation }) {
 			style={styles.container}
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
+			{/* Back Button */}
+			<TouchableOpacity
+				style={styles.backButton}
+				onPress={() => navigation.goBack()}
+				activeOpacity={0.7}
+			>
+				<Ionicons name="arrow-back" size={24} color="#333" />
+			</TouchableOpacity>
+
 			<ScrollView
 				contentContainerStyle={styles.scrollContainer}
 				showsVerticalScrollIndicator={false}
@@ -290,6 +299,26 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#ffffff",
+	},
+	backButton: {
+		position: "absolute",
+		top: 50,
+		left: 20,
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: "#f8f9fa",
+		justifyContent: "center",
+		alignItems: "center",
+		zIndex: 1,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 3,
 	},
 	scrollContainer: {
 		flexGrow: 1,
