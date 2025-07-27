@@ -46,29 +46,29 @@ export default function GuestHomeScreen({ navigation }) {
 	const featuredServices = [
 		{
 			id: 1,
-			title: "Mua hộ hàng từ mọi sàn thương mại điện tử",
-			subtitle: "",
+			title: "Mua hộ từ mọi sàn TMĐT",
+			subtitle: "Hỗ trợ toàn bộ website quốc tế",
 			icon: "bag-outline",
 			color: "#42A5F5",
 		},
 		{
 			id: 2,
-			title: "Nhận order từ nước ngoài về Việt Nam nhanh chóng",
-			subtitle: "",
+			title: "Vận chuyển nhanh chóng",
+			subtitle: "Giao hàng tận nơi trong 7-14 ngày",
 			icon: "airplane-outline",
 			color: "#42A5F5",
 		},
 		{
 			id: 3,
-			title: "Báo giá minh bạch, không phí ẩn",
-			subtitle: "",
+			title: "Báo giá minh bạch",
+			subtitle: "Không phí ẩn, rõ ràng từng khoản",
 			icon: "receipt-outline",
 			color: "#42A5F5",
 		},
 		{
 			id: 4,
-			title: "Theo dõi đơn hàng dễ dàng, giao tận nơi",
-			subtitle: "",
+			title: "Theo dõi đơn hàng",
+			subtitle: "Realtime tracking, giao tận nơi",
 			icon: "location-outline",
 			color: "#42A5F5",
 		},
@@ -110,6 +110,64 @@ export default function GuestHomeScreen({ navigation }) {
 			id: 7,
 			name: "Shein",
 			image: require("../../assets/images/ecommerce/shein-logo.png"),
+		},
+	];
+
+	// Khám phá mua hàng toàn cầu - 4 steps
+	const globalShoppingSteps = [
+		{
+			id: 1,
+			title: "Hỗ trợ mua hộ từ các quốc gia",
+			description:
+				"Chúng tôi hỗ trợ mua hàng từ các nước trên toàn thế giới",
+			type: "countries",
+			countries: [
+				{ flag: "🇺🇸", name: "Hoa Kỳ", code: "US" },
+				{ flag: "🇯🇵", name: "Nhật Bản", code: "JP" },
+				{ flag: "🇰🇷", name: "Hàn Quốc", code: "KR" },
+				{ flag: "🇨🇳", name: "Trung Quốc", code: "CN" },
+				{ flag: "🇸🇬", name: "Singapore", code: "SG" },
+				{ flag: "🇬🇧", name: "Anh", code: "GB" },
+			],
+		},
+		{
+			id: 2,
+			title: "Loại sản phẩm nhận order hộ",
+			description:
+				"Đa dạng danh mục sản phẩm từ thời trang đến công nghệ",
+			type: "products",
+			categories: [
+				{ name: "Thời trang", icon: "shirt-outline" },
+				{ name: "Điện tử", icon: "phone-portrait-outline" },
+				{ name: "Mỹ phẩm", icon: "heart-outline" },
+				{ name: "Đồ gia dụng", icon: "home-outline" },
+				{ name: "Sách", icon: "book-outline" },
+				{ name: "Đồ chơi", icon: "game-controller-outline" },
+			],
+		},
+		{
+			id: 3,
+			title: "Tạo yêu cầu",
+			description: "Click 'Tạo yêu cầu' ngay để trải nghiệm dịch vụ",
+			type: "create-request",
+			action: {
+				label: "Tạo yêu cầu",
+				icon: "add-circle-outline",
+				color: "#42A5F5",
+				description: "Nhận báo giá tốt nhất trong vòng 30 phút",
+			},
+		},
+		{
+			id: 4,
+			title: "Hướng dẫn",
+			description: "Đừng lo, chúng tôi có hướng dẫn cho bạn",
+			type: "guide",
+			action: {
+				label: "Xem hướng dẫn",
+				icon: "play-circle-outline",
+				color: "#4CAF50",
+				description: "Hướng dẫn từng bước một cách đơn giản",
+			},
 		},
 	];
 
@@ -287,7 +345,7 @@ export default function GuestHomeScreen({ navigation }) {
 										>
 											<Ionicons
 												name={service.icon}
-												size={24}
+												size={20}
 												color={service.color}
 											/>
 										</View>
@@ -353,6 +411,186 @@ export default function GuestHomeScreen({ navigation }) {
 								)}
 							</View>
 						))}
+					</View>
+				</View>
+
+				{/* Global Shopping */}
+				<View style={styles.section}>
+					<View style={styles.globalShoppingContainer}>
+						<Text style={styles.sectionTitle}>
+							Khám phá mua hàng toàn cầu
+						</Text>
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={styles.globalScrollContainer}
+							snapToInterval={300}
+							snapToAlignment="start"
+							decelerationRate="fast"
+						>
+							{globalShoppingSteps.map((step) => (
+								<View key={step.id} style={styles.globalStep}>
+									<View style={styles.globalStepCard}>
+										<Text style={styles.globalStepTitle}>
+											{step.title}
+										</Text>
+										<Text
+											style={styles.globalStepDescription}
+										>
+											{step.description}
+										</Text>
+
+										{/* Countries Section */}
+										{step.type === "countries" && (
+											<View style={styles.countriesGrid}>
+												{step.countries.map(
+													(country, index) => (
+														<View
+															key={index}
+															style={
+																styles.countryItem
+															}
+														>
+															<Text
+																style={
+																	styles.countryFlag
+																}
+															>
+																{country.flag}
+															</Text>
+															<Text
+																style={
+																	styles.countryName
+																}
+															>
+																{country.name}
+															</Text>
+														</View>
+													)
+												)}
+											</View>
+										)}
+
+										{/* Products Section */}
+										{step.type === "products" && (
+											<View
+												style={
+													styles.categoriesContainer
+												}
+											>
+												{step.categories
+													.slice(0, 6)
+													.map((category, index) => (
+														<View
+															key={index}
+															style={
+																styles.categoryItem
+															}
+														>
+															<Ionicons
+																name={
+																	category.icon
+																}
+																size={20}
+																color="#42A5F5"
+															/>
+															<Text
+																style={
+																	styles.categoryName
+																}
+															>
+																{category.name}
+															</Text>
+														</View>
+													))}
+											</View>
+										)}
+
+										{/* Create Request Section */}
+										{step.type === "create-request" && (
+											<View
+												style={
+													styles.singleActionContainer
+												}
+											>
+												<View style={styles.actionIcon}>
+													<Ionicons
+														name={step.action.icon}
+														size={48}
+														color={
+															step.action.color
+														}
+													/>
+												</View>
+												<TouchableOpacity
+													style={[
+														styles.actionButton,
+														styles.primaryActionButton,
+													]}
+												>
+													<Text
+														style={[
+															styles.actionButtonText,
+															styles.primaryActionText,
+														]}
+													>
+														{step.action.label}
+													</Text>
+												</TouchableOpacity>
+												<Text
+													style={
+														styles.actionDescription
+													}
+												>
+													{step.action.description}
+												</Text>
+											</View>
+										)}
+
+										{/* Guide Section */}
+										{step.type === "guide" && (
+											<View
+												style={
+													styles.singleActionContainer
+												}
+											>
+												<View style={styles.actionIcon}>
+													<Ionicons
+														name={step.action.icon}
+														size={48}
+														color={
+															step.action.color
+														}
+													/>
+												</View>
+												<TouchableOpacity
+													style={[
+														styles.actionButton,
+														styles.secondaryActionButton,
+													]}
+												>
+													<Text
+														style={[
+															styles.actionButtonText,
+															styles.secondaryActionText,
+														]}
+													>
+														{step.action.label}
+													</Text>
+												</TouchableOpacity>
+												<Text
+													style={
+														styles.actionDescription
+													}
+												>
+													{step.action.description}
+												</Text>
+											</View>
+										)}
+									</View>
+								</View>
+							))}
+						</ScrollView>
 					</View>
 				</View>
 
@@ -766,24 +1004,30 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		flexWrap: "wrap",
 		justifyContent: "space-between",
+		gap: 8,
 	},
 	featuredServiceCard: {
 		width: "48%",
 		backgroundColor: "#f8fafc",
 		borderRadius: 12,
-		marginBottom: 10,
+		marginBottom: 8,
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.04,
+		shadowRadius: 4,
+		elevation: 2,
 	},
 	featuredServiceContent: {
-		padding: 14,
+		padding: 12,
 		flexDirection: "row",
 		alignItems: "flex-start",
 	},
 	featuredServiceIcon: {
-		width: 36,
-		height: 36,
-		borderRadius: 10,
+		width: 32,
+		height: 32,
+		borderRadius: 8,
 		justifyContent: "center",
 		alignItems: "center",
 		marginRight: 10,
@@ -793,17 +1037,188 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	featuredServiceTitle: {
-		fontSize: 13,
+		fontSize: 12,
 		fontWeight: "600",
 		color: "#1e293b",
-		marginBottom: 4,
-		lineHeight: 16,
+		marginBottom: 3,
+		lineHeight: 15,
 	},
 	featuredServiceSubtitle: {
 		fontSize: 11,
 		color: "#64748b",
 		lineHeight: 14,
 		fontWeight: "500",
+	},
+
+	// Global Shopping Styles
+	globalShoppingContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 20,
+		padding: 20,
+		marginHorizontal: 4,
+		marginVertical: 4,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.12,
+		shadowRadius: 16,
+		elevation: 8,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+	},
+	globalScrollContainer: {
+		paddingHorizontal: 1,
+	},
+	globalStep: {
+		width: 290,
+		marginHorizontal: 5,
+	},
+	globalStepCard: {
+		backgroundColor: "#fff",
+		borderRadius: 20,
+		paddingTop: 20,
+		paddingRight: 20,
+		paddingLeft: 20,
+		height: 290,
+		position: "relative",
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.08,
+		shadowRadius: 12,
+		elevation: 6,
+	},
+	globalStepTitle: {
+		fontSize: 18,
+		fontWeight: "800",
+		color: "#1e293b",
+		textAlign: "center",
+		lineHeight: 20,
+	},
+	globalStepDescription: {
+		fontSize: 13,
+		color: "#64748b",
+		textAlign: "center",
+		lineHeight: 18,
+		marginBottom: 8,
+		fontWeight: "500",
+	},
+
+	// Countries Section
+	countriesGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "space-between",
+		gap: 8,
+		flex: 1,
+		paddingVertical: 8,
+	},
+	countryItem: {
+		width: "48%",
+		alignItems: "center",
+		paddingVertical: 8,
+		paddingHorizontal: 6,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		marginBottom: 6,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	countryFlag: {
+		fontSize: 24,
+		marginBottom: 4,
+	},
+	countryName: {
+		fontSize: 11,
+		color: "#334155",
+		textAlign: "center",
+		fontWeight: "600",
+		lineHeight: 13,
+	},
+
+	// Actions Section
+	singleActionContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingVertical: 20,
+		paddingHorizontal: 16,
+	},
+	actionIcon: {
+		marginBottom: 16,
+		alignItems: "center",
+	},
+	actionButton: {
+		paddingVertical: 14,
+		paddingHorizontal: 28,
+		borderRadius: 16,
+		minWidth: 160,
+		marginBottom: 12,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
+		elevation: 5,
+	},
+	actionButtonText: {
+		fontSize: 14,
+		fontWeight: "700",
+		textAlign: "center",
+		letterSpacing: 0.3,
+	},
+	primaryActionButton: {
+		backgroundColor: "#42A5F5",
+	},
+	primaryActionText: {
+		color: "#fff",
+	},
+	secondaryActionButton: {
+		backgroundColor: "#4CAF50",
+	},
+	secondaryActionText: {
+		color: "#fff",
+	},
+	actionDescription: {
+		fontSize: 11,
+		color: "#64748b",
+		textAlign: "center",
+		lineHeight: 15,
+		fontWeight: "500",
+		paddingHorizontal: 8,
+		opacity: 0.9,
+	},
+
+	// Categories Section
+	categoriesContainer: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "space-between",
+		gap: 8,
+		flex: 1,
+	},
+	categoryItem: {
+		width: "30%",
+		alignItems: "center",
+		paddingVertical: 12,
+		paddingHorizontal: 8,
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		marginBottom: 8,
+	},
+	categoryName: {
+		fontSize: 10,
+		color: "#334155",
+		textAlign: "center",
+		fontWeight: "600",
+		marginTop: 4,
+		lineHeight: 12,
 	},
 
 	// Service Steps Styles
