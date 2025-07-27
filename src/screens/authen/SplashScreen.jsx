@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
@@ -15,15 +15,19 @@ const SplashScreen = ({ navigation }) => {
 
 		const checkOnboardingStatus = async () => {
 			try {
-				const hasOnboarded = await AsyncStorage.getItem('@hasOnboarded');
-				
-				if (hasOnboarded === 'true') {
-					navigation.replace("Login");
+				const hasOnboarded = await AsyncStorage.getItem(
+					"@hasOnboarded"
+				);
+
+				if (hasOnboarded === "true") {
+					// Đã xem onboarding, chuyển đến app chính (có thể dùng như guest)
+					navigation.replace("Tabs");
 				} else {
+					// Chưa xem onboarding, chuyển đến onboarding
 					navigation.replace("OnBoarding");
 				}
 			} catch (error) {
-				console.log('Error checking onboarding status:', error);
+				console.log("Error checking onboarding status:", error);
 				navigation.replace("OnBoarding");
 			}
 		};
@@ -33,7 +37,7 @@ const SplashScreen = ({ navigation }) => {
 		}, 2000);
 
 		return () => clearTimeout(timeout);
-	}, []);
+	}, [navigation, logoAnim]);
 
 	return (
 		<View style={styles.container}>

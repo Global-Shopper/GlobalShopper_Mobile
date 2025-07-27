@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import {
 	Animated,
@@ -6,9 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Onboarding from "react-native-onboarding-swiper";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Button = ({ label, ...props }) => (
 	<TouchableOpacity style={styles.button} {...props}>
@@ -54,7 +54,8 @@ const FloatingImage = ({ source }) => {
 					useNativeDriver: true,
 				}),
 			])
-		).start();		}, [animation]);
+		).start();
+	}, [animation]);
 
 	return (
 		<Animated.Image
@@ -69,11 +70,12 @@ const OnboardingScreen = ({ navigation }) => {
 	// Hàm lưu trạng thái đã xem onboarding
 	const handleOnboardingComplete = async () => {
 		try {
-			await AsyncStorage.setItem('@hasOnboarded', 'true');
-			navigation.replace("Login");
+			await AsyncStorage.setItem("@hasOnboarded", "true");
+			// Chuyển đến app chính, user có thể dùng như guest hoặc đăng nhập
+			navigation.replace("Tabs");
 		} catch (error) {
-			console.log('Error saving onboarding status:', error);
-			navigation.replace("Login");
+			console.log("Error saving onboarding status:", error);
+			navigation.replace("Tabs");
 		}
 	};
 
