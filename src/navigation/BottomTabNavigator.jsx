@@ -189,17 +189,19 @@ const BottomTabNavigator = ({ navigation }) => {
 				}
 				options={{
 					title: "Yêu cầu",
-					tabBarBadge: 3,
+					tabBarBadge: isGuest ? null : 3,
 					tabBarBadgeStyle: {
 						backgroundColor: "#FF5722",
 						color: "#FFFFFF",
 						fontSize: 10,
-						fontWeight: "600",
-						minWidth: 18,
-						height: 18,
-						borderRadius: 9,
-						marginLeft: 8,
-						marginTop: 2,
+						fontWeight: "700",
+						minWidth: 20,
+						height: 20,
+						borderRadius: 10,
+						marginLeft: 10,
+						marginTop: -2,
+						borderWidth: 2,
+						borderColor: "#FFFFFF",
 					},
 				}}
 			/>
@@ -212,17 +214,19 @@ const BottomTabNavigator = ({ navigation }) => {
 				}
 				options={{
 					title: "Đơn hàng",
-					tabBarBadge: 2,
+					tabBarBadge: isGuest ? null : 2,
 					tabBarBadgeStyle: {
 						backgroundColor: "#FF5722",
 						color: "#FFFFFF",
 						fontSize: 10,
-						fontWeight: "600",
-						minWidth: 18,
-						height: 18,
-						borderRadius: 9,
-						marginLeft: 8,
-						marginTop: 2,
+						fontWeight: "700",
+						minWidth: 20,
+						height: 20,
+						borderRadius: 10,
+						marginLeft: 10,
+						marginTop: -2,
+						borderWidth: 2,
+						borderColor: "#FFFFFF",
 					},
 				}}
 			/>

@@ -2,21 +2,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../components/ui/text";
 
-const QuickAccess = ({ navigation }) => {
+const QuickAccess = ({ navigation, showLoginDialog }) => {
 	const quickAccessItems = [
 		{
 			id: 1,
 			title: "Hỗ trợ",
 			icon: "headset-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to support"),
+			onPress: () => navigation?.navigate("FAQScreen"),
 		},
 		{
 			id: 2,
 			title: "Hướng dẫn",
 			icon: "book-outline",
 			color: "#42A5F5",
-			onPress: () => navigation?.navigate("FAQScreen"),
+			onPress: () => console.log("Navigate to guide"),
 		},
 		{
 			id: 3,
@@ -37,7 +37,10 @@ const QuickAccess = ({ navigation }) => {
 			title: "Hoàn tiền",
 			icon: "return-up-back-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to refunds"),
+			onPress: () =>
+				showLoginDialog
+					? showLoginDialog()
+					: console.log("Navigate to refunds"),
 		},
 		{
 			id: 6,
@@ -51,7 +54,10 @@ const QuickAccess = ({ navigation }) => {
 			title: "Thống kê",
 			icon: "stats-chart-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to statistics"),
+			onPress: () =>
+				showLoginDialog
+					? showLoginDialog()
+					: console.log("Navigate to statistics"),
 		},
 		{
 			id: 8,

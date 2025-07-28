@@ -10,6 +10,7 @@ import {
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import QuickAccess from "../home/QuickAccess";
+import SliceBanner from "../home/SliceBanner";
 
 export default function HomeScreen({ navigation }) {
 	// Dịch vụ nổi bật
@@ -232,6 +233,9 @@ export default function HomeScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
+				{/* Banner Slider */}
+				<SliceBanner navigation={navigation} />
+
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
 					<View style={styles.mainActionGrid}>
@@ -1025,11 +1029,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	globalStepTitle: {
 		fontSize: 18,
@@ -1186,11 +1185,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	stepIcon: {
 		alignItems: "center",

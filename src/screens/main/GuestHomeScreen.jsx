@@ -7,40 +7,61 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
 import { Text } from "../../components/ui/text";
+import QuickAccess from "../home/QuickAccess";
+import SliceBanner from "../home/SliceBanner";
 
 export default function GuestHomeScreen({ navigation }) {
-	// Truy cập nhanh cho guest
-	const quickAccess = [
-		{
-			id: 1,
-			title: "Hỗ trợ",
-			icon: "headset-outline",
-			color: "#42A5F5",
-			action: () => console.log("Navigate to support"),
-		},
-		{
-			id: 2,
-			title: "Hướng dẫn",
-			icon: "book-outline",
-			color: "#42A5F5",
-			action: () => navigation.navigate("FAQScreen"),
-		},
-		{
-			id: 3,
-			title: "Thông tin thuế",
-			icon: "receipt-outline",
-			color: "#42A5F5",
-			action: () => console.log("Navigate to tax info"),
-		},
-		{
-			id: 4,
-			title: "Tính phí",
-			icon: "calculator-outline",
-			color: "#42A5F5",
-			action: () => console.log("Navigate to fee calculator"),
-		},
-	];
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
+
+	// Handle notification và chat press
+	const handleNotificationPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy thông báo");
+				}
+			)
+		);
+	};
+
+	const handleChatPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy chat");
+				}
+			)
+		);
+	};
+
+	// Function để hiện dialog yêu cầu đăng nhập
+	const showLoginDialog = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy đăng nhập");
+				}
+			)
+		);
+	};
 
 	// Dịch vụ nổi bật
 	const featuredServices = [
@@ -258,7 +279,7 @@ export default function GuestHomeScreen({ navigation }) {
 						<View style={styles.headerIcons}>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() => console.log("Chat pressed")}
+								onPress={handleChatPress}
 							>
 								<Ionicons
 									name="chatbubble-outline"
@@ -268,9 +289,7 @@ export default function GuestHomeScreen({ navigation }) {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() =>
-									console.log("Notification pressed")
-								}
+								onPress={handleNotificationPress}
 							>
 								<Ionicons
 									name="notifications-outline"
@@ -288,39 +307,13 @@ export default function GuestHomeScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Quick Access */}
-				<View style={styles.quickAccessSection}>
-					<View style={styles.quickAccessContainer}>
-						<Text style={styles.sectionTitle}>Truy cập nhanh</Text>
-						<View style={styles.quickAccessRow}>
-							{quickAccess.map((item) => (
-								<TouchableOpacity
-									key={item.id}
-									style={styles.quickAccessItem}
-									onPress={item.action}
-									activeOpacity={0.7}
-								>
-									<View
-										style={[
-											styles.quickAccessIcon,
-											{
-												backgroundColor: `${item.color}20`,
-											},
-										]}
-									>
-										<Ionicons
-											name={item.icon}
-											size={24}
-											color={item.color}
-										/>
-									</View>
-									<Text style={styles.quickAccessText}>
-										{item.title}
-									</Text>
-								</TouchableOpacity>
-							))}
-						</View>
-					</View>
+				{/* Banner Slider và Quick Access - với padding riêng */}
+				<View style={styles.topSection}>
+					<SliceBanner navigation={navigation} />
+					<QuickAccess
+						navigation={navigation}
+						showLoginDialog={showLoginDialog}
+					/>
 				</View>
 
 				{/* Featured Services */}
@@ -527,6 +520,7 @@ export default function GuestHomeScreen({ navigation }) {
 														styles.actionButton,
 														styles.primaryActionButton,
 													]}
+													onPress={showLoginDialog}
 												>
 													<Text
 														style={[
@@ -654,7 +648,10 @@ export default function GuestHomeScreen({ navigation }) {
 										Click &ldquo;Tạo yêu cầu&rdquo; để nhận
 										được báo giá tốt nhất
 									</Text>
-									<TouchableOpacity style={styles.stepButton}>
+									<TouchableOpacity
+										style={styles.stepButton}
+										onPress={showLoginDialog}
+									>
 										<Text style={styles.stepButtonText}>
 											Tạo ngay
 										</Text>
@@ -725,7 +722,10 @@ export default function GuestHomeScreen({ navigation }) {
 										Hướng dẫn bạn tạo yêu cầu chỉ vài bước
 										đơn giản
 									</Text>
-									<TouchableOpacity style={styles.stepButton}>
+									<TouchableOpacity
+										style={styles.stepButton}
+										onPress={showLoginDialog}
+									>
 										<Text style={styles.stepButtonText}>
 											Xem ngay!
 										</Text>
@@ -811,6 +811,7 @@ export default function GuestHomeScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }
@@ -869,6 +870,10 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		paddingBottom: 100,
+	},
+	topSection: {
+		paddingHorizontal: 15,
+		marginTop: 10,
 	},
 	authSection: {
 		backgroundColor: "#fff",
@@ -929,11 +934,6 @@ const styles = StyleSheet.create({
 		marginHorizontal: 16,
 		marginBottom: 12,
 	},
-	quickAccessSection: {
-		marginHorizontal: 16,
-		marginBottom: 12,
-		marginTop: 20,
-	},
 	sectionTitle: {
 		fontSize: 18,
 		fontWeight: "700",
@@ -941,49 +941,6 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 		textAlign: "left",
 		letterSpacing: 0.2,
-	},
-
-	// Quick Access Styles
-	quickAccessContainer: {
-		backgroundColor: "#fff",
-		borderRadius: 16,
-		padding: 16,
-		marginHorizontal: 4,
-		marginVertical: 4,
-		shadowColor: "#42A5F5",
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.08,
-		shadowRadius: 8,
-		elevation: 4,
-		borderWidth: 1,
-		borderColor: "#e2e8f0",
-	},
-	quickAccessRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		gap: 6,
-	},
-	quickAccessItem: {
-		backgroundColor: "transparent",
-		borderRadius: 12,
-		padding: 12,
-		alignItems: "center",
-		flex: 1,
-	},
-	quickAccessIcon: {
-		width: 40,
-		height: 40,
-		borderRadius: 12,
-		justifyContent: "center",
-		alignItems: "center",
-		marginBottom: 8,
-	},
-	quickAccessText: {
-		fontSize: 11,
-		fontWeight: "600",
-		color: "#334155",
-		textAlign: "center",
-		lineHeight: 14,
 	},
 
 	// Featured Services Styles
@@ -1082,11 +1039,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	globalStepTitle: {
 		fontSize: 18,
@@ -1327,11 +1279,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	stepIcon: {
 		alignItems: "center",
@@ -1374,7 +1321,7 @@ const styles = StyleSheet.create({
 		color: "#64748b",
 		textAlign: "center",
 		lineHeight: 18,
-		flex: 1,
+		marginBottom: 20,
 		fontWeight: "400",
 	},
 	marketplaceContainer: {
@@ -1382,14 +1329,14 @@ const styles = StyleSheet.create({
 		flexWrap: "wrap",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginTop: -8,
-		flex: 1,
+		marginBottom: 16,
+		width: "100%",
 	},
 	marketplaceItem: {
 		width: "30%",
 		alignItems: "center",
-		marginBottom: 4,
-		paddingVertical: 4,
+		marginBottom: 12,
+		paddingVertical: 8,
 		paddingHorizontal: 4,
 		backgroundColor: "#fff",
 		borderRadius: 12,

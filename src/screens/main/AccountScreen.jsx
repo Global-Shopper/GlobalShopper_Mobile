@@ -168,6 +168,7 @@ export default function AccountScreen({ navigation }) {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
 			>
 				{/* Tổng quan nhanh */}
 				<View style={styles.statsContainer}>
@@ -258,7 +259,7 @@ export default function AccountScreen({ navigation }) {
 
 				{/* Hỗ trợ & Thông tin */}
 				<View style={styles.sectionContainer}>
-					<Text style={styles.sectionTitle}>Hỗ trợ & Thông tin</Text>
+					<Text style={styles.sectionTitle}>Hỗ trợ</Text>
 					<View style={styles.menuContainer}>
 						{supportAndInfo.map((item) => (
 							<TouchableOpacity
@@ -299,6 +300,33 @@ export default function AccountScreen({ navigation }) {
 					</View>
 				</View>
 
+				{/* Thông tin ứng dụng */}
+				<View style={styles.sectionContainer}>
+					<Text style={styles.sectionTitle}>Thông tin ứng dụng</Text>
+					<View style={styles.appInfoCard}>
+						<View style={styles.appInfoItem}>
+							<Text style={styles.appInfoLabel}>
+								Phiên bản ứng dụng
+							</Text>
+							<Text style={styles.appInfoValue}>1.0.0</Text>
+						</View>
+						<View style={styles.appInfoItem}>
+							<Text style={styles.appInfoLabel}>
+								Hotline hỗ trợ
+							</Text>
+							<Text style={styles.appInfoValue}>1900 1234</Text>
+						</View>
+						<View style={styles.appInfoItem}>
+							<Text style={styles.appInfoLabel}>
+								Email hỗ trợ
+							</Text>
+							<Text style={styles.appInfoValue}>
+								sep490gshop@gmail.com
+							</Text>
+						</View>
+					</View>
+				</View>
+
 				{/* Đăng xuất */}
 				<TouchableOpacity
 					style={styles.logoutButton}
@@ -313,16 +341,6 @@ export default function AccountScreen({ navigation }) {
 						Đăng xuất
 					</Text>
 				</TouchableOpacity>
-
-				{/* Phiên bản & Branding */}
-				<View style={styles.appInfoContainer}>
-					<Text className="text-center text-sm text-muted-foreground">
-						GlobalShopper Mobile v1.0.0
-					</Text>
-					<Text className="text-center text-xs text-muted-foreground mt-1">
-						© 2024 GlobalShopper. All rights reserved.
-					</Text>
-				</View>
 			</ScrollView>
 		</View>
 	);
@@ -337,6 +355,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: 20,
+	},
+	scrollContent: {
+		paddingBottom: 100,
 	},
 	sectionTitle: {
 		fontSize: 20,
@@ -489,5 +510,34 @@ const styles = StyleSheet.create({
 		borderTopWidth: 1,
 		borderTopColor: "#e9ecef",
 		marginBottom: 20,
+	},
+
+	// App Info Styles
+	appInfoCard: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		overflow: "hidden",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	appInfoItem: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		padding: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f8f9fa",
+	},
+	appInfoLabel: {
+		fontSize: 16,
+		color: "#1a1a1a",
+		fontWeight: "500",
+	},
+	appInfoValue: {
+		fontSize: 16,
+		color: "#6c757d",
 	},
 });

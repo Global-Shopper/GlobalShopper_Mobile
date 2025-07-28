@@ -1,30 +1,30 @@
-import React, { useState } from "react";
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	StyleSheet,
-	StatusBar,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import {
+	ScrollView,
+	StatusBar,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 export default function FAQScreen({ navigation }) {
 	const [expandedSections, setExpandedSections] = useState({});
 	const [expandedQuestions, setExpandedQuestions] = useState({});
 
 	const toggleSection = (sectionId) => {
-		setExpandedSections(prev => ({
+		setExpandedSections((prev) => ({
 			...prev,
-			[sectionId]: !prev[sectionId]
+			[sectionId]: !prev[sectionId],
 		}));
 	};
 
 	const toggleQuestion = (questionId) => {
-		setExpandedQuestions(prev => ({
+		setExpandedQuestions((prev) => ({
 			...prev,
-			[questionId]: !prev[questionId]
+			[questionId]: !prev[questionId],
 		}));
 	};
 
@@ -38,24 +38,25 @@ export default function FAQScreen({ navigation }) {
 				{
 					id: "1-1",
 					question: "Làm thế nào để tạo yêu cầu mua hàng?",
-					answer: "Bạn chỉ cần dán link sản phẩm từ các sàn thương mại điện tử quốc tế vào ô yêu cầu. Nếu không có link, bạn có thể chọn \"Yêu cầu không có link\" và điền thông tin sản phẩm để GShop hỗ trợ tìm kiếm và báo giá."
+					answer: 'Bạn chỉ cần dán link sản phẩm từ các sàn thương mại điện tử quốc tế vào ô yêu cầu. Nếu không có link, bạn có thể chọn "Yêu cầu không có link" và điền thông tin sản phẩm để GShop hỗ trợ tìm kiếm và báo giá.',
 				},
 				{
 					id: "1-2",
 					question: "GShop hỗ trợ mua hàng từ những sàn nào?",
-					answer: "Chúng tôi hỗ trợ mua hàng từ các sàn phổ biến như Amazon, eBay, Taobao, 1688, Shopee quốc tế, v.v. Bạn có thể nhập link từ bất kỳ sàn nào – hệ thống sẽ tự động nhận diện."
+					answer: "Chúng tôi hỗ trợ mua hàng từ các sàn phổ biến như Amazon, eBay, Taobao, 1688, Shopee quốc tế, v.v. Bạn có thể nhập link từ bất kỳ sàn nào – hệ thống sẽ tự động nhận diện.",
 				},
 				{
 					id: "1-3",
-					question: "Tôi có thể yêu cầu nhiều sản phẩm cùng lúc không?",
-					answer: "Có. Bạn có thể tạo nhiều yêu cầu khác nhau cho từng sản phẩm, hoặc gộp nhiều sản phẩm vào một yêu cầu nếu đến từ cùng một người bán."
+					question:
+						"Tôi có thể yêu cầu nhiều sản phẩm cùng lúc không?",
+					answer: "Có. Bạn có thể tạo nhiều yêu cầu khác nhau cho từng sản phẩm, hoặc gộp nhiều sản phẩm vào một yêu cầu nếu đến từ cùng một người bán.",
 				},
 				{
 					id: "1-4",
 					question: "Làm sao để huỷ yêu cầu đã gửi?",
-					answer: "Bạn có thể huỷ yêu cầu nếu nó chưa được xử lý. Vào tab \"Yêu cầu\", chọn yêu cầu muốn huỷ và nhấn \"Huỷ yêu cầu\"."
-				}
-			]
+					answer: 'Bạn có thể huỷ yêu cầu nếu nó chưa được xử lý. Vào tab "Yêu cầu", chọn yêu cầu muốn huỷ và nhấn "Huỷ yêu cầu".',
+				},
+			],
 		},
 		{
 			id: 2,
@@ -66,24 +67,24 @@ export default function FAQScreen({ navigation }) {
 				{
 					id: "2-1",
 					question: "Tôi có thể theo dõi đơn hàng như thế nào?",
-					answer: "Vào tab \"Đơn hàng\" để xem trạng thái từng đơn: Đã mua hàng, Đang vận chuyển quốc tế, Đã thông quan, Đang giao nội địa, Đã hoàn tất..."
+					answer: 'Vào tab "Đơn hàng" để xem trạng thái từng đơn: Đã mua hàng, Đang vận chuyển quốc tế, Đã thông quan, Đang giao nội địa, Đã hoàn tất...',
 				},
 				{
 					id: "2-2",
 					question: "Bao lâu hàng sẽ về tới tay tôi?",
-					answer: "Thông thường từ 7–15 ngày làm việc tuỳ quốc gia, thời điểm, phương thức vận chuyển và tình trạng hải quan."
+					answer: "Thông thường từ 7–15 ngày làm việc tuỳ quốc gia, thời điểm, phương thức vận chuyển và tình trạng hải quan.",
 				},
 				{
 					id: "2-3",
 					question: "Nếu hàng bị kẹt hải quan thì sao?",
-					answer: "GShop sẽ đại diện bạn làm việc với đơn vị vận chuyển và hải quan. Nếu cần cung cấp thêm giấy tờ, chúng tôi sẽ chủ động liên hệ bạn."
+					answer: "GShop sẽ đại diện bạn làm việc với đơn vị vận chuyển và hải quan. Nếu cần cung cấp thêm giấy tờ, chúng tôi sẽ chủ động liên hệ bạn.",
 				},
 				{
 					id: "2-4",
 					question: "Tôi có thể đổi/trả sản phẩm không?",
-					answer: "Vì là dịch vụ mua hộ quốc tế, GShop không hỗ trợ đổi/trả hàng, trừ khi sản phẩm bị sai nghiêm trọng hoặc không đúng mô tả. Bạn có thể yêu cầu hỗ trợ nếu gặp vấn đề."
-				}
-			]
+					answer: "Vì là dịch vụ mua hộ quốc tế, GShop không hỗ trợ đổi/trả hàng, trừ khi sản phẩm bị sai nghiêm trọng hoặc không đúng mô tả. Bạn có thể yêu cầu hỗ trợ nếu gặp vấn đề.",
+				},
+			],
 		},
 		{
 			id: 3,
@@ -94,24 +95,24 @@ export default function FAQScreen({ navigation }) {
 				{
 					id: "3-1",
 					question: "Làm sao để nạp tiền vào ví?",
-					answer: "Vào tab \"Ví tiền\" → chọn \"Nạp tiền\" → chọn phương thức chuyển khoản và làm theo hướng dẫn. Sau khi GShop xác nhận nhận được tiền, số dư sẽ được cập nhật."
+					answer: 'Vào tab "Ví tiền" → chọn "Nạp tiền" → chọn phương thức chuyển khoản và làm theo hướng dẫn. Sau khi GShop xác nhận nhận được tiền, số dư sẽ được cập nhật.',
 				},
 				{
 					id: "3-2",
 					question: "Tôi có thể rút tiền khỏi ví không?",
-					answer: "Có. Bạn có thể yêu cầu rút tiền về tài khoản ngân hàng nếu không còn nhu cầu sử dụng số dư."
+					answer: "Có. Bạn có thể yêu cầu rút tiền về tài khoản ngân hàng nếu không còn nhu cầu sử dụng số dư.",
 				},
 				{
 					id: "3-3",
 					question: "GShop có hoàn tiền không?",
-					answer: "Có. GShop hoàn tiền khi:\n\n• Sản phẩm không mua được\n• Người dùng huỷ yêu cầu đúng quy định\n• Đơn hàng bị lỗi do hệ thống"
+					answer: "Có. GShop hoàn tiền khi:\n\n• Sản phẩm không mua được\n• Người dùng huỷ yêu cầu đúng quy định\n• Đơn hàng bị lỗi do hệ thống",
 				},
 				{
 					id: "3-4",
 					question: "Tôi gặp lỗi khi thanh toán thì làm sao?",
-					answer: "Vui lòng kiểm tra kết nối mạng và thử lại. Nếu vẫn không được, bạn có thể liên hệ đội hỗ trợ qua mục \"Gửi yêu cầu hỗ trợ\"."
-				}
-			]
+					answer: 'Vui lòng kiểm tra kết nối mạng và thử lại. Nếu vẫn không được, bạn có thể liên hệ đội hỗ trợ qua mục "Gửi yêu cầu hỗ trợ".',
+				},
+			],
 		},
 		{
 			id: 4,
@@ -122,19 +123,19 @@ export default function FAQScreen({ navigation }) {
 				{
 					id: "4-1",
 					question: "Tôi quên mật khẩu, phải làm sao?",
-					answer: "Tại màn hình đăng nhập, chọn \"Quên mật khẩu\" và làm theo hướng dẫn để đặt lại mật khẩu qua email hoặc số điện thoại."
+					answer: 'Tại màn hình đăng nhập, chọn "Quên mật khẩu" và làm theo hướng dẫn để đặt lại mật khẩu qua email hoặc số điện thoại.',
 				},
 				{
 					id: "4-2",
 					question: "Làm sao để thay đổi số điện thoại?",
-					answer: "Vào \"Tài khoản\" → \"Cài đặt tài khoản\" → chỉnh sửa số điện thoại. Bạn sẽ được yêu cầu xác minh lại OTP mới."
+					answer: 'Vào "Tài khoản" → "Cài đặt tài khoản" → chỉnh sửa số điện thoại. Bạn sẽ được yêu cầu xác minh lại OTP mới.',
 				},
 				{
 					id: "4-3",
 					question: "Tôi muốn xoá tài khoản thì làm gì?",
-					answer: "Vào \"Tài khoản\" → \"Cài đặt tài khoản\" → chọn \"Yêu cầu xoá tài khoản\". Hệ thống sẽ xác nhận lần cuối trước khi xử lý yêu cầu."
-				}
-			]
+					answer: 'Vào "Tài khoản" → "Cài đặt tài khoản" → chọn "Yêu cầu xoá tài khoản". Hệ thống sẽ xác nhận lần cuối trước khi xử lý yêu cầu.',
+				},
+			],
 		},
 		{
 			id: 5,
@@ -145,20 +146,20 @@ export default function FAQScreen({ navigation }) {
 				{
 					id: "5-1",
 					question: "Phí dịch vụ của GShop được tính như thế nào?",
-					answer: "GShop tính phí dịch vụ dựa trên phần trăm giá trị đơn hàng và tuỳ quốc gia. Mức phí sẽ hiển thị rõ ràng trong phần báo giá trước khi bạn xác nhận thanh toán."
+					answer: "GShop tính phí dịch vụ dựa trên phần trăm giá trị đơn hàng và tuỳ quốc gia. Mức phí sẽ hiển thị rõ ràng trong phần báo giá trước khi bạn xác nhận thanh toán.",
 				},
 				{
 					id: "5-2",
 					question: "GShop hoạt động vào thời gian nào?",
-					answer: "Chúng tôi xử lý yêu cầu và đơn hàng từ 08:00 – 22:00 hàng ngày. Bạn vẫn có thể gửi yêu cầu 24/7 và hệ thống sẽ tiếp nhận tự động."
+					answer: "Chúng tôi xử lý yêu cầu và đơn hàng từ 08:00 – 22:00 hàng ngày. Bạn vẫn có thể gửi yêu cầu 24/7 và hệ thống sẽ tiếp nhận tự động.",
 				},
 				{
 					id: "5-3",
 					question: "Làm sao để liên hệ với GShop?",
-					answer: "Bạn có thể gửi yêu cầu qua mục \"Gửi yêu cầu hỗ trợ\", hoặc email đến support@gshop.vn. Chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc."
-				}
-			]
-		}
+					answer: 'Bạn có thể gửi yêu cầu qua mục "Gửi yêu cầu hỗ trợ", hoặc email đến support@gshop.vn. Chúng tôi sẽ phản hồi trong vòng 24 giờ làm việc.',
+				},
+			],
+		},
 	];
 
 	const renderQuestion = (question, sectionColor) => (
@@ -169,14 +170,23 @@ export default function FAQScreen({ navigation }) {
 			>
 				<Text style={styles.questionText}>{question.question}</Text>
 				<Ionicons
-					name={expandedQuestions[question.id] ? "chevron-up" : "chevron-down"}
+					name={
+						expandedQuestions[question.id]
+							? "chevron-up"
+							: "chevron-down"
+					}
 					size={20}
 					color="#78909C"
 				/>
 			</TouchableOpacity>
-			
+
 			{expandedQuestions[question.id] && (
-				<View style={[styles.answerContainer, { borderLeftColor: sectionColor[0] }]}>
+				<View
+					style={[
+						styles.answerContainer,
+						{ borderLeftColor: sectionColor[0] },
+					]}
+				>
 					<Text style={styles.answerText}>{question.answer}</Text>
 				</View>
 			)}
@@ -203,7 +213,11 @@ export default function FAQScreen({ navigation }) {
 					<Text style={styles.sectionTitle}>{section.title}</Text>
 				</View>
 				<Ionicons
-					name={expandedSections[section.id] ? "chevron-up" : "chevron-down"}
+					name={
+						expandedSections[section.id]
+							? "chevron-up"
+							: "chevron-down"
+					}
 					size={24}
 					color="#263238"
 				/>
@@ -211,7 +225,9 @@ export default function FAQScreen({ navigation }) {
 
 			{expandedSections[section.id] && (
 				<View style={styles.questionsContainer}>
-					{section.questions.map(question => renderQuestion(question, section.color))}
+					{section.questions.map((question) =>
+						renderQuestion(question, section.color)
+					)}
 				</View>
 			)}
 		</View>
@@ -255,16 +271,21 @@ export default function FAQScreen({ navigation }) {
 						<Text style={styles.supportTitle}>Vẫn cần hỗ trợ?</Text>
 					</View>
 					<Text style={styles.supportText}>
-						Nếu không tìm thấy câu trả lời phù hợp, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi:
+						Nếu không tìm thấy câu trả lời phù hợp, vui lòng liên hệ
+						đội ngũ hỗ trợ của chúng tôi:
 					</Text>
 					<View style={styles.contactMethods}>
 						<View style={styles.contactItem}>
 							<Ionicons name="mail" size={16} color="#4CAF50" />
-							<Text style={styles.contactText}>support@gshop.vn</Text>
+							<Text style={styles.contactText}>
+								sep490gshop@gmail.com
+							</Text>
 						</View>
 						<View style={styles.contactItem}>
 							<Ionicons name="time" size={16} color="#4CAF50" />
-							<Text style={styles.contactText}>Phản hồi trong 24h</Text>
+							<Text style={styles.contactText}>
+								Phản hồi trong 24h
+							</Text>
 						</View>
 					</View>
 				</View>
