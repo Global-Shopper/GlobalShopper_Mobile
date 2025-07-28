@@ -1029,11 +1029,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	globalStepTitle: {
 		fontSize: 18,
@@ -1190,11 +1185,6 @@ const styles = StyleSheet.create({
 		position: "relative",
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.08,
-		shadowRadius: 12,
-		elevation: 6,
 	},
 	stepIcon: {
 		alignItems: "center",
