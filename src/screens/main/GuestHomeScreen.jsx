@@ -7,8 +7,8 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
 import { Text } from "../../components/ui/text";
-import { useDialog, DialogTemplates } from "../../components/dialogHelpers";
 import QuickAccess from "../home/QuickAccess";
 import SliceBanner from "../home/SliceBanner";
 
@@ -18,29 +18,49 @@ export default function GuestHomeScreen({ navigation }) {
 
 	// Handle notification và chat press
 	const handleNotificationPress = () => {
-		showDialog(DialogTemplates.requireLogin(
-			() => {
-				// Chuyển đến màn hình đăng nhập
-				navigation.navigate("Login");
-			},
-			() => {
-				// Hủy - không làm gì
-				console.log("Hủy thông báo");
-			}
-		));
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy thông báo");
+				}
+			)
+		);
 	};
 
 	const handleChatPress = () => {
-		showDialog(DialogTemplates.requireLogin(
-			() => {
-				// Chuyển đến màn hình đăng nhập  
-				navigation.navigate("Login");
-			},
-			() => {
-				// Hủy - không làm gì
-				console.log("Hủy chat");
-			}
-		));
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy chat");
+				}
+			)
+		);
+	};
+
+	// Function để hiện dialog yêu cầu đăng nhập
+	const showLoginDialog = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy đăng nhập");
+				}
+			)
+		);
 	};
 
 	// Dịch vụ nổi bật
@@ -290,7 +310,10 @@ export default function GuestHomeScreen({ navigation }) {
 				{/* Banner Slider và Quick Access - với padding riêng */}
 				<View style={styles.topSection}>
 					<SliceBanner navigation={navigation} />
-					<QuickAccess navigation={navigation} />
+					<QuickAccess
+						navigation={navigation}
+						showLoginDialog={showLoginDialog}
+					/>
 				</View>
 
 				{/* Featured Services */}
@@ -497,6 +520,7 @@ export default function GuestHomeScreen({ navigation }) {
 														styles.actionButton,
 														styles.primaryActionButton,
 													]}
+													onPress={showLoginDialog}
 												>
 													<Text
 														style={[
@@ -624,7 +648,10 @@ export default function GuestHomeScreen({ navigation }) {
 										Click &ldquo;Tạo yêu cầu&rdquo; để nhận
 										được báo giá tốt nhất
 									</Text>
-									<TouchableOpacity style={styles.stepButton}>
+									<TouchableOpacity
+										style={styles.stepButton}
+										onPress={showLoginDialog}
+									>
 										<Text style={styles.stepButtonText}>
 											Tạo ngay
 										</Text>
@@ -695,7 +722,10 @@ export default function GuestHomeScreen({ navigation }) {
 										Hướng dẫn bạn tạo yêu cầu chỉ vài bước
 										đơn giản
 									</Text>
-									<TouchableOpacity style={styles.stepButton}>
+									<TouchableOpacity
+										style={styles.stepButton}
+										onPress={showLoginDialog}
+									>
 										<Text style={styles.stepButtonText}>
 											Xem ngay!
 										</Text>
