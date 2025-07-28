@@ -1,15 +1,50 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
 import { Text } from "../../components/ui/text";
 
 export default function GuestAccountScreen({ navigation }) {
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
+
 	const handleLoginPress = () => {
 		navigation.navigate("Login");
 	};
 
 	const handleRegisterPress = () => {
 		navigation.navigate("Signup");
+	};
+
+	// Handle notification và chat press
+	const handleNotificationPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy thông báo");
+				}
+			)
+		);
+	};
+
+	const handleChatPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy chat");
+				}
+			)
+		);
 	};
 
 	// Hỗ trợ & Thông tin
@@ -98,7 +133,7 @@ export default function GuestAccountScreen({ navigation }) {
 						<View style={styles.headerIcons}>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() => console.log("Chat pressed")}
+								onPress={handleChatPress}
 							>
 								<Ionicons
 									name="chatbubble-outline"
@@ -108,9 +143,7 @@ export default function GuestAccountScreen({ navigation }) {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() =>
-									console.log("Notification pressed")
-								}
+								onPress={handleNotificationPress}
 							>
 								<Ionicons
 									name="notifications-outline"
@@ -188,6 +221,7 @@ export default function GuestAccountScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }
