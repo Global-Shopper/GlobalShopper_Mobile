@@ -1,9 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
 import { Text } from "../../components/ui/text";
 
 export default function GuestScreen({ navigation, route }) {
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
+
 	// Get the tab info from route params
 	const { tabName, tabIcon } = route.params || {
 		tabName: "Tính năng",
@@ -16,6 +20,37 @@ export default function GuestScreen({ navigation, route }) {
 
 	const handleRegisterPress = () => {
 		navigation.navigate("Signup");
+	};
+
+	// Handle notification và chat press
+	const handleNotificationPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy thông báo");
+				}
+			)
+		);
+	};
+
+	const handleChatPress = () => {
+		showDialog(
+			DialogTemplates.requireLogin(
+				() => {
+					// Chuyển đến màn hình đăng nhập
+					navigation.navigate("Login");
+				},
+				() => {
+					// Hủy - không làm gì
+					console.log("Hủy chat");
+				}
+			)
+		);
 	};
 
 	return (
@@ -33,7 +68,7 @@ export default function GuestScreen({ navigation, route }) {
 						<View style={styles.headerIcons}>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() => console.log("Chat pressed")}
+								onPress={handleChatPress}
 							>
 								<Ionicons
 									name="chatbubble-outline"
@@ -43,9 +78,7 @@ export default function GuestScreen({ navigation, route }) {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() =>
-									console.log("Notification pressed")
-								}
+								onPress={handleNotificationPress}
 							>
 								<Ionicons
 									name="notifications-outline"
@@ -109,6 +142,7 @@ export default function GuestScreen({ navigation, route }) {
 					</View>
 				</View>
 			</View>
+			<Dialog />
 		</View>
 	);
 }
