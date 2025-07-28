@@ -8,10 +8,41 @@ import {
 	View,
 } from "react-native";
 import { Text } from "../../components/ui/text";
+import { useDialog, DialogTemplates } from "../../components/dialogHelpers";
 import QuickAccess from "../home/QuickAccess";
 import SliceBanner from "../home/SliceBanner";
 
 export default function GuestHomeScreen({ navigation }) {
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
+
+	// Handle notification và chat press
+	const handleNotificationPress = () => {
+		showDialog(DialogTemplates.requireLogin(
+			() => {
+				// Chuyển đến màn hình đăng nhập
+				navigation.navigate("Login");
+			},
+			() => {
+				// Hủy - không làm gì
+				console.log("Hủy thông báo");
+			}
+		));
+	};
+
+	const handleChatPress = () => {
+		showDialog(DialogTemplates.requireLogin(
+			() => {
+				// Chuyển đến màn hình đăng nhập  
+				navigation.navigate("Login");
+			},
+			() => {
+				// Hủy - không làm gì
+				console.log("Hủy chat");
+			}
+		));
+	};
+
 	// Dịch vụ nổi bật
 	const featuredServices = [
 		{
@@ -228,7 +259,7 @@ export default function GuestHomeScreen({ navigation }) {
 						<View style={styles.headerIcons}>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() => console.log("Chat pressed")}
+								onPress={handleChatPress}
 							>
 								<Ionicons
 									name="chatbubble-outline"
@@ -238,9 +269,7 @@ export default function GuestHomeScreen({ navigation }) {
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={() =>
-									console.log("Notification pressed")
-								}
+								onPress={handleNotificationPress}
 							>
 								<Ionicons
 									name="notifications-outline"
@@ -752,6 +781,7 @@ export default function GuestHomeScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }

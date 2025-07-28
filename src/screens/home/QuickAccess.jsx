@@ -9,14 +9,14 @@ const QuickAccess = ({ navigation }) => {
 			title: "Hỗ trợ",
 			icon: "headset-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to support"),
+			onPress: () => navigation?.navigate("FAQScreen"),
 		},
 		{
 			id: 2,
 			title: "Hướng dẫn",
 			icon: "book-outline",
 			color: "#42A5F5",
-			onPress: () => navigation?.navigate("FAQScreen"),
+			onPress: () => console.log("Navigate to guide"),
 		},
 		{
 			id: 3,
