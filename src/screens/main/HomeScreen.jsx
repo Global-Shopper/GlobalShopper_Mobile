@@ -10,6 +10,7 @@ import {
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import QuickAccess from "../home/QuickAccess";
+import SliceBanner from "../home/SliceBanner";
 
 export default function HomeScreen({ navigation }) {
 	// Dịch vụ nổi bật
@@ -232,6 +233,9 @@ export default function HomeScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
+				{/* Banner Slider */}
+				<SliceBanner navigation={navigation} />
+
 				{/* Quick Actions */}
 				<View style={styles.quickActions}>
 					<View style={styles.mainActionGrid}>
