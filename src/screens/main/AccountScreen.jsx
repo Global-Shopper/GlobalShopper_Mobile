@@ -143,7 +143,7 @@ export default function AccountScreen({ navigation }) {
 						// Navigate to login screen
 						navigation.reset({
 							index: 0,
-							routes: [{ name: "Login" }],
+							routes: [{ name: "Tabs" }],
 						});
 					},
 				},
