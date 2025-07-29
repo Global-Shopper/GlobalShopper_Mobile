@@ -249,22 +249,17 @@ export default function HomeScreen({ navigation }) {
 								end={{ x: 1, y: 1 }}
 								style={styles.actionGradient}
 							>
-								<View style={styles.actionIconContainer}>
-									<Ionicons
-										name="link-outline"
-										size={28}
-										color="#FFFFFF"
-									/>
-								</View>
-								<Text style={styles.mainActionTitle}>
-									Dán link sản phẩm
-								</Text>
-								<View style={styles.actionArrow}>
-									<Ionicons
-										name="arrow-forward"
-										size={16}
-										color="#FFFFFF"
-									/>
+								<View style={styles.actionContent}>
+									<View style={styles.actionIconContainer}>
+										<Ionicons
+											name="link-outline"
+											size={28}
+											color="#FFFFFF"
+										/>
+									</View>
+									<Text style={styles.mainActionTitle}>
+										Dán link sản phẩm
+									</Text>
 								</View>
 							</LinearGradient>
 						</TouchableOpacity>
@@ -274,32 +269,22 @@ export default function HomeScreen({ navigation }) {
 							onPress={() => navigation.navigate("AddStore")}
 						>
 							<LinearGradient
-								colors={["#E3F2FD", "#BBDEFB"]}
+								colors={["#42A5F5", "#1976D2"]}
 								start={{ x: 0, y: 0 }}
 								end={{ x: 1, y: 1 }}
 								style={styles.actionGradient}
 							>
-								<View style={styles.actionIconContainer}>
-									<Ionicons
-										name="create-outline"
-										size={28}
-										color="#1976D2"
-									/>
-								</View>
-								<Text
-									style={[
-										styles.mainActionTitle,
-										styles.lightCardText,
-									]}
-								>
-									Nhập thông tin sản phẩm
-								</Text>
-								<View style={styles.actionArrow}>
-									<Ionicons
-										name="arrow-forward"
-										size={16}
-										color="#1976D2"
-									/>
+								<View style={styles.actionContent}>
+									<View style={styles.actionIconContainer}>
+										<Ionicons
+											name="create-outline"
+											size={28}
+											color="#FFFFFF"
+										/>
+									</View>
+									<Text style={styles.mainActionTitle}>
+										Nhập thông tin
+									</Text>
 								</View>
 							</LinearGradient>
 						</TouchableOpacity>
@@ -476,7 +461,7 @@ export default function HomeScreen({ navigation }) {
 															"create-request"
 														) {
 															navigation.navigate(
-																"WithLink"
+																"AddStore"
 															);
 														} else {
 															navigation.navigate(
@@ -879,58 +864,38 @@ const styles = StyleSheet.create({
 	},
 	actionGradient: {
 		borderRadius: 16,
-		padding: 20,
-		alignItems: "flex-start",
-		justifyContent: "flex-start",
-		minHeight: 110,
-		paddingRight: 60,
-		position: "relative",
+		padding: 16,
+		minHeight: 100,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	actionContent: {
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	actionIconContainer: {
 		width: 48,
 		height: 48,
 		borderRadius: 24,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		backgroundColor: "rgba(255, 255, 255, 0.25)",
 		justifyContent: "center",
 		alignItems: "center",
 		marginBottom: 12,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 2,
+			height: 4,
 		},
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 3,
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
+		elevation: 4,
 	},
 	mainActionTitle: {
-		fontSize: 16,
-		fontWeight: "600",
+		fontSize: 14,
+		fontWeight: "700",
 		color: "#FFFFFF",
-		textAlign: "left",
-		lineHeight: 22,
-	},
-	lightCardText: {
-		color: "#1976D2",
-	},
-	actionArrow: {
-		position: "absolute",
-		bottom: 18,
-		right: 18,
-		width: 32,
-		height: 32,
-		borderRadius: 16,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		justifyContent: "center",
-		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3,
-		elevation: 2,
+		textAlign: "center",
+		letterSpacing: 0.3,
 	},
 	section: {
 		marginHorizontal: 0,
