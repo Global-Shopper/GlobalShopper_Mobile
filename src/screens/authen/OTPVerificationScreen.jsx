@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-	Alert,
 	Animated,
 	KeyboardAvoidingView,
 	Platform,
@@ -13,18 +12,24 @@ import {
 	View,
 } from "react-native";
 import { useDispatch } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import { setUserInfo } from "../../features/user";
-import { useLazyResendOTPQuery, useVerifyOTPForgotPasswordMutation, useVerifyOTPMutation } from "../../services/gshopApi";
+import {
+	useLazyResendOTPQuery,
+	useVerifyOTPForgotPasswordMutation,
+	useVerifyOTPMutation,
+} from "../../services/gshopApi";
 
 export default function OTPVerificationScreen({ navigation, route }) {
 	const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [timer, setTimer] = useState(60);
 	const [canResend, setCanResend] = useState(false);
-	const [verifyOTP] = useVerifyOTPMutation()
-	const [resendOTP] = useLazyResendOTPQuery()
-	const [verifyOTPForgotPassword] = useVerifyOTPForgotPasswordMutation()
-	const dispatch = useDispatch()
+	const [verifyOTP] = useVerifyOTPMutation();
+	const [resendOTP] = useLazyResendOTPQuery();
+	const [verifyOTPForgotPassword] = useVerifyOTPForgotPasswordMutation();
+	const dispatch = useDispatch();
+	const { showDialog, Dialog } = useDialog();
 
 	// Get email and type from navigation params
 	const email = route?.params?.email || "your-email@example.com";
@@ -150,7 +155,16 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
 		if (otpCode.length !== 6) {
 			shakeAnimation();
-			Alert.alert("Lỗi", "Vui lòng nhập đủ 6 số OTP");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập đủ 6 số OTP",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
@@ -159,48 +173,88 @@ export default function OTPVerificationScreen({ navigation, route }) {
 		try {
 			const data = {
 				email: email,
-				otp: otp.join('')
-			}
+				otp: otp.join(""),
+			};
 			if (type === "signup") {
-				verifyOTP(data).unwrap().then(res => {
-					dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
-					navigation.reset({
-						index: 0,
-						routes: [{ name: 'Tabs' }],
+				verifyOTP(data)
+					.unwrap()
+					.then((res) => {
+						dispatch(
+							setUserInfo({
+								...res?.user,
+								accessToken: res?.token,
+							})
+						);
+						navigation.reset({
+							index: 0,
+							routes: [{ name: "Tabs" }],
 						});
-					})
+					});
 			}
 			if (type === "forgot-password") {
-				verifyOTPForgotPassword(data).unwrap().then(res => {
-					if (res.resetPasswordToken) {
-						Alert.alert("Thành công", "Mã OTP đã được xác thực");
-						navigation.navigate("ResetPassword", { email: email , resetPasswordToken: res?.resetPasswordToken})
-					} else {
-						Alert.alert("Lỗi", res.message);
-					}
-				})
+				verifyOTPForgotPassword(data)
+					.unwrap()
+					.then((res) => {
+						if (res.resetPasswordToken) {
+							showDialog({
+								title: "Thành công",
+								message: "Mã OTP đã được xác thực",
+								primaryButton: {
+									text: "OK",
+									onPress: () => {
+										navigation.navigate("ResetPassword", {
+											email: email,
+											resetPasswordToken:
+												res?.resetPasswordToken,
+										});
+									},
+									style: "success",
+								},
+								showCloseButton: false,
+							});
+						} else {
+							showDialog({
+								title: "Lỗi",
+								message: res.message,
+								primaryButton: {
+									text: "OK",
+									onPress: () => {},
+									style: "primary",
+								},
+								showCloseButton: false,
+							});
+						}
+					});
 			}
 		} catch (error) {
 			// Handle different error cases
 			if (error?.data?.errorCode === "ALREADY_VERIFIED") {
-				Alert.alert(
-					"Email đã được xác thực",
-					error?.data?.message ||
+				showDialog({
+					title: "Email đã được xác thực",
+					message:
+						error?.data?.message ||
 						"Email của bạn đã được xác thực trước đó.",
-					[
-						{
-							text: "OK",
-							onPress: () => navigation.navigate("Login"),
-						},
-					]
-				);
+					primaryButton: {
+						text: "OK",
+						onPress: () => navigation.navigate("Login"),
+						style: "primary",
+					},
+					showCloseButton: false,
+				});
 			} else {
 				shakeAnimation();
-				Alert.alert(
-					"Lỗi xác thực",
-					error?.data?.message ||
-						"OTP không hợp lệ hoặc hết hạn. Vui lòng thử lại."
-				);
+				showDialog({
+					title: "Lỗi xác thực",
+					message:
+						error?.data?.message ||
+						"OTP không hợp lệ hoặc hết hạn. Vui lòng thử lại.",
+					primaryButton: {
+						text: "OK",
+						onPress: () => {},
+						style: "primary",
+					},
+					showCloseButton: false,
+				});
 			}
 		} finally {
 			setIsLoading(false);
@@ -219,11 +273,33 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
 		try {
 			// Simulate API call - replace with real API call
-			resendOTP({email: email}).unwrap().then(res =>{
-				Alert.alert(res.message || "Đã xảy ra lỗi. Vui lòng thử lại!")
-			} )
+			resendOTP({ email: email })
+				.unwrap()
+				.then((res) => {
+					showDialog({
+						title: "Thành công",
+						message:
+							res.message ||
+							"Mã OTP mới đã được gửi đến email của bạn",
+						primaryButton: {
+							text: "OK",
+							onPress: () => {},
+							style: "success",
+						},
+						showCloseButton: false,
+					});
+				});
 		} catch (_error) {
-			Alert.alert("Gửi lại OTP thất bại", "Vui lòng thử lại sau.");
+			showDialog({
+				title: "Lỗi",
+				message: "Gửi lại OTP thất bại. Vui lòng thử lại sau.",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			// Reset timer on failure
 			setCanResend(true);
 			setTimer(0);
@@ -353,6 +429,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 					</LinearGradient>
 				</TouchableOpacity>
 			</View>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

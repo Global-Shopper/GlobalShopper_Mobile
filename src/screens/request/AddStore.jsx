@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
-	Alert,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -11,12 +10,14 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import StoreForm from "../../components/store-form";
 
 export default function AddStore({ navigation }) {
 	const [showInstructions, setShowInstructions] = useState(false);
 	const [storeData, setStoreData] = useState(null);
+	const { showDialog, Dialog } = useDialog();
 
 	const handleStoreDataChange = (data) => {
 		console.log("AddStore - Store data changed:", data);
@@ -28,25 +29,39 @@ export default function AddStore({ navigation }) {
 
 		// Validate store data before navigation
 		if (!storeData) {
-			Alert.alert(
-				"Thiếu thông tin",
-				"Vui lòng điền thông tin cửa hàng trước khi thêm sản phẩm."
-			);
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message:
+					"Vui lòng điền thông tin cửa hàng trước khi thêm sản phẩm.",
+			});
 			return;
 		}
 
 		if (!storeData.storeName?.trim()) {
-			Alert.alert("Thiếu thông tin", "Vui lòng nhập tên cửa hàng.");
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message: "Vui lòng nhập tên cửa hàng.",
+			});
 			return;
 		}
 
 		if (!storeData.storeAddress?.trim()) {
-			Alert.alert("Thiếu thông tin", "Vui lòng nhập địa chỉ cửa hàng.");
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message: "Vui lòng nhập địa chỉ cửa hàng.",
+			});
 			return;
 		}
 
 		if (!storeData.shopLink?.trim()) {
-			Alert.alert("Thiếu thông tin", "Vui lòng nhập link cửa hàng.");
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message: "Vui lòng nhập link cửa hàng.",
+			});
 			return;
 		}
 
@@ -150,6 +165,7 @@ export default function AddStore({ navigation }) {
 					</TouchableOpacity>
 				</ScrollView>
 			</KeyboardAvoidingView>
+			<Dialog />
 		</View>
 	);
 }

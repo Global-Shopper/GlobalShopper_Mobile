@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { setAvatar } from "../features/user";
 import { useUploadAvatarMutation } from "../services/gshopApi";
+import { useDialog } from "./dialogHelpers";
 import { Text } from "./ui/text";
 
 interface HeaderProps {
@@ -58,6 +59,7 @@ export default function Header({
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
 	const dispatch = useDispatch();
+	const { showDialog, Dialog } = useDialog();
 	const email = useSelector((state: any) => state?.rootReducer?.user?.email);
 	const name = useSelector((state: any) => state?.rootReducer?.user?.name);
 	const avatarUrl = useSelector(
@@ -73,11 +75,11 @@ export default function Header({
 		const { status } =
 			await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (status !== "granted") {
-			Alert.alert(
-				"Permission Required",
-				"Sorry, we need camera roll permissions to upload your avatar.",
-				[{ text: "OK" }]
-			);
+			showDialog({
+				title: "Cần quyền truy cập",
+				message:
+					"Xin lỗi, chúng tôi cần quyền truy cập thư viện ảnh để tải lên ảnh đại diện của bạn.",
+			});
 			return false;
 		}
 		return true;
@@ -90,23 +92,26 @@ export default function Header({
 			if (!hasPermission) return;
 
 			// Show options: Camera or Gallery
-			Alert.alert("Upload Avatar", "Choose an option", [
-				{
-					text: "Camera",
+			showDialog({
+				title: "Tải lên ảnh đại diện",
+				message: "Chọn một tùy chọn",
+				primaryButton: {
+					text: "Máy ảnh",
 					onPress: () => pickImage("camera"),
+					style: "primary",
 				},
-				{
-					text: "Gallery",
+				secondaryButton: {
+					text: "Thư viện",
 					onPress: () => pickImage("library"),
+					style: "outline",
 				},
-				{
-					text: "Cancel",
-					style: "cancel",
-				},
-			]);
+			});
 		} catch (error) {
 			console.error("Avatar upload error:", error);
-			Alert.alert("Error", "Failed to upload avatar");
+			showDialog({
+				title: "Lỗi",
+				message: "Không thể tải lên ảnh đại diện",
+			});
 		}
 	};
 
@@ -119,10 +124,10 @@ export default function Header({
 				const cameraPermission =
 					await ImagePicker.requestCameraPermissionsAsync();
 				if (cameraPermission.status !== "granted") {
-					Alert.alert(
-						"Permission Required",
-						"Camera permission is required"
-					);
+					showDialog({
+						title: "Cần quyền truy cập",
+						message: "Cần quyền truy cập máy ảnh",
+					});
 					return;
 				}
 				result = await ImagePicker.launchCameraAsync({
@@ -145,7 +150,10 @@ export default function Header({
 			}
 		} catch (error) {
 			console.error("Pick image error:", error);
-			Alert.alert("Error", "Failed to pick image");
+			showDialog({
+				title: "Lỗi",
+				message: "Không thể chọn ảnh",
+			});
 		}
 	};
 
@@ -227,16 +235,20 @@ export default function Header({
 
 			if (newAvatarUrl) {
 				dispatch(setAvatar(newAvatarUrl));
-				Alert.alert("Thành công", "Cập nhật ảnh đại diện thành công!");
+				showDialog({
+					title: "Thành công",
+					message: "Cập nhật ảnh đại diện thành công!",
+				});
 			} else {
 				console.log(
 					"No avatar URL found in response. Full response:",
 					response
 				);
-				Alert.alert(
-					"Thông báo",
-					"Upload thành công nhưng không nhận được URL ảnh. Vui lòng thử lại sau."
-				);
+				showDialog({
+					title: "Thông báo",
+					message:
+						"Upload thành công nhưng không nhận được URL ảnh. Vui lòng thử lại sau.",
+				});
 			}
 		} catch (error: any) {
 			console.error("Upload avatar error:", error);
@@ -244,7 +256,10 @@ export default function Header({
 				error?.data?.message ||
 				error?.message ||
 				"Có lỗi xảy ra khi tải lên ảnh";
-			Alert.alert("Lỗi", errorMessage);
+			showDialog({
+				title: "Lỗi",
+				message: errorMessage,
+			});
 		}
 	};
 
@@ -252,20 +267,20 @@ export default function Header({
 	const handleAvatarPress = () => {
 		if (onAvatarPress) {
 			// Show custom options with upload option
-			Alert.alert("Thay đổi ảnh đại diện", "Chọn nguồn ảnh:", [
-				{
-					text: "Hủy",
-					style: "cancel",
-				},
-				{
-					text: "Camera",
+			showDialog({
+				title: "Thay đổi ảnh đại diện",
+				message: "Chọn nguồn ảnh:",
+				primaryButton: {
+					text: "Máy ảnh",
 					onPress: () => pickImage("camera"),
+					style: "primary",
 				},
-				{
+				secondaryButton: {
 					text: "Thư viện ảnh",
 					onPress: () => pickImage("library"),
+					style: "outline",
 				},
-			]);
+			});
 		} else {
 			// Default behavior: allow avatar upload
 			handleAvatarUpload();
@@ -291,139 +306,142 @@ export default function Header({
 	console.log(email, name);
 
 	return (
-		<LinearGradient
-			colors={["#42A5F5", "#1976D2"]}
-			start={{ x: 0, y: 0 }}
-			end={{ x: 1, y: 1 }}
-			style={styles.header}
-		>
-			<View style={styles.headerContent}>
-				{/* Left side - Title or Avatar */}
-				{isSimpleHeader ? (
-					// Simple title header (WalletScreen, RequestScreen, OrderScreen)
-					<View style={styles.headerLeft}>
-						{showBackButton && (
-							<TouchableOpacity
-								onPress={onBackPress}
-								style={styles.backButton}
-								activeOpacity={0.7}
-							>
-								<Ionicons
-									name="arrow-back"
-									size={24}
-									color="#FFFFFF"
-								/>
-							</TouchableOpacity>
-						)}
-						<Text style={styles.headerTitle}>{title}</Text>
-					</View>
-				) : (
-					// Avatar header (HomeScreen, ProfileScreen)
-					<View style={styles.headerLeft}>
-						<View style={styles.avatarContainer}>
-							<TouchableOpacity
-								onPress={handleAvatarPress}
-								activeOpacity={0.8}
-								disabled={isUploadingAvatar}
-							>
-								<Image
-									source={
-										avatarUrl && avatarUrl.trim() !== ""
-											? { uri: avatarUrl }
-											: require("../assets/images/logo/logo-gshop-removebg.png")
-									}
-									style={[
-										styles.avatar,
-										isUploadingAvatar &&
-											styles.avatarLoading,
-									]}
-									onError={(error) => {
-										console.log(
-											"Avatar load error:",
-											error
-										);
-									}}
-								/>
-								{isUploadingAvatar && (
-									<View style={styles.uploadingOverlay}>
+		<>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 1 }}
+				style={styles.header}
+			>
+				<View style={styles.headerContent}>
+					{/* Left side - Title or Avatar */}
+					{isSimpleHeader ? (
+						// Simple title header (WalletScreen, RequestScreen, OrderScreen)
+						<View style={styles.headerLeft}>
+							{showBackButton && (
+								<TouchableOpacity
+									onPress={onBackPress}
+									style={styles.backButton}
+									activeOpacity={0.7}
+								>
+									<Ionicons
+										name="arrow-back"
+										size={24}
+										color="#FFFFFF"
+									/>
+								</TouchableOpacity>
+							)}
+							<Text style={styles.headerTitle}>{title}</Text>
+						</View>
+					) : (
+						// Avatar header (HomeScreen, ProfileScreen)
+						<View style={styles.headerLeft}>
+							<View style={styles.avatarContainer}>
+								<TouchableOpacity
+									onPress={handleAvatarPress}
+									activeOpacity={0.8}
+									disabled={isUploadingAvatar}
+								>
+									<Image
+										source={
+											avatarUrl && avatarUrl.trim() !== ""
+												? { uri: avatarUrl }
+												: require("../assets/images/logo/logo-gshop-removebg.png")
+										}
+										style={[
+											styles.avatar,
+											isUploadingAvatar &&
+												styles.avatarLoading,
+										]}
+										onError={(error) => {
+											console.log(
+												"Avatar load error:",
+												error
+											);
+										}}
+									/>
+									{isUploadingAvatar && (
+										<View style={styles.uploadingOverlay}>
+											<Ionicons
+												name="camera"
+												size={20}
+												color="#FFFFFF"
+											/>
+										</View>
+									)}
+								</TouchableOpacity>
+								{isVerified && (
+									<View style={styles.verifiedBadge}>
 										<Ionicons
-											name="camera"
+											name="checkmark-circle"
 											size={20}
-											color="#FFFFFF"
+											color="#28a745"
 										/>
 									</View>
 								)}
+							</View>
+							<View style={styles.greetingContainer}>
+								<Text style={styles.greetingText}>
+									Xin chào, {name}
+								</Text>
+								<Text style={styles.subGreeting}>
+									{subtitle || email}
+								</Text>
+							</View>
+						</View>
+					)}
+
+					<View style={styles.headerRight}>
+						{/* Notification Icon */}
+						{showNotificationIcon && (
+							<TouchableOpacity
+								style={styles.notificationContainer}
+								onPress={handleNotificationPress}
+								activeOpacity={0.7}
+							>
+								<Ionicons
+									name="notifications-outline"
+									size={24}
+									color="#FFFFFF"
+								/>
+								{notificationCount > 0 && (
+									<View style={styles.notificationBadge}>
+										<Text style={styles.notificationText}>
+											{notificationCount > 9
+												? "9+"
+												: notificationCount}
+										</Text>
+									</View>
+								)}
 							</TouchableOpacity>
-							{isVerified && (
-								<View style={styles.verifiedBadge}>
-									<Ionicons
-										name="checkmark-circle"
-										size={20}
-										color="#28a745"
-									/>
-								</View>
-							)}
-						</View>
-						<View style={styles.greetingContainer}>
-							<Text style={styles.greetingText}>
-								Xin chào, {name}
-							</Text>
-							<Text style={styles.subGreeting}>
-								{subtitle || email}
-							</Text>
-						</View>
+						)}
+
+						{/* Chat Icon */}
+						{showChatIcon && (
+							<TouchableOpacity
+								style={styles.chatIcon}
+								onPress={handleChatPress}
+								activeOpacity={0.7}
+							>
+								<Ionicons
+									name="chatbubble-outline"
+									size={24}
+									color="#FFFFFF"
+								/>
+								{chatCount > 0 && (
+									<View style={styles.chatBadge}>
+										<Text style={styles.chatBadgeText}>
+											{chatCount > 9 ? "9+" : chatCount}
+										</Text>
+									</View>
+								)}
+							</TouchableOpacity>
+						)}
 					</View>
-				)}
-
-				<View style={styles.headerRight}>
-					{/* Notification Icon */}
-					{showNotificationIcon && (
-						<TouchableOpacity
-							style={styles.notificationContainer}
-							onPress={handleNotificationPress}
-							activeOpacity={0.7}
-						>
-							<Ionicons
-								name="notifications-outline"
-								size={24}
-								color="#FFFFFF"
-							/>
-							{notificationCount > 0 && (
-								<View style={styles.notificationBadge}>
-									<Text style={styles.notificationText}>
-										{notificationCount > 9
-											? "9+"
-											: notificationCount}
-									</Text>
-								</View>
-							)}
-						</TouchableOpacity>
-					)}
-
-					{/* Chat Icon */}
-					{showChatIcon && (
-						<TouchableOpacity
-							style={styles.chatIcon}
-							onPress={handleChatPress}
-							activeOpacity={0.7}
-						>
-							<Ionicons
-								name="chatbubble-outline"
-								size={24}
-								color="#FFFFFF"
-							/>
-							{chatCount > 0 && (
-								<View style={styles.chatBadge}>
-									<Text style={styles.chatBadgeText}>
-										{chatCount > 9 ? "9+" : chatCount}
-									</Text>
-								</View>
-							)}
-						</TouchableOpacity>
-					)}
 				</View>
-			</View>
-		</LinearGradient>
+			</LinearGradient>
+			<Dialog />
+		</>
 	);
 }
 

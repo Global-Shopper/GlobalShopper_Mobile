@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-	Alert,
 	Animated,
 	Dimensions,
 	KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDialog } from "../../components/dialogHelpers";
 import { useLazyForgotPasswordQuery } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
@@ -22,11 +22,14 @@ export default function ForgotPasswordScreen({ navigation }) {
 	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
+
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
 
-	const [forgotPassword] = useLazyForgotPasswordQuery()
+	const [forgotPassword] = useLazyForgotPasswordQuery();
 
 	useEffect(() => {
 		// Logo breathing animation
@@ -75,12 +78,30 @@ export default function ForgotPasswordScreen({ navigation }) {
 
 	const handleSendOTP = async () => {
 		if (!email.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập email");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập email",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!validateEmail(email)) {
-			Alert.alert("Lỗi", "Email không hợp lệ");
+			showDialog({
+				title: "Lỗi",
+				message: "Email không hợp lệ",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
@@ -88,21 +109,47 @@ export default function ForgotPasswordScreen({ navigation }) {
 
 		try {
 			// Simulate API call to send OTP
-			const res = await forgotPassword({ email: email }).unwrap()
-			console.log(res)
+			const res = await forgotPassword({ email: email }).unwrap();
+			console.log(res);
 			if (res.success) {
-				Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
-				// Chuyển thẳng sang màn hình OTP Verification
-			navigation.navigate("OTPVerification", {
-				email: email,
-				type: "forgot-password", // Để phân biệt với OTP đăng ký
-			});
+				showDialog({
+					title: "Thành công",
+					message: "Mã OTP đã được gửi đến email của bạn",
+					primaryButton: {
+						text: "OK",
+						onPress: () => {
+							navigation.navigate("OTPVerification", {
+								email: email,
+								type: "forgot-password", // Để phân biệt với OTP đăng ký
+							});
+						},
+						style: "success",
+					},
+					showCloseButton: false,
+				});
 			} else {
-				Alert.alert("Lỗi", res.message);
+				showDialog({
+					title: "Lỗi",
+					message: res.message,
+					primaryButton: {
+						text: "OK",
+						onPress: () => {},
+						style: "primary",
+					},
+					showCloseButton: false,
+				});
 			}
-			
 		} catch (_error) {
-			Alert.alert("Lỗi", "Không thể gửi mã OTP. Vui lòng thử lại sau.");
+			showDialog({
+				title: "Lỗi",
+				message: "Không thể gửi mã OTP. Vui lòng thử lại sau.",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 		} finally {
 			setIsLoading(false);
 		}
@@ -234,6 +281,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

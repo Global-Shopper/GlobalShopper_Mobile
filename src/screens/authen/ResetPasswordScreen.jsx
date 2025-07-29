@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-	Alert,
 	Animated,
 	Dimensions,
 	KeyboardAvoidingView,
@@ -15,6 +14,7 @@ import {
 	View,
 } from "react-native";
 import { useDispatch } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import { setUserInfo } from "../../features/user";
 import { useResetPasswordMutation } from "../../services/gshopApi";
 
@@ -38,8 +38,9 @@ export default function ResetPasswordScreen({ navigation, route }) {
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
 	const rotateAnim = useRef(new Animated.Value(0)).current;
-	const [resetPassword] = useResetPasswordMutation()
-	const dispatch = useDispatch()
+	const [resetPassword] = useResetPasswordMutation();
+	const dispatch = useDispatch();
+	const { showDialog, Dialog } = useDialog();
 
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
@@ -111,17 +112,44 @@ export default function ResetPasswordScreen({ navigation, route }) {
 	const handleResetPassword = async () => {
 		// Validation
 		if (!password) {
-			Alert.alert("Lỗi", "Vui lòng nhập mật khẩu mới");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập mật khẩu mới",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!isPasswordValid) {
-			Alert.alert("Lỗi", "Mật khẩu không đáp ứng yêu cầu");
+			showDialog({
+				title: "Lỗi",
+				message: "Mật khẩu không đáp ứng yêu cầu",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (password !== confirmPassword) {
-			Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
+			showDialog({
+				title: "Lỗi",
+				message: "Mật khẩu xác nhận không khớp",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
@@ -132,39 +160,64 @@ export default function ResetPasswordScreen({ navigation, route }) {
 			resetPassword({
 				token: resetPasswordToken,
 				password: password,
-			}).unwrap().then(res => {
-				Alert.alert("Thành công", "Mật khẩu đã được đặt lại thành công");
-				dispatch(setUserInfo({...res?.user, accessToken: res?.token}))
-				navigation.reset({
-					index: 0,
-					routes: [{ name: 'Tabs' }],
-					});
 			})
+				.unwrap()
+				.then((res) => {
+					showDialog({
+						title: "Thành công",
+						message: "Mật khẩu đã được đặt lại thành công",
+						primaryButton: {
+							text: "OK",
+							onPress: () => {
+								dispatch(
+									setUserInfo({
+										...res?.user,
+										accessToken: res?.token,
+									})
+								);
+								navigation.reset({
+									index: 0,
+									routes: [{ name: "Tabs" }],
+								});
+							},
+							style: "success",
+						},
+						showCloseButton: false,
+					});
+				});
 		} catch (_error) {
-			Alert.alert(
-				"Lỗi",
-				_error?.data?.message || "Lỗi khi đặt lại mật khẩu"
-			);
+			showDialog({
+				title: "Lỗi",
+				message: _error?.data?.message || "Lỗi khi đặt lại mật khẩu",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	const handleBackToLogin = () => {
-		Alert.alert(
-			"Xác nhận",
-			"Bạn có chắc chắn muốn quay lại? Mật khẩu sẽ không được đặt lại.",
-			[
-				{
-					text: "Hủy",
-					style: "cancel",
-				},
-				{
-					text: "Quay lại",
-					onPress: () => navigation.navigate("Login"),
-				},
-			]
-		);
+		showDialog({
+			title: "Xác nhận",
+			message:
+				"Bạn có chắc chắn muốn quay lại? Mật khẩu sẽ không được đặt lại.",
+			primaryButton: {
+				text: "Quay lại",
+				onPress: () => navigation.navigate("Login"),
+				style: "primary",
+			},
+			secondaryButton: {
+				text: "Hủy",
+				onPress: () => {},
+				style: "outline",
+			},
+			showCloseButton: false,
+		});
 	};
 
 	return (
@@ -473,6 +526,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

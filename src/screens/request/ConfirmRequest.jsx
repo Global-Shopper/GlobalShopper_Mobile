@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -13,6 +12,7 @@ import {
 	View,
 } from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
+import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
 import StoreCard from "../../components/store-card";
@@ -25,6 +25,7 @@ export default function ConfirmRequest({ navigation, route }) {
 	// API hooks
 	const [createWithoutLinkRequest, { isLoading: isCreatingRequest }] =
 		useCreateWithoutLinkPurchaseRequestMutation();
+	const { showDialog, Dialog } = useDialog();
 
 	const [note, setNote] = useState("");
 	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
@@ -54,30 +55,34 @@ export default function ConfirmRequest({ navigation, route }) {
 
 		// Kiểm tra địa chỉ giao hàng
 		if (!deliveryAddress) {
-			Alert.alert(
-				"Thiếu thông tin",
-				"Vui lòng chọn địa chỉ giao hàng trước khi gửi yêu cầu.",
-				[
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message:
+					"Vui lòng chọn địa chỉ giao hàng trước khi gửi yêu cầu.",
+				buttons: [
 					{
 						text: "Chọn địa chỉ",
+						style: "primary",
 						onPress: handleEditAddress,
 					},
 					{
 						text: "Hủy",
-						style: "cancel",
+						style: "text",
 					},
-				]
-			);
+				],
+			});
 			return;
 		}
 
 		// Kiểm tra thông tin cửa hàng
 		if (!storeData || !storeData.storeName?.trim()) {
-			Alert.alert(
-				"Thiếu thông tin",
-				"Thông tin cửa hàng không đầy đủ. Vui lòng quay lại kiểm tra tên cửa hàng.",
-				[{ text: "OK" }]
-			);
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message:
+					"Thông tin cửa hàng không đầy đủ. Vui lòng quay lại kiểm tra tên cửa hàng.",
+			});
 			return;
 		}
 
@@ -91,22 +96,23 @@ export default function ConfirmRequest({ navigation, route }) {
 
 		// Kiểm tra sản phẩm
 		if (!products || products.length === 0) {
-			Alert.alert(
-				"Thiếu thông tin",
-				"Chưa có sản phẩm nào. Vui lòng thêm sản phẩm trước khi gửi yêu cầu.",
-				[{ text: "OK" }]
-			);
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message:
+					"Chưa có sản phẩm nào. Vui lòng thêm sản phẩm trước khi gửi yêu cầu.",
+			});
 			return;
 		}
 
 		// Kiểm tra sản phẩm có tên không
 		const productsWithoutName = products.filter((p) => !p.name?.trim());
 		if (productsWithoutName.length > 0) {
-			Alert.alert(
-				"Thiếu thông tin",
-				"Một số sản phẩm chưa có tên. Vui lòng kiểm tra lại.",
-				[{ text: "OK" }]
-			);
+			showDialog({
+				type: "error",
+				title: "Thiếu thông tin",
+				message: "Một số sản phẩm chưa có tên. Vui lòng kiểm tra lại.",
+			});
 			return;
 		}
 
@@ -292,10 +298,13 @@ export default function ConfirmRequest({ navigation, route }) {
 
 			console.error("Final error message:", errorMessage);
 
-			Alert.alert(
-				"Lỗi",
-				`${errorMessage}\n\nStatus: ${error?.status || "Unknown"}`
-			);
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: `${errorMessage}\n\nStatus: ${
+					error?.status || "Unknown"
+				}`,
+			});
 		}
 	};
 
@@ -566,6 +575,7 @@ export default function ConfirmRequest({ navigation, route }) {
 					</LinearGradient>
 				</TouchableOpacity>
 			</View>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

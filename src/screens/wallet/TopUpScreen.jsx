@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Linking from 'expo-linking';
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import {
-	Alert,
 	Image,
 	ScrollView,
 	StyleSheet,
@@ -11,13 +10,15 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useDepositWalletMutation } from "../../services/gshopApi";
 
 export default function TopUpScreen({ navigation }) {
-	console.log(Linking.createURL('/'))
-	const [deposit, { isLoading: isDepositLoading }] = useDepositWalletMutation();
+	console.log(Linking.createURL("/"));
+	const [deposit] = useDepositWalletMutation();
+	const { showDialog, Dialog } = useDialog();
 	const [selectedAmount, setSelectedAmount] = useState(null);
 	const [customAmount, setCustomAmount] = useState("");
 	const [selectedMethod, setSelectedMethod] = useState(null);
@@ -65,36 +66,55 @@ export default function TopUpScreen({ navigation }) {
 	const handleTopUp = () => {
 		const amount = selectedAmount || parseInt(customAmount);
 		if (!amount || amount < 10000) {
-			Alert.alert("Lỗi", "Số tiền nạp tối thiểu là 10.000 VND");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Số tiền nạp tối thiểu là 10.000 VND",
+			});
 			return;
 		}
 
 		if (!selectedMethod) {
-			Alert.alert("Lỗi", "Vui lòng chọn phương thức thanh toán");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng chọn phương thức thanh toán",
+			});
 			return;
 		}
 
-		Alert.alert(
-			"Xác nhận nạp tiền",
-			`Bạn có muốn nạp ${formatCurrency(amount)} vào ví?`,
-			[
-				{ text: "Hủy", style: "cancel" },
+		showDialog({
+			type: "confirm",
+			title: "Xác nhận nạp tiền",
+			message: `Bạn có muốn nạp ${formatCurrency(amount)} vào ví?`,
+			buttons: [
+				{
+					text: "Hủy",
+					style: "text",
+				},
 				{
 					text: "Xác nhận",
+					style: "primary",
 					onPress: () => {
-						deposit({balance: selectedAmount || customAmount, redirectUri: `${Linking.createURL('/')}wallet`}).unwrap()
-						.then((res) => {
-							console.log(res)
-							navigation.navigate("VNPayGateWay", {url: res.url});
+						deposit({
+							balance: selectedAmount || customAmount,
+							redirectUri: `${Linking.createURL("/")}wallet`,
 						})
-						.catch((error) => {
-							console.log(error);
-						});
+							.unwrap()
+							.then((res) => {
+								console.log(res);
+								navigation.navigate("VNPayGateWay", {
+									url: res.url,
+								});
+							})
+							.catch((error) => {
+								console.log(error);
+							});
 						navigation.goBack();
 					},
 				},
-			]
-		);
+			],
+		});
 	};
 
 	return (
@@ -291,6 +311,7 @@ export default function TopUpScreen({ navigation }) {
 					</LinearGradient>
 				</TouchableOpacity>
 			</View>
+			<Dialog />
 		</View>
 	);
 }

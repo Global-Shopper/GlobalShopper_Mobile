@@ -89,6 +89,7 @@ export const DialogTemplates = {
 			onPress: onCancel || (() => {}),
 			style: "outline" as const,
 		},
+		showCloseButton: false,
 	}),
 
 	// Confirm xóa
@@ -99,8 +100,6 @@ export const DialogTemplates = {
 	) => ({
 		title: "Xóa " + itemName,
 		message: `Bạn có chắc chắn muốn xóa ${itemName} này không? Hành động này không thể hoàn tác.`,
-		type: "warning" as const,
-		icon: "trash-outline",
 		primaryButton: {
 			text: "Xóa",
 			onPress: onConfirm,
@@ -111,32 +110,31 @@ export const DialogTemplates = {
 			onPress: onCancel || (() => {}),
 			style: "outline" as const,
 		},
+		showCloseButton: false,
 	}),
 
 	// Thông báo thành công
 	success: (title: string, message: string, onOk?: () => void) => ({
 		title,
 		message,
-		type: "info" as const,
-		icon: "checkmark-circle-outline",
 		primaryButton: {
 			text: "OK",
 			onPress: onOk || (() => {}),
 			style: "success" as const,
 		},
+		showCloseButton: false,
 	}),
 
 	// Thông báo lỗi
 	error: (title: string, message: string, onOk?: () => void) => ({
 		title,
 		message,
-		type: "alert" as const,
-		icon: "alert-circle-outline",
 		primaryButton: {
 			text: "OK",
 			onPress: onOk || (() => {}),
 			style: "danger" as const,
 		},
+		showCloseButton: false,
 	}),
 
 	// Confirm chung
@@ -148,7 +146,6 @@ export const DialogTemplates = {
 	) => ({
 		title,
 		message,
-		type: "confirm" as const,
 		primaryButton: {
 			text: "Xác nhận",
 			onPress: onConfirm,
@@ -159,6 +156,7 @@ export const DialogTemplates = {
 			onPress: onCancel || (() => {}),
 			style: "outline" as const,
 		},
+		showCloseButton: false,
 	}),
 };
 
