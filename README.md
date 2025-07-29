@@ -1,50 +1,94 @@
-# Welcome to your Expo app 👋
+# 🌍 Global Shopper - GShop
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**GShop** là một nền tảng hỗ trợ **mua hộ hàng quốc tế**, cho phép người dùng dễ dàng gửi yêu cầu mua hàng từ các trang thương mại điện tử hoặc cửa hàng ở nước ngoài, theo dõi tiến trình đơn hàng, quản lý ví tiền và thực hiện hoàn tiền một cách tiện lợi.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Công nghệ sử dụng
 
-   ```bash
-   npm install
-   ```
+-   **React Native** – phát triển ứng dụng di động đa nền tảng (iOS & Android)
+-   **Expo** – framework phát triển React Native nhanh chóng
+-   **Redux Toolkit** – quản lý state toàn cục
+-   **RTK Query** – quản lý API calls và caching
+-   **React Navigation** – điều hướng trong ứng dụng
+-   **TypeScript** – tăng cường type safety
+-   **NativeWind** – styling với Tailwind CSS
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## ⚙️ Cài đặt & chạy ứng dụng
 
 ```bash
-npm run reset-project
+# 1. Clone repository
+git clone https://github.com/Global-Shopper/GlobalShopper_Mobile.git
+
+# 2. Di chuyển vào thư mục dự án
+cd GlobalShopper_Mobile
+
+# 3. Cài đặt dependencies
+npm install
+
+# 4. Chạy ứng dụng
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**Lưu ý:** Bạn cần cài đặt Node.js và npm trước khi bắt đầu.
 
-## Learn more
+### 📱 Các tùy chọn chạy ứng dụng:
 
-To learn more about developing your project with Expo, look at the following resources:
+-   **Android Emulator** – Nhấn `a` để mở trên Android emulator
+-   **iOS Simulator** – Nhấn `i` để mở trên iOS simulator (chỉ trên macOS)
+-   **Expo Go** – Quét QR code để chạy trên thiết bị thật
+-   **Development Build** – Cho trải nghiệm gần với production nhất
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 📱 Chức năng chính
 
-Join our community of developers creating universal apps.
+🛒 **Gửi yêu cầu mua hàng** - Có thể gửi yêu cầu có link hoặc không có link từ cửa hàng nước ngoài
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+🔍 **Theo dõi trạng thái đơn hàng** - Theo dõi từng bước một cách chi tiết
+
+💳 **Quản lý ví tiền** - Nạp tiền, thanh toán, và quản lý số dư trong ứng dụng
+
+⏪ **Hỗ trợ hoàn tiền** - Hoàn tiền nếu đơn hàng không thể thực hiện được
+
+📲 **Thông báo realtime** - Nhận thông báo trạng thái đơn hàng theo thời gian thực
+
+👤 **Quản lý tài khoản** - Chỉnh sửa thông tin cá nhân, địa chỉ giao hàng
+
+🔐 **Bảo mật** - Xác thực email, đổi mật khẩu an toàn
+
+## 🛠️ Scripts có sẵn
+
+```bash
+# Chạy ứng dụng development
+npm start
+
+# Reset dự án về trạng thái ban đầu
+npm run reset-project
+
+# Type checking với TypeScript
+npx tsc --noEmit
+
+# Lint code
+npx eslint .
+```
+
+---
+
+## 📧 Liên hệ
+
+Mọi góp ý hoặc hỗ trợ kỹ thuật vui lòng liên hệ:
+
+📩 **Email:** sep490gshop@gmail.com
+
+---
+
+## 📄 License
+
+Dự án này thuộc về **Global Shopper Team** - SEP490 Project.
+
+---
+
+_Được phát triển với ❤️ bởi Global Shopper Team_
