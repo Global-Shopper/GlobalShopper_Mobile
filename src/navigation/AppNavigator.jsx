@@ -31,6 +31,7 @@ import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScr
 import WithLink from "../screens/request/WithLink";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
+import WithdrawScreen from "../screens/wallet/WithdrawScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
@@ -157,6 +158,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="TopUp"
 				component={TopUpScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="Withdraw"
+				component={WithdrawScreen}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
