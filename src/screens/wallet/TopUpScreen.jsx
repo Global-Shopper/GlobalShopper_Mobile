@@ -67,7 +67,6 @@ export default function TopUpScreen({ navigation }) {
 		const amount = selectedAmount || parseInt(customAmount);
 		if (!amount || amount < 10000) {
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: "Số tiền nạp tối thiểu là 10.000 VND",
 			});
@@ -76,7 +75,6 @@ export default function TopUpScreen({ navigation }) {
 
 		if (!selectedMethod) {
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: "Vui lòng chọn phương thức thanh toán",
 			});
@@ -84,36 +82,33 @@ export default function TopUpScreen({ navigation }) {
 		}
 
 		showDialog({
-			type: "confirm",
 			title: "Xác nhận nạp tiền",
 			message: `Bạn có muốn nạp ${formatCurrency(amount)} vào ví?`,
-			buttons: [
-				{
-					text: "Hủy",
-					style: "text",
-				},
-				{
-					text: "Xác nhận",
-					style: "primary",
-					onPress: () => {
-						deposit({
-							balance: selectedAmount || customAmount,
-							redirectUri: `${Linking.createURL("/")}wallet`,
-						})
-							.unwrap()
-							.then((res) => {
-								console.log(res);
-								navigation.navigate("VNPayGateWay", {
-									url: res.url,
-								});
-							})
-							.catch((error) => {
-								console.log(error);
+			primaryButton: {
+				text: "Xác nhận",
+				style: "primary",
+				onPress: () => {
+					deposit({
+						balance: selectedAmount || customAmount,
+						redirectUri: `${Linking.createURL("/")}wallet`,
+					})
+						.unwrap()
+						.then((res) => {
+							console.log(res);
+							navigation.navigate("VNPayGateWay", {
+								url: res.url,
 							});
-						navigation.goBack();
-					},
+						})
+						.catch((error) => {
+							console.log(error);
+						});
 				},
-			],
+			},
+			secondaryButton: {
+				text: "Hủy",
+				style: "outline",
+				onPress: () => {},
+			},
 		});
 	};
 
