@@ -13,8 +13,24 @@ import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useCurrentUserTransactionsQuery } from "../../services/gshopApi";
 
-export default function TransactionHistoryScreen({ navigation }) {
+export default function TransactionHistoryScreen({ navigation, route }) {
 	const [activeTab, setActiveTab] = useState("all");
+
+	// Handle initial tab from navigation params
+	useEffect(() => {
+		console.log("TransactionHistoryScreen - route.params:", route.params);
+		if (route.params?.initialTab) {
+			const { initialTab } = route.params;
+			console.log("Setting initial tab to:", initialTab);
+			if (initialTab === "withdraw") {
+				setActiveTab("withdrawal");
+				console.log("Set active tab to withdrawal");
+			} else {
+				setActiveTab(initialTab);
+				console.log("Set active tab to:", initialTab);
+			}
+		}
+	}, [route.params]);
 
 	// Fetch transaction data from API
 	const { data, isLoading, isError, error, refetch } =

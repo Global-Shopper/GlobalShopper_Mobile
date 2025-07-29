@@ -208,7 +208,10 @@ export default function WalletScreen({ navigation }) {
 							</LinearGradient>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.secondaryActionButton}>
+						<TouchableOpacity
+							style={styles.secondaryActionButton}
+							onPress={() => navigation.navigate("Withdraw")}
+						>
 							<View style={styles.actionContainer}>
 								<Ionicons
 									name="arrow-up-circle-outline"
