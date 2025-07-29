@@ -1,14 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import {
-	Alert,
-	ScrollView,
-	StyleSheet,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { signout } from "../../features/user";
@@ -17,6 +12,7 @@ export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
 	const reduxUser = useSelector((state) => state?.rootReducer?.user);
 	const dispatch = useDispatch();
+	const { showDialog, Dialog } = useDialog();
 
 	const [user] = useState({
 		name: reduxUser?.name,
@@ -126,29 +122,29 @@ export default function AccountScreen({ navigation }) {
 	];
 
 	const handleLogout = () => {
-		Alert.alert(
-			"Đăng xuất",
-			"Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?",
-			[
-				{
-					text: "Hủy",
-					style: "cancel",
+		showDialog({
+			title: "Đăng xuất",
+			message: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?",
+			primaryButton: {
+				text: "Đăng xuất",
+				onPress: () => {
+					// Clear user data from Redux
+					dispatch(signout());
+					// Navigate to login screen
+					navigation.reset({
+						index: 0,
+						routes: [{ name: "Tabs" }],
+					});
 				},
-				{
-					text: "Đăng xuất",
-					style: "destructive",
-					onPress: () => {
-						// Clear user data from Redux
-						dispatch(signout());
-						// Navigate to login screen
-						navigation.reset({
-							index: 0,
-							routes: [{ name: "Tabs" }],
-						});
-					},
-				},
-			]
-		);
+				style: "danger",
+			},
+			secondaryButton: {
+				text: "Hủy",
+				onPress: () => {},
+				style: "outline",
+			},
+			showCloseButton: false,
+		});
 	};
 
 	return (
@@ -342,6 +338,7 @@ export default function AccountScreen({ navigation }) {
 					</Text>
 				</TouchableOpacity>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }

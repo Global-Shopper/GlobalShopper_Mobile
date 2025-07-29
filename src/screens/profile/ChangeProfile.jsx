@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	ScrollView,
 	StatusBar,
 	StyleSheet,
@@ -13,6 +12,7 @@ import {
 	View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import {
 	useGetCustomerInfoQuery,
 	useUpdateCustomerProfileMutation,
@@ -40,6 +40,7 @@ export default function ChangeProfile({ navigation }) {
 
 	const [isEdited, setIsEdited] = useState(false);
 	const [initialData, setInitialData] = useState({});
+	const { showDialog, Dialog } = useDialog();
 
 	// Load user data when component mounts or data changes
 	useEffect(() => {
@@ -120,18 +121,30 @@ export default function ChangeProfile({ navigation }) {
 	const handleSave = async () => {
 		// Validate required fields
 		if (!formData.fullName.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập họ và tên",
+			});
 			return;
 		}
 		if (!formData.phone.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập số điện thoại",
+			});
 			return;
 		}
 
 		// Phone validation (basic)
 		const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
 		if (!phoneRegex.test(formData.phone)) {
-			Alert.alert("Lỗi", "Số điện thoại không hợp lệ");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Số điện thoại không hợp lệ",
+			});
 			return;
 		}
 
@@ -201,16 +214,22 @@ export default function ChangeProfile({ navigation }) {
 
 			console.log("Profile update response:", response);
 
-			Alert.alert("Thành công", "Thông tin tài khoản đã được cập nhật", [
-				{
-					text: "OK",
-					onPress: () => {
-						setIsEdited(false);
-						setInitialData(formData); // Update initial data to current data
-						navigation.goBack();
+			showDialog({
+				type: "success",
+				title: "Thành công",
+				message: "Thông tin tài khoản đã được cập nhật",
+				buttons: [
+					{
+						text: "OK",
+						style: "primary",
+						onPress: () => {
+							setIsEdited(false);
+							setInitialData(formData); // Update initial data to current data
+							navigation.goBack();
+						},
 					},
-				},
-			]);
+				],
+			});
 		} catch (error) {
 			console.error("Profile update error:", error);
 			console.error("Error status:", error?.status);
@@ -221,29 +240,33 @@ export default function ChangeProfile({ navigation }) {
 				error?.data?.message ||
 				error?.message ||
 				"Có lỗi xảy ra khi cập nhật thông tin";
-			Alert.alert(
-				"Lỗi",
-				`${errorMessage}\n\nStatus: ${error?.status || "Unknown"}`
-			);
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: `${errorMessage}\n\nStatus: ${
+					error?.status || "Unknown"
+				}`,
+			});
 		}
 	};
 
 	const showGenderPicker = () => {
-		Alert.alert(
-			"Chọn giới tính",
-			"",
-			genderOptions
+		showDialog({
+			title: "Chọn giới tính",
+			message: "",
+			buttons: genderOptions
 				.map((option) => ({
 					text: option,
+					style: "outline",
 					onPress: () => handleInputChange("gender", option),
 				}))
 				.concat([
 					{
 						text: "Hủy",
-						style: "cancel",
+						style: "text",
 					},
-				])
-		);
+				]),
+		});
 	};
 
 	// Show loading screen while fetching profile data
@@ -485,6 +508,7 @@ export default function ChangeProfile({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }

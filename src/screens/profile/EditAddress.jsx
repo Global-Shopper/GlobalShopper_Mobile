@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
-	Alert,
 	ScrollView,
 	StatusBar,
 	StyleSheet,
@@ -10,18 +9,28 @@ import {
 	Text,
 	TextInput,
 	TouchableOpacity,
-	View
+	View,
 } from "react-native";
-import { useDeleteShippingAddressMutation, useUpdateShippingAddressMutation } from "../../services/gshopApi";
+import { useDialog } from "../../components/dialogHelpers";
+import {
+	useDeleteShippingAddressMutation,
+	useUpdateShippingAddressMutation,
+} from "../../services/gshopApi";
 
 import BottomPicker from "../../components/BottomPicker";
-import { getDistricts, getProvinces, getWards, resolveName } from "../../services/vnGeoAPI";
+import {
+	getDistricts,
+	getProvinces,
+	getWards,
+	resolveName,
+} from "../../services/vnGeoAPI";
 
 export default function EditAddress({ navigation, route }) {
 	// Get address data from route params
 	const { addressData } = route.params || {};
-	const [updateShippingAddress] = useUpdateShippingAddressMutation()
-	const [deleteShippingAddress] = useDeleteShippingAddressMutation()
+	const [updateShippingAddress] = useUpdateShippingAddressMutation();
+	const [deleteShippingAddress] = useDeleteShippingAddressMutation();
+	const { showDialog, Dialog } = useDialog();
 
 	const [formData, setFormData] = useState({
 		name: "",
@@ -36,19 +45,16 @@ export default function EditAddress({ navigation, route }) {
 
 	const [isEdited, setIsEdited] = useState(false);
 
-	const addressTypeOptions = ["Nhà riêng", "Văn phòng"];
-
-	const [picker, setPicker] = useState(null); 
+	const [picker, setPicker] = useState(null);
 	const [provinces, setProvinces] = useState([]);
 	const [districts, setDistricts] = useState([]);
 	const [wards, setWards] = useState([]);
 	const [provinceId, setProvinceId] = useState(addressData?.provinceCode);
 	const [districtId, setDistrictId] = useState(addressData?.districtCode);
 	const [wardId, setWardId] = useState(addressData?.wardCode);
-	const openProvincePicker = () => setPicker('province');
-	const openDistrictPicker  = () => districts.length && setPicker('district');
-	const openWardPicker      = () => wards.length && setPicker('ward');
-	const closePicker         = () => setPicker(null);
+	const openProvincePicker = () => setPicker("province");
+	const openDistrictPicker = () => districts.length && setPicker("district");
+	const openWardPicker = () => wards.length && setPicker("ward");
 	const [isInit, setIsInit] = useState(true);
 
 	useEffect(() => {
@@ -57,95 +63,95 @@ export default function EditAddress({ navigation, route }) {
 
 	useEffect(() => {
 		if (provinceId) {
-			getDistricts(provinceId).then(
-				(res) => {
+			getDistricts(provinceId)
+				.then((res) => {
 					setDistricts(res);
 					if (isInit) {
 						setWards([]);
 						return;
 					} else {
-						handleInputChange('district', '');
-						handleInputChange('ward', '');
-						setDistrictId('');
-						setWardId('');
+						handleInputChange("district", "");
+						handleInputChange("ward", "");
+						setDistrictId("");
+						setWardId("");
 					}
-				}
-			).catch(console.error);
-			
+				})
+				.catch(console.error);
 		} else {
 			setDistricts([]);
 			setWards([]);
 		}
-	}, [provinceId])
+	}, [provinceId, isInit]);
 
 	useEffect(() => {
 		if (districtId) {
-			getWards(districtId).then(
-				(res) => {
+			getWards(districtId)
+				.then((res) => {
 					setWards(res);
 					if (isInit) {
 						setWards([]);
 						return;
 					} else {
-						handleInputChange('ward', '');
-						setWardId('');
+						handleInputChange("ward", "");
+						setWardId("");
 					}
-				}
-			).catch(console.error);
+				})
+				.catch(console.error);
 		} else {
 			setWards([]);
 		}
-	}, [districtId])
+	}, [districtId, isInit]);
 
 	useEffect(() => {
 		if (isInit) {
 			setIsInit(false);
 		}
-	}, [wardId])
-
+	}, [wardId, isInit]);
 
 	const chooseProvince = (item) => {
 		setProvinceId(item.id);
-		setDistrictId('');
-		handleInputChange('province', item.full_name);
-	  };
-	  
-	  const chooseDistrict = (item) => {
+		setDistrictId("");
+		handleInputChange("province", item.full_name);
+	};
+
+	const chooseDistrict = (item) => {
 		setDistrictId(item.id);
-		setWardId('');
-		handleInputChange('district', item.full_name);
-	  };
-	  
-	  const chooseWard = (item) => {
+		setWardId("");
+		handleInputChange("district", item.full_name);
+	};
+
+	const chooseWard = (item) => {
 		setWardId(item.id);
-		handleInputChange('ward', item.full_name);
-	  };
-	  useEffect(() => {
+		handleInputChange("ward", item.full_name);
+	};
+	useEffect(() => {
 		if (!addressData) return;
-	  
+
 		// IIFE async trong useEffect
 		(async () => {
-		  try {
-			// Lấy tên đầy đủ “Phường…, Quận…, Tỉnh…”
-			const { full_name } = await resolveName(addressData.wardCode);
-			const [ward = "", district = "", province = ""] = full_name.split(", ").map(s => s.trim());
-	  
-			setFormData({
-			  name:        addressData.name           ?? "",
-			  phoneNumber: addressData.phoneNumber?.replace("+84 ", "0") ?? "",
-			  houseNumber: addressData.addressLine    ?? "",
-			  ward,
-			  district,
-			  province,
-			  isDefault:   addressData.isDefault      ?? false,
-			  tag:         addressData.tag            ?? "Nhà riêng",
-			});
-		  } catch (err) {
-			console.warn("resolveName failed:", err);
-		  }
+			try {
+				// Lấy tên đầy đủ “Phường…, Quận…, Tỉnh…”
+				const { full_name } = await resolveName(addressData.wardCode);
+				const [ward = "", district = "", province = ""] = full_name
+					.split(", ")
+					.map((s) => s.trim());
+
+				setFormData({
+					name: addressData.name ?? "",
+					phoneNumber:
+						addressData.phoneNumber?.replace("+84 ", "0") ?? "",
+					houseNumber: addressData.addressLine ?? "",
+					ward,
+					district,
+					province,
+					isDefault: addressData.isDefault ?? false,
+					tag: addressData.tag ?? "Nhà riêng",
+				});
+			} catch (err) {
+				console.warn("resolveName failed:", err);
+			}
 		})();
-	
-	  }, [addressData]);
+	}, [addressData]);
 
 	const handleInputChange = (field, value) => {
 		setFormData((prev) => ({
@@ -159,33 +165,61 @@ export default function EditAddress({ navigation, route }) {
 	const handleSave = () => {
 		// Validate required fields
 		if (!formData.name.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập họ và tên");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập họ và tên",
+			});
 			return;
 		}
 		if (!formData.phoneNumber.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập số điện thoại",
+			});
 			return;
 		}
 		// Validate phone number format
 		const phoneRegex = /^[0-9]{10,11}$/;
 		if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ""))) {
-			Alert.alert("Lỗi", "Số điện thoại không hợp lệ");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Số điện thoại không hợp lệ",
+			});
 			return;
 		}
 		if (!formData.houseNumber.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập số nhà");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập số nhà",
+			});
 			return;
 		}
 		if (!wardId.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập phường/xã");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập phường/xã",
+			});
 			return;
 		}
 		if (!districtId.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập quận/huyện");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập quận/huyện",
+			});
 			return;
 		}
 		if (!provinceId.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập tỉnh/thành phố");
+			showDialog({
+				type: "error",
+				title: "Lỗi",
+				message: "Vui lòng nhập tỉnh/thành phố",
+			});
 			return;
 		}
 
@@ -202,72 +236,93 @@ export default function EditAddress({ navigation, route }) {
 			phoneNumber: formData.phoneNumber,
 			tag: formData.tag,
 			isDefault: formData.isDefault,
-		}
-		updateShippingAddress(data).unwrap().then(res => {
-			Alert.alert("Thành công", "Địa chỉ đã được cập nhật thành công", [
-				{
-					text: "OK",
-					onPress: () => {
-						setIsEdited(false);
-						navigation.goBack();
-					},
-				},
-			]);
-		}).catch(err => {
-			console.log(err)
-			Alert.alert("Lỗi", err.data.message);
-		}).finally(() => {
-			setIsEdited(false);
-			navigation.goBack();
-		})
-	};
-
-	const showAddressTypePicker = () => {
-		Alert.alert(
-			"Chọn loại địa chỉ",
-			"",
-			addressTypeOptions
-				.map((option) => ({
-					text: option,
-					onPress: () => handleInputChange("tag", option),
-				}))
-				.concat([
-					{
-						text: "Hủy",
-						style: "cancel",
-					},
-				])
-		);
+		};
+		updateShippingAddress(data)
+			.unwrap()
+			.then((res) => {
+				showDialog({
+					type: "success",
+					title: "Thành công",
+					message: "Địa chỉ đã được cập nhật thành công",
+					buttons: [
+						{
+							text: "OK",
+							style: "primary",
+							onPress: () => {
+								setIsEdited(false);
+								navigation.goBack();
+							},
+						},
+					],
+				});
+			})
+			.catch((err) => {
+				console.log(err);
+				showDialog({
+					type: "error",
+					title: "Lỗi",
+					message: err.data.message,
+				});
+			})
+			.finally(() => {
+				setIsEdited(false);
+				navigation.goBack();
+			});
 	};
 
 	const handleDelete = () => {
-		Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa địa chỉ này?", [
-			{
-				text: "Hủy",
-				style: "cancel",
-			},
-			{
-				text: "Xóa",
-				style: "destructive",
-				onPress: () => {
-					deleteShippingAddress(addressData.id).unwrap().then(res => {
-						if(res.success) {
-							Alert.alert("Thành công",res.message || "Địa chỉ đã được xóa", [
-								{
-									text: "OK",
-									onPress: () => navigation.goBack(),
-								},
-							]);
-						} else {
-							Alert.alert("Lỗi", res.message);
-						}
-					}).catch(err => {	
-						console.log(err)
-						Alert.alert("Lỗi", err.data.message);
-					})
+		showDialog({
+			type: "confirm",
+			title: "Xác nhận xóa",
+			message: "Bạn có chắc chắn muốn xóa địa chỉ này?",
+			buttons: [
+				{
+					text: "Hủy",
+					style: "text",
 				},
-			},
-		]);
+				{
+					text: "Xóa",
+					style: "danger",
+					onPress: () => {
+						deleteShippingAddress(addressData.id)
+							.unwrap()
+							.then((res) => {
+								if (res.success) {
+									showDialog({
+										type: "success",
+										title: "Thành công",
+										message:
+											res.message ||
+											"Địa chỉ đã được xóa",
+										buttons: [
+											{
+												text: "OK",
+												style: "primary",
+												onPress: () =>
+													navigation.goBack(),
+											},
+										],
+									});
+								} else {
+									showDialog({
+										type: "error",
+										title: "Lỗi",
+										message: res.message,
+									});
+								}
+							})
+							.catch((err) => {
+								console.log(err);
+								showDialog({
+									type: "error",
+									title: "Lỗi",
+									message: err.data.message,
+								});
+							});
+					},
+				},
+			],
+		});
 	};
 
 	return (
@@ -404,43 +459,65 @@ export default function EditAddress({ navigation, route }) {
 
 					{/* Tỉnh / Thành phố */}
 					<View style={styles.inputGroup}>
-					<Text style={styles.label}>Tỉnh/Thành phố <Text style={styles.required}>*</Text></Text>
-					<TouchableOpacity style={styles.inputContainer} onPress={openProvincePicker}>
-						<Text style={styles.textInput}>
-							{formData.province || 'Chọn tỉnh / thành phố'}
+						<Text style={styles.label}>
+							Tỉnh/Thành phố{" "}
+							<Text style={styles.required}>*</Text>
 						</Text>
-						<Ionicons name="chevron-down" size={20} color="#78909C" />
-					</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.inputContainer}
+							onPress={openProvincePicker}
+						>
+							<Text style={styles.textInput}>
+								{formData.province || "Chọn tỉnh / thành phố"}
+							</Text>
+							<Ionicons
+								name="chevron-down"
+								size={20}
+								color="#78909C"
+							/>
+						</TouchableOpacity>
 					</View>
 
 					{/* Quận / Huyện */}
 					<View style={styles.inputGroup}>
-					<Text style={styles.label}>Quận/Huyện <Text style={styles.required}>*</Text></Text>
-					<TouchableOpacity
-						style={styles.inputContainer}
-						onPress={openDistrictPicker}
-						disabled={!provinceId}
-					>
-						<Text style={styles.textInput}>
-						{formData.district || 'Chọn quận / huyện'}
+						<Text style={styles.label}>
+							Quận/Huyện <Text style={styles.required}>*</Text>
 						</Text>
-						<Ionicons name="chevron-down" size={20} color="#78909C" />
-					</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.inputContainer}
+							onPress={openDistrictPicker}
+							disabled={!provinceId}
+						>
+							<Text style={styles.textInput}>
+								{formData.district || "Chọn quận / huyện"}
+							</Text>
+							<Ionicons
+								name="chevron-down"
+								size={20}
+								color="#78909C"
+							/>
+						</TouchableOpacity>
 					</View>
 
 					{/* Phường / Xã */}
 					<View style={styles.inputGroup}>
-					<Text style={styles.label}>Phường/Xã <Text style={styles.required}>*</Text></Text>
-					<TouchableOpacity
-						style={styles.inputContainer}
-						onPress={openWardPicker}
-						disabled={!districtId}
-					>
-						<Text style={styles.textInput}>
-						{formData.ward || 'Chọn phường / xã'}
+						<Text style={styles.label}>
+							Phường/Xã <Text style={styles.required}>*</Text>
 						</Text>
-						<Ionicons name="chevron-down" size={20} color="#78909C" />
-					</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.inputContainer}
+							onPress={openWardPicker}
+							disabled={!districtId}
+						>
+							<Text style={styles.textInput}>
+								{formData.ward || "Chọn phường / xã"}
+							</Text>
+							<Ionicons
+								name="chevron-down"
+								size={20}
+								color="#78909C"
+							/>
+						</TouchableOpacity>
 					</View>
 
 					{/* Loại địa chỉ */}
@@ -520,28 +597,29 @@ export default function EditAddress({ navigation, route }) {
 			<BottomPicker
 				visible={!!picker}
 				title={
-					picker === 'province'
-					? 'Chọn Tỉnh / Thành phố'
-					: picker === 'district'
-					? 'Chọn Quận / Huyện'
-					: 'Chọn Phường / Xã'
+					picker === "province"
+						? "Chọn Tỉnh / Thành phố"
+						: picker === "district"
+						? "Chọn Quận / Huyện"
+						: "Chọn Phường / Xã"
 				}
 				data={
-					picker === 'province'
-					? provinces
-					: picker === 'district'
-					? districts
-					: wards
+					picker === "province"
+						? provinces
+						: picker === "district"
+						? districts
+						: wards
 				}
 				onSelect={
-					picker === 'province'
-					? chooseProvince
-					: picker === 'district'
-					? chooseDistrict
-					: chooseWard
+					picker === "province"
+						? chooseProvince
+						: picker === "district"
+						? chooseDistrict
+						: chooseWard
 				}
 				onClose={() => setPicker(null)}
-				/>
+			/>
+			<Dialog />
 		</View>
 	);
 }

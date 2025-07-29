@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-	Alert,
 	Animated,
 	Dimensions,
 	KeyboardAvoidingView,
@@ -15,6 +14,7 @@ import {
 	View,
 } from "react-native";
 import { useDispatch } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import { setUserInfo } from "../../features/user";
 import { useLoginMutation } from "../../services/gshopApi";
 
@@ -27,6 +27,9 @@ export default function LoginScreen({ navigation }) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [login] = useLoginMutation();
 	const dispatch = useDispatch();
+
+	// Dialog hook
+	const { showDialog, Dialog } = useDialog();
 
 	// Animation for logo
 	const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -74,7 +77,16 @@ export default function LoginScreen({ navigation }) {
 
 	const handleLogin = async () => {
 		if (!email || !password) {
-			Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập đầy đủ email và mật khẩu",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 		setIsLoading(true);
@@ -96,15 +108,38 @@ export default function LoginScreen({ navigation }) {
 			})
 			.catch((e) => {
 				if (e.data?.errorCode === 1001) {
-					Alert.alert("Bạn cần phải xác nhận email");
-					navigation.navigate("OTPVerification", {
-						email: email,
+					showDialog({
+						title: "Xác nhận email",
+						message: "Bạn cần phải xác nhận email để tiếp tục",
+						primaryButton: {
+							text: "Xác nhận ngay",
+							onPress: () => {
+								navigation.navigate("OTPVerification", {
+									email: email,
+								});
+							},
+							style: "primary",
+						},
+						secondaryButton: {
+							text: "Để sau",
+							onPress: () => {},
+							style: "outline",
+						},
+						showCloseButton: false,
 					});
 				} else {
-					Alert.alert(
-						e.data.message ||
-							"Đã có lỗi xảy ra. Vui lòng thử lại sau"
-					);
+					showDialog({
+						title: "Đăng nhập thất bại",
+						message:
+							e.data?.message ||
+							"Đã có lỗi xảy ra. Vui lòng thử lại sau",
+						primaryButton: {
+							text: "OK",
+							onPress: () => {},
+							style: "primary",
+						},
+						showCloseButton: false,
+					});
 				}
 			})
 			.finally(() => {
@@ -291,6 +326,7 @@ export default function LoginScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

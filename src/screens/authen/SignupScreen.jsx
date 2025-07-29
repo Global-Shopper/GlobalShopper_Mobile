@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
 import {
-	Alert,
 	Animated,
 	Dimensions,
 	KeyboardAvoidingView,
@@ -15,6 +14,7 @@ import {
 	View,
 } from "react-native";
 import { useDispatch } from "react-redux";
+import { useDialog } from "../../components/dialogHelpers";
 import { useRegisterMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
@@ -41,6 +41,7 @@ export default function SignupScreen({ navigation }) {
 
 	const [register] = useRegisterMutation();
 	const dispatch = useDispatch();
+	const { showDialog, Dialog } = useDialog();
 
 	// ScrollView ref for auto-scroll
 	const scrollViewRef = useRef(null);
@@ -112,37 +113,100 @@ export default function SignupScreen({ navigation }) {
 	const handleSignup = async () => {
 		// Validation
 		if (!fullName.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập họ tên");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập họ tên",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!email.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập email");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập email",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!gender) {
-			Alert.alert("Lỗi", "Vui lòng chọn giới tính");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng chọn giới tính",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!password) {
-			Alert.alert("Lỗi", "Vui lòng nhập mật khẩu");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập mật khẩu",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!isPasswordValid) {
-			Alert.alert("Lỗi", "Mật khẩu không đáp ứng yêu cầu");
+			showDialog({
+				title: "Lỗi",
+				message: "Mật khẩu không đáp ứng yêu cầu",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (password !== confirmPassword) {
-			Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
+			showDialog({
+				title: "Lỗi",
+				message: "Mật khẩu xác nhận không khớp",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
 		if (!agreeToTerms) {
-			Alert.alert("Lỗi", "Vui lòng đồng ý với điều khoản và chính sách");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng đồng ý với điều khoản và chính sách",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 			return;
 		}
 
@@ -169,11 +233,29 @@ export default function SignupScreen({ navigation }) {
 							email: email,
 						});
 					} else {
-						Alert.alert(res.message);
+						showDialog({
+							title: "Lỗi",
+							message: res.message,
+							primaryButton: {
+								text: "OK",
+								onPress: () => {},
+								style: "primary",
+							},
+							showCloseButton: false,
+						});
 					}
 				});
 		} catch (error) {
-			Alert.alert(error.data.message);
+			showDialog({
+				title: "Lỗi",
+				message: error.data.message,
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
+				showCloseButton: false,
+			});
 		} finally {
 			setIsLoading(false);
 		}
@@ -184,10 +266,16 @@ export default function SignupScreen({ navigation }) {
 	};
 
 	const handleTermsPress = () => {
-		Alert.alert(
-			"Điều khoản và Chính sách",
-			"Chức năng đang được phát triển"
-		);
+		showDialog({
+			title: "Điều khoản và Chính sách",
+			message: "Chức năng đang được phát triển",
+			primaryButton: {
+				text: "OK",
+				onPress: () => {},
+				style: "primary",
+			},
+			showCloseButton: false,
+		});
 	};
 
 	return (
@@ -589,6 +677,7 @@ export default function SignupScreen({ navigation }) {
 					</View>
 				</View>
 			</ScrollView>
+			<Dialog />
 		</KeyboardAvoidingView>
 	);
 }

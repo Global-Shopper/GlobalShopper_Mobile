@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	ScrollView,
 	StatusBar,
 	StyleSheet,
@@ -12,9 +11,12 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useDialog } from "../../components/dialogHelpers";
 import { useChangePasswordMutation } from "../../services/gshopApi";
 
 export default function ChangePassword({ navigation }) {
+	const { showDialog, Dialog } = useDialog();
+
 	// API hooks
 	const [changePassword, { isLoading: isChangingPassword }] =
 		useChangePasswordMutation();
@@ -101,24 +103,24 @@ export default function ChangePassword({ navigation }) {
 
 				console.log("Change password response:", response);
 
-				Alert.alert(
-					"Thành công",
-					"Mật khẩu đã được thay đổi thành công!",
-					[
-						{
-							text: "OK",
-							onPress: () => {
-								// Clear form data
-								setFormData({
-									currentPassword: "",
-									newPassword: "",
-									confirmPassword: "",
-								});
-								navigation.goBack();
-							},
+				showDialog({
+					title: "Thành công",
+					message: "Mật khẩu đã được thay đổi thành công!",
+					primaryButton: {
+						text: "OK",
+						onPress: () => {
+							// Clear form data
+							setFormData({
+								currentPassword: "",
+								newPassword: "",
+								confirmPassword: "",
+							});
+							navigation.goBack();
 						},
-					]
-				);
+						style: "success",
+					},
+					showCloseButton: false,
+				});
 			} catch (error) {
 				console.error("Change password error:", error);
 				console.error("Error status:", error?.status);
@@ -129,7 +131,16 @@ export default function ChangePassword({ navigation }) {
 					error?.data?.message ||
 					error?.message ||
 					"Có lỗi xảy ra khi thay đổi mật khẩu";
-				Alert.alert("Lỗi", errorMessage);
+				showDialog({
+					title: "Lỗi",
+					message: errorMessage,
+					primaryButton: {
+						text: "OK",
+						onPress: () => {},
+						style: "primary",
+					},
+					showCloseButton: false,
+				});
 			}
 		}
 	};
@@ -332,6 +343,7 @@ export default function ChangePassword({ navigation }) {
 					</LinearGradient>
 				</TouchableOpacity>
 			</ScrollView>
+			<Dialog />
 		</View>
 	);
 }

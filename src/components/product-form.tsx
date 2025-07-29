@@ -3,7 +3,6 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
-	Alert,
 	Image,
 	ScrollView,
 	StyleSheet,
@@ -12,6 +11,7 @@ import {
 	View,
 } from "react-native";
 import { Text } from "./ui/text";
+import { useDialog } from "./dialogHelpers";
 
 interface ProductFormProps {
 	initialData?: any;
@@ -113,6 +113,7 @@ export default function ProductForm({
 	onSubmit,
 	onChange,
 }: ProductFormProps) {
+	const { showDialog, Dialog } = useDialog();
 	const [formData, setFormData] = useState<ProductData>(() => {
 		return getInitialFormData(initialData, storeData, mode);
 	});
@@ -221,16 +222,19 @@ export default function ProductForm({
 			await ImagePicker.requestMediaLibraryPermissionsAsync();
 
 		if (permissionResult.granted === false) {
-			Alert.alert(
-				"Quyền truy cập",
-				"Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
-			);
+			showDialog({
+				title: "Quyền truy cập",
+				message: "Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
+			});
 			return;
 		}
 
 		// Check if max images reached
 		if (formData.images.length >= 4) {
-			Alert.alert("Giới hạn ảnh", "Bạn chỉ có thể thêm tối đa 4 ảnh");
+			showDialog({
+				title: "Giới hạn ảnh",
+				message: "Bạn chỉ có thể thêm tối đa 4 ảnh"
+			});
 			return;
 		}
 
@@ -269,12 +273,18 @@ export default function ProductForm({
 
 	const validateForm = () => {
 		if (!formData.name.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập tên sản phẩm");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập tên sản phẩm"
+			});
 			return false;
 		}
 		// Only validate price for fromLink mode
 		if (mode === "fromLink" && !formData.price.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập giá sản phẩm");
+			showDialog({
+				title: "Lỗi",
+				message: "Vui lòng nhập giá sản phẩm"
+			});
 			return false;
 		}
 		// Converted price is auto-calculated, no need to validate manually
@@ -808,6 +818,7 @@ export default function ProductForm({
 					<Text style={styles.submitButtonText}>Tiếp tục</Text>
 				</LinearGradient>
 			</TouchableOpacity>
+			<Dialog />
 		</ScrollView>
 	);
 }
