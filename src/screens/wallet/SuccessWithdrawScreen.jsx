@@ -65,9 +65,11 @@ export default function SuccessWithdrawScreen({ navigation, route }) {
 	};
 
 	const handleViewTransactions = () => {
-		console.log("Navigating to TransactionHistory with initialTab: withdraw");
+		console.log(
+			"Navigating to TransactionHistory with initialTab: withdraw"
+		);
 		navigation.navigate("TransactionHistory", {
-			initialTab: "withdraw" // Pass parameter to focus on withdraw tab
+			initialTab: "withdraw", // Pass parameter to focus on withdraw tab
 		});
 	};
 
@@ -331,12 +333,10 @@ export default function SuccessWithdrawScreen({ navigation, route }) {
 						colors={["#1976D2", "#42A5F5"]}
 						style={styles.primaryButtonGradient}
 					>
-						<Ionicons
-							name="home-outline"
-							size={20}
-							color="#fff"
-						/>
-						<Text style={styles.primaryButtonText}>Về trang chủ</Text>
+						<Ionicons name="home-outline" size={20} color="#fff" />
+						<Text style={styles.primaryButtonText}>
+							Về trang chủ
+						</Text>
 					</LinearGradient>
 				</TouchableOpacity>
 			</View>

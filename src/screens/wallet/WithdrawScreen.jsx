@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ActivityIndicator,
 	ScrollView,
+	StatusBar,
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
@@ -106,9 +108,19 @@ const WithdrawScreen = ({ navigation }) => {
 	const validateWithdraw = () => {
 		console.log("Starting validation...");
 		const numericAmount = parseFloat(parseFormattedNumber(withdrawAmount));
-		console.log("Withdraw amount:", withdrawAmount, "Numeric:", numericAmount);
+		console.log(
+			"Withdraw amount:",
+			withdrawAmount,
+			"Numeric:",
+			numericAmount
+		);
 		console.log("Current balance:", currentBalance);
-		console.log("Bank info:", {selectedBank, bankBranch, accountNumber, accountName});
+		console.log("Bank info:", {
+			selectedBank,
+			bankBranch,
+			accountNumber,
+			accountName,
+		});
 
 		if (!withdrawAmount || numericAmount <= 0) {
 			console.log("Amount validation failed");
@@ -145,7 +157,9 @@ const WithdrawScreen = ({ navigation }) => {
 	};
 
 	const handleConfirmWithdraw = () => {
-		const numericAmount = parseFloat(parseFormattedNumber(withdrawAmount) || "0");
+		const numericAmount = parseFloat(
+			parseFormattedNumber(withdrawAmount) || "0"
+		);
 		console.log("Confirming withdraw and navigating...");
 		console.log("Navigation object:", navigation);
 		console.log("Params to pass:", {
@@ -156,7 +170,7 @@ const WithdrawScreen = ({ navigation }) => {
 			accountNumber: accountNumber,
 			accountName: accountName,
 		});
-		
+
 		try {
 			navigation.navigate("SuccessWithdrawScreen", {
 				withdrawId: "WD" + Date.now(),
@@ -174,45 +188,33 @@ const WithdrawScreen = ({ navigation }) => {
 
 	const handleSubmitWithdraw = () => {
 		console.log("handleSubmitWithdraw called");
-		
+
 		// Temporary bypass validation for testing
 		console.log("TESTING: Bypassing validation for now");
 		handleConfirmWithdraw();
 		return;
-		
-		if (!validateWithdraw()) {
-			console.log("Validation failed");
-			return;
-		}
-		console.log("Validation passed, showing dialog");
-
-		const numericAmount = parseFloat(parseFormattedNumber(withdrawAmount));
-
-		showDialog({
-			title: "Xác nhận rút tiền",
-			content: `Bạn có chắc chắn muốn rút ${formatCurrency(
-				numericAmount
-			)} về tài khoản ${accountNumber}?`,
-			primaryButton: {
-				text: "Xác nhận",
-				onPress: handleConfirmWithdraw,
-			},
-			secondaryButton: {
-				text: "Hủy",
-			},
-		});
 	};
 
 	return (
 		<View style={styles.container}>
+			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+
 			{/* Header */}
-			<View style={styles.header}>
-				<TouchableOpacity onPress={() => navigation.goBack()}>
-					<Ionicons name="arrow-back" size={24} color="#333" />
-				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Rút tiền</Text>
-				<View style={{ width: 24 }} />
-			</View>
+			<LinearGradient
+				colors={["#42A5F5", "#1976D2"]}
+				style={styles.header}
+			>
+				<View style={styles.headerContent}>
+					<TouchableOpacity
+						onPress={() => navigation.goBack()}
+						style={styles.backButton}
+					>
+						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+					</TouchableOpacity>
+					<Text style={styles.headerTitle}>Rút tiền</Text>
+					<View style={styles.placeholder} />
+				</View>
+			</LinearGradient>
 
 			<ScrollView
 				style={styles.content}
@@ -475,23 +477,35 @@ const WithdrawScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#ffffff",
+		backgroundColor: "#F5F5F5",
 	},
 	header: {
+		paddingTop: 50,
+		paddingBottom: 20,
+		paddingHorizontal: 20,
+	},
+	headerContent: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingHorizontal: 20,
-		paddingTop: 50,
-		paddingBottom: 20,
-		backgroundColor: "#ffffff",
-		borderBottomWidth: 1,
-		borderBottomColor: "#e2e8f0",
+	},
+	backButton: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	headerTitle: {
-		fontSize: 18,
+		fontSize: 20,
 		fontWeight: "600",
-		color: "#333",
+		color: "#FFFFFF",
+		textAlign: "center",
+		flex: 1,
+	},
+	placeholder: {
+		width: 40,
 	},
 	content: {
 		flex: 1,
