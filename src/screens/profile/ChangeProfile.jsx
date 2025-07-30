@@ -39,8 +39,10 @@ export default function ChangeProfile({ navigation }) {
 	});
 
 	const [isEdited, setIsEdited] = useState(false);
+	const [isEditMode, setIsEditMode] = useState(false);
 	const [initialData, setInitialData] = useState({});
-	const { showDialog, Dialog } = useDialog();
+	const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+	const { showDialog, hideDialog, Dialog } = useDialog();
 
 	// Load user data when component mounts or data changes
 	useEffect(() => {
@@ -61,8 +63,8 @@ export default function ChangeProfile({ navigation }) {
 						const year = dateObj.getFullYear();
 						displayBirthDate = `${day}/${month}/${year}`;
 					}
-				} catch (error) {
-					console.log("Error converting date:", error);
+				} catch (_error) {
+					// Silent error handling for date conversion
 				}
 			}
 
@@ -118,21 +120,90 @@ export default function ChangeProfile({ navigation }) {
 		setIsEdited(hasChanges);
 	};
 
+	const handleEditToggle = () => {
+		if (isEditMode) {
+			// If currently in edit mode and user wants to cancel
+			if (isEdited) {
+				showDialog({
+					title: "Huỷ thay đổi",
+					message:
+						"Những thông tin bạn vừa nhập sẽ không được lưu nếu bạn thoát ra.",
+					showCloseButton: false,
+					primaryButton: {
+						text: "Tiếp tục ",
+						onPress: () => {
+							// Just close dialog, stay in edit mode
+						},
+						style: "primary",
+					},
+					secondaryButton: {
+						text: "Huỷ ",
+						onPress: () => {
+							setFormData(initialData);
+							setIsEdited(false);
+							setIsEditMode(false);
+						},
+						style: "outline",
+					},
+				});
+			} else {
+				setIsEditMode(false);
+			}
+		} else {
+			setIsEditMode(true);
+		}
+	};
+
+	const handleBackPress = () => {
+		if (isEditMode && isEdited) {
+			showDialog({
+				title: "Huỷ thay đổi",
+				message:
+					"Những thông tin bạn vừa nhập sẽ không được lưu nếu bạn thoát ra.",
+				showCloseButton: false,
+				primaryButton: {
+					text: "Tiếp tục chỉnh sửa",
+					onPress: () => {
+						// Just close dialog, stay in edit mode
+					},
+					style: "primary",
+				},
+				secondaryButton: {
+					text: "Huỷ thay đổi",
+					onPress: () => {
+						navigation.goBack();
+					},
+					style: "outline",
+				},
+			});
+		} else {
+			navigation.goBack();
+		}
+	};
+
 	const handleSave = async () => {
 		// Validate required fields
 		if (!formData.fullName.trim()) {
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: "Vui lòng nhập họ và tên",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
 			});
 			return;
 		}
 		if (!formData.phone.trim()) {
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: "Vui lòng nhập số điện thoại",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
 			});
 			return;
 		}
@@ -141,9 +212,13 @@ export default function ChangeProfile({ navigation }) {
 		const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
 		if (!phoneRegex.test(formData.phone)) {
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: "Số điện thoại không hợp lệ",
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
 			});
 			return;
 		}
@@ -194,79 +269,64 @@ export default function ChangeProfile({ navigation }) {
 				updateData.dateOfBirth = convertedBirthDate;
 			}
 
-			console.log("=== API UPDATE DEBUG ===");
-			console.log("Form data:", formData);
-			console.log(
-				"Converted birth date (timestamp):",
-				convertedBirthDate
-			);
-			console.log(
-				"Converted birth date (readable):",
-				convertedBirthDate
-					? new Date(convertedBirthDate).toISOString()
-					: "null"
-			);
-			console.log("Converted gender:", convertedGender);
-			console.log("Update data sending to API:", updateData);
-			console.log("API endpoint: PUT /customer");
-
 			const response = await updateProfile(updateData).unwrap();
 
-			console.log("Profile update response:", response);
+			// Ensure any existing dialog is closed first
+			hideDialog();
 
-			showDialog({
-				type: "success",
-				title: "Thành công",
-				message: "Thông tin tài khoản đã được cập nhật",
-				buttons: [
-					{
-						text: "OK",
-						style: "primary",
-						onPress: () => {
-							setIsEdited(false);
-							setInitialData(formData); // Update initial data to current data
-							navigation.goBack();
-						},
-					},
-				],
-			});
+			// Small delay to ensure dialog is closed, then show success
+			setTimeout(() => {
+				showDialog({
+					title: "Thành công",
+					message: "Cập nhật thông tin thành công",
+					showCloseButton: false,
+				});
+
+				// Auto close success dialog after 3 seconds
+				setTimeout(() => {
+					hideDialog();
+					setIsEdited(false);
+					setIsEditMode(false);
+					setInitialData(formData); // Update initial data to current data
+				}, 3000);
+			}, 500);
 		} catch (error) {
-			console.error("Profile update error:", error);
-			console.error("Error status:", error?.status);
-			console.error("Error data:", error?.data);
-			console.error("Error message:", error?.message);
-
 			const errorMessage =
 				error?.data?.message ||
 				error?.message ||
 				"Có lỗi xảy ra khi cập nhật thông tin";
 			showDialog({
-				type: "error",
 				title: "Lỗi",
 				message: `${errorMessage}\n\nStatus: ${
 					error?.status || "Unknown"
 				}`,
+				primaryButton: {
+					text: "OK",
+					onPress: () => {},
+					style: "primary",
+				},
 			});
 		}
 	};
 
 	const showGenderPicker = () => {
-		showDialog({
-			title: "Chọn giới tính",
-			message: "",
-			buttons: genderOptions
-				.map((option) => ({
-					text: option,
-					style: "outline",
-					onPress: () => handleInputChange("gender", option),
-				}))
-				.concat([
-					{
-						text: "Hủy",
-						style: "text",
-					},
-				]),
-		});
+		if (!isEditMode) {
+			return; // Only allow in edit mode
+		}
+
+		setShowGenderDropdown(!showGenderDropdown);
+	};
+
+	const selectGender = (gender) => {
+		handleInputChange("gender", gender);
+		setShowGenderDropdown(false);
+	};
+
+	// Helper function to close dropdown when other inputs are focused
+	const closeGenderDropdown = () => {
+		if (showGenderDropdown) {
+			setShowGenderDropdown(false);
+		}
 	};
 
 	// Show loading screen while fetching profile data
@@ -280,7 +340,7 @@ export default function ChangeProfile({ navigation }) {
 				>
 					<View style={styles.headerContent}>
 						<TouchableOpacity
-							onPress={() => navigation.goBack()}
+							onPress={handleBackPress}
 							style={styles.backButton}
 						>
 							<Ionicons
@@ -290,11 +350,9 @@ export default function ChangeProfile({ navigation }) {
 							/>
 						</TouchableOpacity>
 						<Text style={styles.headerTitle}>
-							Chỉnh sửa thông tin
+							Thông tin cá nhân
 						</Text>
-						<View style={styles.saveButton}>
-							<Text style={styles.saveButtonText}>Lưu</Text>
-						</View>
+						<View style={styles.placeholder} />
 					</View>
 				</LinearGradient>
 				<View style={styles.loadingContainer}>
@@ -318,7 +376,7 @@ export default function ChangeProfile({ navigation }) {
 				>
 					<View style={styles.headerContent}>
 						<TouchableOpacity
-							onPress={() => navigation.goBack()}
+							onPress={handleBackPress}
 							style={styles.backButton}
 						>
 							<Ionicons
@@ -328,11 +386,9 @@ export default function ChangeProfile({ navigation }) {
 							/>
 						</TouchableOpacity>
 						<Text style={styles.headerTitle}>
-							Chỉnh sửa thông tin
+							Thông tin cá nhân
 						</Text>
-						<View style={styles.saveButton}>
-							<Text style={styles.saveButtonText}>Lưu</Text>
-						</View>
+						<View style={styles.placeholder} />
 					</View>
 				</LinearGradient>
 				<View style={styles.errorContainer}>
@@ -364,33 +420,13 @@ export default function ChangeProfile({ navigation }) {
 			>
 				<View style={styles.headerContent}>
 					<TouchableOpacity
-						onPress={() => navigation.goBack()}
+						onPress={handleBackPress}
 						style={styles.backButton}
 					>
 						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
 					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Chỉnh sửa thông tin</Text>
-					<TouchableOpacity
-						onPress={handleSave}
-						style={[
-							styles.saveButton,
-							isEdited && styles.saveButtonActive,
-						]}
-						disabled={!isEdited || isUpdating}
-					>
-						{isUpdating ? (
-							<ActivityIndicator size="small" color="#1976D2" />
-						) : (
-							<Text
-								style={[
-									styles.saveButtonText,
-									isEdited && styles.saveButtonTextActive,
-								]}
-							>
-								Lưu
-							</Text>
-						)}
-					</TouchableOpacity>
+					<Text style={styles.headerTitle}>Thông tin cá nhân</Text>
+					<View style={styles.placeholder} />
 				</View>
 			</LinearGradient>
 
@@ -405,56 +441,143 @@ export default function ChangeProfile({ navigation }) {
 						<Text style={styles.label}>
 							Họ và tên <Text style={styles.required}>*</Text>
 						</Text>
-						<View style={styles.inputContainer}>
+						<View
+							style={[
+								styles.inputContainer,
+								!isEditMode && styles.inputContainerView,
+							]}
+						>
 							<Ionicons
 								name="person-outline"
 								size={20}
 								color="#78909C"
 								style={styles.inputIcon}
 							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.fullName}
-								onChangeText={(value) =>
-									handleInputChange("fullName", value)
-								}
-								placeholder="Nhập họ và tên"
-								placeholderTextColor="#B0BEC5"
-							/>
+							{isEditMode ? (
+								<TextInput
+									style={styles.textInput}
+									value={formData.fullName}
+									onChangeText={(value) =>
+										handleInputChange("fullName", value)
+									}
+									onFocus={closeGenderDropdown}
+									placeholder="Nhập họ và tên"
+									placeholderTextColor="#B0BEC5"
+								/>
+							) : (
+								<Text
+									style={[styles.textInput, styles.textView]}
+								>
+									{formData.fullName || "Chưa cập nhật"}
+								</Text>
+							)}
 						</View>
 					</View>
 
 					{/* Giới tính */}
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>Giới tính</Text>
-						<TouchableOpacity
-							style={styles.inputContainer}
-							onPress={showGenderPicker}
-						>
-							<Ionicons
-								name="transgender-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<Text
+						{isEditMode ? (
+							<View style={styles.dropdownContainer}>
+								<TouchableOpacity
+									style={styles.inputContainer}
+									onPress={() => {
+										showGenderPicker();
+									}}
+									activeOpacity={0.7}
+								>
+									<Ionicons
+										name="transgender-outline"
+										size={20}
+										color="#78909C"
+										style={styles.inputIcon}
+									/>
+									<Text
+										style={[
+											styles.textInput,
+											{
+												color: formData.gender
+													? "#263238"
+													: "#B0BEC5",
+											},
+										]}
+									>
+										{formData.gender || "Chọn giới tính"}
+									</Text>
+									<Ionicons
+										name={
+											showGenderDropdown
+												? "chevron-up"
+												: "chevron-down"
+										}
+										size={20}
+										color="#78909C"
+									/>
+								</TouchableOpacity>
+
+								{/* Dropdown options */}
+								{showGenderDropdown && (
+									<View style={styles.dropdownOptions}>
+										{genderOptions.map((option, index) => (
+											<TouchableOpacity
+												key={index}
+												style={[
+													styles.dropdownOption,
+													formData.gender ===
+														option &&
+														styles.selectedOption,
+													index ===
+														genderOptions.length -
+															1 &&
+														styles.lastDropdownOption,
+												]}
+												onPress={() =>
+													selectGender(option)
+												}
+												activeOpacity={0.7}
+											>
+												<Text
+													style={[
+														styles.dropdownOptionText,
+														formData.gender ===
+															option &&
+															styles.selectedOptionText,
+													]}
+												>
+													{option}
+												</Text>
+												{formData.gender === option && (
+													<Ionicons
+														name="checkmark"
+														size={20}
+														color="#1976D2"
+													/>
+												)}
+											</TouchableOpacity>
+										))}
+									</View>
+								)}
+							</View>
+						) : (
+							<View
 								style={[
-									styles.textInput,
-									{
-										color: formData.gender
-											? "#263238"
-											: "#B0BEC5",
-									},
+									styles.inputContainer,
+									styles.inputContainerView,
 								]}
 							>
-								{formData.gender || "Chọn giới tính"}
-							</Text>
-							<Ionicons
-								name="chevron-down"
-								size={20}
-								color="#78909C"
-							/>
-						</TouchableOpacity>
+								<Ionicons
+									name="transgender-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+								<Text
+									style={[styles.textInput, styles.textView]}
+								>
+									{formData.gender || "Chưa cập nhật"}
+								</Text>
+							</View>
+						)}
 					</View>
 
 					{/* Ngày sinh */}
@@ -462,23 +585,37 @@ export default function ChangeProfile({ navigation }) {
 						<Text style={styles.label}>
 							Ngày sinh <Text style={styles.required}>*</Text>
 						</Text>
-						<View style={styles.inputContainer}>
+						<View
+							style={[
+								styles.inputContainer,
+								!isEditMode && styles.inputContainerView,
+							]}
+						>
 							<Ionicons
 								name="calendar-outline"
 								size={20}
 								color="#78909C"
 								style={styles.inputIcon}
 							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.birthDate}
-								onChangeText={(value) =>
-									handleInputChange("birthDate", value)
-								}
-								placeholder="DD/MM/YYYY"
-								placeholderTextColor="#B0BEC5"
-								maxLength={10}
-							/>
+							{isEditMode ? (
+								<TextInput
+									style={styles.textInput}
+									value={formData.birthDate}
+									onChangeText={(value) =>
+										handleInputChange("birthDate", value)
+									}
+									onFocus={closeGenderDropdown}
+									placeholder="DD/MM/YYYY"
+									placeholderTextColor="#B0BEC5"
+									maxLength={10}
+								/>
+							) : (
+								<Text
+									style={[styles.textInput, styles.textView]}
+								>
+									{formData.birthDate || "Chưa cập nhật"}
+								</Text>
+							)}
 						</View>
 					</View>
 
@@ -487,25 +624,93 @@ export default function ChangeProfile({ navigation }) {
 						<Text style={styles.label}>
 							Số điện thoại <Text style={styles.required}>*</Text>
 						</Text>
-						<View style={styles.inputContainer}>
+						<View
+							style={[
+								styles.inputContainer,
+								!isEditMode && styles.inputContainerView,
+							]}
+						>
 							<Ionicons
 								name="call-outline"
 								size={20}
 								color="#78909C"
 								style={styles.inputIcon}
 							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.phone}
-								onChangeText={(value) =>
-									handleInputChange("phone", value)
-								}
-								placeholder="Nhập số điện thoại"
-								placeholderTextColor="#B0BEC5"
-								keyboardType="phone-pad"
-							/>
+							{isEditMode ? (
+								<TextInput
+									style={styles.textInput}
+									value={formData.phone}
+									onChangeText={(value) =>
+										handleInputChange("phone", value)
+									}
+									onFocus={closeGenderDropdown}
+									placeholder="Nhập số điện thoại"
+									placeholderTextColor="#B0BEC5"
+									keyboardType="phone-pad"
+								/>
+							) : (
+								<Text
+									style={[styles.textInput, styles.textView]}
+								>
+									{formData.phone || "Chưa cập nhật"}
+								</Text>
+							)}
 						</View>
 					</View>
+
+					{/* Nút chỉnh sửa khi ở view mode */}
+					{!isEditMode && (
+						<TouchableOpacity
+							style={styles.editButton}
+							onPress={handleEditToggle}
+						>
+							<Ionicons
+								name="create-outline"
+								size={20}
+								color="#1976D2"
+							/>
+							<Text style={styles.editButtonText}>
+								Chỉnh sửa thông tin
+							</Text>
+						</TouchableOpacity>
+					)}
+
+					{/* Cancel and Save buttons when in edit mode */}
+					{isEditMode && (
+						<View style={styles.buttonContainer}>
+							<TouchableOpacity
+								style={styles.cancelButton}
+								onPress={() => {
+									closeGenderDropdown();
+									handleEditToggle();
+								}}
+							>
+								<Text style={styles.cancelButtonText}>Huỷ</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={[
+									styles.updateButton,
+									isEdited && styles.updateButtonActive,
+								]}
+								onPress={() => {
+									closeGenderDropdown();
+									handleSave();
+								}}
+								disabled={!isEdited || isUpdating}
+							>
+								{isUpdating ? (
+									<ActivityIndicator
+										size="small"
+										color="#FFFFFF"
+									/>
+								) : (
+									<Text style={styles.updateButtonText}>
+										Cập nhật
+									</Text>
+								)}
+							</TouchableOpacity>
+						</View>
+					)}
 				</View>
 			</ScrollView>
 			<Dialog />
@@ -551,6 +756,25 @@ const styles = StyleSheet.create({
 		minWidth: 60,
 		alignItems: "center",
 	},
+	placeholder: {
+		width: 40,
+	},
+	editButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "#E3F2FD",
+		borderRadius: 8,
+		paddingVertical: 14,
+		borderWidth: 1,
+		borderColor: "#1976D2",
+	},
+	editButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1976D2",
+		marginLeft: 8,
+	},
 	saveButtonActive: {
 		backgroundColor: "#FFFFFF",
 	},
@@ -558,6 +782,11 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "rgba(255, 255, 255, 0.6)",
+	},
+	actionButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
 	},
 	saveButtonTextActive: {
 		color: "#1976D2",
@@ -603,6 +832,10 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		backgroundColor: "#FAFAFA",
 	},
+	inputContainerView: {
+		backgroundColor: "#F8F9FA",
+		borderColor: "#E9ECEF",
+	},
 	inputIcon: {
 		marginRight: 12,
 	},
@@ -611,6 +844,45 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: "#263238",
 		paddingVertical: 4,
+	},
+	textView: {
+		color: "#495057",
+		fontWeight: "500",
+	},
+	buttonContainer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		marginTop: 20,
+		gap: 12,
+	},
+	cancelButton: {
+		flex: 1,
+		paddingVertical: 14,
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#DC3545",
+		backgroundColor: "#FFFFFF",
+		alignItems: "center",
+	},
+	cancelButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#DC3545",
+	},
+	updateButton: {
+		flex: 1,
+		paddingVertical: 14,
+		borderRadius: 8,
+		backgroundColor: "#B0BEC5",
+		alignItems: "center",
+	},
+	updateButtonActive: {
+		backgroundColor: "#1976D2",
+	},
+	updateButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
 	},
 	loadingContainer: {
 		flex: 1,
@@ -649,5 +921,52 @@ const styles = StyleSheet.create({
 		color: "#FFFFFF",
 		fontWeight: "600",
 		fontSize: 16,
+	},
+	dropdownContainer: {
+		position: "relative",
+		zIndex: 1000,
+	},
+	dropdownOptions: {
+		position: "absolute",
+		top: "100%",
+		left: 0,
+		right: 0,
+		backgroundColor: "#FFFFFF",
+		borderWidth: 1,
+		borderColor: "#E0E0E0",
+		borderRadius: 8,
+		marginTop: 4,
+		elevation: 8,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		zIndex: 1002,
+	},
+	dropdownOption: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 16,
+		paddingVertical: 14,
+		borderBottomWidth: 1,
+		borderBottomColor: "#F0F0F0",
+	},
+	selectedOption: {
+		backgroundColor: "#E3F2FD",
+	},
+	dropdownOptionText: {
+		fontSize: 16,
+		color: "#263238",
+	},
+	selectedOptionText: {
+		color: "#1976D2",
+		fontWeight: "600",
+	},
+	lastDropdownOption: {
+		borderBottomWidth: 0,
 	},
 });
