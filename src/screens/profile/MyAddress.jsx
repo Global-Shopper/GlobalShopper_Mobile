@@ -9,13 +9,17 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useGetShippingAddressQuery } from "../../services/gshopApi";
+import {
+	useDefaultShippingAddressMutation,
+	useGetShippingAddressQuery,
+} from "../../services/gshopApi";
 import { resolveName } from "../../services/vnGeoAPI";
 
 export default function MyAddress({ navigation, route }) {
 	const { mode = "default", onSelectAddress } = route.params || {};
 
 	const { data: addresses = [] } = useGetShippingAddressQuery();
+	const [setDefaultAddress] = useDefaultShippingAddressMutation();
 	const [wardNames, setWardNames] = useState({});
 
 	useEffect(() => {
@@ -24,20 +28,19 @@ export default function MyAddress({ navigation, route }) {
 			for (const address of addresses) {
 				if (!wardNames[address.wardCode]) {
 					try {
-						await resolveName(address.wardCode).then(res => {
+						await resolveName(address.wardCode).then((res) => {
 							namesMap[address.wardCode] = res.full_name;
 						});
-						
-					} catch (error) {
+					} catch (_error) {
 						namesMap[address.wardCode] = "";
 					}
 				}
 			}
 			setWardNames((prev) => ({ ...prev, ...namesMap }));
 		};
-	
+
 		if (addresses.length > 0) {
-			fetchWardNames()
+			fetchWardNames();
 		}
 	}, [addresses]);
 
@@ -53,8 +56,28 @@ export default function MyAddress({ navigation, route }) {
 	};
 
 	const handleSetDefault = (addressId) => {
-		// Set address as default
-		console.log("Set as default:", addressId);
+		// Find current default address
+		const currentDefault = addresses.find((addr) => addr.default);
+		const targetAddress = addresses.find((addr) => addr.id === addressId);
+
+		if (currentDefault && currentDefault.id !== addressId) {
+			// There's already a default address, show confirmation
+			// Note: This is optional UX improvement
+			console.log(
+				`Changing default from "${currentDefault.name}" to "${targetAddress.name}"`
+			);
+		}
+
+		setDefaultAddress(addressId)
+			.unwrap()
+			.then((res) => {
+				console.log("Set default address success:", res);
+				// Note: API should automatically unset other addresses and set this one as default
+			})
+			.catch((err) => {
+				console.log("Set default address error:", err);
+				// Optional: Show error message
+			});
 	};
 
 	const handleSelectAddress = (address) => {
@@ -115,7 +138,8 @@ export default function MyAddress({ navigation, route }) {
 			</View>
 
 			{/* Address */}
-			<Text style={styles.addressText}
+			<Text
+				style={styles.addressText}
 				numberOfLines={1}
 				ellipsizeMode="tail"
 			>
@@ -141,7 +165,7 @@ export default function MyAddress({ navigation, route }) {
 						<Text style={styles.actionButtonText}>Chỉnh sửa</Text>
 					</TouchableOpacity>
 
-					{!item.isDefault && (
+					{!item.default && (
 						<TouchableOpacity
 							style={[styles.actionButton, styles.defaultButton]}
 							onPress={() => handleSetDefault(item.id)}
@@ -168,10 +192,34 @@ export default function MyAddress({ navigation, route }) {
 
 	// Sort addresses to show default first
 	const sortedAddresses = [...addresses].sort((a, b) => {
-		if (a.isDefault && !b.isDefault) return -1;
-		if (!a.isDefault && b.isDefault) return 1;
+		if (a.default && !b.default) return -1;
+		if (!a.default && b.default) return 1;
 		return 0;
 	});
+
+	// Debug: Check how many default addresses exist
+	const defaultAddresses = addresses.filter((addr) => addr.default);
+	if (defaultAddresses.length > 1) {
+		console.warn(
+			"⚠️ Multiple default addresses detected:",
+			defaultAddresses.length
+		);
+		console.log(
+			"Default addresses:",
+			defaultAddresses.map((addr) => ({
+				id: addr.id,
+				name: addr.name,
+				default: addr.default,
+			}))
+		);
+	} else if (defaultAddresses.length === 1) {
+		console.log(
+			"Correct: Only 1 default address found:",
+			defaultAddresses[0].name
+		);
+	} else {
+		console.log("No default address set");
+	}
 
 	return (
 		<View style={styles.container}>
