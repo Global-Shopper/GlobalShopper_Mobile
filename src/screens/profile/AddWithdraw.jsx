@@ -3,12 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
+	Image,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
 	StatusBar,
 	StyleSheet,
+	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
@@ -16,15 +17,15 @@ import { useDialog } from "../../components/dialogHelpers";
 import { Text } from "../../components/ui/text";
 import {
 	useCreateBankAccountMutation,
-	useGetBanksQuery,
 	useUpdateBankAccountMutation,
 } from "../../services/gshopApi";
+import { getBanks, searchBanks } from "../../services/vietqrAPI";
 
 const AddWithdraw = ({ navigation, route }) => {
 	const { showDialog, Dialog } = useDialog();
 	const { account, isEdit } = route.params || {};
 
-	// Form state
+	// Form state - thêm selectedBankInfo để lưu thông tin ngân hàng đã chọn
 	const [formData, setFormData] = useState({
 		bankAccountNumber: "",
 		providerName: "",
@@ -33,20 +34,70 @@ const AddWithdraw = ({ navigation, route }) => {
 		default: false,
 	});
 
+	// Bank selection state
+	const [selectedBankInfo, setSelectedBankInfo] = useState(null);
+	const [showBankSelection, setShowBankSelection] = useState(true);
+
 	// Validation state
 	const [errors, setErrors] = useState({});
 
 	// Dropdown state for bank selection
 	const [showBankDropdown, setShowBankDropdown] = useState(false);
 
-	// Get banks from API
-	const { data: banks = [], isLoading: banksLoading } = useGetBanksQuery();
+	// Banks from VietQR Service
+	const [banks, setBanks] = useState([]);
+	const [filteredBanks, setFilteredBanks] = useState([]);
+	const [banksLoading, setBanksLoading] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	// Mutations
 	const [createBankAccount, { isLoading: isCreating }] =
 		useCreateBankAccountMutation();
 	const [updateBankAccount, { isLoading: isUpdating }] =
 		useUpdateBankAccountMutation();
+
+	// Fetch banks from VietQR Service
+	useEffect(() => {
+		const loadBanks = async () => {
+			console.log("AddWithdraw: Starting to load banks...");
+			setBanksLoading(true);
+			try {
+				const banksData = await getBanks();
+				setBanks(banksData);
+				setFilteredBanks(banksData);
+				console.log(
+					`AddWithdraw: Loaded ${banksData.length} banks from VietQR service`
+				);
+				console.log("AddWithdraw: First bank:", banksData[0]);
+			} catch (error) {
+				console.error("AddWithdraw: Error loading banks:", error);
+			} finally {
+				setBanksLoading(false);
+			}
+		};
+
+		loadBanks();
+	}, []);
+
+	// Handle search banks
+	const handleSearchBanks = async (query) => {
+		setSearchQuery(query);
+		if (!query.trim()) {
+			setFilteredBanks(banks);
+			setShowBankDropdown(false);
+			return;
+		}
+
+		try {
+			const filtered = await searchBanks(query);
+			setFilteredBanks(filtered);
+			setShowBankDropdown(filtered.length > 0);
+		} catch (error) {
+			console.error("Search error:", error);
+			setFilteredBanks([]);
+			setShowBankDropdown(false);
+		}
+	};
 
 	// Populate form if editing
 	useEffect(() => {
@@ -58,8 +109,21 @@ const AddWithdraw = ({ navigation, route }) => {
 				expirationDate: account.expirationDate || "",
 				default: account.default || false,
 			});
+
+			// Find bank info if editing
+			if (account.providerName && banks.length > 0) {
+				const bankInfo = banks.find(
+					(bank) =>
+						bank.shortName === account.providerName ||
+						bank.name === account.providerName
+				);
+				if (bankInfo) {
+					setSelectedBankInfo(bankInfo);
+					setShowBankSelection(false);
+				}
+			}
 		}
-	}, [isEdit, account]);
+	}, [isEdit, account, banks]);
 
 	const validateForm = () => {
 		const newErrors = {};
@@ -70,7 +134,8 @@ const AddWithdraw = ({ navigation, route }) => {
 			newErrors.bankAccountNumber = "Số tài khoản phải từ 8-20 chữ số";
 		}
 
-		if (!formData.providerName.trim()) {
+		// Check if bank is selected (either through selectedBankInfo or providerName)
+		if (!selectedBankInfo && !formData.providerName.trim()) {
 			newErrors.providerName = "Vui lòng chọn ngân hàng";
 		}
 
@@ -103,9 +168,21 @@ const AddWithdraw = ({ navigation, route }) => {
 		}
 	};
 
-	const handleBankSelect = (bankName) => {
-		handleInputChange("providerName", bankName);
+	const handleBankSelect = (bank) => {
+		console.log("Selected bank:", bank);
+		setSelectedBankInfo(bank);
+		handleInputChange("providerName", bank.shortName);
 		setShowBankDropdown(false);
+		setShowBankSelection(false);
+		setSearchQuery(""); // Clear search
+	};
+
+	const handleChangeBankSelection = () => {
+		setShowBankSelection(true);
+		setSelectedBankInfo(null);
+		handleInputChange("providerName", "");
+		setSearchQuery(""); // Clear search
+		setFilteredBanks(banks); // Show all banks
 	};
 
 	const handleSubmit = async () => {
@@ -114,15 +191,31 @@ const AddWithdraw = ({ navigation, route }) => {
 		}
 
 		try {
+			// Ensure we have providerName from selected bank or form data
+			const providerName = selectedBankInfo
+				? selectedBankInfo.shortName
+				: formData.providerName.trim();
+
 			const payload = {
 				bankAccountNumber: formData.bankAccountNumber.trim(),
-				providerName: formData.providerName.trim(),
+				providerName: providerName,
 				accountHolderName: formData.accountHolderName.trim(),
 				expirationDate: formData.expirationDate.trim() || null,
 				default: formData.default,
 			};
 
+			console.log("Submit payload:", payload);
+			console.log("Form data check:", {
+				accountNumber: formData.accountNumber,
+				accountHolderName: formData.accountHolderName,
+				bankId: formData.bankId,
+				bankName: formData.bankName,
+				isEdit,
+				accountId: account?.id,
+			});
+
 			if (isEdit && account) {
+				console.log("Updating bank account with ID:", account.id);
 				await updateBankAccount({
 					id: account.id,
 					...payload,
@@ -130,10 +223,15 @@ const AddWithdraw = ({ navigation, route }) => {
 
 				showDialog({
 					title: "Thành công",
-					content: "Đã cập nhật tài khoản ngân hàng thành công",
+					content: "Bạn đã cập nhật tài khoản rút tiền thành công!",
 					primaryButton: {
 						text: "OK",
-						onPress: () => navigation.goBack(),
+						onPress: () => {
+							console.log("Dialog onPress triggered");
+							if (navigation && navigation.goBack) {
+								navigation.goBack();
+							}
+						},
 					},
 				});
 			} else {
@@ -141,20 +239,32 @@ const AddWithdraw = ({ navigation, route }) => {
 
 				showDialog({
 					title: "Thành công",
-					content: "Đã thêm tài khoản ngân hàng thành công",
+					content: "Bạn đã thêm tài khoản rút tiền thành công!",
 					primaryButton: {
 						text: "OK",
-						onPress: () => navigation.goBack(),
+						onPress: () => {
+							console.log("Dialog onPress triggered");
+							if (navigation && navigation.goBack) {
+								navigation.goBack();
+							}
+						},
 					},
 				});
 			}
 		} catch (error) {
 			console.error("Submit error:", error);
+			console.error("Error details:", JSON.stringify(error, null, 2));
 
 			let errorMessage = "Có lỗi xảy ra. Vui lòng thử lại.";
 
 			if (error.status === 400) {
 				errorMessage = "Thông tin tài khoản không hợp lệ";
+				console.error("400 Error - Request data:", {
+					accountNumber: formData.accountNumber,
+					accountHolderName: formData.accountHolderName,
+					bankId: formData.bankId,
+					bankName: formData.bankName,
+				});
 			} else if (error.status === 409) {
 				errorMessage = "Tài khoản ngân hàng này đã tồn tại";
 			} else if (error.message) {
@@ -164,7 +274,12 @@ const AddWithdraw = ({ navigation, route }) => {
 			showDialog({
 				title: "Lỗi",
 				content: errorMessage,
-				primaryButton: { text: "OK" },
+				primaryButton: {
+					text: "OK",
+					onPress: () => {
+						console.log("Error dialog closed");
+					},
+				},
 			});
 		}
 	};
@@ -223,28 +338,25 @@ const AddWithdraw = ({ navigation, route }) => {
 					</Text>
 				</TouchableOpacity>
 			) : (
-				<TouchableOpacity
+				<TextInput
 					style={[styles.input, errors[field] && styles.inputError]}
-					onPress={() => {
-						Alert.prompt(
-							label,
-							placeholder,
-							(text) => handleInputChange(field, text),
-							"plain-text",
-							formData[field],
-							options.keyboardType || "default"
-						);
+					placeholder={placeholder}
+					placeholderTextColor="#9CA3AF"
+					value={formData[field]}
+					onChangeText={(text) => {
+						// Auto uppercase for accountHolderName
+						const value =
+							field === "accountHolderName"
+								? text.toUpperCase()
+								: text;
+						handleInputChange(field, value);
 					}}
-				>
-					<Text
-						style={[
-							styles.inputText,
-							!formData[field] && styles.placeholderText,
-						]}
-					>
-						{formData[field] || placeholder}
-					</Text>
-				</TouchableOpacity>
+					keyboardType={options.keyboardType || "default"}
+					autoCapitalize={
+						field === "accountHolderName" ? "characters" : "none"
+					}
+					autoCorrect={false}
+				/>
 			)}
 
 			{errors[field] && (
@@ -252,6 +364,87 @@ const AddWithdraw = ({ navigation, route }) => {
 			)}
 		</View>
 	);
+
+	const renderBankSelection = () => {
+		if (!showBankSelection && selectedBankInfo) {
+			// Hiển thị ngân hàng đã chọn
+			return (
+				<View style={styles.formGroup}>
+					<Text style={styles.label}>
+						Ngân hàng <Text style={styles.required}>*</Text>
+					</Text>
+					<View style={styles.selectedBankContainer}>
+						<View style={styles.selectedBankInfo}>
+							<View style={styles.selectedBankLogoContainer}>
+								<Image
+									source={{ uri: selectedBankInfo.logo }}
+									style={styles.selectedBankLogo}
+									resizeMode="contain"
+									onError={(e) => {
+										console.log(
+											"Failed to load logo:",
+											selectedBankInfo.logo
+										);
+									}}
+								/>
+							</View>
+							<View style={styles.selectedBankText}>
+								<Text style={styles.selectedBankShortName}>
+									{selectedBankInfo.shortName}
+								</Text>
+								<Text style={styles.selectedBankFullName}>
+									{selectedBankInfo.name}
+								</Text>
+							</View>
+						</View>
+						<TouchableOpacity
+							style={styles.changeBankButton}
+							onPress={handleChangeBankSelection}
+						>
+							<Ionicons
+								name="create-outline"
+								size={16}
+								color="#FFFFFF"
+							/>
+						</TouchableOpacity>
+					</View>
+				</View>
+			);
+		}
+
+		// Hiển thị dropdown chọn ngân hàng
+		return (
+			<View style={styles.formGroup}>
+				<Text style={styles.label}>
+					Ngân hàng <Text style={styles.required}>*</Text>
+				</Text>
+				<View style={styles.searchInputContainer}>
+					<TextInput
+						style={[
+							styles.searchTextInput,
+							errors.providerName && styles.inputError,
+						]}
+						placeholder="Nhập tên ngân hàng (vcb, bidv, acb...)"
+						placeholderTextColor="#9CA3AF"
+						value={searchQuery}
+						onChangeText={handleSearchBanks}
+						autoCapitalize="none"
+						autoCorrect={false}
+					/>
+					<Ionicons
+						name="search"
+						size={20}
+						color="#6B7280"
+						style={styles.searchIcon}
+					/>
+				</View>
+				{renderBankDropdown()}
+				{errors.providerName && (
+					<Text style={styles.errorText}>{errors.providerName}</Text>
+				)}
+			</View>
+		);
+	};
 
 	const renderBankDropdown = () => {
 		if (!showBankDropdown) return null;
@@ -262,13 +455,15 @@ const AddWithdraw = ({ navigation, route }) => {
 					<View style={styles.dropdownLoading}>
 						<ActivityIndicator size="small" color="#42A5F5" />
 						<Text style={styles.dropdownLoadingText}>
-							Đang tải...
+							Đang tải danh sách ngân hàng...
 						</Text>
 					</View>
-				) : banks.length === 0 ? (
+				) : filteredBanks.length === 0 ? (
 					<View style={styles.dropdownEmpty}>
 						<Text style={styles.dropdownEmptyText}>
-							Không có dữ liệu ngân hàng
+							{searchQuery
+								? `Không tìm thấy "${searchQuery}"`
+								: "Không có dữ liệu ngân hàng"}
 						</Text>
 					</View>
 				) : (
@@ -276,15 +471,35 @@ const AddWithdraw = ({ navigation, route }) => {
 						style={styles.dropdownScroll}
 						showsVerticalScrollIndicator={false}
 					>
-						{banks.map((bank) => (
+						{filteredBanks.map((bank) => (
 							<TouchableOpacity
-								key={bank.id || bank.name}
+								key={bank.id || bank.bin}
 								style={styles.dropdownItem}
-								onPress={() => handleBankSelect(bank.name)}
+								onPress={() => handleBankSelect(bank)}
 							>
-								<Text style={styles.dropdownItemText}>
-									{bank.name}
-								</Text>
+								<View style={styles.bankItemContainer}>
+									<View style={styles.bankLogoContainer}>
+										<Image
+											source={{ uri: bank.logo }}
+											style={styles.bankLogo}
+											resizeMode="contain"
+											onError={(e) => {
+												console.log(
+													"Failed to load bank logo:",
+													bank.logo
+												);
+											}}
+										/>
+									</View>
+									<View style={styles.bankItemText}>
+										<Text style={styles.bankShortName}>
+											{bank.shortName}
+										</Text>
+										<Text style={styles.bankFullName}>
+											{bank.name}
+										</Text>
+									</View>
+								</View>
 							</TouchableOpacity>
 						))}
 					</ScrollView>
@@ -325,21 +540,16 @@ const AddWithdraw = ({ navigation, route }) => {
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.form}>
+					{/* Bank Selection - FIRST */}
+					{renderBankSelection()}
+
+					{/* Show other fields always after bank selection is shown */}
 					{renderFormField(
 						"Số tài khoản",
 						"bankAccountNumber",
 						"Nhập số tài khoản ngân hàng",
 						{ required: true, keyboardType: "numeric" }
 					)}
-
-					{renderFormField(
-						"Ngân hàng",
-						"providerName",
-						"Chọn ngân hàng",
-						{ required: true }
-					)}
-
-					{renderBankDropdown()}
 
 					{renderFormField(
 						"Tên chủ tài khoản",
@@ -355,9 +565,33 @@ const AddWithdraw = ({ navigation, route }) => {
 						{ required: false }
 					)}
 
-					{renderFormField("Tùy chọn", "default", "", {
-						required: false,
-					})}
+					{/* Checkbox without label */}
+					<View style={styles.formGroup}>
+						<TouchableOpacity
+							style={styles.checkboxContainer}
+							onPress={() =>
+								handleInputChange("default", !formData.default)
+							}
+						>
+							<View
+								style={[
+									styles.checkbox,
+									formData.default && styles.checkboxChecked,
+								]}
+							>
+								{formData.default && (
+									<Ionicons
+										name="checkmark"
+										size={16}
+										color="#FFFFFF"
+									/>
+								)}
+							</View>
+							<Text style={styles.checkboxLabel}>
+								Đặt làm tài khoản mặc định
+							</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
 
 				{/* Submit Button */}
@@ -503,6 +737,25 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: "#F3F4F6",
 	},
+	bankItemContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	bankItemText: {
+		flex: 1,
+		marginLeft: 12,
+	},
+	bankShortName: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#374151",
+		marginBottom: 2,
+	},
+	bankFullName: {
+		fontSize: 12,
+		color: "#6B7280",
+		lineHeight: 16,
+	},
 	dropdownItemText: {
 		fontSize: 16,
 		color: "#374151",
@@ -529,6 +782,7 @@ const styles = StyleSheet.create({
 	checkboxContainer: {
 		flexDirection: "row",
 		alignItems: "center",
+		paddingVertical: 8,
 	},
 	checkbox: {
 		width: 20,
@@ -569,6 +823,106 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#FFFFFF",
+	},
+	// Selected bank styles
+	selectedBankContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		backgroundColor: "#F0F7FF",
+		borderRadius: 12,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#42A5F5",
+	},
+	selectedBankInfo: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+	},
+	bankLogoSmall: {
+		width: 32,
+		height: 32,
+		borderRadius: 8,
+		backgroundColor: "#F3F4F6",
+	},
+	selectedBankText: {
+		flex: 1,
+	},
+	selectedBankShortName: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#1976D2",
+		marginBottom: 4,
+	},
+	selectedBankFullName: {
+		fontSize: 13,
+		color: "#6B7280",
+		lineHeight: 18,
+	},
+	changeBankButton: {
+		backgroundColor: "#42A5F5",
+		borderRadius: 8,
+		paddingHorizontal: 8,
+		paddingVertical: 8,
+		alignItems: "center",
+		justifyContent: "center",
+		minWidth: 32,
+		minHeight: 32,
+	},
+	changeBankText: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	// Search input styles
+	searchInputContainer: {
+		position: "relative",
+	},
+	searchTextInput: {
+		borderWidth: 1,
+		borderColor: "#D1D5DB",
+		borderRadius: 12,
+		paddingHorizontal: 16,
+		paddingVertical: 14,
+		paddingRight: 50,
+		fontSize: 16,
+		color: "#111827",
+		backgroundColor: "#FFFFFF",
+	},
+	searchIcon: {
+		position: "absolute",
+		right: 16,
+		top: "50%",
+		marginTop: -10,
+	},
+	// Logo styles
+	bankLogoContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 8,
+		backgroundColor: "#F9FAFB",
+		alignItems: "center",
+		justifyContent: "center",
+		overflow: "hidden",
+	},
+	bankLogo: {
+		width: 32,
+		height: 32,
+	},
+	selectedBankLogoContainer: {
+		width: 56,
+		height: 56,
+		borderRadius: 12,
+		backgroundColor: "#F9FAFB",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
+		overflow: "hidden",
+	},
+	selectedBankLogo: {
+		width: 48,
+		height: 48,
 	},
 });
 

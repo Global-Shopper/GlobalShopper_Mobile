@@ -1,6 +1,3 @@
-/**
- * VietQR Service - Quản lý API liên quan đến ngân hàng Việt Nam
- */
 import axios from "axios";
 
 const vietqrApi = axios.create({
@@ -8,7 +5,6 @@ const vietqrApi = axios.create({
 	timeout: 10000,
 });
 
-// Cache đơn giản
 let cachedBanks = null;
 
 async function fetchData() {
@@ -16,13 +12,12 @@ async function fetchData() {
 		const response = await vietqrApi.get("/banks");
 
 		if (response.data.code === "00" && response.data.data) {
-			// Sử dụng logo URL từ API, không override
 			return response.data.data;
 		}
 		throw new Error("API Error");
 	} catch (error) {
 		console.log("VietQR API failed:", error.message);
-		return []; // Trả về mảng rỗng thay vì fallback data
+		return [];
 	}
 }
 
