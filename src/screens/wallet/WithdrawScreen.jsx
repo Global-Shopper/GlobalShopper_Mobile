@@ -18,6 +18,7 @@ import {
 	useGetWalletQuery,
 	useWithdrawWalletMutation,
 } from "../../services/gshopApi";
+import { getBanks } from "../../services/vietqrAPI";
 
 const WithdrawScreen = ({ navigation }) => {
 	const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -122,24 +123,22 @@ const WithdrawScreen = ({ navigation }) => {
 		setShowNewAccountForm(savedBankAccounts?.length === 0);
 	}, [savedBankAccounts?.length, isLoadingSavedAccounts]);
 
-	// Fetch banks from VietQR API
+	// Fetch banks from VietQR 
 	useEffect(() => {
 		const fetchBanks = async () => {
 			setIsLoadingBanks(true);
 			try {
-				const response = await fetch("https://api.vietqr.io/v2/banks");
-				const data = await response.json();
+				const banksFromAPI = await getBanks();
+				console.log("VietQR API Response:", banksFromAPI);
 
-				console.log("VietQR API Response:", data);
-
-				if (data.code === "00" && data.data) {
+				if (banksFromAPI && banksFromAPI.length > 0) {
 					// Sort banks by shortName for better UX
-					const sortedBanks = data.data.sort((a, b) =>
+					const sortedBanks = banksFromAPI.sort((a, b) =>
 						a.shortName.localeCompare(b.shortName)
 					);
 					setBanksData(sortedBanks);
 				} else {
-					throw new Error("Failed to fetch banks data");
+					throw new Error("No banks data received");
 				}
 			} catch (error) {
 				console.error("Error fetching banks:", error);
@@ -332,11 +331,15 @@ const WithdrawScreen = ({ navigation }) => {
 				withdrawId: result.withdrawId,
 				transactionId: result.transactionId,
 				requestId: result.requestId,
-				allKeys: Object.keys(result || {})
+				allKeys: Object.keys(result || {}),
 			});
 
 			// Navigate to success screen with proper ID from backend
-			const backendWithdrawId = result.id || result.withdrawId || result.transactionId || result.requestId;
+			const backendWithdrawId =
+				result.id ||
+				result.withdrawId ||
+				result.transactionId ||
+				result.requestId;
 			console.log("Using withdraw ID:", backendWithdrawId);
 
 			navigation.navigate("SuccessWithdrawScreen", {
