@@ -10,6 +10,13 @@ let cachedBanks = null;
 async function fetchData() {
 	try {
 		const response = await vietqrApi.get("/banks");
+		console.log("VietQR API response:", {
+			code: response.data.code,
+			dataExists: !!response.data.data,
+			dataLength: response.data.data?.length,
+			firstBank: response.data.data?.[0],
+			sampleBanks: response.data.data?.slice(0, 3),
+		});
 
 		if (response.data.code === "00" && response.data.data) {
 			return response.data.data;

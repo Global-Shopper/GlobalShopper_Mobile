@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
+	Image,
 	StatusBar,
 	StyleSheet,
 	TouchableOpacity,
@@ -15,9 +17,11 @@ import {
 	useGetBankAccountsQuery,
 	useUpdateBankAccountMutation,
 } from "../../services/gshopApi";
+import { getBanks } from "../../services/vietqrAPI";
 
 const WithdrawList = ({ navigation }) => {
 	const { showDialog, Dialog } = useDialog();
+	const [banks, setBanks] = useState([]);
 
 	// Get bank accounts from API
 	const {
@@ -26,6 +30,137 @@ const WithdrawList = ({ navigation }) => {
 		error,
 		refetch,
 	} = useGetBankAccountsQuery();
+
+	// Load banks data for logos
+	useEffect(() => {
+		const loadBanks = async () => {
+			try {
+				const banksData = await getBanks();
+				setBanks(banksData);
+			} catch (error) {
+				console.error("Error loading banks:", error);
+			}
+		};
+		loadBanks();
+	}, []);
+
+	// Function to get bank logo URL
+	const getBankLogo = (bankAccount) => {
+		if (!bankAccount?.providerName || banks.length === 0) {
+			return null;
+		}
+
+		const providerName = bankAccount.providerName.toUpperCase().trim();
+
+		console.log("getBankLogo debug:", {
+			providerName: providerName,
+			banksAvailable: banks.length,
+			searchingIn: banks
+				.map((b) => ({
+					id: b.id,
+					name: b.name?.toUpperCase(),
+					shortName: b.short_name?.toUpperCase(),
+					code: b.code?.toUpperCase(),
+				}))
+				.slice(0, 5),
+		});
+
+		// Try to match by different name variations
+		const bank = banks.find((b) => {
+			const bankName = b.name?.toUpperCase().trim() || "";
+			const bankShortName = b.short_name?.toUpperCase().trim() || "";
+			const bankCode = b.code?.toUpperCase().trim() || "";
+
+			// Direct name match
+			if (bankName === providerName) return true;
+			if (bankShortName === providerName) return true;
+			if (bankCode === providerName) return true;
+
+			// Partial matches for common variations
+			if (
+				bankName.includes(providerName) ||
+				providerName.includes(bankName)
+			)
+				return true;
+			if (
+				bankShortName.includes(providerName) ||
+				providerName.includes(bankShortName)
+			)
+				return true;
+
+			// Special cases for Vietnamese bank name variations
+			if (
+				providerName === "VIETINBANK" &&
+				(bankName.includes("VIETINBANK") ||
+					bankShortName.includes("VTB") ||
+					bankCode === "VTB")
+			)
+				return true;
+			if (
+				providerName === "VIETCOMBANK" &&
+				(bankName.includes("VIETCOMBANK") ||
+					bankShortName.includes("VCB") ||
+					bankCode === "VCB")
+			)
+				return true;
+			if (
+				providerName === "TECHCOMBANK" &&
+				(bankName.includes("TECHCOMBANK") ||
+					bankShortName.includes("TCB") ||
+					bankCode === "TCB")
+			)
+				return true;
+			if (
+				providerName === "AGRIBANK" &&
+				(bankName.includes("AGRIBANK") ||
+					bankShortName.includes("AGRI") ||
+					bankCode === "AGRI")
+			)
+				return true;
+			if (
+				providerName === "BIDV" &&
+				(bankName.includes("BIDV") || bankCode === "BIDV")
+			)
+				return true;
+			if (
+				providerName === "SACOMBANK" &&
+				(bankName.includes("SACOMBANK") ||
+					bankShortName.includes("SCB") ||
+					bankCode === "SCB")
+			)
+				return true;
+			if (
+				providerName === "MBBANK" &&
+				(bankName.includes("MBBANK") ||
+					bankShortName.includes("MBB") ||
+					bankCode === "MBB")
+			)
+				return true;
+			if (
+				providerName === "VPBANK" &&
+				(bankName.includes("VPBANK") || bankCode === "VPB")
+			)
+				return true;
+
+			return false;
+		});
+
+		console.log("getBankLogo result:", {
+			providerName: providerName,
+			foundBank: bank
+				? {
+						id: bank.id,
+						name: bank.name,
+						shortName: bank.short_name,
+						code: bank.code,
+						hasLogo: !!bank.logo,
+				  }
+				: null,
+			logoUrl: bank?.logo || null,
+		});
+
+		return bank?.logo || null;
+	};
 
 	// Debug logging
 	console.log("WithdrawList - API Response:", {
@@ -37,6 +172,44 @@ const WithdrawList = ({ navigation }) => {
 			? bankAccounts.length
 			: "not array",
 	});
+
+	// Debug banks data
+	console.log("WithdrawList - Banks data:", {
+		banksCount: banks.length,
+		banks: banks.slice(0, 3), // Log first 3 banks
+	});
+
+	// Debug bank matching
+	if (bankAccounts.length > 0) {
+		console.log("WithdrawList - Bank matching debug:", {
+			firstAccount: bankAccounts[0],
+			providerName: bankAccounts[0]?.providerName,
+			allAccountFields: Object.keys(bankAccounts[0] || {}),
+			matchedByName: banks.find(
+				(b) =>
+					b.name
+						?.toUpperCase()
+						.includes(
+							bankAccounts[0]?.providerName?.toUpperCase()
+						) ||
+					b.short_name
+						?.toUpperCase()
+						.includes(bankAccounts[0]?.providerName?.toUpperCase())
+			),
+			vietinbankMatch: banks.find(
+				(b) =>
+					b.name?.toUpperCase().includes("VIETINBANK") ||
+					b.short_name?.toUpperCase().includes("VTB")
+			),
+			allBankNames: banks
+				.map((b) => ({
+					name: b.name,
+					shortName: b.short_name,
+					code: b.code,
+				}))
+				.slice(0, 10), // First 10 banks with details
+		});
+	}
 
 	// Delete bank account mutation
 	const [deleteBankAccount, { isLoading: isDeleting }] =
@@ -112,85 +285,119 @@ const WithdrawList = ({ navigation }) => {
 		}
 	};
 
-	const renderBankAccountItem = ({ item }) => (
-		<View style={styles.accountCard}>
-			<View style={styles.accountHeader}>
-				<View style={styles.bankInfo}>
-					<View style={styles.bankIconContainer}>
-						<Ionicons name="card" size={24} color="#42A5F5" />
-					</View>
-					<View style={styles.bankDetails}>
-						<Text style={styles.bankName}>{item.providerName}</Text>
-						<Text style={styles.accountNumber}>
-							**** **** **** {item.bankAccountNumber?.slice(-4)}
-						</Text>
-						<Text style={styles.accountHolder}>
-							{item.accountHolderName}
-						</Text>
-						{item.expirationDate && (
-							<Text style={styles.expirationDate}>
-								Hết hạn: {item.expirationDate}
+	const renderBankAccountItem = ({ item }) => {
+		console.log("renderBankAccountItem - Processing:", {
+			providerName: item.providerName,
+			accountNumber: item.bankAccountNumber?.slice(-4),
+		});
+
+		const bankLogo = getBankLogo(item);
+
+		return (
+			<View style={styles.accountCard}>
+				<View style={styles.accountHeader}>
+					<View style={styles.bankInfo}>
+						<View style={styles.bankIconContainer}>
+							{bankLogo ? (
+								<Image
+									source={{ uri: bankLogo }}
+									style={styles.bankLogo}
+									resizeMode="contain"
+								/>
+							) : (
+								<Ionicons
+									name="card"
+									size={24}
+									color="#42A5F5"
+								/>
+							)}
+						</View>
+						<View style={styles.bankDetails}>
+							<Text style={styles.bankName}>
+								{item.providerName}
 							</Text>
-						)}
+							<Text style={styles.accountNumber}>
+								**** **** ****{" "}
+								{item.bankAccountNumber?.slice(-4)}
+							</Text>
+							<Text style={styles.accountHolder}>
+								{item.accountHolderName}
+							</Text>
+							{item.expirationDate && (
+								<Text style={styles.expirationDate}>
+									Hết hạn: {item.expirationDate}
+								</Text>
+							)}
+						</View>
 					</View>
+
+					{item.default && (
+						<View style={styles.defaultBadge}>
+							<Text style={styles.defaultText}>Mặc định</Text>
+						</View>
+					)}
 				</View>
 
-				{item.default && (
-					<View style={styles.defaultBadge}>
-						<Text style={styles.defaultText}>Mặc định</Text>
-					</View>
-				)}
-			</View>
+				<View style={styles.accountActions}>
+					{!item.default && (
+						<TouchableOpacity
+							style={[
+								styles.actionButton,
+								styles.setDefaultButton,
+							]}
+							onPress={() => handleSetDefault(item.id)}
+							disabled={isUpdating}
+						>
+							{isUpdating ? (
+								<ActivityIndicator
+									size="small"
+									color="#FFFFFF"
+								/>
+							) : (
+								<>
+									<Ionicons
+										name="checkmark-circle"
+										size={16}
+										color="#FFFFFF"
+									/>
+									<Text style={styles.actionButtonText}>
+										Đặt mặc định
+									</Text>
+								</>
+							)}
+						</TouchableOpacity>
+					)}
 
-			<View style={styles.accountActions}>
-				{!item.default && (
 					<TouchableOpacity
-						style={[styles.actionButton, styles.setDefaultButton]}
-						onPress={() => handleSetDefault(item.id)}
-						disabled={isUpdating}
+						style={[styles.actionButton, styles.editButton]}
+						onPress={() => handleEditAccount(item)}
 					>
-						{isUpdating ? (
+						<Ionicons name="pencil" size={16} color="#FFFFFF" />
+						<Text style={styles.actionButtonText}>Sửa</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={[styles.actionButton, styles.deleteButton]}
+						onPress={() => handleDeleteAccount(item.id, item)}
+						disabled={isDeleting}
+					>
+						{isDeleting ? (
 							<ActivityIndicator size="small" color="#FFFFFF" />
 						) : (
 							<>
 								<Ionicons
-									name="checkmark-circle"
+									name="trash"
 									size={16}
 									color="#FFFFFF"
 								/>
-								<Text style={styles.actionButtonText}>
-									Đặt mặc định
-								</Text>
+								<Text style={styles.actionButtonText}>Xóa</Text>
 							</>
 						)}
 					</TouchableOpacity>
-				)}
-
-				<TouchableOpacity
-					style={[styles.actionButton, styles.editButton]}
-					onPress={() => handleEditAccount(item)}
-				>
-					<Ionicons name="create" size={16} color="#FFFFFF" />
-					<Text style={styles.actionButtonText}>Sửa</Text>
-				</TouchableOpacity>
-
-				<TouchableOpacity
-					style={[styles.actionButton, styles.deleteButton]}
-					onPress={() => handleDeleteAccount(item.id, item)}
-					disabled={isDeleting}
-				>
-					{isDeleting ? (
-						<ActivityIndicator size="small" color="#FFFFFF" />
-					) : (
-						<>
-							<Ionicons name="trash" size={16} color="#FFFFFF" />
-							<Text style={styles.actionButtonText}>Xóa</Text>
-						</>
-					)}
-				</TouchableOpacity>
+				</View>
 			</View>
-		</View>
-	);
+		);
+	};
 
 	const renderEmptyState = () => (
 		<View style={styles.emptyState}>
@@ -338,93 +545,120 @@ const styles = StyleSheet.create({
 	},
 	accountCard: {
 		backgroundColor: "#FFFFFF",
-		borderRadius: 16,
-		padding: 20,
+		borderRadius: 20,
+		padding: 24,
 		marginBottom: 16,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
-		elevation: 4,
+		shadowColor: "#1E293B",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 12,
+		elevation: 5,
+		borderWidth: 1,
+		borderColor: "#F1F5F9",
 	},
 	accountHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
-		marginBottom: 16,
+		marginBottom: 20,
 	},
 	bankInfo: {
 		flexDirection: "row",
 		flex: 1,
 	},
 	bankIconContainer: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
-		backgroundColor: "#F0F7FF",
+		width: 56,
+		height: 56,
+		borderRadius: 12,
+		backgroundColor: "#F8FAFC",
 		alignItems: "center",
 		justifyContent: "center",
-		marginRight: 12,
+		marginRight: 16,
+		borderWidth: 1,
+		borderColor: "#E2E8F0",
+	},
+	bankLogo: {
+		width: 40,
+		height: 40,
+		borderRadius: 8,
 	},
 	bankDetails: {
 		flex: 1,
 	},
 	bankName: {
 		fontSize: 16,
-		fontWeight: "600",
-		color: "#1F2937",
+		fontWeight: "700",
+		color: "#1E293B",
 		marginBottom: 4,
 	},
 	accountNumber: {
-		fontSize: 14,
-		color: "#6B7280",
+		fontSize: 15,
+		color: "#475569",
+		fontWeight: "600",
+		letterSpacing: 1,
 		marginBottom: 4,
 	},
 	accountHolder: {
 		fontSize: 14,
-		color: "#374151",
-		marginBottom: 4,
+		color: "#64748B",
+		marginBottom: 2,
 	},
 	expirationDate: {
 		fontSize: 12,
-		color: "#9CA3AF",
+		color: "#94A3B8",
+		fontStyle: "italic",
 	},
 	defaultBadge: {
-		backgroundColor: "#10B981",
-		borderRadius: 12,
-		paddingHorizontal: 8,
-		paddingVertical: 4,
+		backgroundColor: "#059669",
+		borderRadius: 16,
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		shadowColor: "#059669",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 4,
+		elevation: 3,
 	},
 	defaultText: {
 		fontSize: 12,
-		fontWeight: "600",
+		fontWeight: "700",
 		color: "#FFFFFF",
+		textTransform: "uppercase",
+		letterSpacing: 0.5,
 	},
 	accountActions: {
 		flexDirection: "row",
 		justifyContent: "flex-end",
 		flexWrap: "wrap",
 		gap: 8,
+		marginTop: 8,
 	},
 	actionButton: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingHorizontal: 12,
-		paddingVertical: 8,
-		borderRadius: 8,
-		gap: 4,
+		paddingHorizontal: 14,
+		paddingVertical: 10,
+		borderRadius: 10,
+		gap: 6,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+		minWidth: 80,
+		justifyContent: "center",
 	},
 	setDefaultButton: {
-		backgroundColor: "#10B981",
+		backgroundColor: "#059669",
 	},
 	editButton: {
-		backgroundColor: "#F59E0B",
+		backgroundColor: "#0EA5E9",
 	},
 	deleteButton: {
-		backgroundColor: "#EF4444",
+		backgroundColor: "#DC2626",
 	},
 	actionButtonText: {
-		fontSize: 12,
+		fontSize: 13,
 		fontWeight: "600",
 		color: "#FFFFFF",
 	},
