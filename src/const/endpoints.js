@@ -17,7 +17,7 @@ const endpoints = {
 	WITH_LINK_PURCHASE_REQUEST: "/purchase-request/online-request",
 	WITHOUT_LINK_PURCHASE_REQUEST: "/purchase-request/offline-request",
 	WALLET: "/wallet",
-	WITHDRAW_WALLET: "/wallet/withdraw",
+	WITHDRAW_WALLET: "/wallet/withdraw-request",
 	CHECKPAYMENT: "/wallet/check-payment-vnpay",
 	TRANSACTION_HISTORY: "/transactions/current-user",
 	BANK_ACCOUNTS: "/bank-account",

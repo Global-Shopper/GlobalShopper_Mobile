@@ -15,7 +15,6 @@ import { Text } from "../../components/ui/text";
 import {
 	useCreateBankAccountMutation,
 	useGetBankAccountsQuery,
-	useGetBanksQuery,
 	useGetWalletQuery,
 	useWithdrawWalletMutation,
 } from "../../services/gshopApi";
@@ -45,9 +44,9 @@ const WithdrawScreen = ({ navigation }) => {
 	const { data: savedBankAccounts = [], isLoading: isLoadingSavedAccounts } =
 		useGetBankAccountsQuery();
 
-	// Get banks list from API
-	const { data: banksData = [], isLoading: isLoadingBanks } =
-		useGetBanksQuery();
+	// Get banks list from VietQR API instead of backend
+	const [banksData, setBanksData] = useState([]);
+	const [isLoadingBanks, setIsLoadingBanks] = useState(false);
 
 	// Create bank account mutation
 	const [createBankAccount] = useCreateBankAccountMutation();
@@ -56,54 +55,38 @@ const WithdrawScreen = ({ navigation }) => {
 	const currentBalance = wallet?.balance || 2000000;
 
 	// Use real saved accounts from API
-	const savedAccounts =
-		savedBankAccounts?.length > 0
-			? [
-					...savedBankAccounts,
-					{
-						id: "new",
-						bankName: "Nhập mới",
-						accountNumber: "",
-						accountName: "",
-					},
-			  ]
-			: [];
-
-	// Use real banks from API with better error handling
-	const banks = useMemo(() => {
-		if (!banksData) return [];
-
-		// Handle if banksData is array
-		if (Array.isArray(banksData)) {
-			return banksData
-				.map(
-					(bank) =>
-						bank.name || bank.bankName || bank.shortName || bank
-				)
-				.filter(Boolean);
+	const savedAccounts = useMemo(() => {
+		if (savedBankAccounts?.length > 0) {
+			return [
+				...savedBankAccounts.map((account) => ({
+					id: account.id,
+					bankName: account.providerName || account.bankName,
+					accountNumber:
+						account.bankAccountNumber || account.accountNumber,
+					accountName:
+						account.accountHolderName || account.accountName,
+					isDefault: account.default || false,
+				})),
+				{
+					id: "new",
+					bankName: "Nhập mới",
+					accountNumber: "",
+					accountName: "",
+					isDefault: false,
+				},
+			];
 		}
-
-		// Handle if banksData has a data property
-		if (banksData.data && Array.isArray(banksData.data)) {
-			return banksData.data
-				.map(
-					(bank) =>
-						bank.name || bank.bankName || bank.shortName || bank
-				)
-				.filter(Boolean);
-		}
-
-		// Handle if banksData is object with banks property
-		if (banksData.banks && Array.isArray(banksData.banks)) {
-			return banksData.banks
-				.map(
-					(bank) =>
-						bank.name || bank.bankName || bank.shortName || bank
-				)
-				.filter(Boolean);
-		}
-
 		return [];
+	}, [savedBankAccounts]);
+
+	// Use real banks from VietQR API with better error handling
+	const banks = useMemo(() => {
+		if (!banksData || !Array.isArray(banksData)) return [];
+
+		// Map VietQR bank data to simple name array
+		return banksData
+			.map((bank) => bank.shortName || bank.name)
+			.filter(Boolean);
 	}, [banksData]);
 
 	// Fallback banks if API fails or returns empty
@@ -127,6 +110,8 @@ const WithdrawScreen = ({ navigation }) => {
 	console.log("Banks data from API:", banksData);
 	console.log("Mapped banks:", banks);
 	console.log("Final banks to show:", finalBanks);
+	console.log("Saved bank accounts:", savedBankAccounts);
+	console.log("Mapped saved accounts:", savedAccounts);
 
 	// Update form visibility when saved accounts change
 	useEffect(() => {
@@ -137,7 +122,36 @@ const WithdrawScreen = ({ navigation }) => {
 		setShowNewAccountForm(savedBankAccounts?.length === 0);
 	}, [savedBankAccounts?.length, isLoadingSavedAccounts]);
 
-	// Fetch banks from external API
+	// Fetch banks from VietQR API
+	useEffect(() => {
+		const fetchBanks = async () => {
+			setIsLoadingBanks(true);
+			try {
+				const response = await fetch("https://api.vietqr.io/v2/banks");
+				const data = await response.json();
+
+				console.log("VietQR API Response:", data);
+
+				if (data.code === "00" && data.data) {
+					// Sort banks by shortName for better UX
+					const sortedBanks = data.data.sort((a, b) =>
+						a.shortName.localeCompare(b.shortName)
+					);
+					setBanksData(sortedBanks);
+				} else {
+					throw new Error("Failed to fetch banks data");
+				}
+			} catch (error) {
+				console.error("Error fetching banks:", error);
+				// Keep empty array, will use fallback
+				setBanksData([]);
+			} finally {
+				setIsLoadingBanks(false);
+			}
+		};
+
+		fetchBanks();
+	}, []);
 
 	const formatCurrency = (amount) => {
 		return new Intl.NumberFormat("vi-VN", {
@@ -163,14 +177,25 @@ const WithdrawScreen = ({ navigation }) => {
 	};
 
 	const handleAccountSelect = (account) => {
+		console.log("Selected account:", account);
 		setSelectedSavedAccount(account.id);
+
 		if (account.id === "new") {
 			setShowNewAccountForm(true);
+			// Clear form when selecting "new"
+			setSelectedBank("");
+			setAccountNumber("");
+			setAccountName("");
 		} else {
 			setShowNewAccountForm(false);
-			setSelectedBank(account.bankName || account.bank);
-			setAccountNumber(account.accountNumber);
-			setAccountName(account.accountName);
+			// Fill form with selected account data
+			setSelectedBank(account.bankName || account.providerName || "");
+			setAccountNumber(
+				account.accountNumber || account.bankAccountNumber || ""
+			);
+			setAccountName(
+				account.accountName || account.accountHolderName || ""
+			);
 		}
 		setShowAccountDropdown(false);
 	};
@@ -181,6 +206,7 @@ const WithdrawScreen = ({ navigation }) => {
 	};
 
 	const validateWithdraw = () => {
+		console.log("=== VALIDATION DEBUG ===");
 		console.log("Starting validation...");
 		const numericAmount = parseFloat(parseFormattedNumber(withdrawAmount));
 		console.log(
@@ -194,10 +220,11 @@ const WithdrawScreen = ({ navigation }) => {
 			selectedBank,
 			accountNumber,
 			accountName,
+			selectedSavedAccount,
 		});
 
 		if (!withdrawAmount || numericAmount <= 0) {
-			console.log("Amount validation failed");
+			console.log("❌ Amount validation failed");
 			showDialog({
 				title: "Lỗi",
 				content: "Vui lòng nhập số tiền hợp lệ",
@@ -207,7 +234,7 @@ const WithdrawScreen = ({ navigation }) => {
 		}
 
 		if (numericAmount > currentBalance) {
-			console.log("Balance validation failed");
+			console.log("❌ Balance validation failed");
 			showDialog({
 				title: "Lỗi",
 				content: "Số tiền rút không được vượt quá số dư hiện tại",
@@ -217,7 +244,12 @@ const WithdrawScreen = ({ navigation }) => {
 		}
 
 		if (!selectedBank || !accountNumber || !accountName) {
-			console.log("Bank info validation failed");
+			console.log("❌ Bank info validation failed");
+			console.log("Missing fields:", {
+				selectedBank: !selectedBank,
+				accountNumber: !accountNumber,
+				accountName: !accountName,
+			});
 			showDialog({
 				title: "Lỗi",
 				content: "Vui lòng điền đầy đủ thông tin tài khoản",
@@ -226,15 +258,17 @@ const WithdrawScreen = ({ navigation }) => {
 			return false;
 		}
 
-		console.log("All validation passed!");
+		console.log("✅ All validation passed!");
 		return true;
 	};
 
 	const handleSubmitWithdraw = async () => {
+		console.log("=== WITHDRAW DEBUG START ===");
 		console.log("handleSubmitWithdraw called");
 
 		// Validate form
 		if (!validateWithdraw()) {
+			console.log("Validation failed, aborting withdraw");
 			return;
 		}
 
@@ -243,18 +277,30 @@ const WithdrawScreen = ({ navigation }) => {
 				parseFormattedNumber(withdrawAmount)
 			);
 
+			console.log("Parsed amount:", numericAmount);
+
 			// Save bank account if user checked the option
 			if (saveAccount) {
 				try {
+					console.log("Attempting to save bank account...");
 					const bankAccountData = {
 						bankName: selectedBank,
 						accountNumber: accountNumber,
 						accountName: accountName,
+						// Try both field variations that might be expected by API
+						providerName: selectedBank,
+						bankAccountNumber: accountNumber,
+						accountHolderName: accountName,
 					};
+					console.log("Bank account data:", bankAccountData);
 					await createBankAccount(bankAccountData).unwrap();
 					console.log("Bank account saved successfully");
 				} catch (error) {
 					console.error("Failed to save bank account:", error);
+					console.error(
+						"Bank account save error details:",
+						JSON.stringify(error, null, 2)
+					);
 					// Continue with withdrawal even if saving bank account fails
 				}
 			}
@@ -265,33 +311,75 @@ const WithdrawScreen = ({ navigation }) => {
 				accountNumber: accountNumber,
 				accountName: accountName,
 				note: note || "",
+				// Try to include bankAccountId if using saved account
+				...(selectedSavedAccount &&
+					selectedSavedAccount !== "new" && {
+						bankAccountId: selectedSavedAccount,
+					}),
 			};
 
+			console.log("=== WITHDRAW API CALL ===");
 			console.log("Calling withdraw API with:", withdrawData);
+			console.log("API endpoint: /wallet/withdraw-request");
+			console.log("Method: POST");
 
 			const result = await withdrawWallet(withdrawData).unwrap();
 
+			console.log("=== WITHDRAW SUCCESS ===");
 			console.log("Withdraw successful:", result);
+			console.log("Response structure:", {
+				id: result.id,
+				withdrawId: result.withdrawId,
+				transactionId: result.transactionId,
+				requestId: result.requestId,
+				allKeys: Object.keys(result || {})
+			});
 
-			// Navigate to success screen
+			// Navigate to success screen with proper ID from backend
+			const backendWithdrawId = result.id || result.withdrawId || result.transactionId || result.requestId;
+			console.log("Using withdraw ID:", backendWithdrawId);
+
 			navigation.navigate("SuccessWithdrawScreen", {
-				withdrawId: result.id || "WD" + Date.now(),
+				withdrawId: backendWithdrawId || "WD" + Date.now(), // Fallback if no ID from backend
 				amount: numericAmount,
 				bankName: selectedBank,
 				accountNumber: accountNumber,
 				accountName: accountName,
 			});
 		} catch (error) {
+			console.log("=== WITHDRAW ERROR ===");
 			console.error("Withdraw error:", error);
+			console.error("Error details:", JSON.stringify(error, null, 2));
+
+			let errorMessage = "Có lỗi xảy ra khi rút tiền. Vui lòng thử lại.";
+
+			if (error.status === 400) {
+				errorMessage = "Thông tin rút tiền không hợp lệ";
+				console.error("400 Error - Invalid withdraw data:", {
+					amount: parseFloat(parseFormattedNumber(withdrawAmount)),
+					bankName: selectedBank,
+					accountNumber: accountNumber,
+					accountName: accountName,
+					note: note,
+				});
+			} else if (error.status === 401) {
+				errorMessage =
+					"Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.";
+			} else if (error.status === 403) {
+				errorMessage = "Bạn không có quyền thực hiện giao dịch này.";
+			} else if (error.status === 500) {
+				errorMessage = "Lỗi hệ thống. Vui lòng thử lại sau.";
+			} else if (error.message) {
+				errorMessage = error.message;
+			}
 
 			showDialog({
 				title: "Lỗi",
-				content:
-					error.message ||
-					"Có lỗi xảy ra khi rút tiền. Vui lòng thử lại.",
+				content: errorMessage,
 				primaryButton: { text: "OK" },
 			});
 		}
+		console.log("=== WITHDRAW DEBUG END ===");
 	};
 
 	return (
@@ -396,17 +484,24 @@ const WithdrawScreen = ({ navigation }) => {
 							>
 								<Text style={styles.dropdownText}>
 									{selectedSavedAccount
-										? savedAccounts.find(
-												(acc) =>
-													acc.id ===
-													selectedSavedAccount
-										  )?.bankName +
-										  " - " +
-										  savedAccounts.find(
-												(acc) =>
-													acc.id ===
-													selectedSavedAccount
-										  )?.accountNumber
+										? (() => {
+												const account =
+													savedAccounts.find(
+														(acc) =>
+															acc.id ===
+															selectedSavedAccount
+													);
+												if (
+													account &&
+													account.id === "new"
+												) {
+													return "Nhập mới";
+												}
+												if (account) {
+													return `${account.bankName} - ${account.accountNumber}`;
+												}
+												return "Chọn tài khoản đã lưu";
+										  })()
 										: "Chọn tài khoản đã lưu"}
 								</Text>
 								<Ionicons
@@ -425,23 +520,55 @@ const WithdrawScreen = ({ navigation }) => {
 									{savedAccounts.map((account) => (
 										<TouchableOpacity
 											key={account.id}
-											style={styles.dropdownItem}
+											style={[
+												styles.dropdownItem,
+												account.isDefault &&
+													styles.defaultAccountItem,
+											]}
 											onPress={() =>
 												handleAccountSelect(account)
 											}
 										>
-											<Text
-												style={styles.dropdownItemText}
+											<View
+												style={
+													styles.accountItemContainer
+												}
 											>
-												{account.id === "new"
-													? "Nhập mới"
-													: `${
-															account.bankName ||
-															account.bank
-													  } - ${
-															account.accountNumber
-													  }`}
-											</Text>
+												<Text
+													style={
+														styles.dropdownItemText
+													}
+												>
+													{account.id === "new"
+														? "➕ Nhập mới"
+														: `${account.bankName} - ${account.accountNumber}`}
+												</Text>
+												{account.isDefault &&
+													account.id !== "new" && (
+														<View
+															style={
+																styles.defaultBadge
+															}
+														>
+															<Text
+																style={
+																	styles.defaultBadgeText
+																}
+															>
+																Mặc định
+															</Text>
+														</View>
+													)}
+											</View>
+											{account.id !== "new" && (
+												<Text
+													style={
+														styles.accountHolderText
+													}
+												>
+													{account.accountName}
+												</Text>
+											)}
 										</TouchableOpacity>
 									))}
 								</View>
@@ -760,9 +887,35 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: "#f1f5f9",
 	},
+	defaultAccountItem: {
+		backgroundColor: "#f0f9ff",
+	},
+	accountItemContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginBottom: 4,
+	},
 	dropdownItemText: {
 		fontSize: 16,
 		color: "#333",
+		flex: 1,
+	},
+	accountHolderText: {
+		fontSize: 14,
+		color: "#666",
+		fontStyle: "italic",
+	},
+	defaultBadge: {
+		backgroundColor: "#10b981",
+		borderRadius: 8,
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+	},
+	defaultBadgeText: {
+		fontSize: 10,
+		color: "#ffffff",
+		fontWeight: "600",
 	},
 	newAccountForm: {
 		marginTop: 16,
