@@ -17,7 +17,11 @@ const endpoints = {
 	WITH_LINK_PURCHASE_REQUEST: "/purchase-request/online-request",
 	WITHOUT_LINK_PURCHASE_REQUEST: "/purchase-request/offline-request",
 	WALLET: "/wallet",
+	WITHDRAW_WALLET: "/wallet/withdraw",
 	CHECKPAYMENT: "/wallet/check-payment-vnpay",
 	TRANSACTION_HISTORY: "/transactions/current-user",
+	BANK_ACCOUNTS: "/bank-account",
+	BANK_ACCOUNTS_CURRENT: "/bank-account/current",
+	BANKS: "/banks",
 };
 export default endpoints;

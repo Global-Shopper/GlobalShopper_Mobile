@@ -77,6 +77,14 @@ export default function AccountScreen({ navigation }) {
 		},
 		{
 			id: 3,
+			title: "Thông tin rút tiền",
+			subtitle: "Quản lý tài khoản ngân hàng",
+			icon: "card-outline",
+			gradientColors: ["#66BB6A", "#4CAF50"],
+			action: () => navigation.navigate("WithdrawList"),
+		},
+		{
+			id: 4,
 			title: "Ngôn ngữ / Language",
 			subtitle: "Tiếng Việt",
 			icon: "language-outline",
