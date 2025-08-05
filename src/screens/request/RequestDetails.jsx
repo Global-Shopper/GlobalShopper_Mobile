@@ -136,6 +136,44 @@ export default function RequestDetails({ navigation, route }) {
 	// Use the correct data for rendering
 	const displayData = requestDetails;
 
+	// Debug API structure for quoted status
+	if (displayData?.status?.toLowerCase() === "quoted") {
+		console.log("=== QUOTED STATUS DEBUG ===");
+		console.log(
+			"Full requestDetails:",
+			JSON.stringify(requestDetails, null, 2)
+		);
+		console.log("subRequests:", requestDetails?.subRequests);
+		console.log(
+			"quotationForPurchase:",
+			requestDetails?.subRequests?.[0]?.quotationForPurchase
+		);
+
+		// Debug subRequests structure in detail
+		if (requestDetails?.subRequests?.length > 0) {
+			console.log("=== SUBREQUESTS DETAIL ===");
+			requestDetails.subRequests.forEach((subReq, index) => {
+				console.log(`subRequests[${index}]:`, subReq);
+				console.log(
+					`subRequests[${index}].requestItems:`,
+					subReq.requestItems
+				);
+				console.log(
+					`subRequests[${index}].quotationForPurchase:`,
+					subReq.quotationForPurchase
+				);
+			});
+		}
+
+		// Debug original requestItems vs subRequests requestItems
+		console.log("=== PRODUCT COMPARISON ===");
+		console.log("Original requestItems:", requestDetails?.requestItems);
+		console.log(
+			"SubRequests[0] requestItems:",
+			requestDetails?.subRequests?.[0]?.requestItems
+		);
+	}
+
 	const getStatusColor = (status) => {
 		switch (status?.toLowerCase()) {
 			case "sent":
@@ -422,6 +460,8 @@ export default function RequestDetails({ navigation, route }) {
 								displayData?.items?.length ||
 								displayData?.products?.length ||
 								displayData?.productList?.length ||
+								displayData?.subRequests?.[0]?.requestItems
+									?.length ||
 								0}{" "}
 							sản phẩm)
 						</Text>
@@ -431,157 +471,195 @@ export default function RequestDetails({ navigation, route }) {
 					{displayData?.requestItems?.length > 0 ||
 					displayData?.items?.length > 0 ||
 					displayData?.products?.length > 0 ||
-					displayData?.productList?.length > 0 ? (
-						(
-							displayData?.requestItems ||
-							displayData?.items ||
-							displayData?.products ||
-							displayData?.productList ||
-							[]
-						).map((product, index) => {
-							// Determine product mode based on request type
-							const productMode =
-								displayData?.requestType?.toLowerCase() ===
-									"online" ||
-								displayData?.type?.toLowerCase() === "online"
-									? "withLink"
-									: "manual";
+					displayData?.productList?.length > 0 ||
+					displayData?.subRequests?.[0]?.requestItems?.length > 0 ? (
+						(() => {
+							// Debug which product source we're using
+							const productSource =
+								displayData?.requestItems?.length > 0
+									? displayData.requestItems
+									: displayData?.items?.length > 0
+									? displayData.items
+									: displayData?.products?.length > 0
+									? displayData.products
+									: displayData?.productList?.length > 0
+									? displayData.productList
+									: displayData?.subRequests?.[0]
+											?.requestItems?.length > 0
+									? displayData.subRequests[0].requestItems
+									: [];
 
-							// Parse variants array to extract color, size, and other info
-							const parseVariants = (variants) => {
-								if (!variants || !Array.isArray(variants))
-									return {};
+							console.log("=== PRODUCT SOURCE DEBUG ===");
+							console.log(
+								"Product source selected:",
+								productSource
+							);
+							console.log(
+								"Product source length:",
+								productSource.length
+							);
+							console.log(
+								"Source type:",
+								displayData?.requestItems?.length > 0
+									? "requestItems"
+									: displayData?.items?.length > 0
+									? "items"
+									: displayData?.products?.length > 0
+									? "products"
+									: displayData?.productList?.length > 0
+									? "productList"
+									: displayData?.subRequests?.[0]
+											?.requestItems?.length > 0
+									? "subRequests[0].requestItems"
+									: "none"
+							);
 
-								const result = {};
-								variants.forEach((variant) => {
-									if (typeof variant === "string") {
-										if (variant.includes("Màu sắc:")) {
-											result.color = variant
-												.replace("Màu sắc:", "")
-												.trim();
-										} else if (
-											variant.includes("Kích cỡ:")
-										) {
-											result.size = variant
-												.replace("Kích cỡ:", "")
-												.trim();
-										} else if (
-											variant.includes("Chất liệu:")
-										) {
-											result.material = variant
-												.replace("Chất liệu:", "")
-												.trim();
-										} else if (
-											variant.includes("Thương hiệu:")
-										) {
-											result.brand = variant
-												.replace("Thương hiệu:", "")
-												.trim();
+							return productSource.map((product, index) => {
+								// Determine product mode based on request type
+								const productMode =
+									displayData?.requestType?.toLowerCase() ===
+										"online" ||
+									displayData?.type?.toLowerCase() ===
+										"online"
+										? "withLink"
+										: "manual";
+
+								// Parse variants array to extract color, size, and other info
+								const parseVariants = (variants) => {
+									if (!variants || !Array.isArray(variants))
+										return {};
+
+									const result = {};
+									variants.forEach((variant) => {
+										if (typeof variant === "string") {
+											if (variant.includes("Màu sắc:")) {
+												result.color = variant
+													.replace("Màu sắc:", "")
+													.trim();
+											} else if (
+												variant.includes("Kích cỡ:")
+											) {
+												result.size = variant
+													.replace("Kích cỡ:", "")
+													.trim();
+											} else if (
+												variant.includes("Chất liệu:")
+											) {
+												result.material = variant
+													.replace("Chất liệu:", "")
+													.trim();
+											} else if (
+												variant.includes("Thương hiệu:")
+											) {
+												result.brand = variant
+													.replace("Thương hiệu:", "")
+													.trim();
+											}
 										}
-									}
-								});
-								return result;
-							};
+									});
+									return result;
+								};
 
-							const parsedVariants = parseVariants(
-								product.variants
-							);
+								const parsedVariants = parseVariants(
+									product.variants
+								);
 
-							return (
-								<ProductCard
-									key={product.id || index}
-									id={product.id || index.toString()}
-									name={
-										product.productName ||
-										product.name ||
-										"Sản phẩm không tên"
-									}
-									description={
-										product.description ||
-										product.productDescription
-									}
-									images={
-										product.images ||
-										product.productImages ||
-										[]
-									}
-									price={
-										productMode === "manual"
-											? ""
-											: product.price ||
-											  product.productPrice ||
-											  ""
-									}
-									convertedPrice={
-										productMode === "manual"
-											? ""
-											: product.convertedPrice
-									}
-									exchangeRate={
-										productMode === "manual"
-											? undefined
-											: product.exchangeRate
-									}
-									category={
-										product.category ||
-										product.productCategory ||
-										parsedVariants.category
-									}
-									brand={
-										product.brand ||
-										product.productBrand ||
-										parsedVariants.brand
-									}
-									material={
-										product.material ||
-										product.productMaterial ||
-										parsedVariants.material
-									}
-									size={
-										product.size ||
-										product.productSize ||
-										parsedVariants.size
-									}
-									color={
-										product.color ||
-										product.productColor ||
-										parsedVariants.color
-									}
-									platform={
-										product.platform ||
-										product.ecommercePlatform
-									}
-									productLink={
-										product.productURL ||
-										product.productLink ||
-										product.url
-									}
-									quantity={product.quantity || 1}
-									mode={productMode}
-									sellerInfo={
-										productMode === "manual"
-											? {
-													name:
-														product.sellerName ||
-														"",
-													phone:
-														product.sellerPhone ||
-														"",
-													email:
-														product.sellerEmail ||
-														"",
-													address:
-														product.sellerAddress ||
-														"",
-													storeLink:
-														product.sellerStoreLink ||
-														"",
-											  }
-											: undefined
-									}
-								/>
-							);
-						})
+								return (
+									<ProductCard
+										key={product.id || index}
+										id={product.id || index.toString()}
+										name={
+											product.productName ||
+											product.name ||
+											"Sản phẩm không tên"
+										}
+										description={
+											product.description ||
+											product.productDescription
+										}
+										images={
+											product.images ||
+											product.productImages ||
+											[]
+										}
+										price={
+											productMode === "manual"
+												? ""
+												: product.price ||
+												  product.productPrice ||
+												  ""
+										}
+										convertedPrice={
+											productMode === "manual"
+												? ""
+												: product.convertedPrice
+										}
+										exchangeRate={
+											productMode === "manual"
+												? undefined
+												: product.exchangeRate
+										}
+										category={
+											product.category ||
+											product.productCategory ||
+											parsedVariants.category
+										}
+										brand={
+											product.brand ||
+											product.productBrand ||
+											parsedVariants.brand
+										}
+										material={
+											product.material ||
+											product.productMaterial ||
+											parsedVariants.material
+										}
+										size={
+											product.size ||
+											product.productSize ||
+											parsedVariants.size
+										}
+										color={
+											product.color ||
+											product.productColor ||
+											parsedVariants.color
+										}
+										platform={
+											product.platform ||
+											product.ecommercePlatform
+										}
+										productLink={
+											product.productURL ||
+											product.productLink ||
+											product.url
+										}
+										quantity={product.quantity || 1}
+										mode={productMode}
+										sellerInfo={
+											productMode === "manual"
+												? {
+														name:
+															product.sellerName ||
+															"",
+														phone:
+															product.sellerPhone ||
+															"",
+														email:
+															product.sellerEmail ||
+															"",
+														address:
+															product.sellerAddress ||
+															"",
+														storeLink:
+															product.sellerStoreLink ||
+															"",
+												  }
+												: undefined
+										}
+									/>
+								);
+							});
+						})()
 					) : (
 						<View style={styles.emptyProductContainer}>
 							<Text style={styles.emptyProductText}>
@@ -596,26 +674,105 @@ export default function RequestDetails({ navigation, route }) {
 
 				{/* Quotation Card - Show only for quoted or confirmed requests */}
 				{(displayData?.status?.toLowerCase() === "quoted" ||
-					displayData?.status?.toLowerCase() === "confirmed") && (
-					<View style={styles.section}>
-						<QuotationCard
-							productPrice={1200000}
-							serviceFee={60000}
-							serviceFeePercent={5}
-							internationalShipping={200000}
-							importTax={120000}
-							domesticShipping={35000}
-							totalAmount={1615000}
-							additionalFees={undefined}
-							updatedTotalAmount={undefined}
-							isExpanded={true}
-						/>
-					</View>
-				)}
+					displayData?.status?.toLowerCase() === "confirmed") &&
+					(() => {
+						// Get quotation data from the first product's quotationDetail
+						const firstProduct =
+							displayData?.subRequests?.[0]?.requestItems?.[0];
+						const quotationDetail =
+							firstProduct?.quotationDetail || {};
+
+						console.log("=== QUOTATION DEBUG ===");
+						console.log("First product:", firstProduct);
+						console.log("QuotationDetail:", quotationDetail);
+						console.log(
+							"TaxRates from quotationDetail:",
+							quotationDetail?.taxRates
+						);
+
+						// Extract values from quotationDetail
+						const basePrice = quotationDetail?.basePrice || 0;
+						const serviceFee = quotationDetail?.serviceFee || 0;
+						const totalTaxAmount =
+							quotationDetail?.totalTaxAmount || 0;
+						const totalVNDPrice =
+							quotationDetail?.totalVNDPrice || 0;
+						const exchangeRate = quotationDetail?.exchangeRate || 1;
+						const currency = quotationDetail?.currency || "USD";
+						const taxRates = quotationDetail?.taxRates || [];
+
+						// Calculate VND values
+						const productPriceVND = Math.round(
+							basePrice * exchangeRate
+						);
+						const serviceFeeVND = Math.round(
+							((serviceFee * exchangeRate) / 100) * basePrice
+						);
+						const importTaxVND = Math.round(
+							totalTaxAmount * exchangeRate
+						);
+
+						console.log("Calculated values:", {
+							basePrice,
+							serviceFee,
+							totalTaxAmount,
+							totalVNDPrice,
+							exchangeRate,
+							currency,
+							taxRates,
+							productPriceVND,
+							serviceFeeVND,
+							importTaxVND,
+						});
+
+						// Prepare tax details if available in quotationDetail
+						const taxDetails = quotationDetail?.taxBreakdown
+							? {
+									importDuty:
+										quotationDetail.taxBreakdown
+											.importDuty || 0,
+									vat: quotationDetail.taxBreakdown.vat || 0,
+									specialConsumptionTax:
+										quotationDetail.taxBreakdown
+											.specialConsumptionTax || 0,
+									environmentTax:
+										quotationDetail.taxBreakdown
+											.environmentTax || 0,
+									totalTaxAmount: totalTaxAmount,
+							  }
+							: undefined;
+
+						return (
+							<View style={styles.section}>
+								<QuotationCard
+									// Original price data
+									originalProductPrice={basePrice}
+									originalCurrency={currency}
+									exchangeRate={exchangeRate}
+									// VND converted prices
+									productPrice={productPriceVND}
+									serviceFee={serviceFeeVND}
+									serviceFeePercent={serviceFee}
+									internationalShipping={0} // Not specified in quotationDetail
+									importTax={importTaxVND}
+									domesticShipping={0} // Not specified in quotationDetail
+									// Tax details (legacy format)
+									taxDetails={taxDetails}
+									// Tax rates from API
+									taxRates={taxRates}
+									// Total amount
+									totalAmount={Math.round(totalVNDPrice)}
+									additionalFees={undefined}
+									updatedTotalAmount={undefined}
+									isExpanded={true}
+								/>
+							</View>
+						);
+					})()}
 
 				{/* Payment Agreement Checkbox - Show only for quoted requests */}
 				{displayData?.status?.toLowerCase() === "quoted" && (
-					<View style={styles.section}>
+					<View style={styles.checkboxSection}>
 						<View style={styles.checkboxContainer}>
 							<TouchableOpacity
 								style={[
@@ -904,12 +1061,16 @@ const styles = StyleSheet.create({
 		color: "#1976D2",
 		fontWeight: "500",
 	},
+	checkboxSection: {
+		marginBottom: 5,
+		marginTop: -5,
+	},
 	checkboxContainer: {
 		flexDirection: "row",
 		alignItems: "flex-start",
 		gap: 12,
 		paddingHorizontal: 18,
-		paddingVertical: 16,
+		paddingVertical: 12,
 	},
 	checkbox: {
 		width: 20,
