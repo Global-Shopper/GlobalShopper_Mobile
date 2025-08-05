@@ -10,14 +10,6 @@ interface PaymentSmCardProps {
 	balance?: string;
 }
 
-interface PaymentInfo {
-	name: string;
-	type: "icon" | "image";
-	icon?: string;
-	iconColor?: string;
-	logo?: any;
-}
-
 const PaymentSmCard: React.FC<PaymentSmCardProps> = ({
 	paymentMethod,
 	isSelected = false,
@@ -29,15 +21,8 @@ const PaymentSmCard: React.FC<PaymentSmCardProps> = ({
 			case "wallet":
 				return {
 					name: "Ví GShop",
-					type: "icon",
-					icon: "wallet-outline",
-					iconColor: "#4CAF50",
-				};
-			case "payos":
-				return {
-					name: "PayOS",
 					type: "image",
-					logo: require("../assets/images/payment/payos-logo.png"),
+					logo: require("../assets/images/logo/logo-gshop-removebg.png"),
 				};
 			case "vnpay":
 				return {
