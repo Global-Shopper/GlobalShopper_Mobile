@@ -17,14 +17,30 @@ import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
-import { useCreateWithoutLinkPurchaseRequestMutation } from "../../services/gshopApi";
+import {
+	useCreateOnlinePurchaseRequestMutation,
+	useCreateWithoutLinkPurchaseRequestMutation,
+} from "../../services/gshopApi";
 
 export default function ConfirmRequest({ navigation, route }) {
-	const { products = [], storeData = null } = route.params || {};
+	const {
+		products = [],
+		storeData = null,
+		mode = "manual",
+	} = route.params || {};
 
-	// API hooks
-	const [createWithoutLinkRequest, { isLoading: isCreatingRequest }] =
-		useCreateWithoutLinkPurchaseRequestMutation();
+	// API hooks - choose based on mode
+	const [
+		createWithoutLinkRequest,
+		{ isLoading: isCreatingWithoutLinkRequest },
+	] = useCreateWithoutLinkPurchaseRequestMutation();
+	const [
+		createOnlinePurchaseRequest,
+		{ isLoading: isCreatingOnlineRequest },
+	] = useCreateOnlinePurchaseRequestMutation();
+
+	const isCreatingRequest =
+		isCreatingWithoutLinkRequest || isCreatingOnlineRequest;
 	const { showDialog, Dialog } = useDialog();
 
 	const [note, setNote] = useState("");
@@ -75,25 +91,6 @@ export default function ConfirmRequest({ navigation, route }) {
 			return;
 		}
 
-		// Kiểm tra thông tin cửa hàng
-		if (!storeData || !storeData.storeName?.trim()) {
-			showDialog({
-				type: "error",
-				title: "Thiếu thông tin",
-				message:
-					"Thông tin cửa hàng không đầy đủ. Vui lòng quay lại kiểm tra tên cửa hàng.",
-			});
-			return;
-		}
-
-		// Cho phép tạo request với chỉ có tên cửa hàng (bỏ validation quá khắt khe)
-		console.log("=== STORE DATA VALIDATION ===");
-		console.log("storeData.storeName:", storeData.storeName);
-		console.log("storeData.storeAddress:", storeData.storeAddress);
-		console.log("storeData.phoneNumber:", storeData.phoneNumber);
-		console.log("storeData.email:", storeData.email);
-		console.log("storeData.shopLink:", storeData.shopLink);
-
 		// Kiểm tra sản phẩm
 		if (!products || products.length === 0) {
 			showDialog({
@@ -117,145 +114,180 @@ export default function ConfirmRequest({ navigation, route }) {
 		}
 
 		try {
-			console.log("=== DEBUG STORE DATA ===");
-			console.log("storeData:", storeData);
-			console.log("storeData type:", typeof storeData);
-			console.log(
-				"storeData keys:",
-				storeData ? Object.keys(storeData) : "null"
-			);
-			console.log("storeName:", storeData?.storeName);
-			console.log("storeAddress:", storeData?.storeAddress);
-			console.log("phoneNumber:", storeData?.phoneNumber);
-			console.log("email:", storeData?.email);
-			console.log("shopLink:", storeData?.shopLink);
+			console.log("=== CREATE REQUEST DEBUG ===");
+			console.log("Mode:", mode);
+			console.log("Products:", products);
 
-			// Chuẩn bị contactInfo từ sellerInfo của product đầu tiên (vì tất cả products cùng 1 seller trong manual mode)
-			const contactInfo = [];
-			const firstProduct = products[0];
+			let response;
 
-			console.log("=== CHECKING SELLER INFO ===");
-			console.log("First product:", firstProduct);
-			console.log("First product sellerInfo:", firstProduct?.sellerInfo);
-
-			if (firstProduct?.sellerInfo) {
-				const seller = firstProduct.sellerInfo;
-
-				// Tên cửa hàng (bắt buộc)
-				if (seller.name?.trim()) {
-					contactInfo.push(`Tên cửa hàng: ${seller.name.trim()}`);
-				}
-
-				// Các thông tin tùy chọn
-				if (seller.address?.trim()) {
-					contactInfo.push(`Địa chỉ: ${seller.address.trim()}`);
-				}
-				if (seller.phone?.trim()) {
-					contactInfo.push(`Số điện thoại: ${seller.phone.trim()}`);
-				}
-				if (seller.email?.trim()) {
-					contactInfo.push(`Email: ${seller.email.trim()}`);
-				}
-				if (seller.storeLink?.trim()) {
-					contactInfo.push(`Link shop: ${seller.storeLink.trim()}`);
-				}
-			}
-
-			// Fallback: Nếu không có sellerInfo, sử dụng storeData
-			if (contactInfo.length === 0) {
-				console.log("No sellerInfo found, using storeData as fallback");
-
-				if (storeData?.storeName?.trim()) {
-					contactInfo.push(
-						`Tên cửa hàng: ${storeData.storeName.trim()}`
-					);
-				}
-				if (storeData?.storeAddress?.trim()) {
-					contactInfo.push(
-						`Địa chỉ: ${storeData.storeAddress.trim()}`
-					);
-				}
-				if (storeData?.phoneNumber?.trim()) {
-					contactInfo.push(
-						`Số điện thoại: ${storeData.phoneNumber.trim()}`
-					);
-				}
-				if (storeData?.email?.trim()) {
-					contactInfo.push(`Email: ${storeData.email.trim()}`);
-				}
-				if (storeData?.shopLink?.trim()) {
-					contactInfo.push(`Link shop: ${storeData.shopLink.trim()}`);
-				}
-			}
-
-			// Test với contactInfo cứng để đảm bảo backend nhận được (backup)
-			const hardcodedContactInfo = [
-				"Test Store Name",
-				"Test Store Address",
-				"Test Phone: 0123456789",
-			];
-			console.log("=== CONTACT INFO PREPARED ===");
-			console.log("contactInfo array:", contactInfo);
-			console.log("contactInfo length:", contactInfo.length);
-
-			// Chuẩn bị requestItems từ products
-			const requestItems = products.map((product) => {
-				// Tạo variants array chứa các thông tin không có field riêng
-				const variants = [];
-				if (product.color?.trim()) {
-					variants.push(`Màu sắc: ${product.color.trim()}`);
-				}
-				if (product.size?.trim()) {
-					variants.push(`Kích cỡ: ${product.size.trim()}`);
-				}
-				if (product.material?.trim()) {
-					variants.push(`Chất liệu: ${product.material.trim()}`);
-				}
-				if (product.brand?.trim()) {
-					variants.push(`Thương hiệu: ${product.brand.trim()}`);
-				}
-				if (product.category?.trim()) {
-					variants.push(`Danh mục: ${product.category.trim()}`);
-				}
-				if (product.origin?.trim()) {
-					variants.push(`Xuất sứ: ${product.origin.trim()}`);
-				}
-
-				return {
-					productName: product.name?.trim() || "Sản phẩm",
-					productURL: product.productLink?.trim() || "",
-					variants: variants,
-					images: product.images || [],
-					quantity: parseInt(product.quantity) || 1,
-					description: product.description?.trim() || "",
+			if (mode === "fromLink") {
+				// Online Purchase Request for products from links
+				const onlineRequestData = {
+					shippingAddressId: deliveryAddress.id,
+					requestItems: products.map((product) => ({
+						productName: product.name || "Sản phẩm",
+						productURL: product.productLink || "",
+						quantity: parseInt(product.quantity) || 1,
+						price: product.convertedPrice || 0,
+						currency: "VND",
+						variants: [
+							...(product.size
+								? [`Kích cỡ: ${product.size}`]
+								: []),
+							...(product.color
+								? [`Màu sắc: ${product.color}`]
+								: []),
+							...(product.material
+								? [`Chất liệu: ${product.material}`]
+								: []),
+							...(product.brand
+								? [`Thương hiệu: ${product.brand}`]
+								: []),
+							...(product.category
+								? [`Danh mục: ${product.category}`]
+								: []),
+						],
+						images: product.images || [],
+						description: product.description || "",
+						platform: product.platform || "Unknown",
+					})),
 				};
-			});
 
-			// Tạo request data theo đúng cấu trúc API
-			const requestData = {
-				shippingAddressId: deliveryAddress.id,
-				contactInfo:
-					contactInfo.length > 0 ? contactInfo : hardcodedContactInfo, // Use hardcoded if contactInfo is empty
-				requestItems: requestItems,
-			};
+				// Thêm note nếu có
+				if (note.trim()) {
+					onlineRequestData.note = note.trim();
+				}
 
-			// Thêm note nếu có
-			if (note.trim()) {
-				requestData.note = note.trim();
+				console.log("=== CREATE ONLINE REQUEST ===");
+				console.log(
+					"Request data:",
+					JSON.stringify(onlineRequestData, null, 2)
+				);
+
+				response = await createOnlinePurchaseRequest(
+					onlineRequestData
+				).unwrap();
+			} else {
+				// Manual mode - without link request
+				// Kiểm tra thông tin cửa hàng cho manual mode
+				if (!storeData || !storeData.storeName?.trim()) {
+					showDialog({
+						type: "error",
+						title: "Thiếu thông tin",
+						message:
+							"Thông tin cửa hàng không đầy đủ. Vui lòng quay lại kiểm tra tên cửa hàng.",
+					});
+					return;
+				}
+
+				// Chuẩn bị contactInfo từ sellerInfo của product đầu tiên (vì tất cả products cùng 1 seller trong manual mode)
+				const contactInfo = [];
+				const firstProduct = products[0];
+
+				if (firstProduct?.sellerInfo) {
+					const seller = firstProduct.sellerInfo;
+
+					// Tên cửa hàng (bắt buộc)
+					if (seller.name?.trim()) {
+						contactInfo.push(`Tên cửa hàng: ${seller.name.trim()}`);
+					}
+
+					// Các thông tin tùy chọn
+					if (seller.address?.trim()) {
+						contactInfo.push(`Địa chỉ: ${seller.address.trim()}`);
+					}
+					if (seller.phone?.trim()) {
+						contactInfo.push(
+							`Số điện thoại: ${seller.phone.trim()}`
+						);
+					}
+					if (seller.email?.trim()) {
+						contactInfo.push(`Email: ${seller.email.trim()}`);
+					}
+					if (seller.storeLink?.trim()) {
+						contactInfo.push(
+							`Link shop: ${seller.storeLink.trim()}`
+						);
+					}
+				}
+
+				// Fallback: Nếu không có sellerInfo, sử dụng storeData
+				if (contactInfo.length === 0) {
+					if (storeData?.storeName?.trim()) {
+						contactInfo.push(
+							`Tên cửa hàng: ${storeData.storeName.trim()}`
+						);
+					}
+					if (storeData?.storeAddress?.trim()) {
+						contactInfo.push(
+							`Địa chỉ: ${storeData.storeAddress.trim()}`
+						);
+					}
+					if (storeData?.phoneNumber?.trim()) {
+						contactInfo.push(
+							`Số điện thoại: ${storeData.phoneNumber.trim()}`
+						);
+					}
+					if (storeData?.email?.trim()) {
+						contactInfo.push(`Email: ${storeData.email.trim()}`);
+					}
+					if (storeData?.shopLink?.trim()) {
+						contactInfo.push(
+							`Link shop: ${storeData.shopLink.trim()}`
+						);
+					}
+				}
+
+				// Chuẩn bị requestItems từ products
+				const requestItems = products.map((product) => {
+					// Tạo variants array chứa các thông tin không có field riêng
+					const variants = [];
+					if (product.color?.trim()) {
+						variants.push(`Màu sắc: ${product.color.trim()}`);
+					}
+					if (product.size?.trim()) {
+						variants.push(`Kích cỡ: ${product.size.trim()}`);
+					}
+					if (product.material?.trim()) {
+						variants.push(`Chất liệu: ${product.material.trim()}`);
+					}
+					if (product.brand?.trim()) {
+						variants.push(`Thương hiệu: ${product.brand.trim()}`);
+					}
+					if (product.category?.trim()) {
+						variants.push(`Danh mục: ${product.category.trim()}`);
+					}
+
+					return {
+						productName: product.name?.trim() || "Sản phẩm",
+						productURL: product.productLink?.trim() || "",
+						variants: variants,
+						images: product.images || [],
+						quantity: parseInt(product.quantity) || 1,
+						description: product.description?.trim() || "",
+					};
+				});
+
+				// Tạo request data theo đúng cấu trúc API
+				const requestData = {
+					shippingAddressId: deliveryAddress.id,
+					contactInfo: contactInfo,
+					requestItems: requestItems,
+				};
+
+				// Thêm note nếu có
+				if (note.trim()) {
+					requestData.note = note.trim();
+				}
+
+				console.log("=== CREATE WITHOUT LINK REQUEST ===");
+				console.log(
+					"Request data:",
+					JSON.stringify(requestData, null, 2)
+				);
+
+				response = await createWithoutLinkRequest(requestData).unwrap();
 			}
-
-			console.log("=== CREATE WITHOUT LINK REQUEST ===");
-			console.log("Original contactInfo:", contactInfo);
-			console.log("Hardcoded contactInfo:", hardcodedContactInfo);
-			console.log("Final contactInfo used:", requestData.contactInfo);
-			console.log("Request items:", requestItems);
-			console.log("Full request data:");
-			console.log(JSON.stringify(requestData, null, 2));
-
-			// Gọi API
-			const response = await createWithoutLinkRequest(
-				requestData
-			).unwrap();
 
 			console.log("Create request response:", response);
 
@@ -275,8 +307,6 @@ export default function ConfirmRequest({ navigation, route }) {
 			console.error("Error status:", error?.status);
 			console.error("Error data:", error?.data);
 			console.error("Error message:", error?.message);
-			console.error("Error response:", error?.response);
-			console.error("Error config:", error?.config);
 
 			// More detailed error message handling
 			let errorMessage =

@@ -10,8 +10,8 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { Text } from "./ui/text";
 import { useDialog } from "./dialogHelpers";
+import { Text } from "./ui/text";
 
 interface ProductFormProps {
 	initialData?: any;
@@ -34,7 +34,6 @@ interface ProductData {
 	size: string;
 	color: string;
 	quantity: number | string; // Allow string for temporary editing
-	origin: string; // Added origin field
 	platform: string;
 	productLink: string;
 	sellerInfo?: {
@@ -82,7 +81,6 @@ function getInitialFormData(
 		size: initialData?.size || "",
 		color: initialData?.color || "",
 		quantity: initialData?.quantity || "", // Default empty, let user input
-		origin: initialData?.origin || "", // Added origin field
 		platform: initialData?.platform || "",
 		productLink: initialData?.productLink || "",
 	};
@@ -104,6 +102,40 @@ function getInitialFormData(
 	}
 
 	return baseData;
+}
+
+// Helper function to truncate URL
+function truncateUrl(url: string, maxLength: number = 50): string {
+	if (!url) return "";
+	if (url.length <= maxLength) return url;
+	return url.substring(0, maxLength) + "...";
+}
+
+// Helper function to get platform logo
+function getPlatformLogo(platform: string) {
+	const platformLower = platform.toLowerCase();
+	if (platformLower.includes("amazon")) {
+		return require("../assets/images/ecommerce/amazon-logo.png");
+	}
+	if (platformLower.includes("aliexpress")) {
+		return require("../assets/images/ecommerce/aliexpress-logo.png");
+	}
+	if (platformLower.includes("ebay")) {
+		return require("../assets/images/ecommerce/ebay-logo.png");
+	}
+	if (platformLower.includes("asos")) {
+		return require("../assets/images/ecommerce/asos-logo.png");
+	}
+	if (platformLower.includes("dhgate")) {
+		return require("../assets/images/ecommerce/dhgate-logo.png");
+	}
+	if (platformLower.includes("gmarket")) {
+		return require("../assets/images/ecommerce/gmarket-logo.png");
+	}
+	if (platformLower.includes("shein")) {
+		return require("../assets/images/ecommerce/shein-logo.png");
+	}
+	return null;
 }
 
 export default function ProductForm({
@@ -224,7 +256,7 @@ export default function ProductForm({
 		if (permissionResult.granted === false) {
 			showDialog({
 				title: "Quyền truy cập",
-				message: "Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
+				message: "Cần quyền truy cập thư viện ảnh để chọn hình ảnh",
 			});
 			return;
 		}
@@ -233,7 +265,7 @@ export default function ProductForm({
 		if (formData.images.length >= 4) {
 			showDialog({
 				title: "Giới hạn ảnh",
-				message: "Bạn chỉ có thể thêm tối đa 4 ảnh"
+				message: "Bạn chỉ có thể thêm tối đa 4 ảnh",
 			});
 			return;
 		}
@@ -275,7 +307,7 @@ export default function ProductForm({
 		if (!formData.name.trim()) {
 			showDialog({
 				title: "Lỗi",
-				message: "Vui lòng nhập tên sản phẩm"
+				message: "Vui lòng nhập tên sản phẩm",
 			});
 			return false;
 		}
@@ -283,7 +315,7 @@ export default function ProductForm({
 		if (mode === "fromLink" && !formData.price.trim()) {
 			showDialog({
 				title: "Lỗi",
-				message: "Vui lòng nhập giá sản phẩm"
+				message: "Vui lòng nhập giá sản phẩm",
 			});
 			return false;
 		}
@@ -347,6 +379,24 @@ export default function ProductForm({
 			<View style={styles.section}>
 				<Text style={styles.sectionTitle}>Thông tin sản phẩm</Text>
 
+				{/* Product Link - Show at top for fromLink mode (read-only) */}
+				{mode === "fromLink" && formData.productLink && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Link sản phẩm</Text>
+						<View style={[styles.inputContainer, styles.readOnlyContainer]}>
+							<Ionicons
+								name="link-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<Text style={styles.readOnlyText}>
+								{truncateUrl(formData.productLink, 60)}
+							</Text>
+						</View>
+					</View>
+				)}
+
 				{/* Product Name */}
 				<View style={styles.inputGroup}>
 					<Text style={styles.label}>
@@ -371,7 +421,58 @@ export default function ProductForm({
 					</View>
 				</View>
 
-				{/* Product URL - Show for manual mode (editable) */}
+				{/* Description */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Mô tả sản phẩm</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="document-text-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={[styles.textInput, styles.multilineInput]}
+							value={formData.description}
+							onChangeText={(value) =>
+								handleInputChange("description", value)
+							}
+							placeholder="Nhập mô tả sản phẩm"
+							placeholderTextColor="#B0BEC5"
+							multiline
+							numberOfLines={3}
+							textAlignVertical="top"
+						/>
+					</View>
+				</View>
+
+				{/* Platform */}
+				{formData.platform && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Nền tảng</Text>
+						<View style={styles.platformContainer}>
+							{getPlatformLogo(formData.platform) ? (
+								<Image
+									source={getPlatformLogo(formData.platform)}
+									style={styles.platformLogo}
+									resizeMode="contain"
+								/>
+							) : (
+								<Ionicons
+									name="storefront-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+							)}
+							<Text style={styles.platformText}>
+								{formData.platform}
+							</Text>
+						</View>
+					</View>
+				)}
+
+				{/* Product Link - Show for manual mode (editable) */}
 				{mode === "manual" && (
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>Link sản phẩm</Text>
@@ -401,90 +502,69 @@ export default function ProductForm({
 					</View>
 				)}
 
-				{/* Origin */}
+				{/* Size - User input field */}
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Xuất sứ</Text>
+					<Text style={styles.label}>Kích thước</Text>
 					<View style={styles.inputContainer}>
 						<Ionicons
-							name="location-outline"
+							name="resize-outline"
 							size={20}
 							color="#78909C"
 							style={styles.inputIcon}
 						/>
 						<TextInput
 							style={styles.textInput}
-							value={formData.origin}
+							value={formData.size}
 							onChangeText={(value) =>
-								handleInputChange("origin", value)
+								handleInputChange("size", value)
 							}
-							placeholder="Nhập xuất sứ (VD: Việt Nam, Trung Quốc...)"
+							placeholder="Nhập kích thước (VD: S, M, L, XL...)"
 							placeholderTextColor="#B0BEC5"
 						/>
 					</View>
 				</View>
 
-				{/* Product Link - Only show for fromLink mode */}
-				{mode === "fromLink" && (
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Link sản phẩm</Text>
-						<View
-							style={[
-								styles.inputContainer,
-								styles.readOnlyContainer,
-							]}
-						>
-							<Ionicons
-								name="link-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={[
-									styles.textInput,
-									styles.multilineInput,
-									styles.readOnlyInput,
-								]}
-								value={formData.productLink}
-								placeholder="Link sản phẩm từ trang web"
-								placeholderTextColor="#B0BEC5"
-								multiline
-								numberOfLines={2}
-								textAlignVertical="top"
-								editable={false}
-								selectTextOnFocus={false}
-							/>
-							<Ionicons
-								name="lock-closed-outline"
-								size={16}
-								color="#9E9E9E"
-								style={styles.lockIcon}
-							/>
-						</View>
-					</View>
-				)}
-
-				{/* Description */}
+				{/* Color - User input field */}
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Mô tả sản phẩm</Text>
+					<Text style={styles.label}>Màu sắc</Text>
 					<View style={styles.inputContainer}>
 						<Ionicons
-							name="document-text-outline"
+							name="color-palette-outline"
 							size={20}
 							color="#78909C"
 							style={styles.inputIcon}
 						/>
 						<TextInput
-							style={[styles.textInput, styles.multilineInput]}
-							value={formData.description}
+							style={styles.textInput}
+							value={formData.color}
 							onChangeText={(value) =>
-								handleInputChange("description", value)
+								handleInputChange("color", value)
 							}
-							placeholder="Nhập mô tả sản phẩm"
+							placeholder="Nhập màu sắc (VD: Đỏ, Xanh, Trắng...)"
 							placeholderTextColor="#B0BEC5"
-							multiline
-							numberOfLines={3}
-							textAlignVertical="top"
+						/>
+					</View>
+				</View>
+
+				{/* Quantity - User input field */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Số lượng</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="layers-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.textInput}
+							value={formData.quantity.toString()}
+							onChangeText={(value) =>
+								handleInputChange("quantity", value)
+							}
+							placeholder="Nhập số lượng"
+							placeholderTextColor="#B0BEC5"
+							keyboardType="numeric"
 						/>
 					</View>
 				</View>
@@ -539,270 +619,6 @@ export default function ProductForm({
 						{formData.images.length}/4 ảnh
 					</Text>
 				</View>
-
-				{/* Price - Only show for fromLink mode */}
-				{mode === "fromLink" && (
-					<>
-						<View style={styles.inputGroup}>
-							<Text style={styles.label}>
-								Giá sản phẩm{" "}
-								<Text style={styles.required}>*</Text>
-							</Text>
-							<View style={styles.inputContainer}>
-								<Ionicons
-									name="cash-outline"
-									size={20}
-									color="#78909C"
-									style={styles.inputIcon}
-								/>
-								<TextInput
-									style={styles.textInput}
-									value={formData.price}
-									onChangeText={(value) =>
-										handleInputChange("price", value)
-									}
-									placeholder="Nhập giá sản phẩm (VD: $99.99)"
-									placeholderTextColor="#B0BEC5"
-									keyboardType="default"
-								/>
-							</View>
-						</View>
-
-						<View style={styles.inputGroup}>
-							<Text style={styles.label}>
-								Giá chuyển đổi (VNĐ){" "}
-								<Text style={styles.required}>*</Text>
-							</Text>
-							<View
-								style={[
-									styles.inputContainer,
-									styles.readOnlyContainer,
-								]}
-							>
-								<Ionicons
-									name="card-outline"
-									size={20}
-									color="#78909C"
-									style={styles.inputIcon}
-								/>
-								<TextInput
-									style={[
-										styles.textInput,
-										styles.convertedPriceInput,
-									]}
-									value={formData.convertedPrice}
-									placeholder="Giá sẽ được tự động tính toán"
-									placeholderTextColor="#B0BEC5"
-									keyboardType="numeric"
-									editable={false}
-								/>
-								<Ionicons
-									name="lock-closed-outline"
-									size={16}
-									color="#999999"
-									style={styles.lockIcon}
-								/>
-							</View>
-							<Text style={styles.exchangeRateText}>
-								Tỉ giá hiện tại: 1$ ={" "}
-								{formData.exchangeRate.toLocaleString("vi-VN")}{" "}
-								VNĐ
-							</Text>
-						</View>
-					</>
-				)}
-
-				{/* Category - Hidden */}
-				{false && (
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Phân loại / Danh mục</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="list-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.category}
-								onChangeText={(value) =>
-									handleInputChange("category", value)
-								}
-								placeholder="Nhập danh mục sản phẩm"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-				)}
-
-				{/* Brand */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Thương hiệu</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="ribbon-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.brand}
-							onChangeText={(value) =>
-								handleInputChange("brand", value)
-							}
-							placeholder="Nhập thương hiệu"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Material */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Chất liệu</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="layers-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.material}
-							onChangeText={(value) =>
-								handleInputChange("material", value)
-							}
-							placeholder="Nhập chất liệu"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Size */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Kích thước</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="resize-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.size}
-							onChangeText={(value) =>
-								handleInputChange("size", value)
-							}
-							placeholder="Nhập kích thước"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Color */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Màu sắc</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="color-palette-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.color}
-							onChangeText={(value) =>
-								handleInputChange("color", value)
-							}
-							placeholder="Nhập màu sắc"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Quantity */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Số lượng</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="basket-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.quantity?.toString() || ""}
-							onChangeText={(value) => {
-								// Allow empty string temporarily for editing
-								if (value === "") {
-									handleInputChange("quantity", "");
-									return;
-								}
-
-								// Only allow numbers
-								const cleanValue = value.replace(/[^0-9]/g, "");
-								if (cleanValue === "") {
-									handleInputChange("quantity", "");
-									return;
-								}
-
-								const numValue = parseInt(cleanValue);
-								if (!isNaN(numValue) && numValue > 0) {
-									handleInputChange("quantity", numValue);
-								}
-							}}
-							onBlur={() => {
-								// When user finishes editing, validate only if they entered something
-								if (
-									formData.quantity !== "" &&
-									formData.quantity !== undefined
-								) {
-									const currentQuantity =
-										typeof formData.quantity === "string"
-											? parseInt(formData.quantity) || 0
-											: formData.quantity;
-									if (currentQuantity < 1) {
-										handleInputChange("quantity", 1);
-									}
-								}
-							}}
-							placeholder="Nhập số lượng"
-							placeholderTextColor="#B0BEC5"
-							keyboardType="numeric"
-						/>
-					</View>
-				</View>
-
-				{/* Platform - Only show for fromLink mode */}
-				{mode === "fromLink" && (
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>
-							Nền tảng thương mại điện tử
-						</Text>
-						<View style={styles.inputContainer}>
-							<Ionicons
-								name="globe-outline"
-								size={20}
-								color="#78909C"
-								style={styles.inputIcon}
-							/>
-							<TextInput
-								style={styles.textInput}
-								value={formData.platform}
-								onChangeText={(value) =>
-									handleInputChange("platform", value)
-								}
-								placeholder="Nhập nền tảng (Amazon, Shopee...)"
-								placeholderTextColor="#B0BEC5"
-							/>
-						</View>
-					</View>
-				)}
 			</View>
 
 			{/* Submit Button */}
@@ -1013,5 +829,31 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		textAlign: "right",
 		fontStyle: "italic",
+	},
+	readOnlyText: {
+		flex: 1,
+		fontSize: 16,
+		color: "#666",
+		paddingVertical: 4,
+	},
+	platformContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 12,
+		borderWidth: 1,
+		borderColor: "#E9ECEF",
+	},
+	platformLogo: {
+		width: 24,
+		height: 24,
+		marginRight: 8,
+	},
+	platformText: {
+		fontSize: 14,
+		color: "#495057",
+		fontWeight: "500",
 	},
 });

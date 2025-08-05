@@ -215,6 +215,33 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["PurchaseRequest"],
 		}),
+		createOnlinePurchaseRequest: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.ONLINE_PURCHASE_REQUEST,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest"],
+		}),
+		// AI Raw Data mutation
+		getRawDataFromUrl: builder.mutation({
+			query: (url) => ({
+				params: { link: url },
+				url: endpoints.AI_RAW_DATA,
+				method: "GET",
+			}),
+		}),
+		// Currency conversion mutation
+		convertToVnd: builder.mutation({
+			query: ({ amount, fromCurrency }) => ({
+				data: {
+					amount: parseFloat(amount),
+					fromCurrency: fromCurrency.toUpperCase(),
+				},
+				url: endpoints.CURRENCY_CONVERT_TO_VND,
+				method: "POST",
+			}),
+		}),
 		getPurchaseRequestDetail: builder.query({
 			query: (id) => ({
 				url: `${endpoints.PURCHASE_REQUEST}/${id}`,
@@ -356,6 +383,9 @@ export const {
 	useGetPurchaseRequestByIdQuery,
 	useCreateWithLinkPurchaseRequestMutation,
 	useCreateWithoutLinkPurchaseRequestMutation,
+	useCreateOnlinePurchaseRequestMutation,
+	useGetRawDataFromUrlMutation,
+	useConvertToVndMutation,
 	useGetWalletQuery,
 	useDepositWalletMutation,
 	useWithdrawWalletMutation,

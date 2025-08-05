@@ -14,8 +14,8 @@ const endpoints = {
 	CUSTOMER_PROFILE: "/customer",
 	UPLOAD_AVATAR: "/customer/avatar",
 	PURCHASE_REQUEST: "/purchase-request",
-	WITH_LINK_PURCHASE_REQUEST: "/purchase-request/online-request",
 	WITHOUT_LINK_PURCHASE_REQUEST: "/purchase-request/offline-request",
+	ONLINE_PURCHASE_REQUEST: "/purchase-request/online-request",
 	WALLET: "/wallet",
 	WITHDRAW_WALLET: "/wallet/withdraw-request",
 	CHECKPAYMENT: "/wallet/check-payment-vnpay",
@@ -23,5 +23,7 @@ const endpoints = {
 	BANK_ACCOUNTS: "/bank-account",
 	BANK_ACCOUNTS_CURRENT: "/bank-account/current",
 	BANKS: "/banks",
+	AI_RAW_DATA: "/ai/get-raw-data",
+	CURRENCY_CONVERT_TO_VND: "/currency/convert-to-vnd",
 };
 export default endpoints;

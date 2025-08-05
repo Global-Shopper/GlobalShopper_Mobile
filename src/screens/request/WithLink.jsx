@@ -5,6 +5,10 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import LinkCard from "../../components/link-card";
 import { Text } from "../../components/ui/text";
+import {
+	useConvertToVndMutation,
+	useGetRawDataFromUrlMutation,
+} from "../../services/gshopApi";
 
 export default function WithLink({ navigation }) {
 	const [productLinks, setProductLinks] = useState([
@@ -12,6 +16,10 @@ export default function WithLink({ navigation }) {
 	]);
 	const [showInstructions, setShowInstructions] = useState(false);
 	const MAX_LINKS = 5;
+
+	// RTK Query hooks
+	const [getRawDataFromUrl] = useGetRawDataFromUrlMutation();
+	const [convertToVnd] = useConvertToVndMutation();
 
 	// Simple validation functions
 	const isValidUrl = (string) => {
@@ -23,67 +31,166 @@ export default function WithLink({ navigation }) {
 		}
 	};
 
+	// Helper function to extract platform from URL
+	const extractPlatform = (url) => {
+		const urlLower = url.toLowerCase();
+		if (urlLower.includes("amazon")) return "Amazon";
+		if (urlLower.includes("aliexpress")) return "AliExpress";
+		if (urlLower.includes("ebay")) return "eBay";
+		if (urlLower.includes("shopee")) return "Shopee";
+		if (urlLower.includes("lazada")) return "Lazada";
+		if (urlLower.includes("tiki")) return "Tiki";
+		if (urlLower.includes("sendo")) return "Sendo";
+		return "Unknown";
+	};
+
+	// Helper function to extract currency from price string
+	const extractCurrency = (priceString) => {
+		if (!priceString) return "USD";
+		const price = priceString.toString().toLowerCase();
+		if (price.includes("$") || price.includes("usd")) return "USD";
+		if (price.includes("€") || price.includes("eur")) return "EUR";
+		if (price.includes("£") || price.includes("gbp")) return "GBP";
+		if (price.includes("¥") || price.includes("jpy")) return "JPY";
+		if (price.includes("₫") || price.includes("vnd")) return "VND";
+		return "USD"; // Default to USD
+	};
+
+	// Helper function to extract numeric value from price string
+	const extractPrice = (priceString) => {
+		if (!priceString) return 0;
+		// Remove all non-numeric characters except dots and commas
+		const cleaned = priceString.toString().replace(/[^\d.,]/g, "");
+		// Replace commas with dots for consistent decimal parsing
+		const normalized = cleaned.replace(/,/g, ".");
+		return parseFloat(normalized) || 0;
+	};
+
 	const parseProductLink = async (link) => {
 		try {
-			// Call your actual backend API here
-			const response = await fetch("/api/parse-product-link", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ url: link }),
-			});
+			console.log("=== PARSING PRODUCT LINK ===");
+			console.log("URL:", link);
 
-			if (!response.ok) {
-				throw new Error("Failed to parse product link");
+			// Update status to show AI is working
+			const newLinks = [...productLinks];
+			const linkIndex = newLinks.findIndex((item) => item.link === link);
+			if (linkIndex !== -1) {
+				newLinks[linkIndex] = {
+					...newLinks[linkIndex],
+					status: "ai-processing",
+				};
+				setProductLinks(newLinks);
 			}
 
-			const data = await response.json();
-			return data;
-		} catch (_error) {
-			// For demo purposes, simulate different scenarios
-			const url = link.toLowerCase();
-			const shouldSucceed = Math.random() > 0.3;
+			// Call real API to get raw data
+			console.log("Calling getRawDataFromUrl with:", link);
+			const rawDataResponse = await getRawDataFromUrl(link);
+			console.log("Raw data response:", rawDataResponse);
+			console.log("Raw data response error:", rawDataResponse.error);
+			console.log("Raw data response data:", rawDataResponse.data);
 
-			if (shouldSucceed) {
-				// Mock data based on platform
-				let mockData = {
-					title: "Sample Product Title",
-					price: "$99.99",
-					image: "https://via.placeholder.com/150",
-					platform: "Unknown",
-					exchangeRate: 25000, // Tỉ giá hiện tại
-				};
+			if (rawDataResponse.error) {
+				console.error("API Error details:", rawDataResponse.error);
+				console.error("Error status:", rawDataResponse.error.status);
+				console.error("Error data:", rawDataResponse.error.data);
+				console.error("Error message:", rawDataResponse.error.data?.message);
+				throw new Error(
+					"API_ERROR: " +
+						(rawDataResponse.error.data?.message ||
+							rawDataResponse.error.message ||
+							"Failed to fetch product data")
+				);
+			}
 
-				if (url.includes("amazon")) {
-					mockData = {
-						title: "Apple iPhone 15 Pro Max",
-						price: "$1,199.00",
-						image: "https://via.placeholder.com/150",
-						platform: "Amazon",
-						exchangeRate: 25000,
-					};
-				} else if (url.includes("aliexpress")) {
-					mockData = {
-						title: "Wireless Bluetooth Headphones",
-						price: "$29.99",
-						image: "https://via.placeholder.com/150",
-						platform: "AliExpress",
-						exchangeRate: 25000,
-					};
-				} else if (url.includes("ebay")) {
-					mockData = {
-						title: "Vintage Nike Air Jordan 1",
-						price: "$150.00",
-						image: "https://via.placeholder.com/150",
-						platform: "eBay",
-						exchangeRate: 25000,
-					};
-				}
-
-				return mockData;
-			} else {
+			const rawData = rawDataResponse.data;
+			if (!rawData || !rawData.name) {
 				throw new Error("NO_DATA");
+			}
+
+			// Extract platform from URL
+			const platform = extractPlatform(link);
+
+			// Extract price and currency
+			const priceValue = extractPrice(rawData.price);
+			const currency = extractCurrency(rawData.price);
+
+			console.log("Extracted price:", priceValue, currency);
+
+			// Convert to VND if not already VND
+			let convertedPrice = priceValue;
+			let exchangeRate = 1;
+
+			if (currency !== "VND" && priceValue > 0) {
+				try {
+					console.log(
+						"Converting currency:",
+						priceValue,
+						currency,
+						"to VND"
+					);
+					const conversionResponse = await convertToVnd({
+						amount: priceValue,
+						fromCurrency: currency,
+					});
+					console.log("Conversion response:", conversionResponse);
+
+					if (conversionResponse.error) {
+						console.error(
+							"Currency conversion failed:",
+							conversionResponse.error
+						);
+					} else if (
+						conversionResponse.data &&
+						conversionResponse.data.convertedAmount
+					) {
+						convertedPrice =
+							conversionResponse.data.convertedAmount;
+						exchangeRate =
+							conversionResponse.data.exchangeRate ||
+							convertedPrice / priceValue;
+					}
+				} catch (conversionError) {
+					console.error(
+						"Currency conversion failed:",
+						conversionError
+					);
+					// Continue without conversion
+				}
+			}
+
+			// Format the response data
+			const formattedData = {
+				name: rawData.name || "Sản phẩm",
+				description: rawData.description || "",
+				price: rawData.price || "0",
+				convertedPrice: convertedPrice,
+				currency: currency,
+				exchangeRate: exchangeRate,
+				images: rawData.images || [],
+				platform: platform,
+				brand: rawData.brand || "",
+				category: rawData.category || "",
+				material: rawData.material || "",
+				// Remove origin field as requested
+				productLink: link,
+				// Fields for user to fill: size, color, quantity
+				size: "",
+				color: "",
+				quantity: 1,
+			};
+
+			console.log("Formatted product data:", formattedData);
+			return formattedData;
+		} catch (error) {
+			console.error("Product parsing error:", error);
+
+			// Handle different error types
+			if (error.message === "NO_DATA") {
+				throw new Error("NO_DATA");
+			} else if (error.message.includes("API Error")) {
+				throw new Error("API_ERROR");
+			} else {
+				throw new Error("UNKNOWN_ERROR");
 			}
 		}
 	};
@@ -134,7 +241,7 @@ export default function WithLink({ navigation }) {
 				return;
 			}
 
-			// Try to parse the product data
+			// Try to parse the product data using real API
 			const data = await parseProductLink(link);
 			newLinks[index] = {
 				link,
@@ -151,7 +258,10 @@ export default function WithLink({ navigation }) {
 					break;
 				case "NO_DATA":
 					errorMessage =
-						"Link hợp lệ nhưng không lấy được dữ liệu sản phẩm";
+						"Không thể lấy thông tin sản phẩm từ link này";
+					break;
+				case "API_ERROR":
+					errorMessage = "Lỗi kết nối API. Vui lòng thử lại";
 					break;
 				default:
 					errorMessage = "Có lỗi xảy ra khi xử lý link";
@@ -177,15 +287,28 @@ export default function WithLink({ navigation }) {
 		}
 
 		// Convert all valid products to format expected by ProductDetails
-		const products = validLinks.map((item) => ({
-			title: item.data.title,
+		const products = validLinks.map((item, index) => ({
+			id: `withlink_${index}`,
+			name: item.data.name,
+			description: item.data.description,
 			price: item.data.price,
-			image: item.data.image,
+			convertedPrice: item.data.convertedPrice,
+			currency: item.data.currency,
+			exchangeRate: item.data.exchangeRate,
+			images: item.data.images,
 			platform: item.data.platform,
-			productLink: item.link, // Truyền link gốc
-			exchangeRate: item.data.exchangeRate, // Truyền tỉ giá
-			// Add more fields as needed
+			productLink: item.link,
+			brand: item.data.brand,
+			category: item.data.category,
+			material: item.data.material,
+			// User fillable fields
+			size: item.data.size || "",
+			color: item.data.color || "",
+			quantity: item.data.quantity || 1,
+			mode: "fromLink", // Identify this as fromLink mode
 		}));
+
+		console.log("Navigating to ProductDetails with products:", products);
 
 		// Navigate to ProductDetails with all valid products
 		navigation.navigate("ProductDetails", {
