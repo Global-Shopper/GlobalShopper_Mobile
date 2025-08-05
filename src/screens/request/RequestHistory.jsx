@@ -1,22 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
-import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
-import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import { useGetPurchaseRequestDetailQuery } from "../../services/gshopApi";
 
 export default function RequestHistory({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id;
 
-	// Fetch request details from API
+	// Fetch request details from API (which should include history)
 	const {
 		data: requestDetail,
 		isLoading,
 		isError,
 		error,
 		refetch,
-	} = useGetPurchaseRequestByIdQuery(requestId, {
+	} = useGetPurchaseRequestDetailQuery(requestId, {
 		skip: !requestId, // Skip if no request ID
 		refetchOnMountOrArgChange: true,
 	});
@@ -25,157 +24,155 @@ export default function RequestHistory({ navigation, route }) {
 	console.log("Request ID:", requestId);
 	console.log("Request detail from API:", requestDetail);
 	console.log("Original request:", request);
+	console.log("Current request type:", currentRequest?.type);
+	console.log("Current request:", currentRequest);
 	console.log("Is loading:", isLoading);
 	console.log("Is error:", isError);
-	console.log("Error:", error);
 
 	// Use API data if available, fallback to route params
 	const currentRequest = requestDetail || request;
 
-	// Generate history based on request status from API or fallback data
-	const getHistoryByStatus = (status, requestData) => {
-		// Base history from API if available
-		const baseHistory = [
-			{
-				id: "1",
-				date: requestData?.createdAt || "15/01/2024 14:30",
-				action: "Đã gửi",
-				description: "Yêu cầu được tạo và gửi thành công",
-				status: "completed",
-				isCurrent: status === "sent",
-			},
-		];
+	// Helper function to get shortened UUID like RequestScreen
+	const getShortId = (fullId) => {
+		if (!fullId) return "N/A";
+		if (typeof fullId === "string" && fullId.includes("-")) {
+			return "#" + fullId.split("-")[0];
+		}
+		return "#" + fullId;
+	};
 
-		if (status === "checking") {
-			return [
-				{
-					id: "2",
-					date: requestData?.updatedAt || "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "checking",
-					isCurrent: true,
-				},
-				...baseHistory,
-			];
+	// Helper function to get request type text
+	const getRequestTypeText = (type) => {
+		console.log("Getting request type text for:", type);
+
+		if (!type) {
+			return "Loại yêu cầu không xác định";
 		}
 
-		if (status === "confirmed") {
-			return [
-				{
-					id: "4",
-					date: requestData?.updatedAt || "17/01/2024 14:20",
-					action: "Đã xác nhận",
-					description: "Khách hàng đã xác nhận báo giá và thanh toán",
-					status: "confirmed",
-					isCurrent: true,
-				},
-				{
-					id: "3",
-					date: "16/01/2024 10:30",
-					action: "Đã báo giá",
-					description:
-						"Nhân viên đã gửi báo giá chi tiết cho yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
+		switch (type?.toLowerCase()) {
+			case "offline":
+				return "Hàng nội địa/quốc tế";
+			case "online":
+				return "Hàng từ nền tảng e-commerce";
+			case "domestic":
+				return "Hàng nội địa";
+			case "international":
+				return "Hàng quốc tế";
+			case "ecommerce":
+			case "e-commerce":
+				return "Hàng từ nền tảng e-commerce";
+			default:
+				return `Loại: ${type}`;
 		}
+	};
 
-		if (status === "quoted") {
-			return [
-				{
-					id: "3",
-					date: requestData?.updatedAt || "16/01/2024 10:30",
-					action: "Đã báo giá",
-					description:
-						"Nhân viên đã gửi báo giá chi tiết cho yêu cầu",
-					status: "quoted",
-					isCurrent: true,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
+	// Helper function to get action text from status
+	const getActionFromStatus = (status) => {
+		switch (status?.toLowerCase()) {
+			case "sent":
+				return "Đã gửi";
+			case "checking":
+				return "Đang xử lý";
+			case "quoted":
+				return "Đã báo giá";
+			case "confirmed":
+				return "Đã xác nhận";
+			case "cancelled":
+				return "Đã hủy";
+			case "insufficient":
+				return "Cập nhật";
+			case "completed":
+				return "Hoàn thành";
+			default:
+				return "Cập nhật";
 		}
+	};
 
-		if (status === "cancelled") {
-			return [
-				{
-					id: "3",
-					date: requestData?.updatedAt || "16/01/2024 09:15",
-					action: "Đã hủy",
-					description:
-						"Yêu cầu đã được hủy theo yêu cầu của khách hàng",
-					status: "cancelled",
-					isCurrent: true,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
+	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
+	const formatDate = (dateString) => {
+		if (!dateString) return "N/A";
+
+		try {
+			const date = new Date(dateString);
+			const day = date.getDate().toString().padStart(2, "0");
+			const month = (date.getMonth() + 1).toString().padStart(2, "0");
+			const year = date.getFullYear();
+			const hours = date.getHours().toString().padStart(2, "0");
+			const minutes = date.getMinutes().toString().padStart(2, "0");
+
+			return `${day}/${month}/${year} ${hours}:${minutes}`;
+		} catch (_error) {
+			return dateString;
 		}
+	};
 
-		if (status === "insufficient") {
-			return [
-				{
-					id: "3",
-					date: requestData?.updatedAt || "16/01/2024 09:30",
-					action: "Cập nhật",
-					description:
-						"Yêu cầu cần cập nhật thêm thông tin hoặc thanh toán",
-					status: "insufficient",
-					isCurrent: true,
-				},
-				{
-					id: "2",
-					date: "15/01/2024 15:45",
-					action: "Đang xử lý",
-					description: "Nhân viên đã tiếp nhận và đang xử lý yêu cầu",
-					status: "completed",
-					isCurrent: false,
-				},
-				...baseHistory,
-			];
-		}
+	// Format history data from API response
+	const formatHistoryFromAPI = (requestData) => {
+		console.log("=== FORMATTING HISTORY FROM API ===");
+		console.log("Request data:", requestData);
 
-		// Default case for sent status
-		if (status === "sent") {
-			return baseHistory.map((item) => ({
-				...item,
-				isCurrent: true,
-				status: "sent",
+		// Check if request has history array from API
+		if (requestData?.history && Array.isArray(requestData.history)) {
+			console.log("Found API history array:", requestData.history);
+			return requestData.history.map((item, index) => ({
+				id: item.id || index.toString(),
+				date: formatDate(item.createdAt || item.timestamp || item.date),
+				action:
+					getActionFromStatus(item.status) ||
+					item.action ||
+					"Cập nhật",
+				description:
+					item.description ||
+					`Cập nhật trạng thái: ${getActionFromStatus(item.status)}`,
+				status: item.status || "completed",
+				isCurrent: index === 0, // First item is always current
 			}));
 		}
 
-		return baseHistory;
+		console.log(
+			"No API history found, creating fallback from request status"
+		);
+		// Fallback: Create basic history from request status and dates
+		const historyItems = [];
+
+		// Always add creation entry
+		historyItems.push({
+			id: "created",
+			date: formatDate(
+				requestData?.createdAt || new Date().toISOString()
+			),
+			action: "Đã tạo yêu cầu",
+			description: "Yêu cầu mua hàng được tạo thành công",
+			status: "completed",
+			isCurrent: false,
+		});
+
+		// Add current status as latest entry if different from sent
+		if (requestData?.status && requestData.status !== "sent") {
+			historyItems.unshift({
+				id: "current",
+				date: formatDate(
+					requestData?.updatedAt ||
+						requestData?.createdAt ||
+						new Date().toISOString()
+				),
+				action: getActionFromStatus(requestData.status),
+				description: `Yêu cầu hiện tại ở trạng thái: ${getActionFromStatus(
+					requestData.status
+				)}`,
+				status: requestData.status,
+				isCurrent: true,
+			});
+		} else {
+			// Mark creation as current if still in sent status
+			historyItems[0].isCurrent = true;
+		}
+
+		return historyItems;
 	};
 
-	const requestHistory = getHistoryByStatus(
-		currentRequest?.status,
-		currentRequest
-	);
+	// Use new API-based history formatter
+	const requestHistory = formatHistoryFromAPI(currentRequest);
 
 	const getStatusColor = (status) => {
 		switch (status) {
@@ -256,21 +253,27 @@ export default function RequestHistory({ navigation, route }) {
 						{/* Request Info */}
 						<View style={styles.requestInfoSection}>
 							<View style={styles.requestInfoCard}>
-								{/* Title is now handled by RequestCard, so remove this line */}
-								<Text style={styles.requestDate}>
-									Tạo ngày:{" "}
-									{currentRequest?.createdAt ||
-										"Không có thông tin"}
-								</Text>
-
-								{/* Hiển thị số lượng sản phẩm */}
-								<RequestCard request={currentRequest} />
-
-								{currentRequest?.note && (
-									<Text style={styles.requestNote}>
-										Ghi chú: {currentRequest.note}
+								{/* Short UUID và Status hiện tại */}
+								<View style={styles.requestHeader}>
+									<View style={styles.requestLeftInfo}>
+										<Text style={styles.requestIdText}>
+											{getShortId(currentRequest?.id)}
+										</Text>
+										<Text style={styles.requestTypeText}>
+											{getRequestTypeText(
+												currentRequest?.type ||
+													currentRequest?.requestType ||
+													currentRequest?.category ||
+													currentRequest?.purchaseType
+											)}
+										</Text>
+									</View>
+									<Text style={styles.currentStatusText}>
+										{getActionFromStatus(
+											currentRequest?.status
+										)}
 									</Text>
-								)}
+								</View>
 							</View>
 						</View>
 
@@ -386,29 +389,39 @@ const styles = StyleSheet.create({
 		shadowRadius: 4,
 		elevation: 4,
 	},
+	requestHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	requestLeftInfo: {
+		flex: 1,
+	},
+	requestIdText: {
+		fontSize: 16,
+		color: "#6c757d",
+		fontWeight: "600",
+		marginBottom: 2,
+	},
+	requestTypeText: {
+		fontSize: 14,
+		color: "#495057",
+		fontWeight: "500",
+	},
+	currentStatusText: {
+		fontSize: 16,
+		color: "#1976D2",
+		fontWeight: "700",
+		backgroundColor: "#e3f2fd",
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 20,
+	},
 	requestCode: {
 		fontSize: 18,
 		fontWeight: "700",
 		color: "#343a40",
 		marginBottom: 4,
-	},
-	requestDate: {
-		fontSize: 14,
-		color: "#6c757d",
-		fontWeight: "500",
-	},
-	requestQuantity: {
-		fontSize: 14,
-		color: "#28a745",
-		fontWeight: "600",
-		marginTop: 4,
-	},
-	requestNote: {
-		fontSize: 14,
-		color: "#495057",
-		fontWeight: "500",
-		marginTop: 8,
-		fontStyle: "italic",
 	},
 	loadingState: {
 		alignItems: "center",
