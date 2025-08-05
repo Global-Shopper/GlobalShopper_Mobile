@@ -383,7 +383,12 @@ export default function ProductForm({
 				{mode === "fromLink" && formData.productLink && (
 					<View style={styles.inputGroup}>
 						<Text style={styles.label}>Link sản phẩm</Text>
-						<View style={[styles.inputContainer, styles.readOnlyContainer]}>
+						<View
+							style={[
+								styles.inputContainer,
+								styles.readOnlyContainer,
+							]}
+						>
 							<Ionicons
 								name="link-outline"
 								size={20}

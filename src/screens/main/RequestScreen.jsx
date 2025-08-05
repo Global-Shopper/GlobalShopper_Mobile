@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import RequestCard from "../../components/request-card";
@@ -50,7 +51,25 @@ export default function RequestScreen({ navigation }) {
 		refetchOnMountOrArgChange: true,
 		// Skip if user not authenticated
 		skip: false,
+		// Disable caching temporarily for debugging
+		forceRefetch: true,
 	});
+
+	// Debug logging
+	console.log("=== REQUEST SCREEN DEBUG ===");
+	console.log("API Params:", getAPIParams());
+	console.log("Raw API Response:", requests);
+	console.log("IsLoading:", isLoading);
+	console.log("IsError:", isError);
+	console.log("Error:", error);
+
+	// Auto-refetch when screen comes into focus
+	useFocusEffect(
+		useCallback(() => {
+			console.log("Screen focused, refetching data...");
+			refetch();
+		}, [refetch])
+	);
 
 	const handleRequestPress = (request) => {
 		console.log("Request pressed:", request);
@@ -89,23 +108,32 @@ export default function RequestScreen({ navigation }) {
 			} else if (Array.isArray(requests)) {
 				allRequests = requests;
 			} else {
-				//console.log("Unknown response structure:", requests);
+				console.log("Unknown response structure:", requests);
 				allRequests = [];
 			}
 		}
 
+		console.log("All requests from API:", allRequests);
+		console.log("Active tab:", activeTab);
+
 		if (activeTab === "all") {
+			console.log("Returning all requests");
 			return allRequests;
 		}
 
 		const selectedTab = tabs.find((tab) => tab.id === activeTab);
 		if (selectedTab?.status) {
-			return allRequests.filter((request) => {
+			const filtered = allRequests.filter((request) => {
 				const requestStatus = request.status?.toLowerCase();
 				const targetStatus = selectedTab.status.toLowerCase();
-				console.log(`Filtering: ${requestStatus} === ${targetStatus}`);
+				console.log(
+					`Filtering: ${requestStatus} === ${targetStatus}`,
+					request
+				);
 				return requestStatus === targetStatus;
 			});
+			console.log("Filtered results:", filtered);
+			return filtered;
 		}
 
 		return allRequests;
@@ -113,8 +141,35 @@ export default function RequestScreen({ navigation }) {
 
 	const filteredRequests = getFilteredRequests();
 
-	console.log("Filtered requests final:", filteredRequests);
-	console.log("Filtered requests count:", filteredRequests?.length);
+	// Sort requests by createdAt descending (newest first)
+	const sortedRequests =
+		filteredRequests?.slice().sort((a, b) => {
+			const dateA = Number(a.createdAt) || 0;
+			const dateB = Number(b.createdAt) || 0;
+			console.log(
+				`Sorting: Request ${a.id} (${dateA}) vs Request ${b.id} (${dateB})`
+			);
+			return dateB - dateA; // Descending order (newest first)
+		}) || [];
+
+	console.log("=== SORTING DEBUG ===");
+	console.log(
+		"Before sort (first 3):",
+		filteredRequests?.slice(0, 3).map((r) => ({
+			id: r.id,
+			createdAt: r.createdAt,
+			date: new Date(Number(r.createdAt)).toLocaleString(),
+		}))
+	);
+	console.log(
+		"After sort (first 3):",
+		sortedRequests?.slice(0, 3).map((r) => ({
+			id: r.id,
+			createdAt: r.createdAt,
+			date: new Date(Number(r.createdAt)).toLocaleString(),
+		}))
+	);
+	console.log("Sorted requests count:", sortedRequests?.length);
 
 	return (
 		<View style={styles.container}>
@@ -209,7 +264,7 @@ export default function RequestScreen({ navigation }) {
 				{/* Request List */}
 				{!isLoading && !isError && (
 					<View style={styles.requestsList}>
-						{filteredRequests?.length === 0 && (
+						{sortedRequests?.length === 0 && (
 							<View style={styles.emptyState}>
 								<Ionicons
 									name="document-outline"
@@ -225,7 +280,7 @@ export default function RequestScreen({ navigation }) {
 							</View>
 						)}
 
-						{filteredRequests?.map((request) => (
+						{sortedRequests?.map((request) => (
 							<RequestCard
 								key={request.id}
 								request={request}
