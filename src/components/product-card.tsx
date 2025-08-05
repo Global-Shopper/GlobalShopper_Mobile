@@ -60,11 +60,6 @@ export default function ProductCard({
 						<Ionicons name="image-outline" size={24} color="#999" />
 					</View>
 				)}
-				{quantity > 1 && (
-					<View style={styles.quantityBadge}>
-						<Text style={styles.quantityText}>x{quantity}</Text>
-					</View>
-				)}
 			</View>
 
 			<View style={styles.content}>
@@ -113,6 +108,14 @@ export default function ProductCard({
 							<Text style={styles.tagText}>{brand}</Text>
 						</View>
 					)}
+					<View style={styles.tag}>
+						<Ionicons
+							name="layers-outline"
+							size={12}
+							color="#666"
+						/>
+						<Text style={styles.tagText}>Số lượng: {quantity}</Text>
+					</View>
 					{size && (
 						<View style={styles.tag}>
 							<Ionicons

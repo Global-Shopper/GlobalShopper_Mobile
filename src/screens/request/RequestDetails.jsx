@@ -19,10 +19,9 @@ export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 
-	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 	const [isAcceptedQuotation, setIsAcceptedQuotation] = useState(false);
 
-	// Fetch purchase request detail from API
+	// Fetch purchase request detail from API - using getPurchaseRequestById
 	const {
 		data: requestDetails,
 		isLoading,
@@ -32,10 +31,48 @@ export default function RequestDetails({ navigation, route }) {
 		skip: !requestId,
 	});
 
-	console.log("Request ID:", requestId);
-	console.log("API Response:", requestDetails);
-	console.log("Loading:", isLoading);
-	console.log("Error:", error);
+	// Helper function to get shortened UUID with #
+	const getShortId = (fullId) => {
+		if (!fullId) return "N/A";
+		if (typeof fullId === "string" && fullId.includes("-")) {
+			return "#" + fullId.split("-")[0];
+		}
+		return "#" + fullId;
+	};
+
+	// Helper function to get request type text
+	const getRequestTypeText = (type) => {
+		if (!type) {
+			return "Loại yêu cầu không xác định";
+		}
+
+		switch (type?.toLowerCase()) {
+			case "offline":
+				return "Hàng nội địa/quốc tế";
+			case "online":
+				return "Hàng từ nền tảng e-commerce";
+			default:
+				return ` ${type}`;
+		}
+	};
+
+	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
+	const formatDate = (dateString) => {
+		if (!dateString) return "N/A";
+
+		try {
+			const date = new Date(dateString);
+			const day = date.getDate().toString().padStart(2, "0");
+			const month = (date.getMonth() + 1).toString().padStart(2, "0");
+			const year = date.getFullYear();
+			const hours = date.getHours().toString().padStart(2, "0");
+			const minutes = date.getMinutes().toString().padStart(2, "0");
+
+			return `${day}/${month}/${year} ${hours}:${minutes}`;
+		} catch (_error) {
+			return dateString;
+		}
+	};
 
 	// Show loading spinner
 	if (isLoading) {
@@ -96,19 +133,24 @@ export default function RequestDetails({ navigation, route }) {
 		);
 	}
 
+	// Use the correct data for rendering
+	const displayData = requestDetails;
+
 	const getStatusColor = (status) => {
-		switch (status?.toUpperCase()) {
-			case "PENDING":
-			case "PROCESSING":
-				return "#FFA726";
-			case "QUOTED":
-				return "#1976D2";
-			case "CONFIRMED":
-				return "#4CAF50";
-			case "CANCELLED":
-			case "CANCELED":
-				return "#F44336";
-			case "COMPLETED":
+		switch (status?.toLowerCase()) {
+			case "sent":
+				return "#28a745";
+			case "checking":
+				return "#17a2b8";
+			case "quoted":
+				return "#ffc107";
+			case "confirmed":
+				return "#007bff";
+			case "cancelled":
+				return "#dc3545";
+			case "insufficient":
+				return "#fd7e14";
+			case "completed":
 				return "#6c757d";
 			default:
 				return "#6c757d";
@@ -116,22 +158,23 @@ export default function RequestDetails({ navigation, route }) {
 	};
 
 	const getStatusText = (status) => {
-		switch (status?.toUpperCase()) {
-			case "PENDING":
-				return "Chờ xử lý";
-			case "PROCESSING":
+		switch (status?.toLowerCase()) {
+			case "sent":
+				return "Đã gửi";
+			case "checking":
 				return "Đang xử lý";
-			case "QUOTED":
+			case "quoted":
 				return "Đã báo giá";
-			case "CONFIRMED":
+			case "confirmed":
 				return "Đã xác nhận";
-			case "CANCELLED":
-			case "CANCELED":
-				return "Đã huỷ";
-			case "COMPLETED":
+			case "cancelled":
+				return "Đã hủy";
+			case "insufficient":
+				return "Cập nhật";
+			case "completed":
 				return "Hoàn thành";
 			default:
-				return "Không xác định";
+				return "Cập nhật";
 		}
 	};
 
@@ -141,10 +184,6 @@ export default function RequestDetails({ navigation, route }) {
 
 	const getRequestTypeBorderColor = (type) => {
 		return type === "with_link" ? "#42A5F5" : "#28a745";
-	};
-
-	const getRequestTypeText = (type) => {
-		return type === "with_link" ? "Có link sản phẩm" : "Không có link";
 	};
 
 	return (
@@ -162,7 +201,7 @@ export default function RequestDetails({ navigation, route }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[
 					styles.scrollContent,
-					requestDetails?.status === "QUOTED" &&
+					displayData?.status?.toLowerCase() === "quoted" &&
 						styles.scrollContentWithButton,
 				]}
 			>
@@ -175,15 +214,19 @@ export default function RequestDetails({ navigation, route }) {
 								<View style={styles.requestTypeContainer}>
 									<Ionicons
 										name={getRequestTypeIcon(
-											requestDetails?.type?.toLowerCase() ===
-												"online"
+											displayData?.requestType?.toLowerCase() ===
+												"online" ||
+												displayData?.type?.toLowerCase() ===
+													"online"
 												? "with_link"
 												: "without_link"
 										)}
 										size={18}
 										color={getRequestTypeBorderColor(
-											requestDetails?.type?.toLowerCase() ===
-												"online"
+											displayData?.requestType?.toLowerCase() ===
+												"online" ||
+												displayData?.type?.toLowerCase() ===
+													"online"
 												? "with_link"
 												: "without_link"
 										)}
@@ -192,13 +235,12 @@ export default function RequestDetails({ navigation, route }) {
 
 								<View style={styles.requestInfo}>
 									<Text style={styles.requestCode}>
-										#
-										{requestDetails?.code ||
-											requestDetails?.id}
+										{getShortId(
+											displayData?.id || displayData?.code
+										)}
 									</Text>
 									<Text style={styles.createdDate}>
-										{requestDetails?.createdAt ||
-											new Date().toLocaleDateString()}
+										{formatDate(displayData?.createdAt)}
 									</Text>
 								</View>
 							</View>
@@ -209,7 +251,7 @@ export default function RequestDetails({ navigation, route }) {
 									{
 										backgroundColor:
 											getStatusColor(
-												requestDetails?.status
+												displayData?.status
 											) + "20",
 									},
 								]}
@@ -219,12 +261,12 @@ export default function RequestDetails({ navigation, route }) {
 										styles.statusText,
 										{
 											color: getStatusColor(
-												requestDetails?.status
+												displayData?.status
 											),
 										},
 									]}
 								>
-									{getStatusText(requestDetails?.status)}
+									{getStatusText(displayData?.status)}
 								</Text>
 							</View>
 						</View>
@@ -237,8 +279,10 @@ export default function RequestDetails({ navigation, route }) {
 									styles.typeValue,
 									{
 										color: getRequestTypeBorderColor(
-											requestDetails?.type?.toLowerCase() ===
-												"online"
+											displayData?.requestType?.toLowerCase() ===
+												"online" ||
+												displayData?.type?.toLowerCase() ===
+													"online"
 												? "with_link"
 												: "without_link"
 										),
@@ -246,10 +290,10 @@ export default function RequestDetails({ navigation, route }) {
 								]}
 							>
 								{getRequestTypeText(
-									requestDetails?.type?.toLowerCase() ===
-										"online"
-										? "with_link"
-										: "without_link"
+									displayData?.requestType ||
+										displayData?.type ||
+										displayData?.category ||
+										displayData?.purchaseType
 								)}
 							</Text>
 						</View>
@@ -262,7 +306,7 @@ export default function RequestDetails({ navigation, route }) {
 						style={styles.historyViewButton}
 						onPress={() =>
 							navigation.navigate("RequestHistory", {
-								request: requestDetails,
+								request: displayData,
 							})
 						}
 					>
@@ -293,48 +337,75 @@ export default function RequestDetails({ navigation, route }) {
 				<View style={styles.section}>
 					<AddressSmCard
 						recipientName={
-							requestDetails?.shippingAddress?.recipientName ||
-							requestDetails?.deliveryAddress?.recipientName
+							displayData?.shippingAddress?.name ||
+							displayData?.deliveryAddress?.name ||
+							displayData?.address?.recipientName ||
+							displayData?.recipientName ||
+							""
 						}
 						phone={
-							requestDetails?.shippingAddress?.phone ||
-							requestDetails?.deliveryAddress?.phone
+							displayData?.shippingAddress?.phoneNumber ||
+							displayData?.deliveryAddress?.phoneNumber ||
+							displayData?.address?.phone ||
+							displayData?.phone ||
+							""
 						}
 						address={
-							requestDetails?.shippingAddress?.address ||
-							requestDetails?.deliveryAddress?.address
+							displayData?.shippingAddress?.location ||
+							displayData?.deliveryAddress?.location ||
+							displayData?.address?.address ||
+							displayData?.address ||
+							""
 						}
 						isDefault={
-							requestDetails?.shippingAddress?.isDefault ||
-							requestDetails?.deliveryAddress?.isDefault
+							displayData?.shippingAddress?.default ||
+							displayData?.deliveryAddress?.default ||
+							displayData?.address?.isDefault ||
+							false
 						}
 						onEdit={() => {}} // Disable edit in details view
-						isEmpty={false}
+						isEmpty={
+							!(
+								displayData?.shippingAddress?.name ||
+								displayData?.deliveryAddress?.name ||
+								displayData?.address?.recipientName ||
+								displayData?.recipientName ||
+								displayData?.shippingAddress?.phoneNumber ||
+								displayData?.deliveryAddress?.phoneNumber ||
+								displayData?.address?.phone ||
+								displayData?.phone ||
+								displayData?.shippingAddress?.location ||
+								displayData?.deliveryAddress?.location ||
+								displayData?.address?.address ||
+								displayData?.address
+							)
+						}
 						showEditButton={false}
 					/>
 				</View>
 
 				{/* Store Information - Show only for OFFLINE requests */}
-				{requestDetails?.type === "OFFLINE" &&
-					requestDetails?.store && (
+				{(displayData?.requestType?.toLowerCase() === "offline" ||
+					displayData?.type?.toLowerCase() === "offline") &&
+					displayData?.store && (
 						<View style={styles.section}>
 							<StoreCard
 								storeName={
-									requestDetails.store.storeName ||
-									requestDetails.store.name
+									displayData.store.storeName ||
+									displayData.store.name
 								}
 								storeAddress={
-									requestDetails.store.storeAddress ||
-									requestDetails.store.address
+									displayData.store.storeAddress ||
+									displayData.store.address
 								}
 								phoneNumber={
-									requestDetails.store.phoneNumber ||
-									requestDetails.store.phone
+									displayData.store.phoneNumber ||
+									displayData.store.phone
 								}
-								email={requestDetails.store.email}
+								email={displayData.store.email}
 								shopLink={
-									requestDetails.store.shopLink ||
-									requestDetails.store.storeLink
+									displayData.store.shopLink ||
+									displayData.store.storeLink
 								}
 								mode="manual"
 								showEditButton={false}
@@ -347,141 +418,185 @@ export default function RequestDetails({ navigation, route }) {
 					<View style={styles.sectionHeader}>
 						<Text style={styles.sectionTitle}>
 							Danh sách sản phẩm (
-							{requestDetails?.items?.length ||
-								requestDetails?.products?.length ||
+							{displayData?.requestItems?.length ||
+								displayData?.items?.length ||
+								displayData?.products?.length ||
+								displayData?.productList?.length ||
 								0}{" "}
 							sản phẩm)
 						</Text>
 					</View>
 
-					{(
-						requestDetails?.items ||
-						requestDetails?.products ||
-						[]
-					).map((product, index) => {
-						// Determine product mode based on request type
-						const productMode =
-							requestDetails?.type === "ONLINE"
-								? "withLink"
-								: "manual";
+					{/* Check if we have any products */}
+					{displayData?.requestItems?.length > 0 ||
+					displayData?.items?.length > 0 ||
+					displayData?.products?.length > 0 ||
+					displayData?.productList?.length > 0 ? (
+						(
+							displayData?.requestItems ||
+							displayData?.items ||
+							displayData?.products ||
+							displayData?.productList ||
+							[]
+						).map((product, index) => {
+							// Determine product mode based on request type
+							const productMode =
+								displayData?.requestType?.toLowerCase() ===
+									"online" ||
+								displayData?.type?.toLowerCase() === "online"
+									? "withLink"
+									: "manual";
 
-						return (
-							<ProductCard
-								key={product.id || index}
-								id={product.id || index.toString()}
-								name={
-									product.name ||
-									product.productName ||
-									"Sản phẩm không tên"
-								}
-								description={
-									product.description ||
-									product.productDescription
-								}
-								images={
-									product.images ||
-									product.productImages ||
-									[]
-								}
-								price={
-									productMode === "manual"
-										? ""
-										: product.price ||
-										  product.productPrice ||
-										  ""
-								}
-								convertedPrice={
-									productMode === "manual"
-										? ""
-										: product.convertedPrice
-								}
-								exchangeRate={
-									productMode === "manual"
-										? undefined
-										: product.exchangeRate
-								}
-								category={
-									product.category || product.productCategory
-								}
-								brand={product.brand || product.productBrand}
-								material={
-									product.material || product.productMaterial
-								}
-								size={product.size || product.productSize}
-								color={product.color || product.productColor}
-								platform={
-									product.platform ||
-									product.ecommercePlatform
-								}
-								productLink={product.productLink || product.url}
-								quantity={product.quantity || 1}
-								mode={productMode}
-								sellerInfo={
-									productMode === "manual"
-										? {
-												name: product.sellerName || "",
-												phone:
-													product.sellerPhone || "",
-												email:
-													product.sellerEmail || "",
-												address:
-													product.sellerAddress || "",
-												storeLink:
-													product.sellerStoreLink ||
-													"",
-										  }
-										: undefined
-								}
-							/>
-						);
-					})}
+							// Parse variants array to extract color, size, and other info
+							const parseVariants = (variants) => {
+								if (!variants || !Array.isArray(variants))
+									return {};
+
+								const result = {};
+								variants.forEach((variant) => {
+									if (typeof variant === "string") {
+										if (variant.includes("Màu sắc:")) {
+											result.color = variant
+												.replace("Màu sắc:", "")
+												.trim();
+										} else if (
+											variant.includes("Kích cỡ:")
+										) {
+											result.size = variant
+												.replace("Kích cỡ:", "")
+												.trim();
+										} else if (
+											variant.includes("Chất liệu:")
+										) {
+											result.material = variant
+												.replace("Chất liệu:", "")
+												.trim();
+										} else if (
+											variant.includes("Thương hiệu:")
+										) {
+											result.brand = variant
+												.replace("Thương hiệu:", "")
+												.trim();
+										}
+									}
+								});
+								return result;
+							};
+
+							const parsedVariants = parseVariants(
+								product.variants
+							);
+
+							return (
+								<ProductCard
+									key={product.id || index}
+									id={product.id || index.toString()}
+									name={
+										product.productName ||
+										product.name ||
+										"Sản phẩm không tên"
+									}
+									description={
+										product.description ||
+										product.productDescription
+									}
+									images={
+										product.images ||
+										product.productImages ||
+										[]
+									}
+									price={
+										productMode === "manual"
+											? ""
+											: product.price ||
+											  product.productPrice ||
+											  ""
+									}
+									convertedPrice={
+										productMode === "manual"
+											? ""
+											: product.convertedPrice
+									}
+									exchangeRate={
+										productMode === "manual"
+											? undefined
+											: product.exchangeRate
+									}
+									category={
+										product.category ||
+										product.productCategory ||
+										parsedVariants.category
+									}
+									brand={
+										product.brand ||
+										product.productBrand ||
+										parsedVariants.brand
+									}
+									material={
+										product.material ||
+										product.productMaterial ||
+										parsedVariants.material
+									}
+									size={
+										product.size ||
+										product.productSize ||
+										parsedVariants.size
+									}
+									color={
+										product.color ||
+										product.productColor ||
+										parsedVariants.color
+									}
+									platform={
+										product.platform ||
+										product.ecommercePlatform
+									}
+									productLink={
+										product.productURL ||
+										product.productLink ||
+										product.url
+									}
+									quantity={product.quantity || 1}
+									mode={productMode}
+									sellerInfo={
+										productMode === "manual"
+											? {
+													name:
+														product.sellerName ||
+														"",
+													phone:
+														product.sellerPhone ||
+														"",
+													email:
+														product.sellerEmail ||
+														"",
+													address:
+														product.sellerAddress ||
+														"",
+													storeLink:
+														product.sellerStoreLink ||
+														"",
+											  }
+											: undefined
+									}
+								/>
+							);
+						})
+					) : (
+						<View style={styles.emptyProductContainer}>
+							<Text style={styles.emptyProductText}>
+								Chưa có sản phẩm nào trong yêu cầu này
+							</Text>
+						</View>
+					)}
 
 					{/* Divider */}
 					<View style={styles.divider} />
 				</View>
 
-				{/* Note Section */}
-				{(requestDetails?.note || requestDetails?.customerNote) && (
-					<View style={styles.section}>
-						<TouchableOpacity
-							style={styles.noteHeader}
-							onPress={() => setIsNoteExpanded(!isNoteExpanded)}
-						>
-							<View style={styles.noteHeaderLeft}>
-								<Ionicons
-									name="chatbox-outline"
-									size={20}
-									color="#1976D2"
-								/>
-								<Text style={styles.sectionTitle}>
-									Lời nhắn từ khách hàng
-								</Text>
-							</View>
-							<Ionicons
-								name={
-									isNoteExpanded
-										? "chevron-up-outline"
-										: "chevron-down-outline"
-								}
-								size={22}
-								color="#1976D2"
-							/>
-						</TouchableOpacity>
-
-						{isNoteExpanded && (
-							<View style={styles.noteContent}>
-								<Text style={styles.noteText}>
-									{requestDetails?.note ||
-										requestDetails?.customerNote}
-								</Text>
-							</View>
-						)}
-					</View>
-				)}
-
 				{/* Quotation Card - Show only for quoted or confirmed requests */}
-				{(requestDetails?.status === "QUOTED" ||
-					requestDetails?.status === "CONFIRMED") && (
+				{(displayData?.status?.toLowerCase() === "quoted" ||
+					displayData?.status?.toLowerCase() === "confirmed") && (
 					<View style={styles.section}>
 						<QuotationCard
 							productPrice={1200000}
@@ -499,7 +614,7 @@ export default function RequestDetails({ navigation, route }) {
 				)}
 
 				{/* Payment Agreement Checkbox - Show only for quoted requests */}
-				{requestDetails?.status === "QUOTED" && (
+				{displayData?.status?.toLowerCase() === "quoted" && (
 					<View style={styles.section}>
 						<View style={styles.checkboxContainer}>
 							<TouchableOpacity
@@ -531,7 +646,7 @@ export default function RequestDetails({ navigation, route }) {
 			</ScrollView>
 
 			{/* Fixed Payment Button - Show only for quoted requests */}
-			{requestDetails?.status === "QUOTED" && (
+			{displayData?.status?.toLowerCase() === "quoted" && (
 				<View style={styles.fixedButtonContainer}>
 					<TouchableOpacity
 						style={[
@@ -542,7 +657,7 @@ export default function RequestDetails({ navigation, route }) {
 						onPress={() => {
 							if (isAcceptedQuotation) {
 								navigation.navigate("ConfirmQuotation", {
-									request: requestDetails,
+									request: displayData,
 								});
 							}
 						}}
@@ -901,5 +1016,19 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontWeight: "600",
 		color: "#fff",
+	},
+	emptyProductContainer: {
+		backgroundColor: "#f8f9fa",
+		padding: 20,
+		borderRadius: 8,
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		borderStyle: "dashed",
+	},
+	emptyProductText: {
+		fontSize: 14,
+		color: "#666",
+		fontStyle: "italic",
 	},
 });

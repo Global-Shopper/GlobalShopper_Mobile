@@ -2,20 +2,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
-import { useGetPurchaseRequestDetailQuery } from "../../services/gshopApi";
+import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 
 export default function RequestHistory({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id;
 
-	// Fetch request details from API (which should include history)
+	// Fetch request details from API using getPurchaseRequestById
 	const {
 		data: requestDetail,
 		isLoading,
 		isError,
 		error,
 		refetch,
-	} = useGetPurchaseRequestDetailQuery(requestId, {
+	} = useGetPurchaseRequestByIdQuery(requestId, {
 		skip: !requestId, // Skip if no request ID
 		refetchOnMountOrArgChange: true,
 	});
