@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
 	},
 	productInfoValue: {
 		fontSize: 14,
-		color: "#1b5e20",
+		color: "#000",
 		fontWeight: "500",
 		lineHeight: 18,
 		flex: 1,
