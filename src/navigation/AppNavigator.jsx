@@ -11,6 +11,7 @@ import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
 import VNPayGateWay from "../screens/payment/VNPayGateWay";
 import AccountSettingList from "../screens/profile/AccountSettingList";
 import AddAddress from "../screens/profile/AddAddress";
+import AddWithdraw from "../screens/profile/AddWithdraw";
 import ChangePassword from "../screens/profile/ChangePassword";
 import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChatSetting from "../screens/profile/ChatSetting";
@@ -21,6 +22,7 @@ import NotiSetting from "../screens/profile/NotiSetting";
 import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
+import WithdrawList from "../screens/profile/WithdrawList";
 import AddStore from "../screens/request/AddStore";
 import ConfirmQuotation from "../screens/request/ConfirmQuotation";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
@@ -144,6 +146,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="PolicyScreen"
 				component={PolicyScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="WithdrawList"
+				component={WithdrawList}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="AddWithdraw"
+				component={AddWithdraw}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

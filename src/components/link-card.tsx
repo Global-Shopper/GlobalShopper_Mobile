@@ -8,7 +8,7 @@ interface LinkCardProps {
 	onLinkChange: (link: string) => void;
 	canRemove: boolean;
 	link: string;
-	status: "idle" | "validating" | "success" | "error";
+	status: "idle" | "validating" | "ai-processing" | "success" | "error";
 	data?: any;
 	error?: string | null;
 }
@@ -29,6 +29,11 @@ export default function LinkCard({
 				return {
 					name: "hourglass-outline" as const,
 					color: "#FF9800",
+				};
+			case "ai-processing":
+				return {
+					name: "flash-outline" as const,
+					color: "#9C27B0",
 				};
 			case "success":
 				return {
@@ -127,7 +132,7 @@ export default function LinkCard({
 						/>
 						<Text style={styles.successText}>
 							Đã lấy được dữ liệu sản phẩm:{" "}
-							{data.title || "Sản phẩm hợp lệ"}
+							{data.name || data.title || "Sản phẩm hợp lệ"}
 						</Text>
 					</View>
 				)}
@@ -148,6 +153,19 @@ export default function LinkCard({
 						/>
 						<Text style={styles.validatingText}>
 							Đang kiểm tra link...
+						</Text>
+					</View>
+				)}
+
+				{status === "ai-processing" && (
+					<View style={styles.aiProcessingContainer}>
+						<Ionicons
+							name="flash-outline"
+							size={14}
+							color="#9C27B0"
+						/>
+						<Text style={styles.aiProcessingText}>
+							AI đang lấy thông tin sản phẩm...
 						</Text>
 					</View>
 				)}
@@ -275,6 +293,23 @@ const styles = StyleSheet.create({
 	validatingText: {
 		fontSize: 12,
 		color: "#F57C00",
+		marginLeft: 6,
+		flex: 1,
+		fontWeight: "500",
+	},
+	aiProcessingContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginTop: 6,
+		marginLeft: 2,
+		backgroundColor: "#F3E5F5",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 6,
+	},
+	aiProcessingText: {
+		fontSize: 12,
+		color: "#7B1FA2",
 		marginLeft: 6,
 		flex: 1,
 		fontWeight: "500",

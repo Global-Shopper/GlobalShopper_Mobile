@@ -13,12 +13,15 @@ import { Text } from "../../components/ui/text";
 
 export default function SuccessWithdrawScreen({ navigation, route }) {
 	const {
-		withdrawId = "WD" + Date.now(),
+		withdrawId,
 		amount = 0,
 		bankName = "",
 		accountNumber = "",
 		accountName = "",
 	} = route.params || {};
+
+	// Use backend ID or generate fallback
+	const displayWithdrawId = withdrawId || `WD${Date.now()}`;
 
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 	const scaleAnim = useRef(new Animated.Value(0.3)).current;
@@ -147,7 +150,9 @@ export default function SuccessWithdrawScreen({ navigation, route }) {
 
 						<View style={styles.infoRow}>
 							<Text style={styles.infoLabel}>Mã giao dịch:</Text>
-							<Text style={styles.infoValue}>{withdrawId}</Text>
+							<Text style={styles.infoValue}>
+								{displayWithdrawId}
+							</Text>
 						</View>
 
 						<View style={styles.infoRow}>

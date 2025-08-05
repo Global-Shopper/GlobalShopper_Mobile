@@ -10,6 +10,8 @@ const gshopApi = createApi({
 		"ShippingAddress",
 		"PurchaseRequest",
 		"Wallet",
+		"Banks",
+		"BankAccounts",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -213,6 +215,33 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["PurchaseRequest"],
 		}),
+		createOnlinePurchaseRequest: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.ONLINE_PURCHASE_REQUEST,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest"],
+		}),
+		// AI Raw Data mutation
+		getRawDataFromUrl: builder.mutation({
+			query: (url) => ({
+				params: { link: url },
+				url: endpoints.AI_RAW_DATA,
+				method: "GET",
+			}),
+		}),
+		// Currency conversion mutation
+		convertToVnd: builder.mutation({
+			query: ({ amount, fromCurrency }) => ({
+				data: {
+					amount: parseFloat(amount),
+					fromCurrency: fromCurrency.toUpperCase(),
+				},
+				url: endpoints.CURRENCY_CONVERT_TO_VND,
+				method: "POST",
+			}),
+		}),
 		getPurchaseRequestDetail: builder.query({
 			query: (id) => ({
 				url: `${endpoints.PURCHASE_REQUEST}/${id}`,
@@ -235,6 +264,14 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["Wallet"],
 		}),
+		withdrawWallet: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.WITHDRAW_WALLET,
+				method: "POST",
+			}),
+			invalidatesTags: ["Wallet"],
+		}),
 		checkPayment: builder.query({
 			query: (data) => ({
 				params: data,
@@ -242,6 +279,70 @@ const gshopApi = createApi({
 				method: "GET",
 			}),
 			invalidatesTags: ["Wallet"],
+		}),
+
+		// Bank Accounts APIs
+		getBankAccounts: builder.query({
+			query: () => ({
+				url: endpoints.BANK_ACCOUNTS,
+				method: "GET",
+			}),
+			providesTags: ["BankAccounts"],
+			transformResponse: (response, meta, arg) => {
+				console.log("getBankAccounts API Response:", response);
+
+				// Handle different response structures
+				if (response) {
+					// If response has data property
+					if (response.data) {
+						return Array.isArray(response.data)
+							? response.data
+							: [];
+					}
+					// If response has content property (pagination)
+					if (response.content) {
+						return Array.isArray(response.content)
+							? response.content
+							: [];
+					}
+					// If response is direct array
+					if (Array.isArray(response)) {
+						return response;
+					}
+				}
+
+				return [];
+			},
+		}),
+		getBanks: builder.query({
+			query: () => ({
+				url: endpoints.BANKS,
+				method: "GET",
+			}),
+			providesTags: ["Banks"],
+		}),
+		createBankAccount: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.BANK_ACCOUNTS,
+				method: "POST",
+			}),
+			invalidatesTags: ["BankAccounts"],
+		}),
+		updateBankAccount: builder.mutation({
+			query: ({ id, ...data }) => ({
+				data: data,
+				url: `${endpoints.BANK_ACCOUNTS}/${id}`,
+				method: "PUT",
+			}),
+			invalidatesTags: ["BankAccounts"],
+		}),
+		deleteBankAccount: builder.mutation({
+			query: (id) => ({
+				url: `${endpoints.BANK_ACCOUNTS}/${id}`,
+				method: "DELETE",
+			}),
+			invalidatesTags: ["BankAccounts"],
 		}),
 
 		currentUserTransactions: builder.query({
@@ -282,12 +383,22 @@ export const {
 	useGetPurchaseRequestByIdQuery,
 	useCreateWithLinkPurchaseRequestMutation,
 	useCreateWithoutLinkPurchaseRequestMutation,
+	useCreateOnlinePurchaseRequestMutation,
+	useGetRawDataFromUrlMutation,
+	useConvertToVndMutation,
 	useGetWalletQuery,
 	useDepositWalletMutation,
+	useWithdrawWalletMutation,
 	useLazyCheckPaymentQuery,
 	useGetPurchaseRequestDetailQuery,
 	useTransactionHistoryQuery,
 	useCurrentUserTransactionsQuery,
+	// Bank Account hooks
+	useGetBankAccountsQuery,
+	useGetBanksQuery,
+	useCreateBankAccountMutation,
+	useUpdateBankAccountMutation,
+	useDeleteBankAccountMutation,
 } = gshopApi;
 
 export default gshopApi;

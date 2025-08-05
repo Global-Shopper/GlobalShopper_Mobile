@@ -70,23 +70,30 @@ const setUpInterceptor = (store) => {
 	// Request interceptor
 	axiosInstance.interceptors.request.use(
 		async (config) => {
-			const appState = await store.getState();
-			const accessToken = appState?.rootReducer?.user?.accessToken;
-			const refreshToken = appState?.rootReducer?.user?.refreshToken;
+			// Skip auth for AI endpoints (they might be public)
+			const isAIEndpoint = config.url?.includes("/ai/");
 
-			if (accessToken) {
-				config.headers["Authorization"] = `Bearer ${accessToken}`;
-			}
+			if (!isAIEndpoint) {
+				const appState = await store.getState();
+				const accessToken = appState?.rootReducer?.user?.accessToken;
+				const refreshToken = appState?.rootReducer?.user?.refreshToken;
 
-			if (isTokenExpired(accessToken)) {
-				const newAccessToken = await refreshAccessToken(refreshToken);
-				if (newAccessToken) {
-					config.headers[
-						"Authorization"
-					] = `Bearer ${newAccessToken}`;
-					store.dispatch(
-						setUser({ ...newAccessToken, isLoggedIn: true })
+				if (accessToken) {
+					config.headers["Authorization"] = `Bearer ${accessToken}`;
+				}
+
+				if (isTokenExpired(accessToken)) {
+					const newAccessToken = await refreshAccessToken(
+						refreshToken
 					);
+					if (newAccessToken) {
+						config.headers[
+							"Authorization"
+						] = `Bearer ${newAccessToken}`;
+						store.dispatch(
+							setUser({ ...newAccessToken, isLoggedIn: true })
+						);
+					}
 				}
 			}
 

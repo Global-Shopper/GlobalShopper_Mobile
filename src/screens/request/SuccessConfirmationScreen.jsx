@@ -255,7 +255,7 @@ export default function SuccessConfirmationScreen({ navigation, route }) {
 					onPress={handleViewOrders}
 				>
 					<Ionicons name="list-outline" size={20} color="#1976D2" />
-					<Text style={styles.secondaryButtonText}>Xem đơn hàng</Text>
+					<Text style={styles.secondaryButtonText}>Xem yêu cầu</Text>
 				</TouchableOpacity>
 
 				<TouchableOpacity

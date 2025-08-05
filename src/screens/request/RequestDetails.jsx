@@ -1,89 +1,114 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
 import QuotationCard from "../../components/quotation-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
+import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 
 export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
+	const requestId = request?.id || route.params?.requestId;
+
 	const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 	const [isAcceptedQuotation, setIsAcceptedQuotation] = useState(false);
 
-	// Mock data
-	const requestDetails = {
-		...request,
-		deliveryAddress: {
-			recipientName: "Nguyễn Văn A",
-			phone: "0123456789",
-			address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
-			isDefault: true,
-		},
-		note: "Vui lòng kiểm tra kỹ chất lượng sản phẩm trước khi gửi.",
-		products: [
-			{
-				id: "1",
-				name: "iPhone 15 Pro Max 256GB",
-				description: "Màu xanh dương, chính hãng Apple",
-				images: [],
-				price: "$1,199",
-				convertedPrice: "29,500,000 VNĐ",
-				exchangeRate: "24,600",
-				category: "Điện tử",
-				brand: "Apple",
-				material: "Titanium",
-				size: "6.7 inch",
-				color: "Xanh dương",
-				platform: "Apple Store",
-				productLink: "https://apple.com/iphone-15-pro",
-				mode: request?.type === "with_link" ? "withLink" : "manual",
-				status: "pending",
-			},
-			{
-				id: "2",
-				name: "AirPods Pro 2nd Gen",
-				description: "Có Active Noise Cancellation",
-				images: [],
-				price: "$249",
-				convertedPrice: "6,125,000 VNĐ",
-				exchangeRate: "24,600",
-				category: "Điện tử",
-				brand: "Apple",
-				material: "Silicone",
-				size: "Standard",
-				color: "Trắng",
-				platform: "Apple Store",
-				productLink: "https://apple.com/airpods-pro",
-				mode: request?.type === "with_link" ? "withLink" : "manual",
-				status: "pending",
-			},
-		],
-		storeData:
-			request?.type === "without_link"
-				? {
-						storeName: "Tech Store Vietnam",
-						storeAddress: "456 Nguyễn Huệ, Quận 1, TP.HCM",
-						phoneNumber: "028-3829-5555",
-						email: "contact@techstore.vn",
-						shopLink: "https://techstore.vn",
-				  }
-				: null,
-	};
+	// Fetch purchase request detail from API
+	const {
+		data: requestDetails,
+		isLoading,
+		error,
+		refetch,
+	} = useGetPurchaseRequestByIdQuery(requestId, {
+		skip: !requestId,
+	});
+
+	console.log("Request ID:", requestId);
+	console.log("API Response:", requestDetails);
+	console.log("Loading:", isLoading);
+	console.log("Error:", error);
+
+	// Show loading spinner
+	if (isLoading) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Chi tiết yêu cầu"
+					showBackButton={true}
+					onBackPress={() => navigation.goBack()}
+					navigation={navigation}
+					showNotificationIcon={false}
+					showChatIcon={false}
+				/>
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#1976D2" />
+					<Text style={styles.loadingText}>
+						Đang tải thông tin...
+					</Text>
+				</View>
+			</View>
+		);
+	}
+
+	// Show error state
+	if (error || !requestDetails) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Chi tiết yêu cầu"
+					showBackButton={true}
+					onBackPress={() => navigation.goBack()}
+					navigation={navigation}
+					showNotificationIcon={false}
+					showChatIcon={false}
+				/>
+				<View style={styles.errorContainer}>
+					<Ionicons
+						name="alert-circle-outline"
+						size={48}
+						color="#dc3545"
+					/>
+					<Text style={styles.errorTitle}>
+						Không thể tải thông tin
+					</Text>
+					<Text style={styles.errorMessage}>
+						{error?.data?.message ||
+							error?.message ||
+							"Vui lòng thử lại sau"}
+					</Text>
+					<TouchableOpacity
+						style={styles.retryButton}
+						onPress={() => refetch()}
+					>
+						<Text style={styles.retryButtonText}>Thử lại</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
 
 	const getStatusColor = (status) => {
-		switch (status) {
-			case "processing":
+		switch (status?.toUpperCase()) {
+			case "PENDING":
+			case "PROCESSING":
+				return "#FFA726";
+			case "QUOTED":
 				return "#1976D2";
-			case "quoted":
-				return "#1976D2";
-			case "confirmed":
-				return "#1976D2";
-			case "cancelled":
-				return "#1976D2";
-			case "completed":
+			case "CONFIRMED":
+				return "#4CAF50";
+			case "CANCELLED":
+			case "CANCELED":
+				return "#F44336";
+			case "COMPLETED":
 				return "#6c757d";
 			default:
 				return "#6c757d";
@@ -91,15 +116,20 @@ export default function RequestDetails({ navigation, route }) {
 	};
 
 	const getStatusText = (status) => {
-		switch (status) {
-			case "processing":
+		switch (status?.toUpperCase()) {
+			case "PENDING":
+				return "Chờ xử lý";
+			case "PROCESSING":
 				return "Đang xử lý";
-			case "quoted":
+			case "QUOTED":
 				return "Đã báo giá";
-			case "confirmed":
+			case "CONFIRMED":
 				return "Đã xác nhận";
-			case "cancelled":
+			case "CANCELLED":
+			case "CANCELED":
 				return "Đã huỷ";
+			case "COMPLETED":
+				return "Hoàn thành";
 			default:
 				return "Không xác định";
 		}
@@ -132,7 +162,7 @@ export default function RequestDetails({ navigation, route }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[
 					styles.scrollContent,
-					request.status === "quoted" &&
+					requestDetails?.status === "QUOTED" &&
 						styles.scrollContentWithButton,
 				]}
 			>
@@ -144,20 +174,31 @@ export default function RequestDetails({ navigation, route }) {
 							<View style={styles.leftSection}>
 								<View style={styles.requestTypeContainer}>
 									<Ionicons
-										name={getRequestTypeIcon(request.type)}
+										name={getRequestTypeIcon(
+											requestDetails?.type?.toLowerCase() ===
+												"online"
+												? "with_link"
+												: "without_link"
+										)}
 										size={18}
 										color={getRequestTypeBorderColor(
-											request.type
+											requestDetails?.type?.toLowerCase() ===
+												"online"
+												? "with_link"
+												: "without_link"
 										)}
 									/>
 								</View>
 
 								<View style={styles.requestInfo}>
 									<Text style={styles.requestCode}>
-										#{request.code}
+										#
+										{requestDetails?.code ||
+											requestDetails?.id}
 									</Text>
 									<Text style={styles.createdDate}>
-										{request.createdAt}
+										{requestDetails?.createdAt ||
+											new Date().toLocaleDateString()}
 									</Text>
 								</View>
 							</View>
@@ -167,8 +208,9 @@ export default function RequestDetails({ navigation, route }) {
 									styles.statusBadge,
 									{
 										backgroundColor:
-											getStatusColor(request.status) +
-											"20",
+											getStatusColor(
+												requestDetails?.status
+											) + "20",
 									},
 								]}
 							>
@@ -177,12 +219,12 @@ export default function RequestDetails({ navigation, route }) {
 										styles.statusText,
 										{
 											color: getStatusColor(
-												request.status
+												requestDetails?.status
 											),
 										},
 									]}
 								>
-									{getStatusText(request.status)}
+									{getStatusText(requestDetails?.status)}
 								</Text>
 							</View>
 						</View>
@@ -195,12 +237,20 @@ export default function RequestDetails({ navigation, route }) {
 									styles.typeValue,
 									{
 										color: getRequestTypeBorderColor(
-											request.type
+											requestDetails?.type?.toLowerCase() ===
+												"online"
+												? "with_link"
+												: "without_link"
 										),
 									},
 								]}
 							>
-								{getRequestTypeText(request.type)}
+								{getRequestTypeText(
+									requestDetails?.type?.toLowerCase() ===
+										"online"
+										? "with_link"
+										: "without_link"
+								)}
 							</Text>
 						</View>
 					</View>
@@ -211,7 +261,9 @@ export default function RequestDetails({ navigation, route }) {
 					<TouchableOpacity
 						style={styles.historyViewButton}
 						onPress={() =>
-							navigation.navigate("RequestHistory", { request })
+							navigation.navigate("RequestHistory", {
+								request: requestDetails,
+							})
 						}
 					>
 						<View style={styles.historyViewLeft}>
@@ -241,31 +293,49 @@ export default function RequestDetails({ navigation, route }) {
 				<View style={styles.section}>
 					<AddressSmCard
 						recipientName={
-							requestDetails.deliveryAddress?.recipientName
+							requestDetails?.shippingAddress?.recipientName ||
+							requestDetails?.deliveryAddress?.recipientName
 						}
-						phone={requestDetails.deliveryAddress?.phone}
-						address={requestDetails.deliveryAddress?.address}
-						isDefault={requestDetails.deliveryAddress?.isDefault}
+						phone={
+							requestDetails?.shippingAddress?.phone ||
+							requestDetails?.deliveryAddress?.phone
+						}
+						address={
+							requestDetails?.shippingAddress?.address ||
+							requestDetails?.deliveryAddress?.address
+						}
+						isDefault={
+							requestDetails?.shippingAddress?.isDefault ||
+							requestDetails?.deliveryAddress?.isDefault
+						}
 						onEdit={() => {}} // Disable edit in details view
 						isEmpty={false}
 						showEditButton={false}
 					/>
 				</View>
 
-				{/* Store Information - Show only for without_link requests */}
-				{request.type === "without_link" &&
-					requestDetails.storeData && (
+				{/* Store Information - Show only for OFFLINE requests */}
+				{requestDetails?.type === "OFFLINE" &&
+					requestDetails?.store && (
 						<View style={styles.section}>
 							<StoreCard
-								storeName={requestDetails.storeData.storeName}
+								storeName={
+									requestDetails.store.storeName ||
+									requestDetails.store.name
+								}
 								storeAddress={
-									requestDetails.storeData.storeAddress
+									requestDetails.store.storeAddress ||
+									requestDetails.store.address
 								}
 								phoneNumber={
-									requestDetails.storeData.phoneNumber
+									requestDetails.store.phoneNumber ||
+									requestDetails.store.phone
 								}
-								email={requestDetails.storeData.email}
-								shopLink={requestDetails.storeData.shopLink}
+								email={requestDetails.store.email}
+								shopLink={
+									requestDetails.store.shopLink ||
+									requestDetails.store.storeLink
+								}
 								mode="manual"
 								showEditButton={false}
 							/>
@@ -276,56 +346,102 @@ export default function RequestDetails({ navigation, route }) {
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
 						<Text style={styles.sectionTitle}>
-							Danh sách sản phẩm ({requestDetails.products.length}{" "}
+							Danh sách sản phẩm (
+							{requestDetails?.items?.length ||
+								requestDetails?.products?.length ||
+								0}{" "}
 							sản phẩm)
 						</Text>
 					</View>
 
-					{requestDetails.products.map((product, index) => (
-						<ProductCard
-							key={product.id || index}
-							id={product.id || index.toString()}
-							name={product.name || "Sản phẩm không tên"}
-							description={product.description}
-							images={product.images}
-							price={
-								product.mode === "manual" ||
-								request.status === "processing"
-									? ""
-									: product.price || ""
-							}
-							convertedPrice={
-								product.mode === "manual" ||
-								request.status === "processing"
-									? ""
-									: product.convertedPrice
-							}
-							exchangeRate={
-								product.mode === "manual" ||
-								request.status === "processing"
-									? undefined
-									: product.exchangeRate
-							}
-							category={product.category}
-							brand={product.brand}
-							material={product.material}
-							size={product.size}
-							color={product.color}
-							platform={product.platform}
-							productLink={product.productLink}
-							mode={product.mode}
-							sellerInfo={product.sellerInfo}
-							status="pending"
-							showEditButton={false}
-						/>
-					))}
+					{(
+						requestDetails?.items ||
+						requestDetails?.products ||
+						[]
+					).map((product, index) => {
+						// Determine product mode based on request type
+						const productMode =
+							requestDetails?.type === "ONLINE"
+								? "withLink"
+								: "manual";
+
+						return (
+							<ProductCard
+								key={product.id || index}
+								id={product.id || index.toString()}
+								name={
+									product.name ||
+									product.productName ||
+									"Sản phẩm không tên"
+								}
+								description={
+									product.description ||
+									product.productDescription
+								}
+								images={
+									product.images ||
+									product.productImages ||
+									[]
+								}
+								price={
+									productMode === "manual"
+										? ""
+										: product.price ||
+										  product.productPrice ||
+										  ""
+								}
+								convertedPrice={
+									productMode === "manual"
+										? ""
+										: product.convertedPrice
+								}
+								exchangeRate={
+									productMode === "manual"
+										? undefined
+										: product.exchangeRate
+								}
+								category={
+									product.category || product.productCategory
+								}
+								brand={product.brand || product.productBrand}
+								material={
+									product.material || product.productMaterial
+								}
+								size={product.size || product.productSize}
+								color={product.color || product.productColor}
+								platform={
+									product.platform ||
+									product.ecommercePlatform
+								}
+								productLink={product.productLink || product.url}
+								quantity={product.quantity || 1}
+								mode={productMode}
+								sellerInfo={
+									productMode === "manual"
+										? {
+												name: product.sellerName || "",
+												phone:
+													product.sellerPhone || "",
+												email:
+													product.sellerEmail || "",
+												address:
+													product.sellerAddress || "",
+												storeLink:
+													product.sellerStoreLink ||
+													"",
+										  }
+										: undefined
+								}
+							/>
+						);
+					})}
 
 					{/* Divider */}
 					<View style={styles.divider} />
 				</View>
 
 				{/* Note Section */}
-				{requestDetails.note && (
+				{(requestDetails?.note || requestDetails?.customerNote) && (
 					<View style={styles.section}>
 						<TouchableOpacity
 							style={styles.noteHeader}
@@ -341,23 +457,22 @@ export default function RequestDetails({ navigation, route }) {
 									Lời nhắn từ khách hàng
 								</Text>
 							</View>
-							<View style={styles.noteHeaderRight}>
-								<Ionicons
-									name={
-										isNoteExpanded
-											? "chevron-up-outline"
-											: "chevron-down-outline"
-									}
-									size={22}
-									color="#1976D2"
-								/>
-							</View>
+							<Ionicons
+								name={
+									isNoteExpanded
+										? "chevron-up-outline"
+										: "chevron-down-outline"
+								}
+								size={22}
+								color="#1976D2"
+							/>
 						</TouchableOpacity>
 
 						{isNoteExpanded && (
-							<View style={styles.noteContainer}>
+							<View style={styles.noteContent}>
 								<Text style={styles.noteText}>
-									{requestDetails.note}
+									{requestDetails?.note ||
+										requestDetails?.customerNote}
 								</Text>
 							</View>
 						)}
@@ -365,8 +480,8 @@ export default function RequestDetails({ navigation, route }) {
 				)}
 
 				{/* Quotation Card - Show only for quoted or confirmed requests */}
-				{(request.status === "quoted" ||
-					request.status === "confirmed") && (
+				{(requestDetails?.status === "QUOTED" ||
+					requestDetails?.status === "CONFIRMED") && (
 					<View style={styles.section}>
 						<QuotationCard
 							productPrice={1200000}
@@ -384,7 +499,7 @@ export default function RequestDetails({ navigation, route }) {
 				)}
 
 				{/* Payment Agreement Checkbox - Show only for quoted requests */}
-				{request.status === "quoted" && (
+				{requestDetails?.status === "QUOTED" && (
 					<View style={styles.section}>
 						<View style={styles.checkboxContainer}>
 							<TouchableOpacity
@@ -416,7 +531,7 @@ export default function RequestDetails({ navigation, route }) {
 			</ScrollView>
 
 			{/* Fixed Payment Button - Show only for quoted requests */}
-			{request.status === "quoted" && (
+			{requestDetails?.status === "QUOTED" && (
 				<View style={styles.fixedButtonContainer}>
 					<TouchableOpacity
 						style={[
@@ -427,7 +542,7 @@ export default function RequestDetails({ navigation, route }) {
 						onPress={() => {
 							if (isAcceptedQuotation) {
 								navigation.navigate("ConfirmQuotation", {
-									request,
+									request: requestDetails,
 								});
 							}
 						}}
@@ -610,6 +725,12 @@ const styles = StyleSheet.create({
 		gap: 6,
 		flex: 1,
 	},
+	noteContent: {
+		backgroundColor: "#f8f9fa",
+		padding: 12,
+		borderRadius: 8,
+		marginTop: 8,
+	},
 	noteHeaderRight: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -733,5 +854,52 @@ const styles = StyleSheet.create({
 	},
 	fixedPaymentButtonTextDisabled: {
 		color: "#9E9E9E",
+	},
+	// Loading and Error States
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#f8f9fa",
+		paddingHorizontal: 20,
+	},
+	loadingText: {
+		fontSize: 16,
+		color: "#666",
+		marginTop: 16,
+		textAlign: "center",
+	},
+	errorContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#f8f9fa",
+		paddingHorizontal: 20,
+	},
+	errorTitle: {
+		fontSize: 18,
+		fontWeight: "600",
+		color: "#dc3545",
+		marginTop: 16,
+		marginBottom: 8,
+		textAlign: "center",
+	},
+	errorMessage: {
+		fontSize: 14,
+		color: "#666",
+		textAlign: "center",
+		lineHeight: 20,
+		marginBottom: 24,
+	},
+	retryButton: {
+		backgroundColor: "#1976D2",
+		paddingHorizontal: 24,
+		paddingVertical: 12,
+		borderRadius: 8,
+	},
+	retryButtonText: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#fff",
 	},
 });
