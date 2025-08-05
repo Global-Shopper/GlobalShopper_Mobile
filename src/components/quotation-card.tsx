@@ -3,12 +3,36 @@ import { StyleSheet, View } from "react-native";
 import { Text } from "./ui/text";
 
 interface QuotationCardProps {
+	// Original prices (no conversion)
+	originalProductPrice?: number;
+	originalCurrency?: string;
+	exchangeRate?: number;
+
+	// VND converted prices
 	productPrice?: number;
 	serviceFee?: number;
 	serviceFeePercent?: number;
 	internationalShipping?: number;
 	importTax?: number;
 	domesticShipping?: number;
+
+	// Tax details
+	taxDetails?: {
+		importDuty?: number;
+		vat?: number;
+		specialConsumptionTax?: number;
+		environmentTax?: number;
+		totalTaxAmount?: number;
+	};
+
+	// Tax rates from API
+	taxRates?: {
+		region: string;
+		taxType: string;
+		rate: number;
+		taxName: string;
+	}[];
+
 	additionalFees?: {
 		actualImportTax?: number;
 		actualShipping?: number;
@@ -21,19 +45,40 @@ interface QuotationCardProps {
 }
 
 export default function QuotationCard({
+	// Original prices
+	originalProductPrice,
+	originalCurrency = "USD",
+	exchangeRate = 1,
+
+	// VND converted prices
 	productPrice = 1200000,
 	serviceFee = 60000,
 	serviceFeePercent = 5,
 	internationalShipping = 200000,
 	importTax = 120000,
 	domesticShipping = 35000,
+
+	// Tax details
+	taxDetails,
+
+	// Tax rates from API
+	taxRates,
+
 	additionalFees,
 	totalAmount = 1615000,
 	updatedTotalAmount,
 	isExpanded = false,
 }: QuotationCardProps) {
 	const formatCurrency = (amount: number) => {
-		return `${amount.toLocaleString("vi-VN")}₫`;
+		return `${amount.toLocaleString("vi-VN")} VND`;
+	};
+
+	const formatOriginalCurrency = (amount: number, currency: string) => {
+		return `${amount.toLocaleString("en-US")} ${currency}`;
+	};
+
+	const formatExchangeRate = (rate: number, currency: string) => {
+		return `1 ${currency} = ${rate.toLocaleString("vi-VN")} VND`;
 	};
 
 	const totalDifference = additionalFees
@@ -56,13 +101,51 @@ export default function QuotationCard({
 			</View>
 
 			<View style={styles.content}>
+				{/* Exchange Rate Section */}
+				{originalProductPrice && exchangeRate > 1 && (
+					<>
+						<View style={styles.exchangeSection}>
+							<View style={styles.exchangeRow}>
+								<View style={styles.exchangeLeft}>
+									<Ionicons
+										name="swap-horizontal-outline"
+										size={16}
+										color="#1976D2"
+									/>
+									<Text style={styles.exchangeTitle}>
+										Tỷ giá:
+									</Text>
+								</View>
+								<Text style={styles.exchangeRate}>
+									{formatExchangeRate(
+										exchangeRate,
+										originalCurrency
+									)}
+								</Text>
+							</View>
+						</View>
+						<View style={styles.divider} />
+					</>
+				)}
+
 				{/* Basic Pricing */}
 				<View style={styles.section}>
+					{/* Product Price */}
 					<View style={styles.priceRow}>
 						<Text style={styles.label}>Giá sản phẩm:</Text>
-						<Text style={styles.value}>
-							{formatCurrency(productPrice)}
-						</Text>
+						<View style={styles.priceColumn}>
+							{originalProductPrice && (
+								<Text style={styles.originalPrice}>
+									{formatOriginalCurrency(
+										originalProductPrice,
+										originalCurrency
+									)}
+								</Text>
+							)}
+							<Text style={styles.value}>
+								{formatCurrency(productPrice)}
+							</Text>
+						</View>
 					</View>
 
 					<View style={styles.priceRow}>
@@ -74,46 +157,181 @@ export default function QuotationCard({
 						</Text>
 					</View>
 
-					<View style={styles.priceRow}>
-						<Text style={styles.label}>
-							Phí vận chuyển quốc tế (tạm tính):
-						</Text>
-						<Text style={styles.value}>
-							{formatCurrency(internationalShipping)}
-						</Text>
-					</View>
+					{/* Tax Details Section */}
+					{taxRates && taxRates.length > 0 ? (
+						<>
+							<View style={styles.taxHeaderCompact}>
+								<View style={styles.taxHeaderLeft}>
+									<Ionicons
+										name="document-text-outline"
+										size={16}
+										color="#ff9800"
+									/>
+									<Text style={styles.taxTitle}>
+										Chi tiết thuế nhập khẩu
+									</Text>
+								</View>
+							</View>
 
-					<View style={styles.priceRow}>
-						<Text style={styles.label}>
-							Thuế nhập khẩu (ước tính):
-						</Text>
-						<Text style={styles.value}>
-							{formatCurrency(importTax)}
-						</Text>
-					</View>
+							{taxRates.map((tax, index) => (
+								<View key={index} style={styles.taxRowCompact}>
+									<Text style={styles.taxLabelCompact}>
+										• {tax.taxName} ({tax.rate}%)
+									</Text>
+									<Text style={styles.taxValueCompact}>
+										{formatCurrency(
+											Math.round(
+												(productPrice * tax.rate) / 100
+											)
+										)}
+									</Text>
+								</View>
+							))}
 
-					<View style={styles.priceRow}>
-						<Text style={styles.label}>
-							Phí giao hàng nội địa (tạm tính):
-						</Text>
-						<Text style={styles.value}>
-							{formatCurrency(domesticShipping)}
-						</Text>
+							<View style={styles.taxTotalRowCompact}>
+								<Text style={styles.taxTotalLabel}>
+									Tổng thuế nhập khẩu
+								</Text>
+								<Text style={styles.taxTotalValue}>
+									{formatCurrency(importTax)}
+								</Text>
+							</View>
+						</>
+					) : taxDetails ? (
+						<>
+							<View style={styles.taxHeader}>
+								<Ionicons
+									name="document-text-outline"
+									size={16}
+									color="#ff9800"
+								/>
+								<Text style={styles.taxTitle}>
+									Chi tiết thuế nhập khẩu
+								</Text>
+							</View>
+
+							{taxDetails.importDuty &&
+								taxDetails.importDuty > 0 && (
+									<View style={styles.taxRow}>
+										<Text style={styles.taxLabel}>
+											• Thuế nhập khẩu:
+										</Text>
+										<Text style={styles.taxValue}>
+											{formatCurrency(
+												taxDetails.importDuty
+											)}
+										</Text>
+									</View>
+								)}
+
+							{taxDetails.vat && taxDetails.vat > 0 && (
+								<View style={styles.taxRow}>
+									<Text style={styles.taxLabel}>
+										• Thuế VAT:
+									</Text>
+									<Text style={styles.taxValue}>
+										{formatCurrency(taxDetails.vat)}
+									</Text>
+								</View>
+							)}
+
+							{taxDetails.specialConsumptionTax &&
+								taxDetails.specialConsumptionTax > 0 && (
+									<View style={styles.taxRow}>
+										<Text style={styles.taxLabel}>
+											• Thuế tiêu thụ đặc biệt:
+										</Text>
+										<Text style={styles.taxValue}>
+											{formatCurrency(
+												taxDetails.specialConsumptionTax
+											)}
+										</Text>
+									</View>
+								)}
+
+							{taxDetails.environmentTax &&
+								taxDetails.environmentTax > 0 && (
+									<View style={styles.taxRow}>
+										<Text style={styles.taxLabel}>
+											• Thuế bảo vệ môi trường:
+										</Text>
+										<Text style={styles.taxValue}>
+											{formatCurrency(
+												taxDetails.environmentTax
+											)}
+										</Text>
+									</View>
+								)}
+
+							<View style={styles.taxTotalRow}>
+								<Text style={styles.taxTotalLabel}>
+									Tổng thuế nhập khẩu:
+								</Text>
+								<Text style={styles.taxTotalValue}>
+									{formatCurrency(
+										taxDetails.totalTaxAmount || importTax
+									)}
+								</Text>
+							</View>
+						</>
+					) : (
+						<View style={styles.priceRow}>
+							<Text style={styles.label}>
+								Thuế nhập khẩu (ước tính):
+							</Text>
+							<Text style={styles.value}>
+								{formatCurrency(importTax)}
+							</Text>
+						</View>
+					)}
+
+					{/* Shipping Fees Section */}
+					<View style={styles.shippingSection}>
+						<View style={styles.priceRow}>
+							<Text style={styles.label}>
+								Phí vận chuyển quốc tế (tạm tính):
+							</Text>
+							<Text style={styles.value}>
+								{formatCurrency(internationalShipping)}
+							</Text>
+						</View>
+
+						<View style={styles.priceRow}>
+							<Text style={styles.label}>
+								Phí giao hàng nội địa (tạm tính):
+							</Text>
+							<Text style={styles.value}>
+								{formatCurrency(domesticShipping)}
+							</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Divider */}
 				<View style={styles.divider} />
 
-				{/* Total */}
+				{/* Total Section */}
 				<View style={styles.totalSection}>
-					<View style={styles.totalRow}>
-						<View style={styles.totalLeft}>
-							<Text style={styles.totalIcon}>💵</Text>
-							<Text style={styles.totalLabel}>
-								Tổng thanh toán:
+					{/* Original Total (if applicable) */}
+					{originalProductPrice && exchangeRate > 1 && (
+						<View style={styles.originalTotalRow}>
+							<Text style={styles.originalTotalLabel}>
+								Tổng tiền gốc ({originalCurrency}):
+							</Text>
+							<Text style={styles.originalTotalValue}>
+								{formatOriginalCurrency(
+									Math.round(totalAmount / exchangeRate),
+									originalCurrency
+								)}
 							</Text>
 						</View>
+					)}
+
+					{/* VND Total */}
+					<View style={styles.totalRowCompact}>
+						<Text style={styles.totalLabelCompact}>
+							Tổng thanh toán (VND)
+						</Text>
 						<Text style={styles.totalValue}>
 							{formatCurrency(updatedTotalAmount || totalAmount)}
 						</Text>
@@ -219,8 +437,8 @@ export default function QuotationCard({
 				{/* Note */}
 				<View style={styles.noteSection}>
 					<Text style={styles.noteText}>
-						💡 Một số phí như thuế và vận chuyển sẽ được cập nhật
-						chính xác sau khi đơn hàng về kho.
+						💡 Thuế và phí vận chuyển sẽ được cập nhật chính xác sau
+						khi đơn hàng về kho
 					</Text>
 				</View>
 			</View>
@@ -234,7 +452,7 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
-		marginBottom: 10,
+		marginBottom: 5,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.08,
@@ -260,16 +478,61 @@ const styles = StyleSheet.create({
 		color: "#333",
 	},
 	content: {
-		padding: 16,
+		padding: 14,
+	},
+	// Exchange Rate Section
+	exchangeSection: {
+		backgroundColor: "#e3f2fd",
+		borderRadius: 8,
+		padding: 12,
+		marginBottom: 8,
+	},
+	exchangeRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	exchangeLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	exchangeHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		marginBottom: 4,
+	},
+	exchangeTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#1976D2",
+	},
+	exchangeRate: {
+		fontSize: 14,
+		fontWeight: "700",
+		color: "#1976D2",
 	},
 	section: {
 		marginBottom: 8,
 	},
+	shippingSection: {
+		marginTop: 4,
+	},
 	priceRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "center",
-		paddingVertical: 8,
+		alignItems: "flex-start",
+		paddingVertical: 6,
+	},
+	priceColumn: {
+		alignItems: "flex-end",
+	},
+	originalPrice: {
+		fontSize: 12,
+		color: "#666",
+		fontStyle: "italic",
+		marginBottom: 2,
 	},
 	label: {
 		fontSize: 14,
@@ -282,18 +545,142 @@ const styles = StyleSheet.create({
 		color: "#333",
 		textAlign: "right",
 	},
+	// Tax Details Section
+	taxHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		marginTop: 8,
+		marginBottom: 8,
+		paddingVertical: 6,
+		paddingHorizontal: 8,
+		backgroundColor: "#fff8e1",
+		borderRadius: 6,
+	},
+	taxHeaderCompact: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "flex-start",
+		marginTop: 8,
+		marginBottom: 6,
+		paddingVertical: 4,
+		paddingHorizontal: 0,
+	},
+	taxHeaderLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	taxTitle: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#ff9800",
+	},
+	taxRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 4,
+		paddingHorizontal: 12,
+	},
+	taxRowCompact: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 3,
+		paddingHorizontal: 8,
+		marginVertical: 1,
+	},
+	taxLabel: {
+		fontSize: 13,
+		color: "#666",
+		flex: 1,
+	},
+	taxLabelCompact: {
+		fontSize: 13,
+		color: "#666",
+		flex: 1,
+	},
+	taxValue: {
+		fontSize: 13,
+		fontWeight: "600",
+		color: "#333",
+		textAlign: "right",
+	},
+	taxValueCompact: {
+		fontSize: 13,
+		fontWeight: "600",
+		color: "#333",
+		textAlign: "right",
+	},
+	taxTotalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		marginTop: 4,
+		borderTopWidth: 1,
+		borderTopColor: "#ffe0b2",
+		backgroundColor: "#fff8e1",
+		borderRadius: 6,
+	},
+	taxTotalRowCompact: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 6,
+		paddingHorizontal: 8,
+		marginTop: 6,
+		borderTopWidth: 1,
+		borderTopColor: "#e0e0e0",
+	},
+	taxTotalLabel: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#ff9800",
+	},
+	taxTotalValue: {
+		fontSize: 14,
+		fontWeight: "700",
+		color: "#ff9800",
+	},
 	divider: {
 		height: 1,
 		backgroundColor: "#E5E5E5",
-		marginVertical: 12,
+		marginVertical: 10,
 	},
 	totalSection: {
 		backgroundColor: "#f8f9fa",
 		borderRadius: 8,
-		padding: 12,
+		padding: 10,
 		marginBottom: 8,
 	},
+	originalTotalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 8,
+		paddingBottom: 8,
+		borderBottomWidth: 1,
+		borderBottomColor: "#dee2e6",
+	},
+	originalTotalLabel: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#666",
+	},
+	originalTotalValue: {
+		fontSize: 14,
+		fontWeight: "700",
+		color: "#666",
+	},
 	totalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	totalRowCompact: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -307,6 +694,11 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 	},
 	totalLabel: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#333",
+	},
+	totalLabelCompact: {
 		fontSize: 16,
 		fontWeight: "700",
 		color: "#333",
@@ -407,14 +799,14 @@ const styles = StyleSheet.create({
 	noteSection: {
 		backgroundColor: "#f0f8ff",
 		borderRadius: 8,
-		padding: 12,
+		padding: 10,
 		borderLeftWidth: 4,
 		borderLeftColor: "#42A5F5",
 	},
 	noteText: {
-		fontSize: 13,
+		fontSize: 12,
 		color: "#666",
-		lineHeight: 18,
+		lineHeight: 16,
 		fontStyle: "italic",
 	},
 });

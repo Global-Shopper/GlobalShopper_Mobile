@@ -5,6 +5,15 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 const SuccessPaymentScreen = ({ navigation, route }) => {
 	const { paymentMethod, amount, requestId } = route.params || {};
 
+	// Helper function to get shortened UUID with #
+	const getShortId = (fullId) => {
+		if (!fullId) return "N/A";
+		if (typeof fullId === "string" && fullId.includes("-")) {
+			return "#" + fullId.split("-")[0];
+		}
+		return "#" + fullId;
+	};
+
 	const getPaymentMethodDisplay = (method) => {
 		switch (method) {
 			case "wallet":
@@ -100,10 +109,12 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 									color="#007BFF"
 								/>
 								<Text style={styles.detailLabel}>
-									Mã đơn hàng
+									Mã yêu cầu
 								</Text>
 							</View>
-							<Text style={styles.detailValue}>#{requestId}</Text>
+							<Text style={styles.detailValue}>
+								{getShortId(requestId)}
+							</Text>
 						</View>
 					)}
 
