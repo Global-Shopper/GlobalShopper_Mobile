@@ -195,7 +195,7 @@ export default function OrderScreen({ navigation }) {
 	const handleOrderPress = (orderId) => {
 		console.log("Order pressed:", orderId);
 		// Navigate to order details with the selected order
-		const selectedOrder = orders.find(order => order.id === orderId);
+		const selectedOrder = orders.find((order) => order.id === orderId);
 		navigation.navigate("OrderDetails", { orderData: selectedOrder });
 	};
 
