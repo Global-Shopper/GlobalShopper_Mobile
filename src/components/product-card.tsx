@@ -148,34 +148,8 @@ export default function ProductCard({
 					)}
 				</View>
 
-				{/* Seller Info for Manual Mode */}
-				{mode === "manual" && sellerInfo && (
-					<View style={styles.sellerSection}>
-						<View style={styles.sellerRow}>
-							<Ionicons
-								name="person-outline"
-								size={14}
-								color="#1976D2"
-							/>
-							<Text style={styles.sellerText} numberOfLines={1}>
-								{sellerInfo.name}
-							</Text>
-						</View>
-						<View style={styles.sellerRow}>
-							<Ionicons
-								name="location-outline"
-								size={14}
-								color="#1976D2"
-							/>
-							<Text style={styles.sellerText} numberOfLines={1}>
-								{sellerInfo.address}
-							</Text>
-						</View>
-					</View>
-				)}
-
-				{/* Product Link for WithLink Mode */}
-				{mode === "withLink" && productLink && (
+				{/* Product Link - Show for both modes */}
+				{productLink && (
 					<View style={styles.linkSection}>
 						<Ionicons
 							name="link-outline"

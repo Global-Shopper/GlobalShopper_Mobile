@@ -51,31 +51,33 @@ export default function AddressSmCard({
 	// Normal address display
 	return (
 		<View style={styles.container}>
-			{/* Header */}
-			<View style={styles.header}>
-				<View style={styles.headerLeft}>
-					{isDefault && (
-						<View style={styles.defaultBadge}>
-							<Text style={styles.defaultText}>Mặc định</Text>
-						</View>
+			{/* Header - Only show if needed */}
+			{(isDefault || (onEdit && showEditButton)) && (
+				<View style={styles.header}>
+					<View style={styles.headerLeft}>
+						{isDefault && (
+							<View style={styles.defaultBadge}>
+								<Text style={styles.defaultText}>Mặc định</Text>
+							</View>
+						)}
+					</View>
+					{onEdit && showEditButton && (
+						<TouchableOpacity
+							onPress={onEdit}
+							style={styles.editButton}
+						>
+							<Ionicons
+								name="chevron-forward"
+								size={16}
+								color="#666"
+							/>
+						</TouchableOpacity>
 					)}
 				</View>
-				{onEdit && showEditButton && (
-					<TouchableOpacity
-						onPress={onEdit}
-						style={styles.editButton}
-					>
-						<Ionicons
-							name="chevron-forward"
-							size={16}
-							color="#666"
-						/>
-					</TouchableOpacity>
-				)}
-			</View>
+			)}
 
 			{/* Content */}
-			<View style={styles.content}>
+			<View style={[styles.content, !isDefault && !(onEdit && showEditButton) && styles.contentNoHeader]}>
 				{/* Name and Phone on same row */}
 				<View style={styles.namePhoneRow}>
 					<Ionicons name="location" size={16} color="#1976D2" />
@@ -132,6 +134,9 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		gap: 8,
+	},
+	contentNoHeader: {
+		marginTop: 0,
 	},
 	namePhoneRow: {
 		flexDirection: "row",

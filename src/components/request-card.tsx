@@ -103,7 +103,7 @@ export default function RequestCard({
 	const getProductDisplayInfo = (request: any) => {
 		if (request.requestType === "ONLINE") {
 			let allProducts: any[] = [];
-			
+
 			// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
 			if (
 				Array.isArray(request.requestItems) &&
@@ -154,7 +154,7 @@ export default function RequestCard({
 			// OFFLINE logic - also support "và X sản phẩm khác" format
 			// First, try to get products from subRequests like ONLINE logic
 			let allProducts: any[] = [];
-			
+
 			if (
 				Array.isArray(request.subRequests) &&
 				request.subRequests.length > 0
@@ -169,7 +169,7 @@ export default function RequestCard({
 					}
 				});
 			}
-			
+
 			// If we found products, use the same logic as ONLINE
 			if (allProducts.length > 0) {
 				const sortedProducts = allProducts.sort((a, b) => {
@@ -191,7 +191,7 @@ export default function RequestCard({
 					return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
 				}
 			}
-			
+
 			// Fallback to store name logic if no products found
 			let mainText = "";
 
