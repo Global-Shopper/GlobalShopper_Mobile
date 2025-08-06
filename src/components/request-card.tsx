@@ -103,6 +103,7 @@ export default function RequestCard({
 	const getProductDisplayInfo = (request: any) => {
 		if (request.requestType === "ONLINE") {
 			let allProducts: any[] = [];
+			
 			// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
 			if (
 				Array.isArray(request.requestItems) &&
@@ -150,6 +151,48 @@ export default function RequestCard({
 				return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
 			}
 		} else {
+			// OFFLINE logic - also support "và X sản phẩm khác" format
+			// First, try to get products from subRequests like ONLINE logic
+			let allProducts: any[] = [];
+			
+			if (
+				Array.isArray(request.subRequests) &&
+				request.subRequests.length > 0
+			) {
+				// Gộp tất cả products từ tất cả subRequests
+				request.subRequests.forEach((subReq: any) => {
+					if (
+						Array.isArray(subReq.requestItems) &&
+						subReq.requestItems.length > 0
+					) {
+						allProducts = [...allProducts, ...subReq.requestItems];
+					}
+				});
+			}
+			
+			// If we found products, use the same logic as ONLINE
+			if (allProducts.length > 0) {
+				const sortedProducts = allProducts.sort((a, b) => {
+					const nameA = (a.productName || a.name || "").toLowerCase();
+					const nameB = (b.productName || b.name || "").toLowerCase();
+					return nameA.localeCompare(nameB);
+				});
+
+				const firstProduct = sortedProducts[0];
+				const firstName =
+					firstProduct.productName ||
+					firstProduct.name ||
+					"Sản phẩm không tên";
+
+				if (allProducts.length === 1) {
+					return firstName;
+				} else {
+					const remainingCount = allProducts.length - 1;
+					return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
+				}
+			}
+			
+			// Fallback to store name logic if no products found
 			let mainText = "";
 
 			if (
@@ -278,7 +321,7 @@ export default function RequestCard({
 			{/* Product Info Section - Combined product name and quantity */}
 			<View style={styles.productInfoSection}>
 				<View style={styles.productInfoContainer}>
-					<Text style={styles.productInfoValue} numberOfLines={2}>
+					<Text style={styles.productInfoValue} numberOfLines={3}>
 						{getProductDisplayInfo(request)}
 					</Text>
 
@@ -428,7 +471,7 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#000",
 		fontWeight: "500",
-		lineHeight: 18,
+		lineHeight: 20,
 		flex: 1,
 		marginRight: 12,
 	},
