@@ -1,18 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { signout } from "../../features/user";
+import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
 
 export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
 	const reduxUser = useSelector((state) => state?.rootReducer?.user);
 	const dispatch = useDispatch();
 	const { showDialog, Dialog } = useDialog();
+
+	// API calls để lấy số lượng thực tế
+	const {
+		data: purchaseRequestData,
+		isLoading: isLoadingRequests,
+		error: requestError,
+	} = useGetPurchaseRequestQuery();
+
+	// State cho số lượng
+	const [requestCount, setRequestCount] = useState(0);
+	const [orderCount, setOrderCount] = useState(0);
 
 	const [user] = useState({
 		name: reduxUser?.name,
@@ -25,6 +37,35 @@ export default function AccountScreen({ navigation }) {
 
 	const [chatNotificationCount] = useState(3); // Số tin nhắn chưa đọc
 
+	// Cập nhật số lượng khi có data từ API
+	useEffect(() => {
+		// Debug log để xem cấu trúc data
+		console.log("Purchase Request Data:", purchaseRequestData);
+		console.log("Is Loading:", isLoadingRequests);
+		console.log("Error:", requestError);
+
+		if (purchaseRequestData && Array.isArray(purchaseRequestData)) {
+			// Đếm số yêu cầu đang xử lý (chưa hoàn thành)
+			const pendingRequests = purchaseRequestData.filter(
+				(request) =>
+					request.status !== "DELIVERED" &&
+					request.status !== "CANCELED"
+			).length;
+
+			// Đếm số đơn hàng đã hoàn thành
+			const completedOrders = purchaseRequestData.filter(
+				(request) => request.status === "DELIVERED"
+			).length;
+
+			setRequestCount(pendingRequests);
+			setOrderCount(completedOrders);
+		} else {
+			// Nếu chưa có data hoặc data không hợp lệ, set về 0
+			setRequestCount(0);
+			setOrderCount(0);
+		}
+	}, [purchaseRequestData, isLoadingRequests, requestError]);
+
 	const handleChatPress = () => {
 		console.log("Chat pressed");
 	};
@@ -36,7 +77,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Yêu cầu",
 			icon: "clipboard",
 			color: "#667eea",
-			value: "12",
+			value: requestCount.toString(),
 			subtitle: "Đang xử lý",
 		},
 		{
@@ -44,16 +85,8 @@ export default function AccountScreen({ navigation }) {
 			title: "Đơn hàng",
 			icon: "bag-check",
 			color: "#f093fb",
-			value: "8",
+			value: orderCount.toString(),
 			subtitle: "Hoàn thành",
-		},
-		{
-			id: 3,
-			title: "Số dư ví",
-			icon: "card",
-			color: "#4facfe",
-			value: "2.5M",
-			subtitle: "VNĐ",
 		},
 	];
 
@@ -80,7 +113,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Thông tin rút tiền",
 			subtitle: "Quản lý tài khoản ngân hàng",
 			icon: "card-outline",
-			gradientColors: ["#66BB6A", "#4CAF50"],
+			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("WithdrawList"),
 		},
 		{

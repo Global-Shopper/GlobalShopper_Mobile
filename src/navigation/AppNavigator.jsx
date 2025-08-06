@@ -7,6 +7,8 @@ import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import NotificationScreen from "../screens/notification/NotificationScreen";
+import OrderDetails from "../screens/order/OrderDetails";
+import OrderHistoryScreen from "../screens/order/OrderHistoryScreen";
 import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
 import VNPayGateWay from "../screens/payment/VNPayGateWay";
 import AccountSettingList from "../screens/profile/AccountSettingList";
@@ -231,6 +233,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="SuccessConfirmationScreen"
 				component={SuccessConfirmationScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="OrderDetails"
+				component={OrderDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="OrderHistory"
+				component={OrderHistoryScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
+import OrderCard from "../../components/order-card";
 import { Text } from "../../components/ui/text";
 
 export default function OrderScreen({ navigation }) {
@@ -9,185 +10,193 @@ export default function OrderScreen({ navigation }) {
 
 	const orders = [
 		{
-			id: "ORD001",
-			title: "iPhone 15 Pro Max từ Apple Store",
-			items: ["1x iPhone 15 Pro Max 256GB", "1x Ốp lưng chính hãng"],
-			total: 35000000,
-			status: "paid",
-			date: "2024-01-15",
-			customer: "Nguyễn Văn A",
-			address: "123 Đường ABC, Quận 1, TP.HCM",
+			id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+			requestType: "ONLINE",
+			seller: "Apple Store",
+			platform: "Amazon",
+			productName: "iPhone 15 Pro Max 256GB - Natural Titanium",
+			productImage: "https://example.com/iphone.jpg",
+			quantity: 1,
+			totalPrice: 35000000,
+			status: "PURCHASED",
+			createdAt: "2024-01-15T08:30:00Z",
+			currency: "VND",
+			trackingCode: "VN123456789",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Nguyễn Văn A",
+				phone: "0901234567",
+				address: "123 Đường ABC, Phường 1, Quận 1, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã thanh toán thành công",
+				date: "2024-01-15T08:30:00Z",
+			},
 		},
 		{
-			id: "ORD002",
-			title: "Giày Nike từ Nike Store US",
-			items: ["1x Nike Air Max 270", "1x Tất Nike"],
-			total: 4500000,
-			status: "purchased",
-			date: "2024-01-14",
-			customer: "Trần Thị B",
-			address: "456 Đường XYZ, Quận 2, TP.HCM",
+			id: "b2c3d4e5-f6g7-8901-bcde-fg2345678901",
+			requestType: "ONLINE",
+			seller: "Nike Official",
+			platform: "Nike Store US",
+			productName: "Nike Air Max 270 Black/White Size 42",
+			productImage: "https://example.com/nike.jpg",
+			quantity: 2,
+			totalPrice: 4500000,
+			status: "IN_TRANSIT",
+			createdAt: "2024-01-14T10:15:00Z",
+			currency: "VND",
+			trackingCode: "VN987654321",
+			shippingUnit: "Viettel Post",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Trần Thị B",
+				phone: "0912345678",
+				address: "456 Đường XYZ, Phường 2, Quận 2, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đang vận chuyển quốc tế",
+				date: "2024-01-16T14:20:00Z",
+			},
 		},
 		{
-			id: "ORD003",
-			title: "MacBook Pro từ Apple Store",
-			items: ["1x MacBook Pro 16 inch M3", "1x Magic Mouse"],
-			total: 55000000,
-			status: "international_shipping",
-			date: "2024-01-13",
-			customer: "Lê Văn C",
-			address: "789 Đường DEF, Quận 3, TP.HCM",
+			id: "c3d4e5f6-g7h8-9012-cdef-gh3456789012",
+			requestType: "OFFLINE",
+			storeName: "Louis Vuitton Paris",
+			productName: "Louis Vuitton Neverfull MM Monogram Canvas",
+			productImage: "https://example.com/lv.jpg",
+			quantity: 1,
+			totalPrice: 45000000,
+			status: "ARRIVED_IN_DESTINATION",
+			createdAt: "2024-01-12T14:20:00Z",
+			currency: "VND",
+			trackingCode: "VN555666777",
+			shippingUnit: "DHL Express",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Lê Văn C",
+				phone: "0923456789",
+				address: "789 Đường ABC, Phường 3, Quận 3, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã đến kho giao hàng",
+				date: "2024-01-18T16:45:00Z",
+			},
 		},
 		{
-			id: "ORD004",
-			title: "Túi Louis Vuitton từ Paris",
-			items: ["1x Louis Vuitton Neverfull MM", "1x Wallet"],
-			total: 45000000,
-			status: "customs_cleared",
-			date: "2024-01-12",
-			customer: "Phạm Thị D",
-			address: "321 Đường GHI, Quận 4, TP.HCM",
+			id: "d4e5f6g7-h8i9-0123-defg-hi4567890123",
+			requestType: "ONLINE",
+			seller: "Rolex Official",
+			platform: "Chrono24",
+			productName: "Rolex Submariner Date 41mm Steel",
+			productImage: "https://example.com/rolex.jpg",
+			quantity: 1,
+			totalPrice: 250000000,
+			status: "DELIVERED",
+			createdAt: "2024-01-11T16:45:00Z",
+			currency: "VND",
+			trackingCode: "VN111222333",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Hoàng Văn E",
+				phone: "0934567890",
+				address: "555 Đường JKL, Phường 5, Quận 5, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đã giao hàng thành công",
+				date: "2024-01-20T14:30:00Z",
+			},
 		},
 		{
-			id: "ORD005",
-			title: "Đồng hồ Rolex từ Switzerland",
-			items: ["1x Rolex Submariner", "1x Hộp đựng"],
-			total: 250000000,
-			status: "domestic_shipping",
-			date: "2024-01-11",
-			customer: "Hoàng Văn E",
-			address: "555 Đường JKL, Quận 5, TP.HCM",
+			id: "e5f6g7h8-i9j0-1234-efgh-ij5678901234",
+			requestType: "OFFLINE",
+			storeName: "ASUS Store NYC",
+			productName: "ASUS ROG Strix G17 Gaming Laptop",
+			productImage: "https://example.com/asus.jpg",
+			quantity: 1,
+			totalPrice: 35000000,
+			status: "ORDER_REQUESTED",
+			createdAt: "2024-01-10T12:00:00Z",
+			currency: "VND",
+			trackingCode: "VN444555666",
+			shippingUnit: "J&T Express",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Võ Thị F",
+				phone: "0945678901",
+				address: "777 Đường MNO, Phường 6, Quận 6, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã đặt hàng",
+				date: "2024-01-10T12:00:00Z",
+			},
 		},
 		{
-			id: "ORD006",
-			title: "Laptop Gaming từ Newegg",
-			items: ["1x ASUS ROG Strix", "1x Gaming Mouse"],
-			total: 35000000,
-			status: "delivered",
-			date: "2024-01-10",
-			customer: "Võ Thị F",
-			address: "777 Đường MNO, Quận 6, TP.HCM",
-		},
-		{
-			id: "ORD007",
-			title: "Camera Sony từ B&H",
-			items: ["1x Sony A7R V", "1x Lens 24-70mm"],
-			total: 75000000,
-			status: "completed",
-			date: "2024-01-09",
-			customer: "Đặng Văn G",
-			address: "888 Đường PQR, Quận 7, TP.HCM",
-		},
-		{
-			id: "ORD008",
-			title: "Perfume Chanel từ France",
-			items: ["1x Chanel No.5", "1x Travel Size"],
-			total: 8500000,
-			status: "cancelled",
-			date: "2024-01-08",
-			customer: "Bùi Thị H",
-			address: "999 Đường STU, Quận 8, TP.HCM",
+			id: "f6g7h8i9-j0k1-2345-fghi-jk6789012345",
+			requestType: "ONLINE",
+			seller: "Sony Official",
+			platform: "B&H Photo",
+			productName: "Sony Alpha A7R V Mirrorless Camera with 24-70mm Lens",
+			quantity: 1,
+			totalPrice: 75000000,
+			status: "CANCELED",
+			createdAt: "2024-01-09T09:30:00Z",
+			currency: "VND",
+			trackingCode: "VN777888999",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Đặng Văn G",
+				phone: "0956789012",
+				address: "888 Đường PQR, Phường 7, Quận 7, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đơn hàng đã bị hủy",
+				date: "2024-01-09T15:45:00Z",
+			},
 		},
 	];
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
-		{ id: "paid", label: "Đã thanh toán", status: "paid" },
-		{ id: "purchased", label: "Đã mua hàng", status: "purchased" },
+		{ id: "PURCHASED", label: "Đã thanh toán", status: "PURCHASED" },
 		{
-			id: "international_shipping",
-			label: "Đang vận chuyển quốc tế",
-			status: "international_shipping",
+			id: "ORDER_REQUESTED",
+			label: "Đã đặt hàng",
+			status: "ORDER_REQUESTED",
 		},
+		{ id: "IN_TRANSIT", label: "Đang vận chuyển", status: "IN_TRANSIT" },
 		{
-			id: "customs_cleared",
-			label: "Đã thông quan",
-			status: "customs_cleared",
+			id: "ARRIVED_IN_DESTINATION",
+			label: "Đã đến nơi",
+			status: "ARRIVED_IN_DESTINATION",
 		},
-		{
-			id: "domestic_shipping",
-			label: "Đang giao nội địa",
-			status: "domestic_shipping",
-		},
-		{ id: "delivered", label: "Đã giao hàng", status: "delivered" },
-		{ id: "completed", label: "Hoàn tất", status: "completed" },
-		{ id: "cancelled", label: "Đã hủy đơn", status: "cancelled" },
+		{ id: "DELIVERED", label: "Đã giao hàng", status: "DELIVERED" },
+		{ id: "CANCELED", label: "Đã hủy", status: "CANCELED" },
 	];
 
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "paid":
-				return "#007bff";
-			case "purchased":
-				return "#17a2b8";
-			case "international_shipping":
-				return "#6610f2";
-			case "customs_cleared":
-				return "#6f42c1";
-			case "domestic_shipping":
-				return "#fd7e14";
-			case "delivered":
-				return "#20c997";
-			case "completed":
-				return "#28a745";
-			case "cancelled":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
+	const handleCancelOrder = (orderId) => {
+		console.log("Cancel order:", orderId);
+		// TODO: Implement cancel order logic
 	};
 
-	const getStatusText = (status) => {
-		switch (status) {
-			case "paid":
-				return "Đã thanh toán";
-			case "purchased":
-				return "Đã mua hàng";
-			case "international_shipping":
-				return "Vận chuyển quốc tế";
-			case "customs_cleared":
-				return "Đã thông quan";
-			case "domestic_shipping":
-				return "Giao nội địa";
-			case "delivered":
-				return "Đã giao hàng";
-			case "completed":
-				return "Hoàn tất";
-			case "cancelled":
-				return "Đã hủy đơn";
-			default:
-				return "Không xác định";
-		}
+	const handleReviewOrder = (orderId) => {
+		console.log("Review order:", orderId);
+		// TODO: Navigate to review screen
 	};
 
-	const getStatusIcon = (status) => {
-		switch (status) {
-			case "paid":
-				return "card-outline";
-			case "purchased":
-				return "bag-check-outline";
-			case "international_shipping":
-				return "airplane-outline";
-			case "customs_cleared":
-				return "shield-checkmark-outline";
-			case "domestic_shipping":
-				return "car-outline";
-			case "delivered":
-				return "checkmark-circle-outline";
-			case "completed":
-				return "trophy-outline";
-			case "cancelled":
-				return "close-circle-outline";
-			default:
-				return "help-circle-outline";
-		}
-	};
-
-	const formatCurrency = (amount) => {
-		return new Intl.NumberFormat("vi-VN", {
-			style: "currency",
-			currency: "VND",
-		}).format(amount);
+	const handleOrderPress = (orderId) => {
+		console.log("Order pressed:", orderId);
+		// Navigate to order details with the selected order
+		const selectedOrder = orders.find((order) => order.id === orderId);
+		navigation.navigate("OrderDetails", { orderData: selectedOrder });
 	};
 
 	const filteredOrders = orders.filter((order) => {
@@ -240,145 +249,13 @@ export default function OrderScreen({ navigation }) {
 				{/* Order List */}
 				<View style={styles.ordersList}>
 					{filteredOrders.map((order) => (
-						<TouchableOpacity
+						<OrderCard
 							key={order.id}
-							style={styles.orderCard}
-						>
-							<View style={styles.orderHeader}>
-								<View style={styles.orderIdContainer}>
-									<Text className="font-bold text-blue-600">
-										#{order.id}
-									</Text>
-									<Text className="text-sm text-muted-foreground">
-										{order.date}
-									</Text>
-								</View>
-
-								<View
-									style={[
-										styles.statusBadge,
-										{
-											backgroundColor:
-												getStatusColor(order.status) +
-												"20",
-										},
-									]}
-								>
-									<Ionicons
-										name={getStatusIcon(order.status)}
-										size={12}
-										color={getStatusColor(order.status)}
-									/>
-									<Text
-										style={[
-											styles.statusText,
-											{
-												color: getStatusColor(
-													order.status
-												),
-											},
-										]}
-									>
-										{getStatusText(order.status)}
-									</Text>
-								</View>
-							</View>
-
-							<Text className="font-semibold text-lg mb-2">
-								{order.title}
-							</Text>
-
-							<View style={styles.customerInfo}>
-								<Ionicons
-									name="person-outline"
-									size={16}
-									color="#666"
-								/>
-								<Text className="text-sm text-muted-foreground ml-2">
-									{order.customer}
-								</Text>
-							</View>
-
-							<View style={styles.addressInfo}>
-								<Ionicons
-									name="location-outline"
-									size={16}
-									color="#666"
-								/>
-								<Text className="text-sm text-muted-foreground ml-2 flex-1">
-									{order.address}
-								</Text>
-							</View>
-
-							<View style={styles.itemsList}>
-								{order.items.map((item, index) => (
-									<Text
-										key={index}
-										className="text-sm text-muted-foreground"
-									>
-										• {item}
-									</Text>
-								))}
-							</View>
-
-							<View style={styles.orderFooter}>
-								<Text className="text-lg font-bold text-green-600">
-									{formatCurrency(order.total)}
-								</Text>
-
-								<View style={styles.orderActions}>
-									<TouchableOpacity
-										style={styles.actionButton}
-									>
-										<Ionicons
-											name="eye-outline"
-											size={16}
-											color="#007bff"
-										/>
-										<Text className="text-blue-600 text-sm ml-1">
-											Chi tiết
-										</Text>
-									</TouchableOpacity>
-
-									{order.status === "delivered" && (
-										<TouchableOpacity
-											style={[
-												styles.actionButton,
-												{ marginLeft: 12 },
-											]}
-										>
-											<Ionicons
-												name="checkmark-circle-outline"
-												size={16}
-												color="#28a745"
-											/>
-											<Text className="text-green-600 text-sm ml-1">
-												Xác nhận
-											</Text>
-										</TouchableOpacity>
-									)}
-
-									{(order.status === "paid" ||
-										order.status === "purchased") && (
-										<TouchableOpacity
-											style={[
-												styles.actionButton,
-												{ marginLeft: 12 },
-											]}
-										>
-											<Ionicons
-												name="close-circle-outline"
-												size={16}
-												color="#dc3545"
-											/>
-											<Text className="text-red-600 text-sm ml-1">
-												Hủy đơn
-											</Text>
-										</TouchableOpacity>
-									)}
-								</View>
-							</View>
-						</TouchableOpacity>
+							order={order}
+							onPress={() => handleOrderPress(order.id)}
+							onCancel={() => handleCancelOrder(order.id)}
+							onReview={() => handleReviewOrder(order.id)}
+						/>
 					))}
 				</View>
 
@@ -405,16 +282,16 @@ const styles = StyleSheet.create({
 	},
 	tabContainer: {
 		backgroundColor: "#ffffff",
-		paddingHorizontal: 20,
-		paddingVertical: 16,
+		paddingHorizontal: 18,
+		paddingVertical: 10,
 		borderBottomWidth: 1,
 		borderBottomColor: "#e9ecef",
 	},
 	tab: {
-		paddingHorizontal: 20,
-		paddingVertical: 12,
-		marginRight: 16,
-		borderRadius: 25,
+		paddingHorizontal: 15,
+		paddingVertical: 10,
+		marginRight: 6,
+		borderRadius: 10,
 		backgroundColor: "#f8f9fa",
 		borderWidth: 1,
 		borderColor: "#e9ecef",
@@ -442,73 +319,6 @@ const styles = StyleSheet.create({
 	},
 	ordersList: {
 		marginBottom: 20,
-	},
-	orderCard: {
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 12,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.05,
-		shadowRadius: 3,
-		elevation: 3,
-	},
-	orderHeader: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: 8,
-	},
-	orderIdContainer: {
-		flex: 1,
-	},
-	statusBadge: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 12,
-	},
-	statusText: {
-		fontSize: 12,
-		fontWeight: "600",
-		marginLeft: 4,
-	},
-	customerInfo: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 4,
-	},
-	addressInfo: {
-		flexDirection: "row",
-		alignItems: "flex-start",
-		marginBottom: 8,
-	},
-	itemsList: {
-		backgroundColor: "#f8f9fa",
-		borderRadius: 8,
-		padding: 12,
-		marginBottom: 12,
-	},
-	orderFooter: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: "#f0f0f0",
-	},
-	orderActions: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	actionButton: {
-		flexDirection: "row",
-		alignItems: "center",
 	},
 	emptyState: {
 		alignItems: "center",
