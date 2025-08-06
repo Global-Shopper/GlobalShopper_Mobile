@@ -21,6 +21,19 @@ export default function OrderScreen({ navigation }) {
 			status: "PURCHASED",
 			createdAt: "2024-01-15T08:30:00Z",
 			currency: "VND",
+			trackingCode: "VN123456789",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Nguyễn Văn A",
+				phone: "0901234567",
+				address: "123 Đường ABC, Phường 1, Quận 1, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã thanh toán thành công",
+				date: "2024-01-15T08:30:00Z",
+			},
 		},
 		{
 			id: "b2c3d4e5-f6g7-8901-bcde-fg2345678901",
@@ -34,6 +47,19 @@ export default function OrderScreen({ navigation }) {
 			status: "IN_TRANSIT",
 			createdAt: "2024-01-14T10:15:00Z",
 			currency: "VND",
+			trackingCode: "VN987654321",
+			shippingUnit: "Viettel Post",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Trần Thị B",
+				phone: "0912345678",
+				address: "456 Đường XYZ, Phường 2, Quận 2, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đang vận chuyển quốc tế",
+				date: "2024-01-16T14:20:00Z",
+			},
 		},
 		{
 			id: "c3d4e5f6-g7h8-9012-cdef-gh3456789012",
@@ -46,6 +72,19 @@ export default function OrderScreen({ navigation }) {
 			status: "ARRIVED_IN_DESTINATION",
 			createdAt: "2024-01-12T14:20:00Z",
 			currency: "VND",
+			trackingCode: "VN555666777",
+			shippingUnit: "DHL Express",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Lê Văn C",
+				phone: "0923456789",
+				address: "789 Đường ABC, Phường 3, Quận 3, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã đến kho giao hàng",
+				date: "2024-01-18T16:45:00Z",
+			},
 		},
 		{
 			id: "d4e5f6g7-h8i9-0123-defg-hi4567890123",
@@ -59,6 +98,19 @@ export default function OrderScreen({ navigation }) {
 			status: "DELIVERED",
 			createdAt: "2024-01-11T16:45:00Z",
 			currency: "VND",
+			trackingCode: "VN111222333",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Hoàng Văn E",
+				phone: "0934567890",
+				address: "555 Đường JKL, Phường 5, Quận 5, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đã giao hàng thành công",
+				date: "2024-01-20T14:30:00Z",
+			},
 		},
 		{
 			id: "e5f6g7h8-i9j0-1234-efgh-ij5678901234",
@@ -71,6 +123,19 @@ export default function OrderScreen({ navigation }) {
 			status: "ORDER_REQUESTED",
 			createdAt: "2024-01-10T12:00:00Z",
 			currency: "VND",
+			trackingCode: "VN444555666",
+			shippingUnit: "J&T Express",
+			paymentMethod: "Ví GShop",
+			deliveryAddress: {
+				recipientName: "Võ Thị F",
+				phone: "0945678901",
+				address: "777 Đường MNO, Phường 6, Quận 6, TP.HCM",
+				isDefault: true,
+			},
+			latestStatus: {
+				title: "Đã đặt hàng",
+				date: "2024-01-10T12:00:00Z",
+			},
 		},
 		{
 			id: "f6g7h8i9-j0k1-2345-fghi-jk6789012345",
@@ -83,17 +148,30 @@ export default function OrderScreen({ navigation }) {
 			status: "CANCELED",
 			createdAt: "2024-01-09T09:30:00Z",
 			currency: "VND",
+			trackingCode: "VN777888999",
+			shippingUnit: "Giao Hàng Nhanh",
+			paymentMethod: "VNPay",
+			deliveryAddress: {
+				recipientName: "Đặng Văn G",
+				phone: "0956789012",
+				address: "888 Đường PQR, Phường 7, Quận 7, TP.HCM",
+				isDefault: false,
+			},
+			latestStatus: {
+				title: "Đơn hàng đã bị hủy",
+				date: "2024-01-09T15:45:00Z",
+			},
 		},
 	];
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
+		{ id: "PURCHASED", label: "Đã thanh toán", status: "PURCHASED" },
 		{
 			id: "ORDER_REQUESTED",
 			label: "Đã đặt hàng",
 			status: "ORDER_REQUESTED",
 		},
-		{ id: "PURCHASED", label: "Đã thanh toán", status: "PURCHASED" },
 		{ id: "IN_TRANSIT", label: "Đang vận chuyển", status: "IN_TRANSIT" },
 		{
 			id: "ARRIVED_IN_DESTINATION",
@@ -116,7 +194,9 @@ export default function OrderScreen({ navigation }) {
 
 	const handleOrderPress = (orderId) => {
 		console.log("Order pressed:", orderId);
-		// TODO: Navigate to order details
+		// Navigate to order details with the selected order
+		const selectedOrder = orders.find(order => order.id === orderId);
+		navigation.navigate("OrderDetails", { orderData: selectedOrder });
 	};
 
 	const filteredOrders = orders.filter((order) => {
