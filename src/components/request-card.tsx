@@ -188,35 +188,67 @@ export default function RequestCard({
 				<View style={styles.productInfoContainer}>
 					<Text style={styles.productInfoValue} numberOfLines={2}>
 						{(() => {
+							console.log("=== PRODUCT NAME DEBUG ===");
+							console.log("Request Type:", request.requestType);
+							console.log("Request Items:", request.requestItems);
+							console.log("SubRequests:", request.subRequests);
+							
 							// Hiển thị tên sản phẩm đầu tiên hoặc tên cửa hàng
 							let mainText = "";
 
 							if (request.requestType === "ONLINE") {
-								// Lấy tên sản phẩm đầu tiên
+								console.log("Processing ONLINE request");
+								
+								// Lấy tên sản phẩm đầu tiên - Check both locations
+								let foundProduct = null;
+								
+								// Trường hợp 1: requestItems (trạng thái sent)
 								if (
 									Array.isArray(request.requestItems) &&
 									request.requestItems.length > 0
 								) {
-									const firstProduct =
-										request.requestItems[0];
+									console.log("Found requestItems:", request.requestItems);
+									foundProduct = request.requestItems[0];
+									console.log("Product from requestItems:", foundProduct);
+								}
+								// Trường hợp 2: subRequests (trạng thái quoted, confirmed, etc.)
+								else if (
+									Array.isArray(request.subRequests) &&
+									request.subRequests.length > 0 &&
+									Array.isArray(request.subRequests[0].requestItems) &&
+									request.subRequests[0].requestItems.length > 0
+								) {
+									console.log("Found subRequests items:", request.subRequests[0].requestItems);
+									foundProduct = request.subRequests[0].requestItems[0];
+									console.log("Product from subRequests:", foundProduct);
+								}
+								
+								if (foundProduct) {
 									mainText =
-										firstProduct.productName ||
-										firstProduct.name ||
+										foundProduct.productName ||
+										foundProduct.name ||
 										"Sản phẩm không tên";
+									console.log("Product name extracted:", mainText);
 								} else {
+									console.log("No product found in either location");
 									mainText = "Không có sản phẩm";
 								}
 							} else {
+								console.log("Processing OFFLINE request");
 								// Lấy tên cửa hàng từ contactInfo hoặc subRequests
 								if (
 									Array.isArray(request.subRequests) &&
 									request.subRequests.length > 0
 								) {
+									console.log("Found subRequests:", request.subRequests);
 									const firstSub = request.subRequests[0];
+									console.log("First subRequest:", firstSub);
+									
 									if (
 										Array.isArray(firstSub.contactInfo) &&
 										firstSub.contactInfo.length > 0
 									) {
+										console.log("SubRequest contactInfo:", firstSub.contactInfo);
 										// Tìm tên cửa hàng trong contactInfo
 										const storeInfo =
 											firstSub.contactInfo.find(
@@ -225,14 +257,20 @@ export default function RequestCard({
 														"Tên cửa hàng:"
 													) || info.includes("Store:")
 											);
+										console.log("Store info found:", storeInfo);
+										
 										if (storeInfo) {
 											mainText = storeInfo
 												.replace("Tên cửa hàng:", "")
 												.replace("Store:", "")
 												.trim();
+											console.log("Store name extracted:", mainText);
 										} else {
 											mainText = firstSub.contactInfo[0];
+											console.log("Using first contactInfo:", mainText);
 										}
+									} else {
+										console.log("No contactInfo in subRequest");
 									}
 								}
 
@@ -241,26 +279,33 @@ export default function RequestCard({
 									Array.isArray(request.contactInfo) &&
 									request.contactInfo.length > 0
 								) {
+									console.log("Fallback to main contactInfo:", request.contactInfo);
 									const storeInfo = request.contactInfo.find(
 										(info) =>
 											info.includes("Tên cửa hàng:") ||
 											info.includes("Store:")
 									);
+									console.log("Main store info found:", storeInfo);
+									
 									if (storeInfo) {
 										mainText = storeInfo
 											.replace("Tên cửa hàng:", "")
 											.replace("Store:", "")
 											.trim();
+										console.log("Main store name extracted:", mainText);
 									} else {
 										mainText = request.contactInfo[0];
+										console.log("Using first main contactInfo:", mainText);
 									}
 								}
 
 								if (!mainText) {
+									console.log("No store info found, using default");
 									mainText = "Cửa hàng không xác định";
 								}
 							}
 
+							console.log("Final mainText:", mainText);
 							return mainText;
 						})()}
 					</Text>
@@ -274,7 +319,7 @@ export default function RequestCard({
 							// Tính tổng số lượng sản phẩm
 							let totalQuantity = 0;
 
-							// Trường hợp 1: Có requestItems trực tiếp
+							// Trường hợp 1: Có requestItems trực tiếp (trạng thái sent)
 							if (
 								Array.isArray(request.requestItems) &&
 								request.requestItems.length > 0
@@ -283,17 +328,17 @@ export default function RequestCard({
 									const qty =
 										parseInt(String(item.quantity || 0)) ||
 										0;
-									console.log(`Item ${index} quantity:`, qty);
+									console.log(`RequestItem ${index} quantity:`, qty);
 									totalQuantity += qty;
 								});
 								console.log(
 									"Total from requestItems:",
 									totalQuantity
 								);
-								return totalQuantity;
+								if (totalQuantity > 0) return totalQuantity;
 							}
 
-							// Trường hợp 2: Có subRequests
+							// Trường hợp 2: Có subRequests (trạng thái quoted, confirmed, etc.)
 							if (
 								Array.isArray(request.subRequests) &&
 								request.subRequests.length > 0
@@ -326,7 +371,7 @@ export default function RequestCard({
 									"Total from subRequests:",
 									totalQuantity
 								);
-								return totalQuantity;
+								if (totalQuantity > 0) return totalQuantity;
 							}
 
 							// Fallback: Dùng productCount nếu có
