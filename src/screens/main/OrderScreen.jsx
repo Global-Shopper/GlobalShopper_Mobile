@@ -189,7 +189,11 @@ export default function OrderScreen({ navigation }) {
 
 	const handleReviewOrder = (orderId) => {
 		console.log("Review order:", orderId);
-		// TODO: Navigate to review screen
+		// Navigate to FeedbackDetails with the selected order
+		const selectedOrder = orders.find((order) => order.id === orderId);
+		console.log("Selected order for review:", selectedOrder);
+		console.log("Navigating to FeedbackDetails...");
+		navigation.navigate("FeedbackDetails", { orderData: selectedOrder });
 	};
 
 	const handleOrderPress = (orderId) => {

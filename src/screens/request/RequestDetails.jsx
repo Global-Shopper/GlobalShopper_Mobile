@@ -31,7 +31,6 @@ export default function RequestDetails({ navigation, route }) {
 		skip: !requestId,
 	});
 
-	// Helper function to get shortened UUID with #
 	const getShortId = (fullId) => {
 		if (!fullId) return "N/A";
 		if (typeof fullId === "string" && fullId.includes("-")) {
@@ -74,7 +73,6 @@ export default function RequestDetails({ navigation, route }) {
 		}
 	};
 
-	// Show loading spinner
 	if (isLoading) {
 		return (
 			<View style={styles.container}>
@@ -135,44 +133,6 @@ export default function RequestDetails({ navigation, route }) {
 
 	// Use the correct data for rendering
 	const displayData = requestDetails;
-
-	// Debug API structure for quoted status
-	if (displayData?.status?.toLowerCase() === "quoted") {
-		console.log("=== QUOTED STATUS DEBUG ===");
-		console.log(
-			"Full requestDetails:",
-			JSON.stringify(requestDetails, null, 2)
-		);
-		console.log("subRequests:", requestDetails?.subRequests);
-		console.log(
-			"quotationForPurchase:",
-			requestDetails?.subRequests?.[0]?.quotationForPurchase
-		);
-
-		// Debug subRequests structure in detail
-		if (requestDetails?.subRequests?.length > 0) {
-			console.log("=== SUBREQUESTS DETAIL ===");
-			requestDetails.subRequests.forEach((subReq, index) => {
-				console.log(`subRequests[${index}]:`, subReq);
-				console.log(
-					`subRequests[${index}].requestItems:`,
-					subReq.requestItems
-				);
-				console.log(
-					`subRequests[${index}].quotationForPurchase:`,
-					subReq.quotationForPurchase
-				);
-			});
-		}
-
-		// Debug original requestItems vs subRequests requestItems
-		console.log("=== PRODUCT COMPARISON ===");
-		console.log("Original requestItems:", requestDetails?.requestItems);
-		console.log(
-			"SubRequests[0] requestItems:",
-			requestDetails?.subRequests?.[0]?.requestItems
-		);
-	}
 
 	const getStatusColor = (status) => {
 		switch (status?.toLowerCase()) {
@@ -425,31 +385,138 @@ export default function RequestDetails({ navigation, route }) {
 				{/* Store Information - Show only for OFFLINE requests */}
 				{(displayData?.requestType?.toLowerCase() === "offline" ||
 					displayData?.type?.toLowerCase() === "offline") &&
-					displayData?.store && (
-						<View style={styles.section}>
-							<StoreCard
-								storeName={
+					(() => {
+						// Extract store info from displayData.store OR subRequests.contactInfo
+						let storeInfo = null;
+
+						// Method 1: Direct store object
+						if (displayData?.store) {
+							storeInfo = {
+								storeName:
 									displayData.store.storeName ||
-									displayData.store.name
-								}
-								storeAddress={
+									displayData.store.name ||
+									"",
+								storeAddress:
 									displayData.store.storeAddress ||
-									displayData.store.address
-								}
-								phoneNumber={
+									displayData.store.address ||
+									"",
+								phoneNumber:
 									displayData.store.phoneNumber ||
-									displayData.store.phone
-								}
-								email={displayData.store.email}
-								shopLink={
+									displayData.store.phone ||
+									"",
+								email: displayData.store.email || "",
+								shopLink:
 									displayData.store.shopLink ||
-									displayData.store.storeLink
-								}
-								mode="manual"
-								showEditButton={false}
-							/>
-						</View>
-					)}
+									displayData.store.storeLink ||
+									"",
+							};
+						}
+						// Method 2: Extract from subRequests.contactInfo
+						else if (displayData?.subRequests?.length > 0) {
+							const firstSubRequest = displayData.subRequests[0];
+							if (
+								firstSubRequest?.contactInfo &&
+								Array.isArray(firstSubRequest.contactInfo)
+							) {
+								const contactInfo = firstSubRequest.contactInfo;
+
+								// Parse contactInfo array to extract store details
+								const parseContactInfo = (infoArray) => {
+									const parsed = {
+										storeName: "",
+										storeAddress: "",
+										phoneNumber: "",
+										email: "",
+										shopLink: "",
+									};
+
+									infoArray.forEach((info) => {
+										if (typeof info === "string") {
+											if (
+												info.includes(
+													"Tên cửa hàng:"
+												) ||
+												info.includes("Store:")
+											) {
+												parsed.storeName = info
+													.replace(
+														"Tên cửa hàng:",
+														""
+													)
+													.replace("Store:", "")
+													.trim();
+											} else if (
+												info.includes("Địa chỉ:") ||
+												info.includes("Address:")
+											) {
+												parsed.storeAddress = info
+													.replace("Địa chỉ:", "")
+													.replace("Address:", "")
+													.trim();
+											} else if (
+												info.includes("SĐT:") ||
+												info.includes("Phone:") ||
+												info.includes("Số điện thoại:")
+											) {
+												parsed.phoneNumber = info
+													.replace("SĐT:", "")
+													.replace("Phone:", "")
+													.replace(
+														"Số điện thoại:",
+														""
+													)
+													.trim();
+											} else if (
+												info.includes("Email:") ||
+												info.includes("@")
+											) {
+												parsed.email = info
+													.replace("Email:", "")
+													.trim();
+											} else if (
+												info.includes("Link:") ||
+												info.includes("Link shop:") ||
+												info.includes("http")
+											) {
+												parsed.shopLink = info
+													.replace("Link:", "")
+													.replace("Link shop:", "")
+													.trim();
+											}
+										}
+									});
+
+									return parsed;
+								};
+
+								storeInfo = parseContactInfo(contactInfo);
+							}
+						}
+
+						// Only render if we have store info
+						if (
+							storeInfo &&
+							(storeInfo.storeName ||
+								storeInfo.storeAddress ||
+								storeInfo.phoneNumber)
+						) {
+							return (
+								<View style={styles.section}>
+									<StoreCard
+										storeName={storeInfo.storeName}
+										storeAddress={storeInfo.storeAddress}
+										phoneNumber={storeInfo.phoneNumber}
+										email={storeInfo.email}
+										shopLink={storeInfo.shopLink}
+										mode="manual"
+										showEditButton={false}
+									/>
+								</View>
+							);
+						}
+
+						return null;
+					})()}
 
 				{/* Product List */}
 				<View style={styles.section}>
@@ -474,7 +541,7 @@ export default function RequestDetails({ navigation, route }) {
 					displayData?.productList?.length > 0 ||
 					displayData?.subRequests?.[0]?.requestItems?.length > 0 ? (
 						(() => {
-							// Debug which product source we're using
+							// Find the product source
 							const productSource =
 								displayData?.requestItems?.length > 0
 									? displayData.requestItems
@@ -488,31 +555,6 @@ export default function RequestDetails({ navigation, route }) {
 											?.requestItems?.length > 0
 									? displayData.subRequests[0].requestItems
 									: [];
-
-							console.log("=== PRODUCT SOURCE DEBUG ===");
-							console.log(
-								"Product source selected:",
-								productSource
-							);
-							console.log(
-								"Product source length:",
-								productSource.length
-							);
-							console.log(
-								"Source type:",
-								displayData?.requestItems?.length > 0
-									? "requestItems"
-									: displayData?.items?.length > 0
-									? "items"
-									: displayData?.products?.length > 0
-									? "products"
-									: displayData?.productList?.length > 0
-									? "productList"
-									: displayData?.subRequests?.[0]
-											?.requestItems?.length > 0
-									? "subRequests[0].requestItems"
-									: "none"
-							);
 
 							return productSource.map((product, index) => {
 								// Determine product mode based on request type
@@ -682,14 +724,6 @@ export default function RequestDetails({ navigation, route }) {
 						const quotationDetail =
 							firstProduct?.quotationDetail || {};
 
-						console.log("=== QUOTATION DEBUG ===");
-						console.log("First product:", firstProduct);
-						console.log("QuotationDetail:", quotationDetail);
-						console.log(
-							"TaxRates from quotationDetail:",
-							quotationDetail?.taxRates
-						);
-
 						// Extract values from quotationDetail
 						const basePrice = quotationDetail?.basePrice || 0;
 						const serviceFee = quotationDetail?.serviceFee || 0;
@@ -711,19 +745,6 @@ export default function RequestDetails({ navigation, route }) {
 						const importTaxVND = Math.round(
 							totalTaxAmount * exchangeRate
 						);
-
-						console.log("Calculated values:", {
-							basePrice,
-							serviceFee,
-							totalTaxAmount,
-							totalVNDPrice,
-							exchangeRate,
-							currency,
-							taxRates,
-							productPriceVND,
-							serviceFeeVND,
-							importTaxVND,
-						});
 
 						// Prepare tax details if available in quotationDetail
 						const taxDetails = quotationDetail?.taxBreakdown

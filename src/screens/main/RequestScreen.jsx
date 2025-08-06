@@ -1,7 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Header from "../../components/header";
 import RequestCard from "../../components/request-card";
 import { Text } from "../../components/ui/text";
@@ -9,8 +15,6 @@ import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
 
 export default function RequestScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
-	const [currentPage, setCurrentPage] = useState(0);
-	const [pageSize] = useState(10); // Remove setPageSize since it's not used
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
@@ -22,21 +26,18 @@ export default function RequestScreen({ navigation }) {
 		{ id: "insufficient", label: "Cập nhật", status: "insufficient" },
 	];
 
-	// Prepare API params based on active tab
 	const getAPIParams = () => {
 		const baseParams = {
-			page: currentPage,
-			size: pageSize,
+			page: 0,
+			size: 1000,
 		};
 
-		// Add status filter if not "all"
 		if (activeTab !== "all") {
 			const selectedTab = tabs.find((tab) => tab.id === activeTab);
 			if (selectedTab?.status) {
-				baseParams.status = selectedTab.status.toUpperCase(); // API có thể yêu cầu uppercase
+				baseParams.status = selectedTab.status.toUpperCase();
 			}
 		}
-
 		return baseParams;
 	};
 
@@ -47,58 +48,54 @@ export default function RequestScreen({ navigation }) {
 		error,
 		refetch,
 	} = useGetPurchaseRequestQuery(getAPIParams(), {
-		// Refetch when activeTab changes
 		refetchOnMountOrArgChange: true,
-		// Skip if user not authenticated
-		skip: false,
-		// Disable caching temporarily for debugging
-		forceRefetch: true,
 	});
 
-	// Debug logging
-	console.log("=== REQUEST SCREEN DEBUG ===");
-	console.log("API Params:", getAPIParams());
-	console.log("Raw API Response:", requests);
-	console.log("IsLoading:", isLoading);
-	console.log("IsError:", isError);
-	console.log("Error:", error);
+	const [refreshing, setRefreshing] = useState(false);
 
-	// Auto-refetch when screen comes into focus
+	const onRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await refetch();
+		} finally {
+			setRefreshing(false);
+		}
+	}, [refetch]);
 	useFocusEffect(
 		useCallback(() => {
-			console.log("Screen focused, refetching data...");
 			refetch();
 		}, [refetch])
 	);
+	useEffect(() => {
+		console.log("useEffect: activeTab changed to", activeTab);
+		refetch();
+	}, [activeTab, refetch]);
 
 	const handleRequestPress = (request) => {
 		console.log("Request pressed:", request);
-		// Navigate to request detail screen
 		navigation.navigate("RequestDetails", { request });
 	};
 
 	const handleRequestCancel = (request) => {
 		console.log("Cancel request:", request.id);
-		// Handle cancel request logic
-		// TODO: Implement cancel request API
 	};
 
 	const handleTabChange = (tabId) => {
+		console.log("=== TAB CHANGE ===");
+		console.log("From:", activeTab, "To:", tabId);
 		setActiveTab(tabId);
-		setCurrentPage(0); // Reset to first page when changing tabs
+		refetch();
 	};
 
 	const handleTestAPI = () => {
 		refetch();
 	};
 
-	// Filter requests based on active tab (fallback client-side filtering)
+	// Filter requests based on active tab
 	const getFilteredRequests = () => {
-		// Try different possible response structures
 		let allRequests = [];
 
 		if (requests) {
-			// Check common API response patterns
 			if (requests.content) {
 				allRequests = requests.content;
 			} else if (requests.data) {
@@ -107,33 +104,23 @@ export default function RequestScreen({ navigation }) {
 					: requests.data.content || [];
 			} else if (Array.isArray(requests)) {
 				allRequests = requests;
-			} else {
-				console.log("Unknown response structure:", requests);
-				allRequests = [];
 			}
 		}
 
-		console.log("All requests from API:", allRequests);
-		console.log("Active tab:", activeTab);
+		console.log("All requests from API:", allRequests.length);
 
 		if (activeTab === "all") {
-			console.log("Returning all requests");
 			return allRequests;
 		}
 
 		const selectedTab = tabs.find((tab) => tab.id === activeTab);
 		if (selectedTab?.status) {
-			const filtered = allRequests.filter((request) => {
-				const requestStatus = request.status?.toLowerCase();
-				const targetStatus = selectedTab.status.toLowerCase();
-				console.log(
-					`Filtering: ${requestStatus} === ${targetStatus}`,
-					request
+			return allRequests.filter((request) => {
+				return (
+					request.status?.toLowerCase() ===
+					selectedTab.status.toLowerCase()
 				);
-				return requestStatus === targetStatus;
 			});
-			console.log("Filtered results:", filtered);
-			return filtered;
 		}
 
 		return allRequests;
@@ -142,33 +129,21 @@ export default function RequestScreen({ navigation }) {
 	const filteredRequests = getFilteredRequests();
 
 	// Sort requests by createdAt descending (newest first)
-	const sortedRequests =
-		filteredRequests?.slice().sort((a, b) => {
+	const sortedRequests = useMemo(() => {
+		if (!filteredRequests || filteredRequests.length === 0) {
+			return [];
+		}
+		const requestsCopy = filteredRequests.map((request) => ({
+			...request,
+		}));
+
+		return requestsCopy.sort((a, b) => {
 			const dateA = Number(a.createdAt) || 0;
 			const dateB = Number(b.createdAt) || 0;
-			console.log(
-				`Sorting: Request ${a.id} (${dateA}) vs Request ${b.id} (${dateB})`
-			);
-			return dateB - dateA; // Descending order (newest first)
-		}) || [];
+			return dateB - dateA;
+		});
+	}, [filteredRequests]);
 
-	console.log("=== SORTING DEBUG ===");
-	console.log(
-		"Before sort (first 3):",
-		filteredRequests?.slice(0, 3).map((r) => ({
-			id: r.id,
-			createdAt: r.createdAt,
-			date: new Date(Number(r.createdAt)).toLocaleString(),
-		}))
-	);
-	console.log(
-		"After sort (first 3):",
-		sortedRequests?.slice(0, 3).map((r) => ({
-			id: r.id,
-			createdAt: r.createdAt,
-			date: new Date(Number(r.createdAt)).toLocaleString(),
-		}))
-	);
 	console.log("Sorted requests count:", sortedRequests?.length);
 
 	return (
@@ -212,6 +187,14 @@ export default function RequestScreen({ navigation }) {
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
+				refreshControl={
+					<RefreshControl
+						refreshing={refreshing}
+						onRefresh={onRefresh}
+						colors={["#007bff"]}
+						tintColor="#007bff"
+					/>
+				}
 			>
 				{/* Loading State */}
 				{isLoading && (
@@ -280,9 +263,9 @@ export default function RequestScreen({ navigation }) {
 							</View>
 						)}
 
-						{sortedRequests?.map((request) => (
+						{sortedRequests?.map((request, index) => (
 							<RequestCard
-								key={request.id}
+								key={`${request.id}-${request.status}-${index}`}
 								request={request}
 								onPress={() => handleRequestPress(request)}
 								onCancel={() => handleRequestCancel(request)}

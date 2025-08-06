@@ -156,7 +156,7 @@ export default function OrderDetails({ navigation, route }) {
 	};
 
 	const handleReview = () => {
-		Alert.alert("Thông báo", "Tính năng đang phát triển");
+		navigation.navigate("FeedbackDetails", { orderData });
 	};
 
 	const handleEditAddress = () => {
