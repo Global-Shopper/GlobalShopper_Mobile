@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { uploadToCloudinary } from "../../utils/uploadToCloundinary";
 
 export default function FeedbackDetails({ navigation, route }) {
 	const { orderData } = route?.params || {};
@@ -129,15 +130,38 @@ export default function FeedbackDetails({ navigation, route }) {
 			});
 
 			if (!result.canceled && result.assets) {
-				const newImages = result.assets.map((asset) => ({
-					id: Date.now() + Math.random(),
-					uri: asset.uri,
-					type: "image",
-				}));
-				setSelectedImages([...selectedImages, ...newImages]);
+				// Upload each image to Cloudinary
+				const uploadPromises = result.assets.map(async (asset) => {
+					const file = {
+						uri: asset.uri,
+						type: "image/jpeg",
+						name: `feedback_${Date.now()}_${Math.random()}.jpg`,
+					};
+
+					const cloudinaryUrl = await uploadToCloudinary(file);
+					return cloudinaryUrl
+						? {
+								id: Date.now() + Math.random(),
+								uri: cloudinaryUrl,
+								type: "image",
+						  }
+						: null;
+				});
+
+				const uploadedImages = await Promise.all(uploadPromises);
+				const validImages = uploadedImages.filter(
+					(img) => img !== null
+				);
+
+				if (validImages.length > 0) {
+					setSelectedImages([...selectedImages, ...validImages]);
+				} else {
+					Alert.alert("Lỗi", "Không thể upload ảnh");
+				}
 			}
-		} catch (_error) {
-			Alert.alert("Lỗi", "Không thể chọn ảnh");
+		} catch (error) {
+			console.error("Error uploading images:", error);
+			Alert.alert("Lỗi", "Không thể chọn và upload ảnh");
 		}
 	};
 

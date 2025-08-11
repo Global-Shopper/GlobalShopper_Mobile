@@ -15,6 +15,7 @@ import {
 	useCurrentUserTransactionsQuery,
 	useGetWalletQuery,
 } from "../../services/gshopApi";
+import { getStatusColor, getStatusText } from "../../utils/statusHandler.js";
 
 export default function WalletScreen({ navigation }) {
 	const {
@@ -111,39 +112,6 @@ export default function WalletScreen({ navigation }) {
 			}
 		}
 		return { dateStr, timeStr };
-	};
-
-	const getStatusText = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "success":
-				return "Hoàn thành";
-			case "pending":
-				return "Đang xử lý";
-			case "fail":
-				return "Thất bại";
-			case "cancelled":
-				return "Đã huỷ";
-			default:
-				return status || "Không xác định";
-		}
-	};
-
-	const getStatusColor = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "completed":
-			case "success":
-				return "#4CAF50";
-			case "processing":
-			case "pending":
-				return "#FF9800";
-			case "failed":
-			case "failure":
-				return "#F44336";
-			case "cancelled":
-				return "#F44336";
-			default:
-				return "#6c757d";
-		}
 	};
 
 	return (

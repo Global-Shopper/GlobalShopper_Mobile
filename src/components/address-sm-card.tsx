@@ -77,7 +77,14 @@ export default function AddressSmCard({
 			)}
 
 			{/* Content */}
-			<View style={[styles.content, !isDefault && !(onEdit && showEditButton) && styles.contentNoHeader]}>
+			<View
+				style={[
+					styles.content,
+					!isDefault &&
+						!(onEdit && showEditButton) &&
+						styles.contentNoHeader,
+				]}
+			>
 				{/* Name and Phone on same row */}
 				<View style={styles.namePhoneRow}>
 					<Ionicons name="location" size={16} color="#1976D2" />

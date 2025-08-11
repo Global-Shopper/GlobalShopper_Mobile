@@ -14,6 +14,15 @@ import QuotationCard from "../../components/quotation-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import {
+	formatDate,
+	getRequestTypeBorderColor,
+	getRequestTypeIcon,
+	getRequestTypeText,
+	getShortId,
+	getStatusColor,
+	getStatusText,
+} from "../../utils/statusHandler";
 
 export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
@@ -30,48 +39,6 @@ export default function RequestDetails({ navigation, route }) {
 	} = useGetPurchaseRequestByIdQuery(requestId, {
 		skip: !requestId,
 	});
-
-	const getShortId = (fullId) => {
-		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return "#" + fullId.split("-")[0];
-		}
-		return "#" + fullId;
-	};
-
-	// Helper function to get request type text
-	const getRequestTypeText = (type) => {
-		if (!type) {
-			return "Loại yêu cầu không xác định";
-		}
-
-		switch (type?.toLowerCase()) {
-			case "offline":
-				return "Hàng nội địa/quốc tế";
-			case "online":
-				return "Hàng từ nền tảng e-commerce";
-			default:
-				return ` ${type}`;
-		}
-	};
-
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch (_error) {
-			return dateString;
-		}
-	};
 
 	if (isLoading) {
 		return (
@@ -134,55 +101,37 @@ export default function RequestDetails({ navigation, route }) {
 	// Use the correct data for rendering
 	const displayData = requestDetails;
 
-	const getStatusColor = (status) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "#28a745";
-			case "checking":
-				return "#17a2b8";
-			case "quoted":
-				return "#ffc107";
-			case "confirmed":
-				return "#007bff";
-			case "cancelled":
-				return "#dc3545";
-			case "insufficient":
-				return "#fd7e14";
-			case "completed":
-				return "#6c757d";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "Đã gửi";
-			case "checking":
-				return "Đang xử lý";
-			case "quoted":
-				return "Đã báo giá";
-			case "confirmed":
-				return "Đã xác nhận";
-			case "cancelled":
-				return "Đã hủy";
-			case "insufficient":
-				return "Cập nhật";
-			case "completed":
-				return "Hoàn thành";
-			default:
-				return "Cập nhật";
-		}
-	};
-
-	const getRequestTypeIcon = (type) => {
-		return type === "with_link" ? "link-outline" : "create-outline";
-	};
-
-	const getRequestTypeBorderColor = (type) => {
-		return type === "with_link" ? "#42A5F5" : "#28a745";
-	};
+	// Show error state
+	if (error || !requestDetails) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Chi tiết yêu cầu"
+					showBackButton={true}
+					onBackPress={() => navigation.goBack()}
+					navigation={navigation}
+					showNotificationIcon={false}
+					showChatIcon={false}
+				/>
+				<View style={styles.errorContainer}>
+					<Ionicons
+						name="alert-circle-outline"
+						size={64}
+						color="#ccc"
+					/>
+					<Text style={styles.errorText}>
+						{error?.message || "Không thể tải thông tin yêu cầu"}
+					</Text>
+					<TouchableOpacity
+						style={styles.retryButton}
+						onPress={() => refetch()}
+					>
+						<Text style={styles.retryButtonText}>Thử lại</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
 
 	return (
 		<View style={styles.container}>

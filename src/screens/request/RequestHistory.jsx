@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import { formatDate, getStatusColor } from "../../utils/statusHandler.js";
 
 export default function RequestHistory({ navigation, route }) {
 	const { request } = route.params || {};
@@ -88,24 +89,6 @@ export default function RequestHistory({ navigation, route }) {
 		}
 	};
 
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch (_error) {
-			return dateString;
-		}
-	};
-
 	// Format history data from API response
 	const formatHistoryFromAPI = (requestData) => {
 		console.log("=== FORMATTING HISTORY FROM API ===");
@@ -173,27 +156,6 @@ export default function RequestHistory({ navigation, route }) {
 
 	// Use new API-based history formatter
 	const requestHistory = formatHistoryFromAPI(currentRequest);
-
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "sent":
-				return "#28a745"; // Green for sent
-			case "checking":
-				return "#17a2b8"; // Teal for checking
-			case "quoted":
-				return "#ffc107"; // Yellow for quoted
-			case "confirmed":
-				return "#007bff"; // Blue for confirmed
-			case "cancelled":
-				return "#dc3545"; // Red for cancelled
-			case "insufficient":
-				return "#fd7e14"; // Orange for insufficient
-			case "completed":
-				return "#6c757d"; // Gray for completed steps
-			default:
-				return "#6c757d";
-		}
-	};
 
 	return (
 		<View style={styles.container}>

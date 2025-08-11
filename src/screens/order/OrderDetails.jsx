@@ -12,6 +12,11 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import {
+	formatDate,
+	getStatusColor,
+	getStatusText,
+} from "../../utils/statusHandler.js";
 
 export default function OrderDetails({ navigation, route }) {
 	// Get order data from route params or use mock data
@@ -65,63 +70,6 @@ export default function OrderDetails({ navigation, route }) {
 			return "#" + fullId.split("-")[0];
 		}
 		return "#" + fullId;
-	};
-
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch {
-			return dateString;
-		}
-	};
-
-	// Get status color and text
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "#007bff";
-			case "PURCHASED":
-				return "#17a2b8";
-			case "IN_TRANSIT":
-				return "#6610f2";
-			case "ARRIVED_IN_DESTINATION":
-				return "#fd7e14";
-			case "DELIVERED":
-				return "#28a745";
-			case "CANCELED":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "Đã đặt hàng";
-			case "PURCHASED":
-				return "Đã thanh toán";
-			case "IN_TRANSIT":
-				return "Đang vận chuyển";
-			case "ARRIVED_IN_DESTINATION":
-				return "Đã đến nơi";
-			case "DELIVERED":
-				return "Đã giao hàng";
-			case "CANCELED":
-				return "Đã hủy";
-			default:
-				return "Không xác định";
-		}
 	};
 
 	// Format currency
