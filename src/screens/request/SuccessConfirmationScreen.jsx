@@ -51,13 +51,18 @@ export default function SuccessConfirmationScreen({ navigation, route }) {
 	};
 
 	const handleViewOrders = () => {
+		// Navigate to Request tab using jumpTo
 		navigation.reset({
 			index: 0,
-			routes: [
-				{ name: "Tabs" },
-				{ name: "OrderScreen" }, // Navigate to orders tab
-			],
+			routes: [{ name: "Tabs" }],
 		});
+		
+		// After a short delay, navigate to the specific tab
+		setTimeout(() => {
+			navigation.navigate("Tabs", {
+				screen: "Request"
+			});
+		}, 100);
 	};
 
 	return (
