@@ -67,153 +67,58 @@ export default function RequestCard({
 	// const getRequestTypeBorderColor = ... (removed)
 
 	const getProductDisplayInfo = (request: any) => {
-		if (request.requestType === "ONLINE") {
-			let allProducts: any[] = [];
+		// For ALL statuses, always show simple product names (not seller/platform info)
+		let allProducts: any[] = [];
 
-			// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
-			if (
-				Array.isArray(request.requestItems) &&
-				request.requestItems.length > 0
-			) {
-				allProducts = [...allProducts, ...request.requestItems];
-			}
-
-			// Trường hợp 2: subRequests (có thể có ở tất cả status, nhất là "quoted", "confirmed")
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				// Gộp tất cả products từ tất cả subRequests
-				request.subRequests.forEach((subReq: any) => {
-					if (
-						Array.isArray(subReq.requestItems) &&
-						subReq.requestItems.length > 0
-					) {
-						allProducts = [...allProducts, ...subReq.requestItems];
-					}
-				});
-			}
-
-			if (allProducts.length === 0) {
-				return "Không có sản phẩm";
-			}
-
-			const sortedProducts = allProducts.sort((a, b) => {
-				const nameA = (a.productName || a.name || "").toLowerCase();
-				const nameB = (b.productName || b.name || "").toLowerCase();
-				return nameA.localeCompare(nameB);
+		// Method 1: Try requestItems first (common in early stages like sent, checking)
+		if (Array.isArray(request.requestItems) && request.requestItems.length > 0) {
+			allProducts = [...request.requestItems];
+		}
+		// Method 2: If no requestItems, get products from subRequests (common in later stages)
+		else if (Array.isArray(request.subRequests) && request.subRequests.length > 0) {
+			request.subRequests.forEach((subReq: any) => {
+				if (Array.isArray(subReq.requestItems) && subReq.requestItems.length > 0) {
+					allProducts = [...allProducts, ...subReq.requestItems];
+				}
 			});
+		}
 
-			const firstProduct = sortedProducts[0];
-			const firstName =
-				firstProduct.productName ||
-				firstProduct.name ||
-				"Sản phẩm không tên";
-
-			if (allProducts.length === 1) {
-				return firstName;
-			} else {
-				const remainingCount = allProducts.length - 1;
-				return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
-			}
-		} else {
-			// OFFLINE logic - also support "và X sản phẩm khác" format
-			// First, try to get products from subRequests like ONLINE logic
-			let allProducts: any[] = [];
-
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				// Gộp tất cả products từ tất cả subRequests
-				request.subRequests.forEach((subReq: any) => {
-					if (
-						Array.isArray(subReq.requestItems) &&
-						subReq.requestItems.length > 0
-					) {
-						allProducts = [...allProducts, ...subReq.requestItems];
-					}
-				});
-			}
-
-			// If we found products, use the same logic as ONLINE
-			if (allProducts.length > 0) {
-				const sortedProducts = allProducts.sort((a, b) => {
-					const nameA = (a.productName || a.name || "").toLowerCase();
-					const nameB = (b.productName || b.name || "").toLowerCase();
-					return nameA.localeCompare(nameB);
-				});
-
-				const firstProduct = sortedProducts[0];
-				const firstName =
-					firstProduct.productName ||
-					firstProduct.name ||
-					"Sản phẩm không tên";
-
-				if (allProducts.length === 1) {
-					return firstName;
-				} else {
-					const remainingCount = allProducts.length - 1;
-					return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
-				}
-			}
-
-			// Fallback to store name logic if no products found
-			let mainText = "";
-
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				const firstSub = request.subRequests[0];
-
-				if (
-					Array.isArray(firstSub.contactInfo) &&
-					firstSub.contactInfo.length > 0
-				) {
-					const storeInfo = firstSub.contactInfo.find(
-						(info: string) =>
-							info.includes("Tên cửa hàng:") ||
-							info.includes("Store:")
-					);
-
-					if (storeInfo) {
-						mainText = storeInfo
-							.replace("Tên cửa hàng:", "")
-							.replace("Store:", "")
-							.trim();
-					} else {
-						mainText = firstSub.contactInfo[0];
-					}
-				}
-			}
-
-			if (
-				!mainText &&
-				Array.isArray(request.contactInfo) &&
-				request.contactInfo.length > 0
-			) {
-				const storeInfo = request.contactInfo.find(
-					(info: string) =>
-						info.includes("Tên cửa hàng:") ||
-						info.includes("Store:")
+		// If we still have no products, try fallback for offline requests
+		if (allProducts.length === 0 && request.requestType === "OFFLINE" && Array.isArray(request.subRequests)) {
+			// Fallback to store name for offline requests with no products
+			const firstSub = request.subRequests[0];
+			if (firstSub && Array.isArray(firstSub.contactInfo) && firstSub.contactInfo.length > 0) {
+				const storeInfo = firstSub.contactInfo.find((info: string) =>
+					info.includes("Tên cửa hàng:") || info.includes("Store:")
 				);
 
 				if (storeInfo) {
-					mainText = storeInfo
+					return storeInfo
 						.replace("Tên cửa hàng:", "")
 						.replace("Store:", "")
 						.trim();
-				} else {
-					mainText = request.contactInfo[0];
 				}
+				return firstSub.contactInfo[0] || "Cửa hàng không xác định";
 			}
+			return "Cửa hàng không xác định";
+		}
 
-			if (!mainText) {
-				mainText = "Cửa hàng không xác định";
-			}
+		if (allProducts.length === 0) {
+			return "Không có sản phẩm";
+		}
 
-			return mainText;
+		// Always show product names regardless of status
+		const firstProduct = allProducts[0];
+		const firstName = firstProduct.productName || firstProduct.name || "Sản phẩm không tên";
+
+		// Debug: Log product count to understand the issue
+		console.log(`[RequestCard] Request ${request.id}: Found ${allProducts.length} products`);
+
+		if (allProducts.length === 1) {
+			return firstName;
+		} else {
+			const remainingCount = allProducts.length - 1;
+			return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
 		}
 	};
 
@@ -290,35 +195,18 @@ export default function RequestCard({
 					<Text style={styles.quantityText}>
 						x
 						{(() => {
-							// Sử dụng cùng logic như getProductDisplayInfo để đảm bảo consistency
+							// Use same logic as getProductDisplayInfo to ensure consistency
 							let allProducts: any[] = [];
 
-							// Gộp products từ CẢ HAI nguồn: requestItems VÀ subRequests
-							// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
-							if (
-								Array.isArray(request.requestItems) &&
-								request.requestItems.length > 0
-							) {
-								allProducts = [
-									...allProducts,
-									...request.requestItems,
-								];
+							// Method 1: Try requestItems first (avoid duplicates)
+							if (Array.isArray(request.requestItems) && request.requestItems.length > 0) {
+								allProducts = [...request.requestItems];
 							}
-
-							// Trường hợp 2: subRequests (có thể có ở tất cả status, nhất là "quoted", "confirmed")
-							if (
-								Array.isArray(request.subRequests) &&
-								request.subRequests.length > 0
-							) {
+							// Method 2: If no requestItems, get from subRequests
+							else if (Array.isArray(request.subRequests) && request.subRequests.length > 0) {
 								request.subRequests.forEach((subReq: any) => {
-									if (
-										Array.isArray(subReq.requestItems) &&
-										subReq.requestItems.length > 0
-									) {
-										allProducts = [
-											...allProducts,
-											...subReq.requestItems,
-										];
+									if (Array.isArray(subReq.requestItems) && subReq.requestItems.length > 0) {
+										allProducts = [...allProducts, ...subReq.requestItems];
 									}
 								});
 							}
@@ -327,26 +215,9 @@ export default function RequestCard({
 								return 1; // Default quantity
 							}
 
-							// Sort products same way as getProductDisplayInfo để đảm bảo consistency
-							const sortedProducts = allProducts.sort((a, b) => {
-								const nameA = (
-									a.productName ||
-									a.name ||
-									""
-								).toLowerCase();
-								const nameB = (
-									b.productName ||
-									b.name ||
-									""
-								).toLowerCase();
-								return nameA.localeCompare(nameB);
-							});
-
-							// Lấy số lượng của sản phẩm đầu tiên (sau khi sort)
-							const firstProduct = sortedProducts[0];
-							const firstProductQuantity =
-								parseInt(String(firstProduct.quantity || 1)) ||
-								1;
+							// Get quantity of first product (no sorting needed for quantity)
+							const firstProduct = allProducts[0];
+							const firstProductQuantity = parseInt(String(firstProduct.quantity || 1)) || 1;
 
 							return firstProductQuantity;
 						})()}

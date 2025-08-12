@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import {
 	ActivityIndicator,
 	ScrollView,
@@ -26,6 +27,16 @@ import {
 	shouldShowQuotation,
 } from "../../utils/statusHandler";
 
+// Helper function to check if request/sub-request is completed/paid
+const isRequestCompleted = (status) => {
+	if (!status) return false;
+	const normalizedStatus = status.toLowerCase();
+	return normalizedStatus === "completed" || 
+		   normalizedStatus === "paid" || 
+		   normalizedStatus === "success" ||
+		   normalizedStatus === "delivered";
+};
+
 export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
@@ -41,7 +52,20 @@ export default function RequestDetails({ navigation, route }) {
 		refetch,
 	} = useGetPurchaseRequestByIdQuery(requestId, {
 		skip: !requestId,
+		// Force refetch to get latest data, ignore cache
+		refetchOnMountOrArgChange: true,
+		refetchOnFocus: true,
 	});
+
+	// Refetch data when screen comes into focus to get latest status
+	useFocusEffect(
+		useCallback(() => {
+			if (requestId) {
+				console.log('[RequestDetails] Screen focused, refetching data for request:', requestId);
+				refetch();
+			}
+		}, [requestId, refetch])
+	);
 
 	if (isLoading) {
 		return (
@@ -101,38 +125,15 @@ export default function RequestDetails({ navigation, route }) {
 		);
 	}
 
-	// Use the correct data for rendering
-	const displayData = requestDetails; // Show error state
-	if (error || !requestDetails) {
-		return (
-			<View style={styles.container}>
-				<Header
-					title="Chi tiết yêu cầu"
-					showBackButton={true}
-					onBackPress={() => navigation.goBack()}
-					navigation={navigation}
-					showNotificationIcon={false}
-					showChatIcon={false}
-				/>
-				<View style={styles.errorContainer}>
-					<Ionicons
-						name="alert-circle-outline"
-						size={64}
-						color="#ccc"
-					/>
-					<Text style={styles.errorText}>
-						{error?.message || "Không thể tải thông tin yêu cầu"}
-					</Text>
-					<TouchableOpacity
-						style={styles.retryButton}
-						onPress={() => refetch()}
-					>
-						<Text style={styles.retryButtonText}>Thử lại</Text>
-					</TouchableOpacity>
-				</View>
-			</View>
-		);
-	}
+	// Use the latest data from API for rendering
+	const displayData = requestDetails;
+
+	// Debug: Log when displayData changes to track status updates
+	console.log('[RequestDetails] Display data updated:', {
+		requestId: requestId,
+		status: displayData?.status,
+		timestamp: new Date().toISOString()
+	});
 
 	return (
 		<View style={styles.container}>
@@ -501,39 +502,50 @@ export default function RequestDetails({ navigation, route }) {
 					{(() => {
 						// Method 1: If we have sub-requests, show by sub-request structure
 						if (displayData?.subRequests?.length > 0) {
-							return displayData.subRequests
-								.map((subRequest, subIndex) => {
-									if (!subRequest?.requestItems?.length)
-										return null;
+								return displayData.subRequests
+									.map((subRequest, subIndex) => {
+										if (!subRequest?.requestItems?.length)
+											return null;
 
-									// Check if this sub-request has quotation
-									const hasQuotation =
-										subRequest.requestItems.some(
-											(item) =>
-												item?.quotationDetail &&
-												Object.keys(
-													item.quotationDetail
-												).length > 0
-										);
-
-									// Calculate sub-request total if has quotation
-									let subRequestTotal = 0;
-									if (hasQuotation) {
-										subRequest.requestItems.forEach(
-											(item) => {
-												if (
-													item?.quotationDetail
-														?.totalVNDPrice
-												) {
-													subRequestTotal +=
+										// Check if this sub-request has quotation
+										const hasQuotation =
+											subRequest.requestItems.some(
+												(item) =>
+													item?.quotationDetail &&
+													Object.keys(
 														item.quotationDetail
-															.totalVNDPrice;
-												}
-											}
-										);
-									}
+													).length > 0
+											);
 
-									return (
+										// Check if request or sub-request is completed/paid
+										const isCompleted = 
+											isRequestCompleted(displayData?.status) ||
+											isRequestCompleted(subRequest?.status);
+
+										// Debug: Log status values to understand actual values
+										console.log(`[RequestDetails] Sub-request ${subIndex}:`, {
+											displayDataStatus: displayData?.status,
+											subRequestStatus: subRequest?.status,
+											isCompleted: isCompleted,
+											hasQuotation: hasQuotation
+										});
+
+										// Calculate sub-request total if has quotation
+										let subRequestTotal = 0;
+										if (hasQuotation) {
+											subRequest.requestItems.forEach(
+												(item) => {
+													if (
+														item?.quotationDetail
+															?.totalVNDPrice
+													) {
+														subRequestTotal +=
+															item.quotationDetail
+																.totalVNDPrice;
+													}
+												}
+											);
+										}									return (
 										<View
 											key={`sub-${subIndex}`}
 											style={styles.subRequestContainer}
@@ -598,23 +610,26 @@ export default function RequestDetails({ navigation, route }) {
 														</Text>
 													</View>
 												</View>
-												{hasQuotation && (
+												{(hasQuotation || isCompleted) && (
 													<View
 														style={
 															styles.subRequestHeaderRight
 														}
 													>
 														<View
-															style={
-																styles.quotationBadge
-															}
+															style={[
+																styles.quotationBadge,
+																isCompleted && {
+																	backgroundColor: "#28a745"
+																}
+															]}
 														>
 															<Text
 																style={
 																	styles.quotationBadgeText
 																}
 															>
-																Đã báo giá
+																{isCompleted ? "Đã thanh toán" : "Đã báo giá"}
 															</Text>
 														</View>
 													</View>
@@ -828,7 +843,7 @@ export default function RequestDetails({ navigation, route }) {
 											</View>
 
 											{/* Quotation for this sub-request */}
-											{hasQuotation &&
+											{(hasQuotation || isCompleted) &&
 												shouldShowQuotation(
 													displayData?.status
 												) && (
@@ -1084,117 +1099,147 @@ export default function RequestDetails({ navigation, route }) {
 															)}
 														</View>
 
-														{/* Payment Section for this sub-request */}
-														<View
-															style={
-																styles.subRequestPayment
-															}
-														>
+														{/* Payment Section for this sub-request - Only show if not completed */}
+														{!isCompleted && (
 															<View
 																style={
-																	styles.subRequestCheckbox
+																	styles.subRequestPayment
 																}
 															>
+																<View
+																	style={
+																		styles.subRequestCheckbox
+																	}
+																>
+																	<TouchableOpacity
+																		style={[
+																			styles.checkbox,
+																			acceptedQuotations[
+																				subIndex
+																			] &&
+																				styles.checkboxChecked,
+																		]}
+																		onPress={() =>
+																			setAcceptedQuotations(
+																				(
+																					prev
+																				) => ({
+																					...prev,
+																					[subIndex]:
+																						!prev[
+																							subIndex
+																						],
+																				})
+																			)
+																		}
+																		activeOpacity={
+																			0.7
+																		}
+																	>
+																		{acceptedQuotations[
+																			subIndex
+																		] && (
+																			<Ionicons
+																				name="checkmark"
+																				size={
+																					16
+																				}
+																				color="#FFFFFF"
+																			/>
+																		)}
+																	</TouchableOpacity>
+																	<Text
+																		style={
+																			styles.checkboxText
+																		}
+																	>
+																		Tôi đồng ý
+																		với báo giá
+																		này và chấp
+																		nhận phí
+																		phát sinh
+																		(nếu có)
+																	</Text>
+																</View>
+
 																<TouchableOpacity
 																	style={[
-																		styles.checkbox,
-																		acceptedQuotations[
+																		styles.subRequestPayButton,
+																		!acceptedQuotations[
 																			subIndex
 																		] &&
-																			styles.checkboxChecked,
+																			styles.subRequestPayButtonDisabled,
 																	]}
-																	onPress={() =>
-																		setAcceptedQuotations(
-																			(
-																				prev
-																			) => ({
-																				...prev,
-																				[subIndex]:
-																					!prev[
-																						subIndex
-																					],
-																			})
-																		)
+																	onPress={() => {
+																		if (
+																			acceptedQuotations[
+																				subIndex
+																			]
+																		) {
+																			navigation.navigate(
+																				"ConfirmQuotation",
+																				{
+																					request:
+																						displayData,
+																					subRequest:
+																						subRequest,
+																					subRequestIndex:
+																						subIndex,
+																				}
+																			);
+																		}
+																	}}
+																	disabled={
+																		!acceptedQuotations[
+																			subIndex
+																		]
 																	}
 																	activeOpacity={
 																		0.7
 																	}
 																>
-																	{acceptedQuotations[
-																		subIndex
-																	] && (
-																		<Ionicons
-																			name="checkmark"
-																			size={
-																				16
-																			}
-																			color="#FFFFFF"
-																		/>
-																	)}
+																	<Text
+																		style={[
+																			styles.subRequestPayButtonText,
+																			!acceptedQuotations[
+																				subIndex
+																			] &&
+																				styles.subRequestPayButtonTextDisabled,
+																		]}
+																	>
+																		Thanh toán
+																	</Text>
 																</TouchableOpacity>
-																<Text
-																	style={
-																		styles.checkboxText
-																	}
-																>
-																	Tôi đồng ý
-																	với báo giá
-																	này và chấp
-																	nhận phí
-																	phát sinh
-																	(nếu có)
-																</Text>
 															</View>
+														)}
 
-															<TouchableOpacity
-																style={[
-																	styles.subRequestPayButton,
-																	!acceptedQuotations[
-																		subIndex
-																	] &&
-																		styles.subRequestPayButtonDisabled,
-																]}
-																onPress={() => {
-																	if (
-																		acceptedQuotations[
-																			subIndex
-																		]
-																	) {
-																		navigation.navigate(
-																			"ConfirmQuotation",
-																			{
-																				request:
-																					displayData,
-																				subRequest:
-																					subRequest,
-																				subRequestIndex:
-																					subIndex,
-																			}
-																		);
-																	}
-																}}
-																disabled={
-																	!acceptedQuotations[
-																		subIndex
-																	]
-																}
-																activeOpacity={
-																	0.7
+														{/* Completed status message */}
+														{isCompleted && (
+															<View
+																style={
+																	styles.completedStatusContainer
 																}
 															>
-																<Text
-																	style={[
-																		styles.subRequestPayButtonText,
-																		!acceptedQuotations[
-																			subIndex
-																		] &&
-																			styles.subRequestPayButtonTextDisabled,
-																	]}
+																<View
+																	style={
+																		styles.completedStatusBadge
+																	}
 																>
-																	Thanh toán
-																</Text>
-															</TouchableOpacity>
-														</View>
+																	<Ionicons
+																		name="checkmark-circle"
+																		size={20}
+																		color="#28a745"
+																	/>
+																	<Text
+																		style={
+																			styles.completedStatusText
+																		}
+																	>
+																		Đã thanh toán thành công
+																	</Text>
+																</View>
+															</View>
+														)}
 													</View>
 												)}
 										</View>
@@ -1837,6 +1882,26 @@ const styles = StyleSheet.create({
 	},
 	subRequestPayButtonTextDisabled: {
 		color: "#9E9E9E",
+	},
+	// Completed Status Styles
+	completedStatusContainer: {
+		backgroundColor: "#f8fff8",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#d4edda",
+	},
+	completedStatusBadge: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 8,
+	},
+	completedStatusText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#28a745",
 	},
 	// Quotation Summary Styles
 	quotationSummaryContainer: {
