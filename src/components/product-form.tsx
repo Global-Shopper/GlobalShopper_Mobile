@@ -146,7 +146,7 @@ export default function ProductForm({
 	onSubmit,
 	onChange,
 }: ProductFormProps) {
-	const { showDialog, Dialog } = useDialog();
+	const { showDialog, hideDialog, Dialog } = useDialog();
 	const [formData, setFormData] = useState<ProductData>(() => {
 		return getInitialFormData(initialData, storeData, mode);
 	});
@@ -300,6 +300,9 @@ export default function ProductForm({
 				const cloudinaryUrl = await uploadToCloudinary(file);
 
 				if (cloudinaryUrl) {
+					// Hide loading dialog
+					hideDialog();
+					
 					const updatedData = {
 						...formData,
 						images: [...formData.images, cloudinaryUrl],
