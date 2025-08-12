@@ -25,5 +25,9 @@ const endpoints = {
 	BANKS: "/banks",
 	AI_RAW_DATA: "/ai/get-raw-data",
 	CURRENCY_CONVERT_TO_VND: "/currency/convert-to-vnd",
+	// Order endpoints
+	ORDERS: "/orders",
+	ORDER_DETAIL: "/orders", // for specific order by ID
+	CANCEL_ORDER: "/orders", // for cancel order by ID
 };
 export default endpoints;

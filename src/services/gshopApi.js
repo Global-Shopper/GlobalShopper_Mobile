@@ -12,6 +12,7 @@ const gshopApi = createApi({
 		"Wallet",
 		"Banks",
 		"BankAccounts",
+		"Order",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -357,6 +358,40 @@ const gshopApi = createApi({
 			}),
 			providesTags: ["Wallet"],
 		}),
+
+		// Order endpoints
+		getAllOrders: builder.query({
+			query: (params = {}) => ({
+				url: endpoints.ORDERS,
+				method: "GET",
+				params: {
+					page: params.page || 0,
+					size: params.size || 20,
+					sortBy: params.sortBy || "createdAt",
+					sortDirection: params.sortDirection || "DESC",
+					status: params.status || undefined, // Filter by status if provided
+				},
+			}),
+			providesTags: ["Order"],
+		}),
+
+		getOrderById: builder.query({
+			query: (orderId) => ({
+				url: `${endpoints.ORDER_DETAIL}/${orderId}`,
+				method: "GET",
+			}),
+			providesTags: (result, error, orderId) => [
+				{ type: "Order", id: orderId },
+			],
+		}),
+
+		cancelOrder: builder.mutation({
+			query: (orderId) => ({
+				url: `${endpoints.CANCEL_ORDER}/${orderId}/cancel`,
+				method: "PUT",
+			}),
+			invalidatesTags: ["Order"],
+		}),
 	}),
 });
 
@@ -399,6 +434,10 @@ export const {
 	useCreateBankAccountMutation,
 	useUpdateBankAccountMutation,
 	useDeleteBankAccountMutation,
+	// Order hooks
+	useGetAllOrdersQuery,
+	useGetOrderByIdQuery,
+	useCancelOrderMutation,
 } = gshopApi;
 
 export default gshopApi;

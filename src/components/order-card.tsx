@@ -5,23 +5,22 @@ import { Text } from "./ui/text";
 interface OrderCardProps {
 	order: {
 		id: string;
-		requestType: "ONLINE" | "OFFLINE";
 		seller?: string;
-		platform?: string;
-		storeName?: string;
-		productName: string;
-		productImage?: string;
-		quantity: number;
+		ecommercePlatform?: string;
+		status: string;
 		totalPrice: number;
-		status:
-			| "ORDER_REQUESTED"
-			| "PURCHASED"
-			| "IN_TRANSIT"
-			| "ARRIVED_IN_DESTINATION"
-			| "DELIVERED"
-			| "CANCELED";
-		createdAt: string;
-		currency?: string;
+		shippingFee?: number;
+		orderItems?: {
+			id: string;
+			productName: string;
+			images?: string[];
+			quantity: number;
+			basePrice: number;
+			currency: string;
+			totalVNDPrice: number;
+			variants?: string[];
+		}[];
+		createdAt: number;
 	};
 	onPress?: () => void;
 	onCancel?: () => void;
@@ -36,28 +35,22 @@ export default function OrderCard({
 }: OrderCardProps) {
 	// Get display title (store name or seller)
 	const getDisplayTitle = () => {
-		if (order.requestType === "ONLINE") {
-			// Online: "ABC Store (Amazon)"
-			if (order.seller && order.platform) {
-				return `${order.seller} (${order.platform})`;
-			} else if (order.seller) {
-				return order.seller;
-			} else if (order.platform) {
-				return order.platform;
-			}
-			return "Cửa hàng online";
-		} else {
-			// Offline: "Tên cửa hàng"
-			return order.storeName || "Cửa hàng ngoại tuyến";
+		if (order.seller && order.ecommercePlatform) {
+			return `${order.seller} (${order.ecommercePlatform})`;
+		} else if (order.seller) {
+			return order.seller;
+		} else if (order.ecommercePlatform) {
+			return order.ecommercePlatform;
 		}
+		return "Cửa hàng online";
 	};
 
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString: string) => {
-		if (!dateString) return "N/A";
+	// Format date from timestamp to Vietnamese format: dd/mm/yyyy hh:mm
+	const formatDate = (timestamp: number) => {
+		if (!timestamp) return "N/A";
 
 		try {
-			const date = new Date(dateString);
+			const date = new Date(timestamp);
 			const day = date.getDate().toString().padStart(2, "0");
 			const month = (date.getMonth() + 1).toString().padStart(2, "0");
 			const year = date.getFullYear();
@@ -66,7 +59,7 @@ export default function OrderCard({
 
 			return `${day}/${month}/${year} ${hours}:${minutes}`;
 		} catch {
-			return dateString;
+			return "N/A";
 		}
 	};
 
@@ -74,8 +67,6 @@ export default function OrderCard({
 		switch (status) {
 			case "ORDER_REQUESTED":
 				return "#007bff";
-			case "PURCHASED":
-				return "#17a2b8";
 			case "IN_TRANSIT":
 				return "#6610f2";
 			case "ARRIVED_IN_DESTINATION":
@@ -92,9 +83,7 @@ export default function OrderCard({
 	const getStatusText = (status: string) => {
 		switch (status) {
 			case "ORDER_REQUESTED":
-				return "Đã đặt hàng";
-			case "PURCHASED":
-				return "Đã thanh toán";
+				return "Đang đặt hàng";
 			case "IN_TRANSIT":
 				return "Đang vận chuyển";
 			case "ARRIVED_IN_DESTINATION":
@@ -108,16 +97,13 @@ export default function OrderCard({
 		}
 	};
 
-	// Format currency
-	const formatCurrency = (amount: number, currency: string = "VND") => {
-		if (currency === "VND") {
-			return `${amount.toLocaleString("vi-VN")} VND`;
-		}
-		return `${amount.toLocaleString("vi-VN")} ${currency}`;
+	// Format currency without decimals
+	const formatCurrency = (amount: number) => {
+		return `${Math.round(amount).toLocaleString("vi-VN")} VND`;
 	};
 
-	// Check if can cancel (only PURCHASED status)
-	const canCancel = order.status === "PURCHASED";
+	// Check if can cancel (only ORDER_REQUESTED status since we removed PURCHASED)
+	const canCancel = order.status === "ORDER_REQUESTED";
 
 	// Check if can review (DELIVERED status)
 	const canReview = order.status === "DELIVERED";
@@ -161,9 +147,9 @@ export default function OrderCard({
 			<View style={styles.productSection}>
 				{/* Product Image */}
 				<View style={styles.productImageContainer}>
-					{order.productImage ? (
+					{order.orderItems?.[0]?.images?.[0] ? (
 						<Image
-							source={{ uri: order.productImage }}
+							source={{ uri: order.orderItems[0].images[0] }}
 							style={styles.productImage}
 							resizeMode="cover"
 						/>
@@ -181,19 +167,32 @@ export default function OrderCard({
 				{/* Product Info */}
 				<View style={styles.productInfo}>
 					<Text style={styles.productName} numberOfLines={2}>
-						{order.productName}
+						{order.orderItems?.[0]?.productName || "Tên sản phẩm không có"}
 					</Text>
+
+					{/* Product Variants Info */}
+					{order.orderItems?.[0]?.variants && order.orderItems[0].variants.length > 0 && (
+						<View style={styles.variantsContainer}>
+							{order.orderItems[0].variants.map((variant, index) => (
+								<View key={index} style={styles.variantBadge}>
+									<Text style={styles.variantText}>
+										{variant}
+									</Text>
+								</View>
+							))}
+						</View>
+					)}
 
 					<View style={styles.quantityRow}>
 						<Text style={styles.quantityLabel}>Số lượng:</Text>
 						<Text style={styles.quantityValue}>
-							x{order.quantity}
+							x{order.orderItems?.[0]?.quantity || 0}
 						</Text>
 					</View>
 
 					<View style={styles.priceRow}>
 						<Text style={styles.totalPrice}>
-							{formatCurrency(order.totalPrice, order.currency)}
+							{formatCurrency(order.totalPrice)}
 						</Text>
 					</View>
 				</View>
@@ -202,10 +201,10 @@ export default function OrderCard({
 			{/* Actions Section */}
 			{(canCancel || canReview) && (
 				<View style={styles.actionsSection}>
-					{canCancel && (
+					{canCancel && onCancel && (
 						<TouchableOpacity
 							style={[styles.actionButton, styles.cancelButton]}
-							onPress={onCancel}
+							onPress={() => onCancel()}
 						>
 							<Ionicons
 								name="close-circle-outline"
@@ -216,10 +215,10 @@ export default function OrderCard({
 						</TouchableOpacity>
 					)}
 
-					{canReview && (
+					{canReview && onReview && (
 						<TouchableOpacity
 							style={[styles.actionButton, styles.reviewButton]}
-							onPress={onReview}
+							onPress={() => onReview()}
 						>
 							<Ionicons
 								name="star-outline"
@@ -317,6 +316,33 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		lineHeight: 20,
 		marginBottom: 8,
+	},
+	storeInfoRow: {
+		marginBottom: 6,
+	},
+	storeInfoText: {
+		fontSize: 12,
+		color: "#6c757d",
+		marginBottom: 2,
+	},
+	variantsContainer: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		marginBottom: 6,
+		gap: 6,
+	},
+	variantBadge: {
+		backgroundColor: "#e3f2fd",
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		borderRadius: 6,
+		borderWidth: 1,
+		borderColor: "#42A5F5",
+	},
+	variantText: {
+		fontSize: 11,
+		color: "#1976d2",
+		fontWeight: "500",
 	},
 	quantityRow: {
 		flexDirection: "row",
