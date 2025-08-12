@@ -386,10 +386,22 @@ const gshopApi = createApi({
 		}),
 
 		cancelOrder: builder.mutation({
-			query: (orderId) => ({
-				url: `${endpoints.CANCEL_ORDER}/${orderId}/cancel`,
-				method: "PUT",
-			}),
+			query: ({ orderId, reason }) => {
+				if (!orderId) {
+					throw new Error("Order ID is required");
+				}
+				console.log("Cancel order API call for orderId:", orderId);
+				console.log("Cancel reason:", reason);
+				const url = `${endpoints.CANCEL_ORDER}/${orderId}/cancel`;
+				console.log("Cancel order URL:", url);
+				const requestBody = reason ? { reason } : {};
+				console.log("Cancel order body:", requestBody);
+				return {
+					url: url,
+					method: "PUT",
+					data: requestBody,
+				};
+			},
 			invalidatesTags: ["Order"],
 		}),
 	}),

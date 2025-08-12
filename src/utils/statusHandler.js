@@ -19,6 +19,18 @@ export const REQUEST_STATUS = {
 };
 
 /**
+ * Danh sách các Order Status (theo API Order)
+ */
+export const ORDER_STATUS = {
+	ORDER_REQUESTED: "ORDER_REQUESTED",
+	PURCHASED: "PURCHASED",
+	IN_TRANSIT: "IN_TRANSIT",
+	ARRIVED_IN_DESTINATION: "ARRIVED_IN_DESTINATION",
+	DELIVERED: "DELIVERED",
+	CANCELED: "CANCELED",
+};
+
+/**
  * Danh sách các request type
  */
 export const REQUEST_TYPE = {
@@ -38,6 +50,13 @@ export const getStatusText = (status) => {
 	if (!status) return "Không xác định";
 
 	const statusMap = {
+		// Order API statuses
+		[ORDER_STATUS.ORDER_REQUESTED]: "Đang đặt hàng",
+		[ORDER_STATUS.PURCHASED]: "Đã mua",
+		[ORDER_STATUS.IN_TRANSIT]: "Đang vận chuyển",
+		[ORDER_STATUS.ARRIVED_IN_DESTINATION]: "Đã đến nơi",
+		[ORDER_STATUS.DELIVERED]: "Đã giao hàng",
+		[ORDER_STATUS.CANCELED]: "Đã hủy",
 		// Actual API statuses
 		[REQUEST_STATUS.SENT]: "Đã gửi",
 		[REQUEST_STATUS.CHECKING]: "Đang xử lý",
@@ -55,7 +74,7 @@ export const getStatusText = (status) => {
 		[REQUEST_STATUS.REJECTED]: "Bị từ chối",
 	};
 
-	return statusMap[status.toLowerCase()] || status;
+	return statusMap[status] || statusMap[status?.toLowerCase()] || status;
 };
 
 /**
@@ -67,6 +86,13 @@ export const getStatusColor = (status) => {
 	if (!status) return "#999999";
 
 	const colorMap = {
+		// Order API statuses
+		[ORDER_STATUS.ORDER_REQUESTED]: "#007bff", // Blue - Đang đặt hàng
+		[ORDER_STATUS.PURCHASED]: "#28a745", // Green - Đã mua
+		[ORDER_STATUS.IN_TRANSIT]: "#6610f2", // Purple - Đang vận chuyển
+		[ORDER_STATUS.ARRIVED_IN_DESTINATION]: "#fd7e14", // Orange - Đã đến nơi
+		[ORDER_STATUS.DELIVERED]: "#28a745", // Green - Đã giao hàng
+		[ORDER_STATUS.CANCELED]: "#dc3545", // Red - Đã hủy
 		// Actual API statuses
 		[REQUEST_STATUS.SENT]: "#FFA726", // Orange - Đã gửi
 		[REQUEST_STATUS.CHECKING]: "#42A5F5", // Blue - Đang xử lý
@@ -84,7 +110,7 @@ export const getStatusColor = (status) => {
 		[REQUEST_STATUS.REJECTED]: "#F44336", // Dark Red - Bị từ chối
 	};
 
-	return colorMap[status.toLowerCase()] || "#999999";
+	return colorMap[status] || colorMap[status?.toLowerCase()] || "#999999";
 };
 
 /**

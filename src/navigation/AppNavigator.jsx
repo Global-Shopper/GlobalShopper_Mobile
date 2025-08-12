@@ -8,6 +8,7 @@ import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import FeedbackDetails from "../screens/feedback/FeedbackDetails";
 import NotificationScreen from "../screens/notification/NotificationScreen";
+import CancelOrder from "../screens/order/CancelOrder";
 import OrderDetails from "../screens/order/OrderDetails";
 import OrderHistoryScreen from "../screens/order/OrderHistoryScreen";
 import SuccessPaymentScreen from "../screens/payment/SuccessPaymentScreen";
@@ -239,6 +240,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="OrderDetails"
 				component={OrderDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="CancelOrder"
+				component={CancelOrder}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

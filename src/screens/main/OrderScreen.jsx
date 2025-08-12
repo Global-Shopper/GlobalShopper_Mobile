@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
 	ActivityIndicator,
+	Alert,
 	FlatList,
 	RefreshControl,
 	ScrollView,
@@ -11,10 +12,7 @@ import {
 import Header from "../../components/header";
 import OrderCard from "../../components/order-card";
 import { Text } from "../../components/ui/text";
-import {
-	useCancelOrderMutation,
-	useGetAllOrdersQuery,
-} from "../../services/gshopApi";
+import { useGetAllOrdersQuery } from "../../services/gshopApi";
 
 export default function OrderScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
@@ -31,9 +29,6 @@ export default function OrderScreen({ navigation }) {
 		page: 0,
 		size: 50,
 	});
-
-	// Cancel order mutation
-	const [cancelOrder] = useCancelOrderMutation();
 
 	// Extract orders from API response
 	const orders = ordersResponse?.content || [];
@@ -65,15 +60,16 @@ export default function OrderScreen({ navigation }) {
 	];
 
 	const handleCancelOrder = async (orderId) => {
-		try {
-			console.log("Cancel order:", orderId);
-			await cancelOrder(orderId).unwrap();
-			// Refresh orders after cancellation
-			refetch();
-		} catch (error) {
-			console.error("Failed to cancel order:", error);
-			// Handle error (show toast, alert, etc.)
+		// Find the selected order
+		const selectedOrder = orders.find((order) => order.id === orderId);
+
+		if (!selectedOrder) {
+			Alert.alert("Lỗi", "Không tìm thấy thông tin đơn hàng");
+			return;
 		}
+
+		// Navigate to CancelOrder screen
+		navigation.navigate("CancelOrder", { orderData: selectedOrder });
 	};
 
 	const handleReviewOrder = (orderId) => {

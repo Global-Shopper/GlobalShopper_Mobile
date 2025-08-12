@@ -167,21 +167,28 @@ export default function OrderCard({
 				{/* Product Info */}
 				<View style={styles.productInfo}>
 					<Text style={styles.productName} numberOfLines={2}>
-						{order.orderItems?.[0]?.productName || "Tên sản phẩm không có"}
+						{order.orderItems?.[0]?.productName ||
+							"Tên sản phẩm không có"}
 					</Text>
 
 					{/* Product Variants Info */}
-					{order.orderItems?.[0]?.variants && order.orderItems[0].variants.length > 0 && (
-						<View style={styles.variantsContainer}>
-							{order.orderItems[0].variants.map((variant, index) => (
-								<View key={index} style={styles.variantBadge}>
-									<Text style={styles.variantText}>
-										{variant}
-									</Text>
-								</View>
-							))}
-						</View>
-					)}
+					{order.orderItems?.[0]?.variants &&
+						order.orderItems[0].variants.length > 0 && (
+							<View style={styles.variantsContainer}>
+								{order.orderItems[0].variants.map(
+									(variant, index) => (
+										<View
+											key={index}
+											style={styles.variantBadge}
+										>
+											<Text style={styles.variantText}>
+												{variant}
+											</Text>
+										</View>
+									)
+								)}
+							</View>
+						)}
 
 					<View style={styles.quantityRow}>
 						<Text style={styles.quantityLabel}>Số lượng:</Text>

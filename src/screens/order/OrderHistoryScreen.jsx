@@ -6,7 +6,12 @@ import { Text } from "../../components/ui/text";
 import { formatDate, getStatusColor } from "../../utils/statusHandler.js";
 
 export default function OrderHistoryScreen({ navigation, route }) {
-	const { orderId } = route.params || {};
+	// const { orderId } = route.params || {}; // TODO: Use orderId when integrating with real API
+
+	// Back button handler
+	const handleBackPress = () => {
+		navigation.goBack();
+	};
 
 	// Mock tracking history data
 	const [trackingHistory] = useState([
@@ -98,6 +103,7 @@ export default function OrderHistoryScreen({ navigation, route }) {
 			<Header
 				title="Lịch sử vận chuyển"
 				showBackButton
+				onBackPress={handleBackPress}
 				navigation={navigation}
 			/>
 
