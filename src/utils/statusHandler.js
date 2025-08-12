@@ -31,6 +31,19 @@ export const ORDER_STATUS = {
 };
 
 /**
+ * Danh sách các Transaction Status
+ */
+export const TRANSACTION_STATUS = {
+	SUCCESS: "success",
+	COMPLETED: "completed",
+	PENDING: "pending",
+	PROCESSING: "processing",
+	FAILED: "failed",
+	CANCELLED: "cancelled",
+	REFUNDED: "refunded",
+};
+
+/**
  * Danh sách các request type
  */
 export const REQUEST_TYPE = {
@@ -50,6 +63,14 @@ export const getStatusText = (status) => {
 	if (!status) return "Không xác định";
 
 	const statusMap = {
+		// Transaction statuses
+		[TRANSACTION_STATUS.SUCCESS]: "Thành công",
+		[TRANSACTION_STATUS.COMPLETED]: "Hoàn thành",
+		[TRANSACTION_STATUS.PENDING]: "Đang chờ",
+		[TRANSACTION_STATUS.PROCESSING]: "Đang xử lý",
+		[TRANSACTION_STATUS.FAILED]: "Thất bại",
+		[TRANSACTION_STATUS.CANCELLED]: "Đã hủy",
+		[TRANSACTION_STATUS.REFUNDED]: "Đã hoàn tiền",
 		// Order API statuses
 		[ORDER_STATUS.ORDER_REQUESTED]: "Đang đặt hàng",
 		[ORDER_STATUS.PURCHASED]: "Đã mua",
@@ -86,6 +107,14 @@ export const getStatusColor = (status) => {
 	if (!status) return "#999999";
 
 	const colorMap = {
+		// Transaction statuses
+		[TRANSACTION_STATUS.SUCCESS]: "#4CAF50", // Green - Thành công
+		[TRANSACTION_STATUS.COMPLETED]: "#4CAF50", // Green - Hoàn thành
+		[TRANSACTION_STATUS.PENDING]: "#FF9800", // Orange - Đang chờ
+		[TRANSACTION_STATUS.PROCESSING]: "#2196F3", // Blue - Đang xử lý
+		[TRANSACTION_STATUS.FAILED]: "#f44336", // Red - Thất bại
+		[TRANSACTION_STATUS.CANCELLED]: "#9E9E9E", // Gray - Đã hủy
+		[TRANSACTION_STATUS.REFUNDED]: "#9C27B0", // Purple - Đã hoàn tiền
 		// Order API statuses
 		[ORDER_STATUS.ORDER_REQUESTED]: "#007bff", // Blue - Đang đặt hàng
 		[ORDER_STATUS.PURCHASED]: "#28a745", // Green - Đã mua
