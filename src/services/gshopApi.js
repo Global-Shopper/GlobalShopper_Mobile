@@ -13,6 +13,7 @@ const gshopApi = createApi({
 		"Banks",
 		"BankAccounts",
 		"Order",
+		"Feedback",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -404,6 +405,37 @@ const gshopApi = createApi({
 			},
 			invalidatesTags: ["Order"],
 		}),
+
+		// Feedback endpoints
+		createFeedback: builder.mutation({
+			query: (feedbackData) => {
+				console.log("Creating feedback with data:", feedbackData);
+				return {
+					url: endpoints.FEEDBACK,
+					method: "POST",
+					data: feedbackData,
+				};
+			},
+			invalidatesTags: ["Feedback", "Order"],
+		}),
+
+		getAllFeedback: builder.query({
+			query: ({ page = 0, size = 10 } = {}) => {
+				const params = new URLSearchParams({
+					page: page.toString(),
+					size: size.toString(),
+				});
+				console.log(
+					"Getting all feedback with params:",
+					params.toString()
+				);
+				return {
+					url: `${endpoints.FEEDBACK_ALL}?${params}`,
+					method: "GET",
+				};
+			},
+			providesTags: ["Feedback"],
+		}),
 	}),
 });
 
@@ -449,7 +481,11 @@ export const {
 	// Order hooks
 	useGetAllOrdersQuery,
 	useGetOrderByIdQuery,
+	useLazyGetOrderByIdQuery,
 	useCancelOrderMutation,
+	// Feedback hooks
+	useCreateFeedbackMutation,
+	useGetAllFeedbackQuery,
 } = gshopApi;
 
 export default gshopApi;

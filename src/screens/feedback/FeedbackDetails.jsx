@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
 	Alert,
@@ -12,62 +11,46 @@ import {
 } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
-import { uploadToCloudinary } from "../../utils/uploadToCloundinary";
+import { useCreateFeedbackMutation } from "../../services/gshopApi";
 
 export default function FeedbackDetails({ navigation, route }) {
 	const { orderData } = route?.params || {};
+
+	// API mutation
+	const [createFeedback, { isLoading: isSubmitting }] =
+		useCreateFeedbackMutation();
 
 	// Debug logs
 	console.log("FeedbackDetails - Route params:", route?.params);
 	console.log("FeedbackDetails - Order data:", orderData);
 
-	// States for ratings
-	const [productRating, setProductRating] = useState(0);
-	const [serviceRating, setServiceRating] = useState(0);
-	const [shippingRating, setShippingRating] = useState(0);
+	// States for rating and comment
+	const [rating, setRating] = useState(0);
+	const [comment, setComment] = useState("");
+	const [selectedReasonTags, setSelectedReasonTags] = useState([]);
+	const [showCustomInput, setShowCustomInput] = useState(false);
 
-	// States for feedback content
-	const [productReview, setProductReview] = useState("");
-	const [serviceReview, setServiceReview] = useState("");
-
-	// States for media
-	const [selectedImages, setSelectedImages] = useState([]);
-	const [selectedVideos, setSelectedVideos] = useState([]);
-
-	// States for shipping tags
-	const [selectedShippingTags, setSelectedShippingTags] = useState([]);
-
-	// Predefined shipping review tags
-	const shippingTags = [
-		{ id: 1, label: "Chuyên nghiệp", color: "#007bff" },
-		{ id: 2, label: "Chu đáo", color: "#28a745" },
-		{ id: 3, label: "Thân thiện", color: "#17a2b8" },
-		{ id: 4, label: "Linh hoạt", color: "#6610f2" },
-		{ id: 5, label: "Đáng tin cậy", color: "#fd7e14" },
-		{ id: 6, label: "Bảo quản hàng tốt", color: "#e83e8c" },
-		{ id: 7, label: "Giao hàng nhanh", color: "#20c997" },
-		{ id: 8, label: "Đóng gói cẩn thận", color: "#6f42c1" },
+	// Predefined reason tags
+	const reasonTags = [
+		{ id: 1, label: "Sản phẩm chất lượng tốt" },
+		{ id: 2, label: "Giá cả hợp lý" },
+		{ id: 3, label: "Giao hàng nhanh" },
+		{ id: 4, label: "Đóng gói cẩn thận" },
+		{ id: 5, label: "Dịch vụ tốt" },
+		{ id: 6, label: "Đúng như mô tả" },
+		{ id: 7, label: "Sản phẩm kém chất lượng" },
+		{ id: 8, label: "Giao hàng chậm" },
+		{ id: 9, label: "Khác" },
 	];
-
-	// Mock order data if not provided
-	const order = orderData || {
-		id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-		productName: "iPhone 15 Pro Max 256GB - Natural Titanium",
-		productImage: "https://example.com/iphone.jpg",
-		seller: "Apple Store",
-		platform: "Amazon",
-		shippingUnit: "Giao Hàng Nhanh",
-		totalPrice: 35000000,
-		quantity: 1,
-	};
 
 	// Helper functions
 	const formatCurrency = (amount, currency = "VND") => {
-		return new Intl.NumberFormat("vi-VN", {
-			style: "currency",
-			currency: currency,
-			minimumFractionDigits: 0,
-		}).format(amount);
+		return (
+			new Intl.NumberFormat("vi-VN", {
+				style: "decimal",
+				minimumFractionDigits: 0,
+			}).format(amount) + " VNĐ"
+		);
 	};
 
 	const handleBackPress = () => {
@@ -75,7 +58,7 @@ export default function FeedbackDetails({ navigation, route }) {
 	};
 
 	// Star rating component
-	const StarRating = ({ rating, setRating, title, disabled = false }) => {
+	const StarRating = ({ rating, setRating, title }) => {
 		return (
 			<View style={styles.ratingContainer}>
 				<Text style={styles.ratingTitle}>{title}</Text>
@@ -83,13 +66,12 @@ export default function FeedbackDetails({ navigation, route }) {
 					{[1, 2, 3, 4, 5].map((star) => (
 						<TouchableOpacity
 							key={star}
-							onPress={() => !disabled && setRating(star)}
+							onPress={() => setRating(star)}
 							style={styles.starButton}
-							disabled={disabled}
 						>
 							<Ionicons
 								name={star <= rating ? "star" : "star-outline"}
-								size={28}
+								size={32}
 								color={star <= rating ? "#FFD700" : "#ddd"}
 							/>
 						</TouchableOpacity>
@@ -102,137 +84,99 @@ export default function FeedbackDetails({ navigation, route }) {
 		);
 	};
 
-	// Media picker functions
-	const requestPermission = async () => {
-		const { status } =
-			await ImagePicker.requestMediaLibraryPermissionsAsync();
-		if (status !== "granted") {
-			Alert.alert(
-				"Cần quyền truy cập",
-				"Ứng dụng cần quyền truy cập thư viện ảnh để upload media.",
-				[{ text: "OK" }]
-			);
-			return false;
-		}
-		return true;
-	};
+	const toggleReasonTag = (tagId) => {
+		const isSelected = selectedReasonTags.includes(tagId);
 
-	const pickImages = async () => {
-		const hasPermission = await requestPermission();
-		if (!hasPermission) return;
-
-		try {
-			const result = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Images,
-				allowsMultipleSelection: true,
-				quality: 0.8,
-				aspect: [1, 1],
-			});
-
-			if (!result.canceled && result.assets) {
-				// Upload each image to Cloudinary
-				const uploadPromises = result.assets.map(async (asset) => {
-					const file = {
-						uri: asset.uri,
-						type: "image/jpeg",
-						name: `feedback_${Date.now()}_${Math.random()}.jpg`,
-					};
-
-					const cloudinaryUrl = await uploadToCloudinary(file);
-					return cloudinaryUrl
-						? {
-								id: Date.now() + Math.random(),
-								uri: cloudinaryUrl,
-								type: "image",
-						  }
-						: null;
-				});
-
-				const uploadedImages = await Promise.all(uploadPromises);
-				const validImages = uploadedImages.filter(
-					(img) => img !== null
+		if (tagId === 9) {
+			// "Khác" option
+			if (isSelected) {
+				setSelectedReasonTags(
+					selectedReasonTags.filter((id) => id !== tagId)
 				);
-
-				if (validImages.length > 0) {
-					setSelectedImages([...selectedImages, ...validImages]);
-				} else {
-					Alert.alert("Lỗi", "Không thể upload ảnh");
-				}
+				setShowCustomInput(false);
+				setComment("");
+			} else {
+				setSelectedReasonTags([...selectedReasonTags, tagId]);
+				setShowCustomInput(true);
+				setComment("");
 			}
-		} catch (error) {
-			console.error("Error uploading images:", error);
-			Alert.alert("Lỗi", "Không thể chọn và upload ảnh");
-		}
-	};
-
-	const pickVideos = async () => {
-		const hasPermission = await requestPermission();
-		if (!hasPermission) return;
-
-		try {
-			const result = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-				allowsEditing: true,
-				quality: 0.8,
-			});
-
-			if (!result.canceled && result.assets[0]) {
-				const newVideo = {
-					id: Date.now() + Math.random(),
-					uri: result.assets[0].uri,
-					type: "video",
-				};
-				setSelectedVideos([...selectedVideos, newVideo]);
+		} else {
+			if (isSelected) {
+				setSelectedReasonTags(
+					selectedReasonTags.filter((id) => id !== tagId)
+				);
+			} else {
+				setSelectedReasonTags([...selectedReasonTags, tagId]);
 			}
-		} catch (_error) {
-			Alert.alert("Lỗi", "Không thể chọn video");
+
+			// Update comment với tất cả lý do đã chọn
+			const updatedTags = isSelected
+				? selectedReasonTags.filter((id) => id !== tagId)
+				: [...selectedReasonTags, tagId];
+
+			const selectedLabels = reasonTags
+				.filter((tag) => updatedTags.includes(tag.id) && tag.id !== 9)
+				.map((tag) => tag.label);
+
+			setComment(selectedLabels.join(", "));
 		}
 	};
 
-	const removeMedia = (id, type) => {
-		if (type === "image") {
-			setSelectedImages(selectedImages.filter((img) => img.id !== id));
-		} else {
-			setSelectedVideos(
-				selectedVideos.filter((video) => video.id !== id)
-			);
-		}
-	};
-
-	const toggleShippingTag = (tagId) => {
-		if (selectedShippingTags.includes(tagId)) {
-			setSelectedShippingTags(
-				selectedShippingTags.filter((id) => id !== tagId)
-			);
-		} else {
-			setSelectedShippingTags([...selectedShippingTags, tagId]);
-		}
-	};
-
-	const handleSubmitReview = () => {
-		if (
-			productRating === 0 &&
-			serviceRating === 0 &&
-			shippingRating === 0
-		) {
-			Alert.alert("Thông báo", "Vui lòng đánh giá ít nhất một hạng mục");
+	const handleSubmitReview = async () => {
+		if (rating === 0) {
+			Alert.alert("Thông báo", "Vui lòng đánh giá số sao");
 			return;
 		}
 
-		Alert.alert("Xác nhận", "Bạn có chắc chắn muốn gửi đánh giá này?", [
-			{
-				text: "Hủy",
-				style: "cancel",
-			},
-			{
-				text: "Gửi",
-				onPress: () => {
-					// TODO: Implement submit review API
-					Alert.alert("Thành công", "Đánh giá của bạn đã được gửi!");
-					navigation.goBack();
+		if (!comment.trim()) {
+			Alert.alert("Thông báo", "Vui lòng nhập nhận xét hoặc chọn lý do");
+			return;
+		}
+
+		try {
+			// Prepare feedback data according to API spec
+			const feedbackData = {
+				orderId: orderData?.id || "test-order-id",
+				rating: rating,
+				comment: comment.trim(),
+			};
+
+			console.log("Submitting feedback data:", feedbackData);
+
+			// Call API
+			const result = await createFeedback(feedbackData).unwrap();
+			console.log("Feedback submitted successfully:", result);
+
+			Alert.alert("Thành công", "Đánh giá của bạn đã được gửi!", [
+				{
+					text: "OK",
+					onPress: () => {
+						// Navigate back to OrderScreen
+						navigation.goBack();
+					},
 				},
-			},
-		]);
+			]);
+		} catch (error) {
+			console.error("Error submitting feedback:", error);
+
+			// Check for duplicate feedback error
+			if (
+				error?.data?.message?.includes(
+					"duplicate key value violates unique constraint"
+				)
+			) {
+				Alert.alert(
+					"Thông báo",
+					"Đơn hàng này đã được đánh giá rồi. Mỗi đơn hàng chỉ có thể đánh giá một lần."
+				);
+			} else {
+				Alert.alert(
+					"Lỗi",
+					error?.data?.message ||
+						"Không thể gửi đánh giá. Vui lòng thử lại!"
+				);
+			}
+		}
 	};
 
 	return (
@@ -255,9 +199,11 @@ export default function FeedbackDetails({ navigation, route }) {
 					<Text style={styles.cardTitle}>Thông tin đơn hàng</Text>
 					<View style={styles.productSection}>
 						<View style={styles.productImageContainer}>
-							{order.productImage ? (
+							{orderData?.orderItems?.[0]?.images?.[0] ? (
 								<Image
-									source={{ uri: order.productImage }}
+									source={{
+										uri: orderData.orderItems[0].images[0],
+									}}
 									style={styles.productImage}
 									resizeMode="cover"
 								/>
@@ -273,245 +219,93 @@ export default function FeedbackDetails({ navigation, route }) {
 						</View>
 						<View style={styles.productInfo}>
 							<Text style={styles.productName} numberOfLines={2}>
-								{order.productName}
+								{orderData?.orderItems?.[0]?.productName ||
+									"Tên sản phẩm"}
 							</Text>
 							<Text style={styles.sellerName}>
-								Người bán: {order.seller}
+								Người bán:{" "}
+								{orderData?.ecommercePlatform || "N/A"}
 							</Text>
 							<Text style={styles.productPrice}>
-								{formatCurrency(order.totalPrice)} x{" "}
-								{order.quantity}
+								{formatCurrency(orderData?.totalPrice || 0)}
 							</Text>
 						</View>
 					</View>
 				</View>
 
-				{/* Product Rating */}
+				{/* Rating Section */}
 				<View style={styles.reviewCard}>
-					<Text style={styles.cardTitle}>Đánh giá sản phẩm</Text>
+					<Text style={styles.cardTitle}>Đánh giá đơn hàng</Text>
 					<StarRating
-						rating={productRating}
-						setRating={setProductRating}
-						title="Chất lượng sản phẩm"
+						rating={rating}
+						setRating={setRating}
+						title="Đánh giá tổng thể"
 					/>
-					<View style={styles.textInputContainer}>
-						<Text style={styles.inputLabel}>
-							Nhận xét về sản phẩm (tùy chọn)
-						</Text>
-						<TextInput
-							style={styles.textInput}
-							placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."
-							value={productReview}
-							onChangeText={setProductReview}
-							multiline
-							numberOfLines={4}
-							textAlignVertical="top"
-						/>
-					</View>
 				</View>
 
-				{/* Service Rating */}
+				{/* Reason Tags */}
 				<View style={styles.reviewCard}>
-					<Text style={styles.cardTitle}>Đánh giá dịch vụ</Text>
-					<StarRating
-						rating={serviceRating}
-						setRating={setServiceRating}
-						title="Chất lượng dịch vụ GShop"
-					/>
-					<View style={styles.textInputContainer}>
-						<Text style={styles.inputLabel}>
-							Nhận xét về dịch vụ (tùy chọn)
-						</Text>
-						<TextInput
-							style={styles.textInput}
-							placeholder="Đánh giá về thái độ phục vụ, tốc độ xử lý..."
-							value={serviceReview}
-							onChangeText={setServiceReview}
-							multiline
-							numberOfLines={4}
-							textAlignVertical="top"
-						/>
-					</View>
-				</View>
-
-				{/* Shipping Rating */}
-				<View style={styles.reviewCard}>
-					<Text style={styles.cardTitle}>Đánh giá vận chuyển</Text>
-					<Text style={styles.shippingUnit}>
-						Đơn vị vận chuyển: {order.shippingUnit}
+					<Text style={styles.cardTitle}>Lý do đánh giá</Text>
+					<Text style={styles.tagsSubtitle}>
+						Chọn lý do phù hợp với trải nghiệm của bạn:
 					</Text>
-					<StarRating
-						rating={shippingRating}
-						setRating={setShippingRating}
-						title="Chất lượng vận chuyển"
-					/>
 
-					{/* Shipping Tags */}
-					<View style={styles.tagsContainer}>
-						<Text style={styles.tagsLabel}>
-							Chọn từ khóa mô tả dịch vụ vận chuyển:
-						</Text>
-						<View style={styles.tagsGrid}>
-							{shippingTags.map((tag) => (
-								<TouchableOpacity
-									key={tag.id}
+					<View style={styles.tagsGrid}>
+						{reasonTags.map((tag) => (
+							<TouchableOpacity
+								key={tag.id}
+								style={[
+									styles.tagButton,
+									selectedReasonTags.includes(tag.id) &&
+										styles.tagButtonSelected,
+								]}
+								onPress={() => toggleReasonTag(tag.id)}
+							>
+								<Text
 									style={[
-										styles.tagButton,
-										selectedShippingTags.includes(
-											tag.id
-										) && {
-											backgroundColor: tag.color,
-											borderColor: tag.color,
-										},
+										styles.tagText,
+										selectedReasonTags.includes(tag.id) &&
+											styles.tagTextSelected,
 									]}
-									onPress={() => toggleShippingTag(tag.id)}
 								>
-									<Text
-										style={[
-											styles.tagText,
-											selectedShippingTags.includes(
-												tag.id
-											) && styles.tagTextSelected,
-										]}
-									>
-										{tag.label}
-									</Text>
-								</TouchableOpacity>
-							))}
-						</View>
+									{tag.label}
+								</Text>
+							</TouchableOpacity>
+						))}
 					</View>
 				</View>
 
-				{/* Media Upload */}
-				<View style={styles.mediaCard}>
-					<Text style={styles.cardTitle}>Ảnh & Video đánh giá</Text>
-					<Text style={styles.mediaSubtitle}>
-						Thêm ảnh hoặc video để đánh giá chân thực hơn
-					</Text>
-
-					{/* Media Selection Buttons */}
-					<View style={styles.mediaButtonsContainer}>
-						<TouchableOpacity
-							style={styles.mediaButton}
-							onPress={pickImages}
-						>
-							<Ionicons
-								name="camera-outline"
-								size={24}
-								color="#007bff"
-							/>
-							<Text style={styles.mediaButtonText}>Thêm ảnh</Text>
-						</TouchableOpacity>
-
-						<TouchableOpacity
-							style={styles.mediaButton}
-							onPress={pickVideos}
-						>
-							<Ionicons
-								name="videocam-outline"
-								size={24}
-								color="#007bff"
-							/>
-							<Text style={styles.mediaButtonText}>
-								Thêm video
-							</Text>
-						</TouchableOpacity>
+				{/* Custom Comment Input - Only show when "Khác" is selected */}
+				{showCustomInput && (
+					<View style={styles.reviewCard}>
+						<Text style={styles.cardTitle}>Nhận xét chi tiết</Text>
+						<Text style={styles.inputSubtitle}>
+							Hãy chia sẻ nhận xét chi tiết của bạn:
+						</Text>
+						<TextInput
+							style={styles.textInput}
+							placeholder="Nhập nhận xét của bạn về đơn hàng..."
+							value={comment}
+							onChangeText={setComment}
+							multiline
+							numberOfLines={4}
+							textAlignVertical="top"
+						/>
 					</View>
-
-					{/* Selected Images */}
-					{selectedImages.length > 0 && (
-						<View style={styles.selectedMediaContainer}>
-							<Text style={styles.selectedMediaTitle}>
-								Ảnh đã chọn:
-							</Text>
-							<ScrollView
-								horizontal
-								showsHorizontalScrollIndicator={false}
-							>
-								<View style={styles.mediaPreviewContainer}>
-									{selectedImages.map((image) => (
-										<View
-											key={image.id}
-											style={styles.mediaPreviewItem}
-										>
-											<Image
-												source={{ uri: image.uri }}
-												style={styles.mediaPreview}
-											/>
-											<TouchableOpacity
-												style={styles.removeMediaButton}
-												onPress={() =>
-													removeMedia(
-														image.id,
-														"image"
-													)
-												}
-											>
-												<Ionicons
-													name="close"
-													size={16}
-													color="#fff"
-												/>
-											</TouchableOpacity>
-										</View>
-									))}
-								</View>
-							</ScrollView>
-						</View>
-					)}
-
-					{/* Selected Videos */}
-					{selectedVideos.length > 0 && (
-						<View style={styles.selectedMediaContainer}>
-							<Text style={styles.selectedMediaTitle}>
-								Video đã chọn:
-							</Text>
-							<ScrollView
-								horizontal
-								showsHorizontalScrollIndicator={false}
-							>
-								<View style={styles.mediaPreviewContainer}>
-									{selectedVideos.map((video) => (
-										<View
-											key={video.id}
-											style={styles.mediaPreviewItem}
-										>
-											<View style={styles.videoPreview}>
-												<Ionicons
-													name="play-circle"
-													size={32}
-													color="#fff"
-												/>
-											</View>
-											<TouchableOpacity
-												style={styles.removeMediaButton}
-												onPress={() =>
-													removeMedia(
-														video.id,
-														"video"
-													)
-												}
-											>
-												<Ionicons
-													name="close"
-													size={16}
-													color="#fff"
-												/>
-											</TouchableOpacity>
-										</View>
-									))}
-								</View>
-							</ScrollView>
-						</View>
-					)}
-				</View>
+				)}
 
 				{/* Submit Button */}
 				<TouchableOpacity
-					style={styles.submitButton}
+					style={[
+						styles.submitButton,
+						isSubmitting && styles.submitButtonDisabled,
+					]}
 					onPress={handleSubmitReview}
+					disabled={isSubmitting}
 				>
-					<Text style={styles.submitButtonText}>Gửi đánh giá</Text>
+					<Text style={styles.submitButtonText}>
+						{isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+					</Text>
 				</TouchableOpacity>
 			</ScrollView>
 		</View>
@@ -637,122 +431,43 @@ const styles = StyleSheet.create({
 		color: "#6c757d",
 		fontStyle: "italic",
 	},
-	shippingUnit: {
+	tagsSubtitle: {
 		fontSize: 14,
 		color: "#6c757d",
-		marginBottom: 8,
-		fontStyle: "italic",
+		marginBottom: 12,
+		lineHeight: 20,
 	},
-	textInputContainer: {
-		marginTop: 12,
-	},
-	inputLabel: {
+	inputSubtitle: {
 		fontSize: 14,
-		color: "#495057",
-		fontWeight: "500",
+		color: "#6c757d",
 		marginBottom: 8,
 	},
 	textInput: {
 		borderWidth: 1,
 		borderColor: "#e9ecef",
 		borderRadius: 8,
-		padding: 10,
+		padding: 12,
 		fontSize: 16,
 		color: "#212529",
 		backgroundColor: "#ffffff",
 		minHeight: 80,
 	},
-	mediaSubtitle: {
-		fontSize: 14,
-		color: "#6c757d",
-		marginBottom: 12,
-		lineHeight: 20,
-	},
-	mediaButtonsContainer: {
-		flexDirection: "row",
-		gap: 12,
-		marginBottom: 16,
-	},
-	mediaButton: {
-		flex: 1,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		borderWidth: 1,
-		borderColor: "#007bff",
-		borderRadius: 8,
-		paddingVertical: 10,
-		paddingHorizontal: 12,
-		backgroundColor: "#f8f9ff",
-	},
-	mediaButtonText: {
-		fontSize: 16,
-		color: "#007bff",
-		fontWeight: "500",
-		marginLeft: 8,
-	},
-	selectedMediaContainer: {
-		marginTop: 12,
-	},
-	selectedMediaTitle: {
-		fontSize: 14,
-		color: "#495057",
-		fontWeight: "500",
-		marginBottom: 8,
-	},
-	mediaPreviewContainer: {
-		flexDirection: "row",
-		gap: 12,
-	},
-	mediaPreviewItem: {
-		position: "relative",
-	},
-	mediaPreview: {
-		width: 80,
-		height: 80,
-		borderRadius: 8,
-	},
-	videoPreview: {
-		width: 80,
-		height: 80,
-		borderRadius: 8,
-		backgroundColor: "#000",
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	removeMediaButton: {
-		position: "absolute",
-		top: -6,
-		right: -6,
-		backgroundColor: "#dc3545",
-		borderRadius: 10,
-		width: 20,
-		height: 20,
-		justifyContent: "center",
-		alignItems: "center",
-	},
 	submitButton: {
-		backgroundColor: "#28a745",
+		backgroundColor: "#007bff",
 		borderRadius: 12,
 		paddingVertical: 14,
 		alignItems: "center",
 		marginBottom: 16,
+	},
+	submitButtonDisabled: {
+		backgroundColor: "#6c757d",
 	},
 	submitButtonText: {
 		color: "#ffffff",
 		fontSize: 18,
 		fontWeight: "700",
 	},
-	// Shipping Tags Styles
-	tagsContainer: {
-		marginTop: 12,
-	},
-	tagsLabel: {
-		fontSize: 14,
-		color: "#495057",
-		fontWeight: "500",
-		marginBottom: 8,
-	},
+	// Tags Styles
 	tagsGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
@@ -760,12 +475,16 @@ const styles = StyleSheet.create({
 	},
 	tagButton: {
 		paddingHorizontal: 12,
-		paddingVertical: 6,
+		paddingVertical: 8,
 		borderRadius: 16,
 		borderWidth: 1,
 		borderColor: "#dee2e6",
 		backgroundColor: "#f8f9fa",
 		marginBottom: 4,
+	},
+	tagButtonSelected: {
+		backgroundColor: "#007bff",
+		borderColor: "#007bff",
 	},
 	tagText: {
 		fontSize: 13,

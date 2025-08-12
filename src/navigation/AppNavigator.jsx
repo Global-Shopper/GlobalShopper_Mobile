@@ -7,6 +7,7 @@ import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
 import FeedbackDetails from "../screens/feedback/FeedbackDetails";
+import FeedbackOrder from "../screens/feedback/FeedbackOrder";
 import NotificationScreen from "../screens/notification/NotificationScreen";
 import CancelOrder from "../screens/order/CancelOrder";
 import OrderDetails from "../screens/order/OrderDetails";
@@ -255,6 +256,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="FeedbackDetails"
 				component={FeedbackDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="FeedbackOrder"
+				component={FeedbackOrder}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

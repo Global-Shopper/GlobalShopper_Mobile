@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -12,11 +12,15 @@ import {
 import Header from "../../components/header";
 import OrderCard from "../../components/order-card";
 import { Text } from "../../components/ui/text";
-import { useGetAllOrdersQuery } from "../../services/gshopApi";
+import {
+	useGetAllOrdersQuery,
+	useLazyGetOrderByIdQuery,
+} from "../../services/gshopApi";
 
 export default function OrderScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
 	const [refreshing, setRefreshing] = useState(false);
+	const [feedbackMap, setFeedbackMap] = useState({}); // Track which orders have feedback
 
 	// API query for orders
 	const {
@@ -30,14 +34,81 @@ export default function OrderScreen({ navigation }) {
 		size: 50,
 	});
 
-	// Extract orders from API response
-	const orders = ordersResponse?.content || [];
+	// Lazy query to get order details with feedback info
+	const [getOrderById] = useLazyGetOrderByIdQuery();
 
-	// Debug: Log the structure of orders data
-	console.log("Orders data structure:", JSON.stringify(orders[0], null, 2));
+	// Extract orders from API response and sort by newest first
+	const orders = useMemo(() => {
+		const ordersList = ordersResponse?.content || [];
+		// Create a copy of the array before sorting to avoid read-only property error
+		return [...ordersList].sort((a, b) => b.createdAt - a.createdAt);
+	}, [ordersResponse]);
+
+	// Load feedback status for delivered orders
+	useEffect(() => {
+		const loadFeedbackStatus = async () => {
+			// Find all delivered orders
+			const deliveredOrders = orders.filter(
+				(order) => order.status === "DELIVERED"
+			);
+
+			if (deliveredOrders.length === 0) return;
+
+			console.log(
+				`Loading feedback status for ${deliveredOrders.length} delivered orders...`
+			);
+
+			const newFeedbackMap = {};
+
+			// Check feedback status for each delivered order
+			for (const order of deliveredOrders) {
+				try {
+					const result = await getOrderById(order.id);
+					if (result.data) {
+						console.log(
+							`Order ${order.id} full response:`,
+							JSON.stringify(result.data, null, 2)
+						);
+						console.log(
+							`Order ${order.id} feedback field:`,
+							result.data.feedback
+						);
+
+						// Check if feedback exists in the order detail
+						const hasFeedback =
+							result.data.feedback &&
+							(result.data.feedback.id ||
+								result.data.feedback.rating);
+
+						newFeedbackMap[order.id] = hasFeedback;
+						console.log(
+							`Order ${order.id}: hasFeedback = ${hasFeedback}`
+						);
+					}
+				} catch (error) {
+					console.error(
+						`Error loading feedback for order ${order.id}:`,
+						error
+					);
+					newFeedbackMap[order.id] = false;
+				}
+			}
+
+			setFeedbackMap(newFeedbackMap);
+		};
+
+		// Only load feedback if we have delivered orders
+		const hasDeliveredOrders = orders.some(
+			(order) => order.status === "DELIVERED"
+		);
+		if (hasDeliveredOrders) {
+			loadFeedbackStatus();
+		}
+	}, [orders, getOrderById]);
 
 	const onRefresh = async () => {
 		setRefreshing(true);
+		setFeedbackMap({}); // Clear feedback map on refresh
 		await refetch();
 		setRefreshing(false);
 	};
@@ -72,13 +143,58 @@ export default function OrderScreen({ navigation }) {
 		navigation.navigate("CancelOrder", { orderData: selectedOrder });
 	};
 
-	const handleReviewOrder = (orderId) => {
+	const handleReviewOrder = async (orderId) => {
 		console.log("Review order:", orderId);
-		// Navigate to FeedbackDetails with the selected order
+		// Find the selected order
 		const selectedOrder = orders.find((order) => order.id === orderId);
 		console.log("Selected order for review:", selectedOrder);
-		console.log("Navigating to FeedbackDetails...");
-		navigation.navigate("FeedbackDetails", { orderData: selectedOrder });
+
+		// Only allow review for delivered orders
+		if (selectedOrder.status !== "DELIVERED") {
+			Alert.alert(
+				"Thông báo",
+				"Chỉ có thể đánh giá đơn hàng đã được giao"
+			);
+			return;
+		}
+
+		try {
+			// Get detailed order info to get complete feedback data
+			console.log("Fetching order details to navigate...");
+			const result = await getOrderById(orderId);
+
+			if (result.data) {
+				const orderDetail = result.data;
+				console.log("Order detail with feedback info:", orderDetail);
+
+				// Check if order has feedback
+				const hasFeedback = feedbackMap[orderId] || false;
+				console.log("Order has feedback from map:", hasFeedback);
+
+				if (hasFeedback) {
+					// Navigate to view feedback
+					console.log(
+						"Navigating to FeedbackOrder to view existing feedback..."
+					);
+					navigation.navigate("FeedbackOrder", {
+						orderData: orderDetail,
+					});
+				} else {
+					// Navigate to create feedback
+					console.log(
+						"Navigating to FeedbackDetails to create feedback..."
+					);
+					navigation.navigate("FeedbackDetails", {
+						orderData: orderDetail,
+					});
+				}
+			} else {
+				Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+			}
+		} catch (error) {
+			console.error("Error fetching order details:", error);
+			Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+		}
 	};
 
 	const handleOrderPress = (orderId) => {
@@ -141,12 +257,21 @@ export default function OrderScreen({ navigation }) {
 	}
 
 	const renderOrder = ({ item }) => {
+		const isDelivered = item.status === "DELIVERED";
+		const hasFeedback = feedbackMap[item.id] || false;
+
+		// Debug log for each order rendering
+		console.log(
+			`Rendering order ${item.id}: status=${item.status}, isDelivered=${isDelivered}, hasFeedback=${hasFeedback}`
+		);
+
 		return (
 			<OrderCard
 				order={item}
 				onPress={() => handleOrderPress(item.id)}
 				onCancel={() => handleCancelOrder(item.id)}
 				onReview={() => handleReviewOrder(item.id)}
+				hasFeedback={hasFeedback}
 			/>
 		);
 	};
@@ -192,7 +317,11 @@ export default function OrderScreen({ navigation }) {
 				data={filteredOrders}
 				renderItem={renderOrder}
 				keyExtractor={(item) => item.id}
-				contentContainerStyle={styles.flatListContent}
+				contentContainerStyle={[
+					styles.flatListContent,
+					filteredOrders.length === 0 && styles.emptyListContent,
+				]}
+				showsVerticalScrollIndicator={true}
 				refreshControl={
 					<RefreshControl
 						refreshing={refreshing}
@@ -287,6 +416,10 @@ const styles = StyleSheet.create({
 	flatListContent: {
 		paddingHorizontal: 16,
 		paddingVertical: 8,
+		flexGrow: 1,
+	},
+	emptyListContent: {
+		flexGrow: 1,
 	},
 	emptyStateContainer: {
 		flex: 1,

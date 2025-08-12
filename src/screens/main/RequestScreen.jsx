@@ -21,7 +21,12 @@ export default function RequestScreen({ navigation }) {
 		{ id: "sent", label: "Đã gửi", status: "sent" },
 		{ id: "checking", label: "Đang xử lý", status: "checking" },
 		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
-		{ id: "completed", label: "Đã thanh toán", status: "completed", alternativeStatuses: ["paid", "success"] },
+		{
+			id: "completed",
+			label: "Đã thanh toán",
+			status: "completed",
+			alternativeStatuses: ["paid", "success"],
+		},
 		{ id: "cancelled", label: "Đã hủy", status: "cancelled" },
 		{ id: "insufficient", label: "Cập nhật", status: "insufficient" },
 	];
@@ -108,9 +113,11 @@ export default function RequestScreen({ navigation }) {
 		}
 
 		console.log("All requests from API:", allRequests.length);
-		
+
 		// Debug: Log all unique statuses to understand what API returns
-		const uniqueStatuses = [...new Set(allRequests.map(req => req.status))];
+		const uniqueStatuses = [
+			...new Set(allRequests.map((req) => req.status)),
+		];
 		console.log("Unique statuses from API:", uniqueStatuses);
 
 		if (activeTab === "all") {
@@ -122,27 +129,36 @@ export default function RequestScreen({ navigation }) {
 			const filtered = allRequests.filter((request) => {
 				const requestStatus = request.status?.toLowerCase();
 				const primaryStatus = selectedTab.status.toLowerCase();
-				
+
 				// Check primary status
 				if (requestStatus === primaryStatus) {
 					return true;
 				}
-				
+
 				// Check alternative statuses for "Đã thanh toán" tab
-				if (selectedTab.alternativeStatuses && Array.isArray(selectedTab.alternativeStatuses)) {
-					return selectedTab.alternativeStatuses.some(altStatus => 
-						requestStatus === altStatus.toLowerCase()
+				if (
+					selectedTab.alternativeStatuses &&
+					Array.isArray(selectedTab.alternativeStatuses)
+				) {
+					return selectedTab.alternativeStatuses.some(
+						(altStatus) => requestStatus === altStatus.toLowerCase()
 					);
 				}
-				
+
 				return false;
 			});
-			
-			console.log(`Filtered requests for tab "${selectedTab.label}":`, filtered.length);
+
+			console.log(
+				`Filtered requests for tab "${selectedTab.label}":`,
+				filtered.length
+			);
 			if (activeTab === "completed") {
-				console.log("Completed tab - statuses found:", filtered.map(req => req.status));
+				console.log(
+					"Completed tab - statuses found:",
+					filtered.map((req) => req.status)
+				);
 			}
-			
+
 			return filtered;
 		}
 

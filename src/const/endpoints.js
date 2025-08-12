@@ -29,5 +29,8 @@ const endpoints = {
 	ORDERS: "/orders",
 	ORDER_DETAIL: "/orders", // for specific order by ID
 	CANCEL_ORDER: "/orders", // for cancel order by ID
+	// Feedback endpoints
+	FEEDBACK: "/feedback",
+	FEEDBACK_ALL: "/feedback",
 };
 export default endpoints;

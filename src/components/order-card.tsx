@@ -25,6 +25,7 @@ interface OrderCardProps {
 	onPress?: () => void;
 	onCancel?: () => void;
 	onReview?: () => void;
+	hasFeedback?: boolean; // To determine if feedback exists
 }
 
 export default function OrderCard({
@@ -32,6 +33,7 @@ export default function OrderCard({
 	onPress,
 	onCancel,
 	onReview,
+	hasFeedback = false,
 }: OrderCardProps) {
 	// Get display title (store name or seller)
 	const getDisplayTitle = () => {
@@ -227,13 +229,8 @@ export default function OrderCard({
 							style={[styles.actionButton, styles.reviewButton]}
 							onPress={() => onReview()}
 						>
-							<Ionicons
-								name="star-outline"
-								size={16}
-								color="#ffc107"
-							/>
 							<Text style={styles.reviewButtonText}>
-								Đánh giá
+								{hasFeedback ? "Xem đánh giá" : "Đánh giá"}
 							</Text>
 						</TouchableOpacity>
 					)}
