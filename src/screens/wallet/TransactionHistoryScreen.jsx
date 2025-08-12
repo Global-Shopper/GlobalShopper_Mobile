@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useCurrentUserTransactionsQuery } from "../../services/gshopApi";
+import { getStatusColor, getStatusText } from "../../utils/statusHandler.js";
 
 export default function TransactionHistoryScreen({ navigation, route }) {
 	const [activeTab, setActiveTab] = useState("all");
@@ -81,9 +82,18 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 		refund: { icon: "refresh-circle", color: "#9C27B0" },
 		// Alternative naming
 		topup: { icon: "add-circle", color: "#4CAF50" },
+		top_up: { icon: "add-circle", color: "#4CAF50" },
+		add_money: { icon: "add-circle", color: "#4CAF50" },
 		purchase: { icon: "card", color: "#2196F3" },
+		buy: { icon: "card", color: "#2196F3" },
+		order: { icon: "card", color: "#2196F3" },
+		checkout: { icon: "card", color: "#2196F3" },
+		pay: { icon: "card", color: "#2196F3" },
 		withdraw: { icon: "arrow-up-circle", color: "#FF9800" },
+		withdraw_money: { icon: "arrow-up-circle", color: "#FF9800" },
 		cashback: { icon: "refresh-circle", color: "#9C27B0" },
+		return: { icon: "refresh-circle", color: "#9C27B0" },
+		cancel: { icon: "refresh-circle", color: "#9C27B0" },
 		commission: { icon: "trending-up", color: "#4CAF50" },
 		fee: { icon: "remove-circle", color: "#F44336" },
 	};
@@ -103,7 +113,66 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 			transactions = data.transactions;
 		}
 
-		return transactions.map((item) => {
+		const mappedTransactions = transactions.map((item) => {
+			// Get Vietnamese description based on transaction type and data
+			const getVietnameseDescription = (item) => {
+				const type = (
+					item.type ||
+					item.transactionType ||
+					""
+				).toLowerCase();
+
+				// If it's a payment/purchase transaction, show order info
+				if (
+					[
+						"payment",
+						"purchase",
+						"buy",
+						"order",
+						"checkout",
+						"pay",
+					].includes(type)
+				) {
+					const orderId =
+						item.orderId ||
+						item.orderCode ||
+						item.referenceId ||
+						item.id;
+					const shortId = orderId
+						? orderId.toString().split("-")[0]
+						: "N/A";
+					return `Thanh toán đơn hàng #${shortId}`;
+				}
+
+				// For other types, use Vietnamese descriptions
+				switch (type) {
+					case "deposit":
+					case "topup":
+					case "top_up":
+					case "add_money":
+						return "Nạp tiền vào ví";
+					case "withdrawal":
+					case "withdraw":
+					case "withdraw_money":
+						return "Rút tiền từ ví";
+					case "refund":
+					case "cashback":
+					case "return":
+						return "Hoàn tiền";
+					case "commission":
+						return "Hoa hồng";
+					case "fee":
+						return "Phí dịch vụ";
+					default:
+						return (
+							item.description ||
+							item.note ||
+							item.remarks ||
+							`Giao dịch ${type || "không xác định"}`
+						);
+				}
+			};
+
 			const mapped = {
 				...item,
 				type: (item.type || item.transactionType || "").toLowerCase(),
@@ -112,11 +181,7 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 					item.transactionStatus ||
 					""
 				).toLowerCase(),
-				description:
-					item.description ||
-					item.note ||
-					item.remarks ||
-					`Giao dịch ${item.type || "không xác định"}`,
+				description: getVietnameseDescription(item),
 				amount: item.amount || item.value || item.total || 0,
 				createdAt:
 					item.createdAt ||
@@ -127,65 +192,92 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 			};
 			return mapped;
 		});
+
+		// Debug: Log transaction types to check what we're getting
+		console.log("🔍 Raw transactions data:", transactions);
+		console.log(
+			"🔍 All transaction types:",
+			mappedTransactions.map((t) => ({
+				id: t.id,
+				originalType:
+					transactions.find((orig) => orig.id === t.id)?.type ||
+					transactions.find((orig) => orig.id === t.id)
+						?.transactionType,
+				mappedType: t.type,
+				description: t.description,
+			}))
+		);
+		console.log(
+			"🔍 Payment/Purchase transactions:",
+			mappedTransactions.filter((t) =>
+				[
+					"payment",
+					"purchase",
+					"buy",
+					"order",
+					"checkout",
+					"pay",
+				].includes(t.type)
+			)
+		);
+
+		return mappedTransactions;
 	})();
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", type: null },
-		{ id: "deposit", label: "Nạp tiền", type: ["deposit", "topup"] },
-		{ id: "payment", label: "Thanh toán", type: ["payment", "purchase"] },
+		{
+			id: "deposit",
+			label: "Nạp tiền",
+			type: ["deposit", "topup", "top_up", "add_money"],
+		},
+		{
+			id: "payment",
+			label: "Thanh toán",
+			type: ["payment", "purchase", "buy", "order", "checkout", "pay"],
+		},
 		{
 			id: "withdrawal",
 			label: "Rút tiền",
-			type: ["withdrawal", "withdraw"],
+			type: ["withdrawal", "withdraw", "withdraw_money"],
 		},
-		{ id: "refund", label: "Hoàn tiền", type: ["refund", "cashback"] },
+		{
+			id: "refund",
+			label: "Hoàn tiền",
+			type: ["refund", "cashback", "return", "cancel"],
+		},
 	];
 
 	const getFilteredTransactions = () => {
+		console.log("🔍 Active tab:", activeTab);
+		console.log("🔍 All transactions count:", allTransactions.length);
+
 		if (activeTab === "all") return allTransactions;
 
 		const selectedTab = tabs.find((tab) => tab.id === activeTab);
+		console.log("🔍 Selected tab:", selectedTab);
+
 		if (!selectedTab || !selectedTab.type) return allTransactions;
 
-		return allTransactions.filter((transaction) => {
+		const filtered = allTransactions.filter((transaction) => {
 			if (Array.isArray(selectedTab.type)) {
-				return selectedTab.type.includes(transaction.type);
+				const isMatch = selectedTab.type.includes(transaction.type);
+				if (activeTab === "payment") {
+					console.log(
+						`🔍 Transaction type: "${transaction.type}", matches payment tab:`,
+						isMatch
+					);
+				}
+				return isMatch;
 			}
 			return transaction.type === selectedTab.type;
 		});
-	};
 
-	const getStatusText = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "success":
-				return "Hoàn thành";
-			case "pending":
-				return "Đang xử lý";
-			case "fail":
-				return "Thất bại";
-			case "cancelled":
-				return "Đã huỷ";
-			default:
-				return status || "Không xác định";
-		}
-	};
-
-	const getStatusColor = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "completed":
-			case "success":
-				return "#4CAF50";
-			case "processing":
-			case "pending":
-				return "#FF9800";
-			case "failed":
-			case "failure":
-				return "#F44336";
-			case "cancelled":
-				return "#F44336";
-			default:
-				return "#6c757d";
-		}
+		console.log(
+			`🔍 Filtered transactions for tab "${activeTab}":`,
+			filtered.length
+		);
+		return filtered;
 	};
 
 	const filteredTransactions = getFilteredTransactions();

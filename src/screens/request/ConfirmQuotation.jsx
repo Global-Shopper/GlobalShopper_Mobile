@@ -15,6 +15,7 @@ import {
 	useGetPurchaseRequestByIdQuery,
 	useGetWalletQuery,
 } from "../../services/gshopApi";
+import { formatDate } from "../../utils/statusHandler.js";
 
 export default function ConfirmQuotation({ navigation, route }) {
 	const { request } = route.params || {};
@@ -41,24 +42,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 			return "#" + fullId.split("-")[0];
 		}
 		return "#" + fullId;
-	};
-
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch (_error) {
-			return dateString;
-		}
 	};
 
 	// Use the correct data for rendering
@@ -465,7 +448,6 @@ const styles = StyleSheet.create({
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
 	typeSection: {

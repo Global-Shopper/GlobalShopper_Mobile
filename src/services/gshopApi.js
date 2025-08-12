@@ -12,6 +12,8 @@ const gshopApi = createApi({
 		"Wallet",
 		"Banks",
 		"BankAccounts",
+		"Order",
+		"Feedback",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -357,6 +359,83 @@ const gshopApi = createApi({
 			}),
 			providesTags: ["Wallet"],
 		}),
+
+		// Order endpoints
+		getAllOrders: builder.query({
+			query: (params = {}) => ({
+				url: endpoints.ORDERS,
+				method: "GET",
+				params: {
+					page: params.page || 0,
+					size: params.size || 20,
+					sortBy: params.sortBy || "createdAt",
+					sortDirection: params.sortDirection || "DESC",
+					status: params.status || undefined, // Filter by status if provided
+				},
+			}),
+			providesTags: ["Order"],
+		}),
+
+		getOrderById: builder.query({
+			query: (orderId) => ({
+				url: `${endpoints.ORDER_DETAIL}/${orderId}`,
+				method: "GET",
+			}),
+			providesTags: (result, error, orderId) => [
+				{ type: "Order", id: orderId },
+			],
+		}),
+
+		cancelOrder: builder.mutation({
+			query: ({ orderId, reason }) => {
+				if (!orderId) {
+					throw new Error("Order ID is required");
+				}
+				console.log("Cancel order API call for orderId:", orderId);
+				console.log("Cancel reason:", reason);
+				const url = `${endpoints.CANCEL_ORDER}/${orderId}/cancel`;
+				console.log("Cancel order URL:", url);
+				const requestBody = reason ? { reason } : {};
+				console.log("Cancel order body:", requestBody);
+				return {
+					url: url,
+					method: "PUT",
+					data: requestBody,
+				};
+			},
+			invalidatesTags: ["Order"],
+		}),
+
+		// Feedback endpoints
+		createFeedback: builder.mutation({
+			query: (feedbackData) => {
+				console.log("Creating feedback with data:", feedbackData);
+				return {
+					url: endpoints.FEEDBACK,
+					method: "POST",
+					data: feedbackData,
+				};
+			},
+			invalidatesTags: ["Feedback", "Order"],
+		}),
+
+		getAllFeedback: builder.query({
+			query: ({ page = 0, size = 10 } = {}) => {
+				const params = new URLSearchParams({
+					page: page.toString(),
+					size: size.toString(),
+				});
+				console.log(
+					"Getting all feedback with params:",
+					params.toString()
+				);
+				return {
+					url: `${endpoints.FEEDBACK_ALL}?${params}`,
+					method: "GET",
+				};
+			},
+			providesTags: ["Feedback"],
+		}),
 	}),
 });
 
@@ -399,6 +478,14 @@ export const {
 	useCreateBankAccountMutation,
 	useUpdateBankAccountMutation,
 	useDeleteBankAccountMutation,
+	// Order hooks
+	useGetAllOrdersQuery,
+	useGetOrderByIdQuery,
+	useLazyGetOrderByIdQuery,
+	useCancelOrderMutation,
+	// Feedback hooks
+	useCreateFeedbackMutation,
+	useGetAllFeedbackQuery,
 } = gshopApi;
 
 export default gshopApi;

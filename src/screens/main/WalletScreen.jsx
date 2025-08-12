@@ -15,6 +15,7 @@ import {
 	useCurrentUserTransactionsQuery,
 	useGetWalletQuery,
 } from "../../services/gshopApi";
+import { getStatusColor, getStatusText } from "../../utils/statusHandler.js";
 
 export default function WalletScreen({ navigation }) {
 	const {
@@ -63,22 +64,121 @@ export default function WalletScreen({ navigation }) {
 		return [];
 	};
 
-	const recentTransactions = getTransactionsArray().slice(0, 3);
+	// Transform and format transactions with Vietnamese descriptions
+	const formatTransactionForDisplay = (transaction) => {
+		// Get Vietnamese description based on transaction type and data
+		const getVietnameseDescription = (item) => {
+			const type = (
+				item.type ||
+				item.transactionType ||
+				""
+			).toLowerCase();
 
-	// Format transaction data for display
+			// If it's a payment/purchase transaction, show order info
+			if (
+				[
+					"payment",
+					"purchase",
+					"buy",
+					"order",
+					"checkout",
+					"pay",
+				].includes(type)
+			) {
+				const orderId =
+					item.orderId ||
+					item.orderCode ||
+					item.referenceId ||
+					item.id;
+				const shortId = orderId
+					? orderId.toString().split("-")[0]
+					: "N/A";
+				return `Thanh toán đơn hàng #${shortId}`;
+			}
+
+			// For other types, use Vietnamese descriptions
+			switch (type) {
+				case "deposit":
+				case "topup":
+				case "top_up":
+				case "add_money":
+					return "Nạp tiền vào ví";
+				case "withdrawal":
+				case "withdraw":
+				case "withdraw_money":
+					return "Rút tiền từ ví";
+				case "refund":
+				case "cashback":
+				case "return":
+					return "Hoàn tiền";
+				case "commission":
+					return "Hoa hồng";
+				case "fee":
+					return "Phí dịch vụ";
+				default:
+					return (
+						transaction.description ||
+						transaction.note ||
+						transaction.remarks ||
+						`Giao dịch ${type || "không xác định"}`
+					);
+			}
+		};
+
+		return {
+			...transaction,
+			type: (
+				transaction.type ||
+				transaction.transactionType ||
+				""
+			).toLowerCase(),
+			status: (
+				transaction.status ||
+				transaction.transactionStatus ||
+				""
+			).toLowerCase(),
+			description: getVietnameseDescription(transaction),
+		};
+	};
+
+	const recentTransactions = getTransactionsArray()
+		.slice(0, 3)
+		.map(formatTransactionForDisplay);
+
+	// Format transaction data for display - updated to match TransactionHistoryScreen
 	const formatTransactionIcon = (type) => {
-		switch (type) {
-			case "DEPOSIT":
-				return { icon: "add-circle", color: "#4CAF50" };
-			case "WITHDRAWAL":
-				return { icon: "remove-circle", color: "#F44336" };
-			case "REFUND":
-				return { icon: "refresh-circle", color: "#FF9800" };
-			case "SERVICE_FEE":
-				return { icon: "card", color: "#FF5722" };
-			default:
-				return { icon: "swap-horizontal", color: "#9C27B0" };
-		}
+		const iconMap = {
+			deposit: { icon: "add-circle", color: "#4CAF50" },
+			payment: { icon: "card", color: "#2196F3" },
+			withdrawal: { icon: "arrow-up-circle", color: "#FF9800" },
+			refund: { icon: "refresh-circle", color: "#9C27B0" },
+			// Alternative naming
+			topup: { icon: "add-circle", color: "#4CAF50" },
+			top_up: { icon: "add-circle", color: "#4CAF50" },
+			add_money: { icon: "add-circle", color: "#4CAF50" },
+			purchase: { icon: "card", color: "#2196F3" },
+			buy: { icon: "card", color: "#2196F3" },
+			order: { icon: "card", color: "#2196F3" },
+			checkout: { icon: "card", color: "#2196F3" },
+			pay: { icon: "card", color: "#2196F3" },
+			withdraw: { icon: "arrow-up-circle", color: "#FF9800" },
+			withdraw_money: { icon: "arrow-up-circle", color: "#FF9800" },
+			cashback: { icon: "refresh-circle", color: "#9C27B0" },
+			return: { icon: "refresh-circle", color: "#9C27B0" },
+			cancel: { icon: "refresh-circle", color: "#9C27B0" },
+			commission: { icon: "trending-up", color: "#4CAF50" },
+			fee: { icon: "remove-circle", color: "#F44336" },
+			// Legacy support
+			DEPOSIT: { icon: "add-circle", color: "#4CAF50" },
+			WITHDRAWAL: { icon: "arrow-up-circle", color: "#FF9800" },
+			REFUND: { icon: "refresh-circle", color: "#9C27B0" },
+			SERVICE_FEE: { icon: "remove-circle", color: "#F44336" },
+		};
+
+		return (
+			iconMap[type] ||
+			iconMap[type?.toLowerCase()] || { icon: "card", color: "#2196F3" }
+		);
 	};
 
 	const formatTransactionDate = (dateString) => {
@@ -111,39 +211,6 @@ export default function WalletScreen({ navigation }) {
 			}
 		}
 		return { dateStr, timeStr };
-	};
-
-	const getStatusText = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "success":
-				return "Hoàn thành";
-			case "pending":
-				return "Đang xử lý";
-			case "fail":
-				return "Thất bại";
-			case "cancelled":
-				return "Đã huỷ";
-			default:
-				return status || "Không xác định";
-		}
-	};
-
-	const getStatusColor = (status) => {
-		switch ((status || "").toLowerCase()) {
-			case "completed":
-			case "success":
-				return "#4CAF50";
-			case "processing":
-			case "pending":
-				return "#FF9800";
-			case "failed":
-			case "failure":
-				return "#F44336";
-			case "cancelled":
-				return "#F44336";
-			default:
-				return "#6c757d";
-		}
 	};
 
 	return (
@@ -312,8 +379,7 @@ export default function WalletScreen({ navigation }) {
 													styles.transactionDescription
 												}
 											>
-												{transaction.description ||
-													transaction.type}
+												{transaction.description}
 											</Text>
 											<View
 												style={

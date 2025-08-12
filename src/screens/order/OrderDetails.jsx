@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+	ActivityIndicator,
 	Alert,
 	Clipboard,
 	Image,
@@ -12,124 +13,46 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { useGetOrderByIdQuery } from "../../services/gshopApi";
+import {
+	formatDate,
+	getStatusColor,
+	getStatusText,
+} from "../../utils/statusHandler.js";
 
 export default function OrderDetails({ navigation, route }) {
-	// Get order data from route params or use mock data
+	// Get order data from route params
 	const routeOrderData = route?.params?.orderData;
+	const orderId = routeOrderData?.id;
 
 	// State for price breakdown
 	const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
 
-	// Mock data - replace with real API data
-	const [orderData] = useState(
-		routeOrderData || {
-			id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-			requestType: "ONLINE",
-			seller: "Apple Store",
-			platform: "Amazon",
-			productName: "iPhone 15 Pro Max 256GB - Natural Titanium",
-			productImage: "https://example.com/iphone.jpg",
-			quantity: 1,
-			totalPrice: 35000000,
-			status: "DELIVERED",
-			createdAt: "2024-01-15T08:30:00Z",
-			currency: "VND",
-			trackingCode: "VN123456789",
-			shippingUnit: "Giao Hàng Nhanh",
-			paymentMethod: "Ví GShop",
-			deliveryAddress: {
-				recipientName: "Nguyễn Văn A",
-				phone: "0901234567",
-				address: "123 Đường ABC, Phường 1, Quận 1, TP.HCM",
-				isDefault: true,
-			},
-			latestStatus: {
-				title: "Đã giao hàng thành công",
-				date: "2024-01-20T14:30:00Z",
-			},
-			priceBreakdown: {
-				productPrice: 32000000,
-				shippingFee: 500000,
-				serviceFee: 800000,
-				discount: 0,
-				tax: 1700000,
-				total: 35000000,
-			},
-		}
-	);
+	// API query for order details
+	const {
+		data: orderData,
+		isLoading,
+		error,
+		refetch,
+	} = useGetOrderByIdQuery(orderId, {
+		skip: !orderId, // Skip if no orderId
+	});
 
-	// Helper function to get shortened UUID with #
-	const getShortId = (fullId) => {
-		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return "#" + fullId.split("-")[0];
-		}
-		return "#" + fullId;
-	};
-
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch {
-			return dateString;
-		}
-	};
-
-	// Get status color and text
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "#007bff";
-			case "PURCHASED":
-				return "#17a2b8";
-			case "IN_TRANSIT":
-				return "#6610f2";
-			case "ARRIVED_IN_DESTINATION":
-				return "#fd7e14";
-			case "DELIVERED":
-				return "#28a745";
-			case "CANCELED":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "Đã đặt hàng";
-			case "PURCHASED":
-				return "Đã thanh toán";
-			case "IN_TRANSIT":
-				return "Đang vận chuyển";
-			case "ARRIVED_IN_DESTINATION":
-				return "Đã đến nơi";
-			case "DELIVERED":
-				return "Đã giao hàng";
-			case "CANCELED":
-				return "Đã hủy";
-			default:
-				return "Không xác định";
-		}
-	};
-
-	// Format currency
+	// Format currency without decimals
 	const formatCurrency = (amount, currency = "VND") => {
 		if (currency === "VND") {
-			return `${amount.toLocaleString("vi-VN")} VND`;
+			return `${Math.round(amount).toLocaleString("vi-VN")} VND`;
 		}
-		return `${amount.toLocaleString("vi-VN")} ${currency}`;
+		return `${Math.round(amount).toLocaleString("vi-VN")} ${currency}`;
+	};
+
+	// Format order ID to show only first part before dash
+	const getShortOrderId = (fullId) => {
+		if (!fullId) return "N/A";
+		if (typeof fullId === "string" && fullId.includes("-")) {
+			return fullId.split("-")[0];
+		}
+		return fullId;
 	};
 
 	// Copy order ID to clipboard
@@ -170,6 +93,52 @@ export default function OrderDetails({ navigation, route }) {
 	const handleBackPress = () => {
 		navigation.goBack();
 	};
+
+	// Handle loading state
+	if (isLoading) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Thông tin đơn hàng"
+					showBackButton
+					onBackPress={handleBackPress}
+					navigation={navigation}
+				/>
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#1D4ED8" />
+					<Text style={styles.loadingText}>
+						Đang tải thông tin đơn hàng...
+					</Text>
+				</View>
+			</View>
+		);
+	}
+
+	// Handle error state
+	if (error || !orderData) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Thông tin đơn hàng"
+					showBackButton
+					onBackPress={handleBackPress}
+					navigation={navigation}
+				/>
+				<View style={styles.errorContainer}>
+					<Text style={styles.errorText}>
+						Không thể tải thông tin đơn hàng:{" "}
+						{error?.message || "Đã xảy ra lỗi"}
+					</Text>
+					<TouchableOpacity
+						onPress={refetch}
+						style={styles.retryButton}
+					>
+						<Text style={styles.retryButtonText}>Thử lại</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
 
 	return (
 		<View style={styles.container}>
@@ -236,51 +205,57 @@ export default function OrderDetails({ navigation, route }) {
 							/>
 						</TouchableOpacity>
 
-						<View style={styles.shippingInfo}>
-							<Text style={styles.shippingLabel}>
-								Đơn vị vận chuyển:
-							</Text>
-							<Text style={styles.shippingValue}>
-								{orderData.shippingUnit}
-							</Text>
-						</View>
+						{orderData.shippingUnit && (
+							<View style={styles.shippingInfo}>
+								<Text style={styles.shippingLabel}>
+									Đơn vị vận chuyển:
+								</Text>
+								<Text style={styles.shippingValue}>
+									{orderData.shippingUnit}
+								</Text>
+							</View>
+						)}
 
-						<View style={styles.shippingInfo}>
-							<Text style={styles.shippingLabel}>
-								Mã vận đơn:
-							</Text>
-							<Text style={styles.shippingValue}>
-								{orderData.trackingCode}
-							</Text>
-						</View>
+						{orderData.trackingCode && (
+							<View style={styles.shippingInfo}>
+								<Text style={styles.shippingLabel}>
+									Mã vận đơn:
+								</Text>
+								<Text style={styles.shippingValue}>
+									{orderData.trackingCode}
+								</Text>
+							</View>
+						)}
 
 						{/* Latest Status */}
 						<View style={styles.latestStatus}>
 							<Text style={styles.latestStatusTitle}>
-								{orderData.latestStatus.title}
+								{getStatusText(orderData.status)}
 							</Text>
 							<Text style={styles.latestStatusDate}>
-								{formatDate(orderData.latestStatus.date)}
+								{formatDate(orderData.createdAt)}
 							</Text>
 						</View>
 					</View>
 
 					{/* Delivery Address Section */}
-					<View style={styles.addressSection}>
-						<Text style={styles.sectionTitle}>
-							Địa chỉ giao hàng
-						</Text>
-						<AddressSmCard
-							recipientName={
-								orderData.deliveryAddress.recipientName
-							}
-							phone={orderData.deliveryAddress.phone}
-							address={orderData.deliveryAddress.address}
-							isDefault={orderData.deliveryAddress.isDefault}
-							onEdit={handleEditAddress}
-							showEditButton={false}
-						/>
-					</View>
+					{orderData.deliveryAddress && (
+						<View style={styles.addressSection}>
+							<Text style={styles.sectionTitle}>
+								Địa chỉ giao hàng
+							</Text>
+							<AddressSmCard
+								recipientName={
+									orderData.deliveryAddress.recipientName
+								}
+								phone={orderData.deliveryAddress.phone}
+								address={orderData.deliveryAddress.address}
+								isDefault={orderData.deliveryAddress.isDefault}
+								onEdit={handleEditAddress}
+								showEditButton={false}
+							/>
+						</View>
+					)}
 				</View>
 
 				{/* Product Info Card */}
@@ -289,9 +264,11 @@ export default function OrderDetails({ navigation, route }) {
 
 					<View style={styles.productSection}>
 						<View style={styles.productImageContainer}>
-							{orderData.productImage ? (
+							{orderData.orderItems?.[0]?.images?.[0] ? (
 								<Image
-									source={{ uri: orderData.productImage }}
+									source={{
+										uri: orderData.orderItems[0].images[0],
+									}}
 									style={styles.productImage}
 									resizeMode="cover"
 								/>
@@ -308,22 +285,44 @@ export default function OrderDetails({ navigation, route }) {
 
 						<View style={styles.productInfo}>
 							<Text style={styles.productName} numberOfLines={2}>
-								{orderData.productName}
+								{orderData.orderItems?.[0]?.productName ||
+									"Tên sản phẩm không có"}
 							</Text>
+
+							{/* Product Variants */}
+							{orderData.orderItems?.[0]?.variants &&
+								orderData.orderItems[0].variants.length > 0 && (
+									<View style={styles.variantsContainer}>
+										{orderData.orderItems[0].variants.map(
+											(variant, index) => (
+												<View
+													key={index}
+													style={styles.variantBadge}
+												>
+													<Text
+														style={
+															styles.variantText
+														}
+													>
+														{variant}
+													</Text>
+												</View>
+											)
+										)}
+									</View>
+								)}
 
 							<View style={styles.productDetails}>
 								<Text style={styles.quantityText}>
-									Số lượng: x{orderData.quantity}
+									Số lượng: x
+									{orderData.orderItems?.[0]?.quantity || 1}
 								</Text>
 								<TouchableOpacity
 									style={styles.priceContainer}
 									onPress={togglePriceBreakdown}
 								>
 									<Text style={styles.priceText}>
-										{formatCurrency(
-											orderData.totalPrice,
-											orderData.currency
-										)}
+										{formatCurrency(orderData.totalPrice)}
 									</Text>
 									<Ionicons
 										name={
@@ -339,79 +338,34 @@ export default function OrderDetails({ navigation, route }) {
 							</View>
 
 							{/* Price Breakdown */}
-							{showPriceBreakdown && orderData.priceBreakdown && (
+							{showPriceBreakdown && (
 								<View style={styles.priceBreakdownContainer}>
-									<View style={styles.breakdownItem}>
-										<Text style={styles.breakdownLabel}>
-											Giá sản phẩm
-										</Text>
-										<Text style={styles.breakdownValue}>
-											{formatCurrency(
-												orderData.priceBreakdown
-													.productPrice,
-												orderData.currency
-											)}
-										</Text>
-									</View>
-
-									<View style={styles.breakdownItem}>
-										<Text style={styles.breakdownLabel}>
-											Phí vận chuyển
-										</Text>
-										<Text style={styles.breakdownValue}>
-											{formatCurrency(
-												orderData.priceBreakdown
-													.shippingFee,
-												orderData.currency
-											)}
-										</Text>
-									</View>
-
-									<View style={styles.breakdownItem}>
-										<Text style={styles.breakdownLabel}>
-											Phí dịch vụ
-										</Text>
-										<Text style={styles.breakdownValue}>
-											{formatCurrency(
-												orderData.priceBreakdown
-													.serviceFee,
-												orderData.currency
-											)}
-										</Text>
-									</View>
-
-									{orderData.priceBreakdown.discount > 0 && (
+									{orderData.orderItems?.[0]?.basePrice && (
 										<View style={styles.breakdownItem}>
 											<Text style={styles.breakdownLabel}>
-												Giảm giá
+												Giá sản phẩm
 											</Text>
-											<Text
-												style={[
-													styles.breakdownValue,
-													styles.discountText,
-												]}
-											>
-												-
+											<Text style={styles.breakdownValue}>
 												{formatCurrency(
-													orderData.priceBreakdown
-														.discount,
-													orderData.currency
+													orderData.orderItems[0]
+														.basePrice
 												)}
 											</Text>
 										</View>
 									)}
 
-									<View style={styles.breakdownItem}>
-										<Text style={styles.breakdownLabel}>
-											Thuế & phí
-										</Text>
-										<Text style={styles.breakdownValue}>
-											{formatCurrency(
-												orderData.priceBreakdown.tax,
-												orderData.currency
-											)}
-										</Text>
-									</View>
+									{orderData.shippingFee && (
+										<View style={styles.breakdownItem}>
+											<Text style={styles.breakdownLabel}>
+												Phí vận chuyển
+											</Text>
+											<Text style={styles.breakdownValue}>
+												{formatCurrency(
+													orderData.shippingFee
+												)}
+											</Text>
+										</View>
+									)}
 
 									<View
 										style={[
@@ -428,8 +382,7 @@ export default function OrderDetails({ navigation, route }) {
 											style={styles.totalBreakdownValue}
 										>
 											{formatCurrency(
-												orderData.priceBreakdown.total,
-												orderData.currency
+												orderData.totalPrice
 											)}
 										</Text>
 									</View>
@@ -507,7 +460,7 @@ export default function OrderDetails({ navigation, route }) {
 							onPress={copyOrderId}
 						>
 							<Text style={styles.orderIdText}>
-								{getShortId(orderData.id)}
+								{getShortOrderId(orderData.id)}
 							</Text>
 							<Ionicons
 								name="copy-outline"
@@ -518,14 +471,16 @@ export default function OrderDetails({ navigation, route }) {
 					</View>
 
 					{/* Payment Method */}
-					<View style={styles.detailRow}>
-						<Text style={styles.detailLabel}>
-							Phương thức thanh toán
-						</Text>
-						<Text style={styles.detailValue}>
-							{orderData.paymentMethod}
-						</Text>
-					</View>
+					{orderData.paymentMethod && (
+						<View style={styles.detailRow}>
+							<Text style={styles.detailLabel}>
+								Phương thức thanh toán
+							</Text>
+							<Text style={styles.detailValue}>
+								{orderData.paymentMethod}
+							</Text>
+						</View>
+					)}
 				</View>
 
 				{/* Review Button (only for completed orders) */}
@@ -549,6 +504,40 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8f9fa",
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#ffffff",
+	},
+	loadingText: {
+		marginTop: 16,
+		fontSize: 16,
+		color: "#6b7280",
+	},
+	errorContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#ffffff",
+		paddingHorizontal: 16,
+	},
+	errorText: {
+		color: "#dc2626",
+		textAlign: "center",
+		fontSize: 16,
+		marginBottom: 16,
+	},
+	retryButton: {
+		backgroundColor: "#1d4ed8",
+		paddingHorizontal: 24,
+		paddingVertical: 8,
+		borderRadius: 8,
+	},
+	retryButtonText: {
+		color: "#ffffff",
+		fontWeight: "500",
 	},
 	content: {
 		flex: 1,
@@ -690,6 +679,25 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		lineHeight: 22,
 		marginBottom: 12,
+	},
+	variantsContainer: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		marginBottom: 12,
+		gap: 6,
+	},
+	variantBadge: {
+		backgroundColor: "#e3f2fd",
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		borderRadius: 6,
+		borderWidth: 1,
+		borderColor: "#42A5F5",
+	},
+	variantText: {
+		fontSize: 11,
+		color: "#1976d2",
+		fontWeight: "500",
 	},
 	productDetails: {
 		flexDirection: "row",

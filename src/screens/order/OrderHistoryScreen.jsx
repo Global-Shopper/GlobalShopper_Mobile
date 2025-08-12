@@ -3,9 +3,15 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
+import { formatDate, getStatusColor } from "../../utils/statusHandler.js";
 
 export default function OrderHistoryScreen({ navigation, route }) {
-	const { orderId } = route.params || {};
+	// const { orderId } = route.params || {}; // TODO: Use orderId when integrating with real API
+
+	// Back button handler
+	const handleBackPress = () => {
+		navigation.goBack();
+	};
 
 	// Mock tracking history data
 	const [trackingHistory] = useState([
@@ -71,24 +77,6 @@ export default function OrderHistoryScreen({ navigation, route }) {
 		},
 	]);
 
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch {
-			return dateString;
-		}
-	};
-
 	// Get status icon
 	const getStatusIcon = (status) => {
 		switch (status) {
@@ -109,34 +97,13 @@ export default function OrderHistoryScreen({ navigation, route }) {
 		}
 	};
 
-	// Get status color
-	const getStatusColor = (status, isCompleted) => {
-		if (!isCompleted) return "#ccc";
-
-		switch (status) {
-			case "DELIVERED":
-				return "#28a745";
-			case "OUT_FOR_DELIVERY":
-				return "#fd7e14";
-			case "ARRIVED_IN_DESTINATION":
-				return "#6610f2";
-			case "IN_TRANSIT":
-				return "#007bff";
-			case "SHIPPED":
-				return "#17a2b8";
-			case "PURCHASED":
-				return "#20c997";
-			default:
-				return "#6c757d";
-		}
-	};
-
 	return (
 		<View style={styles.container}>
 			{/* Header */}
 			<Header
 				title="Lịch sử vận chuyển"
 				showBackButton
+				onBackPress={handleBackPress}
 				navigation={navigation}
 			/>
 

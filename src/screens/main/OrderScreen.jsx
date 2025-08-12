@@ -1,175 +1,123 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+	ActivityIndicator,
+	Alert,
+	FlatList,
+	RefreshControl,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import Header from "../../components/header";
 import OrderCard from "../../components/order-card";
 import { Text } from "../../components/ui/text";
+import {
+	useGetAllOrdersQuery,
+	useLazyGetOrderByIdQuery,
+} from "../../services/gshopApi";
 
 export default function OrderScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
+	const [refreshing, setRefreshing] = useState(false);
+	const [feedbackMap, setFeedbackMap] = useState({}); // Track which orders have feedback
 
-	const orders = [
-		{
-			id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-			requestType: "ONLINE",
-			seller: "Apple Store",
-			platform: "Amazon",
-			productName: "iPhone 15 Pro Max 256GB - Natural Titanium",
-			productImage: "https://example.com/iphone.jpg",
-			quantity: 1,
-			totalPrice: 35000000,
-			status: "PURCHASED",
-			createdAt: "2024-01-15T08:30:00Z",
-			currency: "VND",
-			trackingCode: "VN123456789",
-			shippingUnit: "Giao Hàng Nhanh",
-			paymentMethod: "Ví GShop",
-			deliveryAddress: {
-				recipientName: "Nguyễn Văn A",
-				phone: "0901234567",
-				address: "123 Đường ABC, Phường 1, Quận 1, TP.HCM",
-				isDefault: true,
-			},
-			latestStatus: {
-				title: "Đã thanh toán thành công",
-				date: "2024-01-15T08:30:00Z",
-			},
-		},
-		{
-			id: "b2c3d4e5-f6g7-8901-bcde-fg2345678901",
-			requestType: "ONLINE",
-			seller: "Nike Official",
-			platform: "Nike Store US",
-			productName: "Nike Air Max 270 Black/White Size 42",
-			productImage: "https://example.com/nike.jpg",
-			quantity: 2,
-			totalPrice: 4500000,
-			status: "IN_TRANSIT",
-			createdAt: "2024-01-14T10:15:00Z",
-			currency: "VND",
-			trackingCode: "VN987654321",
-			shippingUnit: "Viettel Post",
-			paymentMethod: "VNPay",
-			deliveryAddress: {
-				recipientName: "Trần Thị B",
-				phone: "0912345678",
-				address: "456 Đường XYZ, Phường 2, Quận 2, TP.HCM",
-				isDefault: false,
-			},
-			latestStatus: {
-				title: "Đang vận chuyển quốc tế",
-				date: "2024-01-16T14:20:00Z",
-			},
-		},
-		{
-			id: "c3d4e5f6-g7h8-9012-cdef-gh3456789012",
-			requestType: "OFFLINE",
-			storeName: "Louis Vuitton Paris",
-			productName: "Louis Vuitton Neverfull MM Monogram Canvas",
-			productImage: "https://example.com/lv.jpg",
-			quantity: 1,
-			totalPrice: 45000000,
-			status: "ARRIVED_IN_DESTINATION",
-			createdAt: "2024-01-12T14:20:00Z",
-			currency: "VND",
-			trackingCode: "VN555666777",
-			shippingUnit: "DHL Express",
-			paymentMethod: "Ví GShop",
-			deliveryAddress: {
-				recipientName: "Lê Văn C",
-				phone: "0923456789",
-				address: "789 Đường ABC, Phường 3, Quận 3, TP.HCM",
-				isDefault: true,
-			},
-			latestStatus: {
-				title: "Đã đến kho giao hàng",
-				date: "2024-01-18T16:45:00Z",
-			},
-		},
-		{
-			id: "d4e5f6g7-h8i9-0123-defg-hi4567890123",
-			requestType: "ONLINE",
-			seller: "Rolex Official",
-			platform: "Chrono24",
-			productName: "Rolex Submariner Date 41mm Steel",
-			productImage: "https://example.com/rolex.jpg",
-			quantity: 1,
-			totalPrice: 250000000,
-			status: "DELIVERED",
-			createdAt: "2024-01-11T16:45:00Z",
-			currency: "VND",
-			trackingCode: "VN111222333",
-			shippingUnit: "Giao Hàng Nhanh",
-			paymentMethod: "VNPay",
-			deliveryAddress: {
-				recipientName: "Hoàng Văn E",
-				phone: "0934567890",
-				address: "555 Đường JKL, Phường 5, Quận 5, TP.HCM",
-				isDefault: false,
-			},
-			latestStatus: {
-				title: "Đã giao hàng thành công",
-				date: "2024-01-20T14:30:00Z",
-			},
-		},
-		{
-			id: "e5f6g7h8-i9j0-1234-efgh-ij5678901234",
-			requestType: "OFFLINE",
-			storeName: "ASUS Store NYC",
-			productName: "ASUS ROG Strix G17 Gaming Laptop",
-			productImage: "https://example.com/asus.jpg",
-			quantity: 1,
-			totalPrice: 35000000,
-			status: "ORDER_REQUESTED",
-			createdAt: "2024-01-10T12:00:00Z",
-			currency: "VND",
-			trackingCode: "VN444555666",
-			shippingUnit: "J&T Express",
-			paymentMethod: "Ví GShop",
-			deliveryAddress: {
-				recipientName: "Võ Thị F",
-				phone: "0945678901",
-				address: "777 Đường MNO, Phường 6, Quận 6, TP.HCM",
-				isDefault: true,
-			},
-			latestStatus: {
-				title: "Đã đặt hàng",
-				date: "2024-01-10T12:00:00Z",
-			},
-		},
-		{
-			id: "f6g7h8i9-j0k1-2345-fghi-jk6789012345",
-			requestType: "ONLINE",
-			seller: "Sony Official",
-			platform: "B&H Photo",
-			productName: "Sony Alpha A7R V Mirrorless Camera with 24-70mm Lens",
-			quantity: 1,
-			totalPrice: 75000000,
-			status: "CANCELED",
-			createdAt: "2024-01-09T09:30:00Z",
-			currency: "VND",
-			trackingCode: "VN777888999",
-			shippingUnit: "Giao Hàng Nhanh",
-			paymentMethod: "VNPay",
-			deliveryAddress: {
-				recipientName: "Đặng Văn G",
-				phone: "0956789012",
-				address: "888 Đường PQR, Phường 7, Quận 7, TP.HCM",
-				isDefault: false,
-			},
-			latestStatus: {
-				title: "Đơn hàng đã bị hủy",
-				date: "2024-01-09T15:45:00Z",
-			},
-		},
-	];
+	// API query for orders
+	const {
+		data: ordersResponse,
+		isLoading,
+		error,
+		refetch,
+	} = useGetAllOrdersQuery({
+		status: activeTab === "all" ? undefined : activeTab,
+		page: 0,
+		size: 50,
+	});
+
+	// Lazy query to get order details with feedback info
+	const [getOrderById] = useLazyGetOrderByIdQuery();
+
+	// Extract orders from API response and sort by newest first
+	const orders = useMemo(() => {
+		const ordersList = ordersResponse?.content || [];
+		// Create a copy of the array before sorting to avoid read-only property error
+		return [...ordersList].sort((a, b) => b.createdAt - a.createdAt);
+	}, [ordersResponse]);
+
+	// Load feedback status for delivered orders
+	useEffect(() => {
+		const loadFeedbackStatus = async () => {
+			// Find all delivered orders
+			const deliveredOrders = orders.filter(
+				(order) => order.status === "DELIVERED"
+			);
+
+			if (deliveredOrders.length === 0) return;
+
+			console.log(
+				`Loading feedback status for ${deliveredOrders.length} delivered orders...`
+			);
+
+			const newFeedbackMap = {};
+
+			// Check feedback status for each delivered order
+			for (const order of deliveredOrders) {
+				try {
+					const result = await getOrderById(order.id);
+					if (result.data) {
+						console.log(
+							`Order ${order.id} full response:`,
+							JSON.stringify(result.data, null, 2)
+						);
+						console.log(
+							`Order ${order.id} feedback field:`,
+							result.data.feedback
+						);
+
+						// Check if feedback exists in the order detail
+						const hasFeedback =
+							result.data.feedback &&
+							(result.data.feedback.id ||
+								result.data.feedback.rating);
+
+						newFeedbackMap[order.id] = hasFeedback;
+						console.log(
+							`Order ${order.id}: hasFeedback = ${hasFeedback}`
+						);
+					}
+				} catch (error) {
+					console.error(
+						`Error loading feedback for order ${order.id}:`,
+						error
+					);
+					newFeedbackMap[order.id] = false;
+				}
+			}
+
+			setFeedbackMap(newFeedbackMap);
+		};
+
+		// Only load feedback if we have delivered orders
+		const hasDeliveredOrders = orders.some(
+			(order) => order.status === "DELIVERED"
+		);
+		if (hasDeliveredOrders) {
+			loadFeedbackStatus();
+		}
+	}, [orders, getOrderById]);
+
+	const onRefresh = async () => {
+		setRefreshing(true);
+		setFeedbackMap({}); // Clear feedback map on refresh
+		await refetch();
+		setRefreshing(false);
+	};
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
-		{ id: "PURCHASED", label: "Đã thanh toán", status: "PURCHASED" },
 		{
 			id: "ORDER_REQUESTED",
-			label: "Đã đặt hàng",
+			label: "Đang đặt hàng",
 			status: "ORDER_REQUESTED",
 		},
 		{ id: "IN_TRANSIT", label: "Đang vận chuyển", status: "IN_TRANSIT" },
@@ -182,18 +130,71 @@ export default function OrderScreen({ navigation }) {
 		{ id: "CANCELED", label: "Đã hủy", status: "CANCELED" },
 	];
 
-	const handleCancelOrder = (orderId) => {
-		console.log("Cancel order:", orderId);
-		// TODO: Implement cancel order logic
+	const handleCancelOrder = async (orderId) => {
+		// Find the selected order
+		const selectedOrder = orders.find((order) => order.id === orderId);
+
+		if (!selectedOrder) {
+			Alert.alert("Lỗi", "Không tìm thấy thông tin đơn hàng");
+			return;
+		}
+
+		// Navigate to CancelOrder screen
+		navigation.navigate("CancelOrder", { orderData: selectedOrder });
 	};
 
-	const handleReviewOrder = (orderId) => {
+	const handleReviewOrder = async (orderId) => {
 		console.log("Review order:", orderId);
-		// Navigate to FeedbackDetails with the selected order
+		// Find the selected order
 		const selectedOrder = orders.find((order) => order.id === orderId);
 		console.log("Selected order for review:", selectedOrder);
-		console.log("Navigating to FeedbackDetails...");
-		navigation.navigate("FeedbackDetails", { orderData: selectedOrder });
+
+		// Only allow review for delivered orders
+		if (selectedOrder.status !== "DELIVERED") {
+			Alert.alert(
+				"Thông báo",
+				"Chỉ có thể đánh giá đơn hàng đã được giao"
+			);
+			return;
+		}
+
+		try {
+			// Get detailed order info to get complete feedback data
+			console.log("Fetching order details to navigate...");
+			const result = await getOrderById(orderId);
+
+			if (result.data) {
+				const orderDetail = result.data;
+				console.log("Order detail with feedback info:", orderDetail);
+
+				// Check if order has feedback
+				const hasFeedback = feedbackMap[orderId] || false;
+				console.log("Order has feedback from map:", hasFeedback);
+
+				if (hasFeedback) {
+					// Navigate to view feedback
+					console.log(
+						"Navigating to FeedbackOrder to view existing feedback..."
+					);
+					navigation.navigate("FeedbackOrder", {
+						orderData: orderDetail,
+					});
+				} else {
+					// Navigate to create feedback
+					console.log(
+						"Navigating to FeedbackDetails to create feedback..."
+					);
+					navigation.navigate("FeedbackDetails", {
+						orderData: orderDetail,
+					});
+				}
+			} else {
+				Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+			}
+		} catch (error) {
+			console.error("Error fetching order details:", error);
+			Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+		}
 	};
 
 	const handleOrderPress = (orderId) => {
@@ -203,10 +204,77 @@ export default function OrderScreen({ navigation }) {
 		navigation.navigate("OrderDetails", { orderData: selectedOrder });
 	};
 
-	const filteredOrders = orders.filter((order) => {
-		if (activeTab === "all") return true;
-		return order.status === activeTab;
-	});
+	// Filter orders based on active tab
+	const filteredOrders =
+		activeTab === "all"
+			? orders
+			: orders.filter((order) => order.status === activeTab);
+
+	// Handle loading state
+	if (isLoading) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Đơn hàng"
+					notificationCount={1}
+					chatCount={3}
+					onChatPress={() => console.log("Chat pressed")}
+					navigation={navigation}
+				/>
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#1D4ED8" />
+					<Text style={styles.loadingText}>Đang tải đơn hàng...</Text>
+				</View>
+			</View>
+		);
+	}
+
+	// Handle error state
+	if (error) {
+		return (
+			<View style={styles.container}>
+				<Header
+					title="Đơn hàng"
+					notificationCount={1}
+					chatCount={3}
+					onChatPress={() => console.log("Chat pressed")}
+					navigation={navigation}
+				/>
+				<View style={styles.errorContainer}>
+					<Text style={styles.errorText}>
+						Không thể tải đơn hàng:{" "}
+						{error.message || "Đã xảy ra lỗi"}
+					</Text>
+					<TouchableOpacity
+						onPress={refetch}
+						style={styles.retryButton}
+					>
+						<Text style={styles.retryButtonText}>Thử lại</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		);
+	}
+
+	const renderOrder = ({ item }) => {
+		const isDelivered = item.status === "DELIVERED";
+		const hasFeedback = feedbackMap[item.id] || false;
+
+		// Debug log for each order rendering
+		console.log(
+			`Rendering order ${item.id}: status=${item.status}, isDelivered=${isDelivered}, hasFeedback=${hasFeedback}`
+		);
+
+		return (
+			<OrderCard
+				order={item}
+				onPress={() => handleOrderPress(item.id)}
+				onCancel={() => handleCancelOrder(item.id)}
+				onReview={() => handleReviewOrder(item.id)}
+				hasFeedback={hasFeedback}
+			/>
+		);
+	};
 
 	return (
 		<View style={styles.container}>
@@ -245,36 +313,34 @@ export default function OrderScreen({ navigation }) {
 				</ScrollView>
 			</View>
 
-			<ScrollView
-				style={styles.content}
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={styles.scrollContent}
-			>
-				{/* Order List */}
-				<View style={styles.ordersList}>
-					{filteredOrders.map((order) => (
-						<OrderCard
-							key={order.id}
-							order={order}
-							onPress={() => handleOrderPress(order.id)}
-							onCancel={() => handleCancelOrder(order.id)}
-							onReview={() => handleReviewOrder(order.id)}
-						/>
-					))}
-				</View>
-
-				{filteredOrders.length === 0 && (
-					<View style={styles.emptyState}>
-						<Ionicons name="bag-outline" size={64} color="#ccc" />
-						<Text className="text-lg font-medium text-muted-foreground mt-4">
-							Không có đơn hàng nào
-						</Text>
-						<Text className="text-sm text-muted-foreground text-center mt-2">
-							Các đơn hàng sẽ xuất hiện ở đây
+			<FlatList
+				data={filteredOrders}
+				renderItem={renderOrder}
+				keyExtractor={(item) => item.id}
+				contentContainerStyle={[
+					styles.flatListContent,
+					filteredOrders.length === 0 && styles.emptyListContent,
+				]}
+				showsVerticalScrollIndicator={true}
+				refreshControl={
+					<RefreshControl
+						refreshing={refreshing}
+						onRefresh={onRefresh}
+						colors={["#1D4ED8"]}
+					/>
+				}
+				ListEmptyComponent={
+					<View style={styles.emptyStateContainer}>
+						<Text style={styles.emptyStateText}>
+							{activeTab === "all"
+								? "Bạn chưa có đơn hàng nào"
+								: `Không có đơn hàng ${tabs
+										.find((tab) => tab.id === activeTab)
+										?.label.toLowerCase()}`}
 						</Text>
 					</View>
-				)}
-			</ScrollView>
+				}
+			/>
 		</View>
 	);
 }
@@ -283,6 +349,40 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8f9fa",
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#ffffff",
+	},
+	loadingText: {
+		marginTop: 16,
+		fontSize: 16,
+		color: "#6b7280",
+	},
+	errorContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#ffffff",
+		paddingHorizontal: 16,
+	},
+	errorText: {
+		color: "#dc2626",
+		textAlign: "center",
+		fontSize: 16,
+		marginBottom: 16,
+	},
+	retryButton: {
+		backgroundColor: "#1d4ed8",
+		paddingHorizontal: 24,
+		paddingVertical: 8,
+		borderRadius: 8,
+	},
+	retryButtonText: {
+		color: "#ffffff",
+		fontWeight: "500",
 	},
 	tabContainer: {
 		backgroundColor: "#ffffff",
@@ -313,20 +413,23 @@ const styles = StyleSheet.create({
 		color: "#ffffff",
 		fontWeight: "600",
 	},
-	content: {
+	flatListContent: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		flexGrow: 1,
+	},
+	emptyListContent: {
+		flexGrow: 1,
+	},
+	emptyStateContainer: {
 		flex: 1,
-		paddingHorizontal: 20,
-		paddingTop: 20,
-	},
-	scrollContent: {
-		paddingBottom: 100,
-	},
-	ordersList: {
-		marginBottom: 20,
-	},
-	emptyState: {
-		alignItems: "center",
 		justifyContent: "center",
-		paddingVertical: 60,
+		alignItems: "center",
+		paddingVertical: 80,
+	},
+	emptyStateText: {
+		color: "#6b7280",
+		fontSize: 16,
+		textAlign: "center",
 	},
 });

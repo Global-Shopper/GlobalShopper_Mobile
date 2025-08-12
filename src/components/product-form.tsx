@@ -10,6 +10,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { uploadToCloudinary } from "../utils/uploadToCloundinary";
 import { useDialog } from "./dialogHelpers";
 import { Text } from "./ui/text";
 
@@ -145,7 +146,7 @@ export default function ProductForm({
 	onSubmit,
 	onChange,
 }: ProductFormProps) {
-	const { showDialog, Dialog } = useDialog();
+	const { showDialog, hideDialog, Dialog } = useDialog();
 	const [formData, setFormData] = useState<ProductData>(() => {
 		return getInitialFormData(initialData, storeData, mode);
 	});
@@ -279,14 +280,49 @@ export default function ProductForm({
 		});
 
 		if (!result.canceled && result.assets && result.assets.length > 0) {
-			const newImageUri = result.assets[0].uri;
-			const updatedData = {
-				...formData,
-				images: [...formData.images, newImageUri],
-			};
-			setFormData(updatedData);
-			if (onChange) {
-				onChange(updatedData);
+			const imageAsset = result.assets[0];
+
+			try {
+				// Show loading state
+				showDialog({
+					title: "Đang tải ảnh",
+					message: "Vui lòng đợi...",
+				});
+
+				// Create file object for Cloudinary
+				const file = {
+					uri: imageAsset.uri,
+					type: "image/jpeg",
+					name: `product_${Date.now()}.jpg`,
+				};
+
+				// Upload to Cloudinary
+				const cloudinaryUrl = await uploadToCloudinary(file);
+
+				if (cloudinaryUrl) {
+					// Hide loading dialog
+					hideDialog();
+
+					const updatedData = {
+						...formData,
+						images: [...formData.images, cloudinaryUrl],
+					};
+					setFormData(updatedData);
+					if (onChange) {
+						onChange(updatedData);
+					}
+				} else {
+					showDialog({
+						title: "Lỗi upload",
+						message: "Không thể tải ảnh lên. Vui lòng thử lại.",
+					});
+				}
+			} catch (error) {
+				console.error("Error uploading image:", error);
+				showDialog({
+					title: "Lỗi upload",
+					message: "Không thể tải ảnh lên. Vui lòng thử lại.",
+				});
 			}
 		}
 	};

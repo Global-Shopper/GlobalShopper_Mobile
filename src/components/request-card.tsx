@@ -1,5 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	formatDate,
+	getRequestTypeBorderColor,
+	getRequestTypeIcon,
+	getShortId,
+	getStatusColor,
+	getStatusText,
+} from "../utils/statusHandler";
 import { Text } from "./ui/text";
 
 interface RequestCardProps {
@@ -13,7 +21,16 @@ interface RequestCardProps {
 			| "quoted"
 			| "confirmed"
 			| "cancelled"
-			| "insufficient";
+			| "insufficient"
+			| "SENT"
+			| "CHECKING"
+			| "QUOTED"
+			| "CONFIRMED"
+			| "CANCELLED"
+			| "INSUFFICIENT"
+			| "paid"
+			| "success"
+			| "completed";
 		date: number;
 		createdAt: string;
 		requestType: "ONLINE" | "OFFLINE";
@@ -49,230 +66,110 @@ export default function RequestCard({
 			}
 		}
 
-		// For all requests (ONLINE without code and OFFLINE), use shortened ID
-		const fullId = request.id;
-		const shortenedId = fullId ? fullId.split("-")[0] : "N/A";
-		return `#${shortenedId}`;
+		// For all requests (ONLINE without code and OFFLINE), use getShortId from statusHandler
+		return getShortId(request.id);
 	};
-	const getStatusColor = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "#28a745";
-			case "checking":
-				return "#17a2b8";
-			case "quoted":
-				return "#ffc107";
-			case "confirmed":
-				return "#007bff";
-			case "cancelled":
-				return "#dc3545";
-			case "insufficient":
-				return "#fd7e14";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "Đã gửi";
-			case "checking":
-				return "Đang xử lý";
-			case "quoted":
-				return "Đã báo giá";
-			case "confirmed":
-				return "Đã xác nhận";
-			case "cancelled":
-				return "Đã hủy";
-			case "insufficient":
-				return "Cập nhật";
-			default:
-				return "Không xác định";
-		}
-	};
-
-	const getRequestTypeIcon = (type: string) => {
-		return type === "ONLINE" ? "link-outline" : "create-outline";
-	};
-
-	const getRequestTypeBorderColor = (type: string) => {
-		return type === "ONLINE" ? "#42A5F5" : "#28a745";
-	};
+	// Remove local status functions and use imported ones from statusHandler
+	// const getStatusColor = ... (removed)
+	// const getStatusText = ... (removed)
+	// const getRequestTypeIcon = ... (removed)
+	// const getRequestTypeBorderColor = ... (removed)
 
 	const getProductDisplayInfo = (request: any) => {
-		if (request.requestType === "ONLINE") {
-			let allProducts: any[] = [];
+		// For ALL statuses, always show simple product names (not seller/platform info)
+		let allProducts: any[] = [];
 
-			// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
-			if (
-				Array.isArray(request.requestItems) &&
-				request.requestItems.length > 0
-			) {
-				allProducts = [...allProducts, ...request.requestItems];
-			}
-
-			// Trường hợp 2: subRequests (có thể có ở tất cả status, nhất là "quoted", "confirmed")
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				// Gộp tất cả products từ tất cả subRequests
-				request.subRequests.forEach((subReq: any) => {
-					if (
-						Array.isArray(subReq.requestItems) &&
-						subReq.requestItems.length > 0
-					) {
-						allProducts = [...allProducts, ...subReq.requestItems];
-					}
-				});
-			}
-
-			if (allProducts.length === 0) {
-				return "Không có sản phẩm";
-			}
-
-			const sortedProducts = allProducts.sort((a, b) => {
-				const nameA = (a.productName || a.name || "").toLowerCase();
-				const nameB = (b.productName || b.name || "").toLowerCase();
-				return nameA.localeCompare(nameB);
-			});
-
-			const firstProduct = sortedProducts[0];
-			const firstName =
-				firstProduct.productName ||
-				firstProduct.name ||
-				"Sản phẩm không tên";
-
-			if (allProducts.length === 1) {
-				return firstName;
-			} else {
-				const remainingCount = allProducts.length - 1;
-				return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
-			}
-		} else {
-			// OFFLINE logic - also support "và X sản phẩm khác" format
-			// First, try to get products from subRequests like ONLINE logic
-			let allProducts: any[] = [];
-
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				// Gộp tất cả products từ tất cả subRequests
-				request.subRequests.forEach((subReq: any) => {
-					if (
-						Array.isArray(subReq.requestItems) &&
-						subReq.requestItems.length > 0
-					) {
-						allProducts = [...allProducts, ...subReq.requestItems];
-					}
-				});
-			}
-
-			// If we found products, use the same logic as ONLINE
-			if (allProducts.length > 0) {
-				const sortedProducts = allProducts.sort((a, b) => {
-					const nameA = (a.productName || a.name || "").toLowerCase();
-					const nameB = (b.productName || b.name || "").toLowerCase();
-					return nameA.localeCompare(nameB);
-				});
-
-				const firstProduct = sortedProducts[0];
-				const firstName =
-					firstProduct.productName ||
-					firstProduct.name ||
-					"Sản phẩm không tên";
-
-				if (allProducts.length === 1) {
-					return firstName;
-				} else {
-					const remainingCount = allProducts.length - 1;
-					return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
-				}
-			}
-
-			// Fallback to store name logic if no products found
-			let mainText = "";
-
-			if (
-				Array.isArray(request.subRequests) &&
-				request.subRequests.length > 0
-			) {
-				const firstSub = request.subRequests[0];
-
+		// Method 1: Try requestItems first (common in early stages like sent, checking)
+		if (
+			Array.isArray(request.requestItems) &&
+			request.requestItems.length > 0
+		) {
+			allProducts = [...request.requestItems];
+		}
+		// Method 2: If no requestItems, get products from subRequests (common in later stages)
+		else if (
+			Array.isArray(request.subRequests) &&
+			request.subRequests.length > 0
+		) {
+			request.subRequests.forEach((subReq: any) => {
 				if (
-					Array.isArray(firstSub.contactInfo) &&
-					firstSub.contactInfo.length > 0
+					Array.isArray(subReq.requestItems) &&
+					subReq.requestItems.length > 0
 				) {
-					const storeInfo = firstSub.contactInfo.find(
-						(info: string) =>
-							info.includes("Tên cửa hàng:") ||
-							info.includes("Store:")
-					);
-
-					if (storeInfo) {
-						mainText = storeInfo
-							.replace("Tên cửa hàng:", "")
-							.replace("Store:", "")
-							.trim();
-					} else {
-						mainText = firstSub.contactInfo[0];
-					}
+					allProducts = [...allProducts, ...subReq.requestItems];
 				}
-			}
+			});
+		}
 
+		// If we still have no products, try fallback for offline requests
+		if (
+			allProducts.length === 0 &&
+			request.requestType === "OFFLINE" &&
+			Array.isArray(request.subRequests)
+		) {
+			// Fallback to store name for offline requests with no products
+			const firstSub = request.subRequests[0];
 			if (
-				!mainText &&
-				Array.isArray(request.contactInfo) &&
-				request.contactInfo.length > 0
+				firstSub &&
+				Array.isArray(firstSub.contactInfo) &&
+				firstSub.contactInfo.length > 0
 			) {
-				const storeInfo = request.contactInfo.find(
+				const storeInfo = firstSub.contactInfo.find(
 					(info: string) =>
 						info.includes("Tên cửa hàng:") ||
 						info.includes("Store:")
 				);
 
 				if (storeInfo) {
-					mainText = storeInfo
+					return storeInfo
 						.replace("Tên cửa hàng:", "")
 						.replace("Store:", "")
 						.trim();
-				} else {
-					mainText = request.contactInfo[0];
 				}
+				return firstSub.contactInfo[0] || "Cửa hàng không xác định";
 			}
+			return "Cửa hàng không xác định";
+		}
 
-			if (!mainText) {
-				mainText = "Cửa hàng không xác định";
-			}
+		if (allProducts.length === 0) {
+			return "Không có sản phẩm";
+		}
 
-			return mainText;
+		// Always show product names regardless of status
+		const firstProduct = allProducts[0];
+		const firstName =
+			firstProduct.productName ||
+			firstProduct.name ||
+			"Sản phẩm không tên";
+
+		// Debug: Log product count to understand the issue
+		console.log(
+			`[RequestCard] Request ${request.id}: Found ${allProducts.length} products`
+		);
+
+		if (allProducts.length === 1) {
+			return firstName;
+		} else {
+			const remainingCount = allProducts.length - 1;
+			return `${firstName}\nvà ${remainingCount} sản phẩm khác`;
 		}
 	};
 
 	return (
-		<TouchableOpacity
-			style={[
-				styles.requestCard,
-				{
-					borderLeftWidth: 4,
-					borderLeftColor: getRequestTypeBorderColor(
-						request.requestType
-					),
-				},
-			]}
-			onPress={onPress}
-		>
+		<TouchableOpacity style={styles.requestCard} onPress={onPress}>
 			{/* Header Section */}
 			<View style={styles.cardHeader}>
 				<View style={styles.leftSection}>
 					<View style={styles.requestTypeContainer}>
 						<Ionicons
-							name={getRequestTypeIcon(request.requestType)}
-							size={26}
+							name={
+								getRequestTypeIcon(
+									request.requestType?.toLowerCase() || ""
+								) as any
+							}
+							size={22}
 							color={getRequestTypeBorderColor(
-								request.requestType
+								request.requestType?.toLowerCase() || ""
 							)}
 						/>
 					</View>
@@ -282,16 +179,7 @@ export default function RequestCard({
 							{getRequestTitle(request)}
 						</Text>
 						<Text style={styles.createdDate}>
-							{new Date(
-								Number(request.createdAt)
-							).toLocaleDateString("vi-VN")}{" "}
-							-{" "}
-							{new Date(
-								Number(request.createdAt)
-							).toLocaleTimeString(["vi-VN"], {
-								hour: "2-digit",
-								minute: "2-digit",
-							})}
+							{formatDate(request.createdAt)}
 						</Text>
 					</View>
 				</View>
@@ -329,23 +217,18 @@ export default function RequestCard({
 					<Text style={styles.quantityText}>
 						x
 						{(() => {
-							// Sử dụng cùng logic như getProductDisplayInfo để đảm bảo consistency
+							// Use same logic as getProductDisplayInfo to ensure consistency
 							let allProducts: any[] = [];
 
-							// Gộp products từ CẢ HAI nguồn: requestItems VÀ subRequests
-							// Trường hợp 1: requestItems (có thể có ở status "sent", "checking")
+							// Method 1: Try requestItems first (avoid duplicates)
 							if (
 								Array.isArray(request.requestItems) &&
 								request.requestItems.length > 0
 							) {
-								allProducts = [
-									...allProducts,
-									...request.requestItems,
-								];
+								allProducts = [...request.requestItems];
 							}
-
-							// Trường hợp 2: subRequests (có thể có ở tất cả status, nhất là "quoted", "confirmed")
-							if (
+							// Method 2: If no requestItems, get from subRequests
+							else if (
 								Array.isArray(request.subRequests) &&
 								request.subRequests.length > 0
 							) {
@@ -366,23 +249,8 @@ export default function RequestCard({
 								return 1; // Default quantity
 							}
 
-							// Sort products same way as getProductDisplayInfo để đảm bảo consistency
-							const sortedProducts = allProducts.sort((a, b) => {
-								const nameA = (
-									a.productName ||
-									a.name ||
-									""
-								).toLowerCase();
-								const nameB = (
-									b.productName ||
-									b.name ||
-									""
-								).toLowerCase();
-								return nameA.localeCompare(nameB);
-							});
-
-							// Lấy số lượng của sản phẩm đầu tiên (sau khi sort)
-							const firstProduct = sortedProducts[0];
+							// Get quantity of first product (no sorting needed for quantity)
+							const firstProduct = allProducts[0];
 							const firstProductQuantity =
 								parseInt(String(firstProduct.quantity || 1)) ||
 								1;
@@ -393,6 +261,8 @@ export default function RequestCard({
 				</View>
 			</View>
 
+			{/* No action buttons in RequestCard - buttons will be in RequestDetails */}
+
 			{/* Actions Section removed as per user request */}
 		</TouchableOpacity>
 	);
@@ -401,23 +271,23 @@ export default function RequestCard({
 const styles = StyleSheet.create({
 	requestCard: {
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 14,
-		marginBottom: 10,
+		borderRadius: 10,
+		padding: 12,
+		marginBottom: 8,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 2,
+			height: 1,
 		},
-		shadowOpacity: 0.06,
-		shadowRadius: 4,
-		elevation: 4,
+		shadowOpacity: 0.05,
+		shadowRadius: 3,
+		elevation: 2,
 	},
 	cardHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
-		marginBottom: 12,
+		marginBottom: 10,
 	},
 	leftSection: {
 		flexDirection: "row",
@@ -425,12 +295,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	requestTypeContainer: {
-		// backgroundColor: "#f8f9fa", // Removed background
-		borderRadius: 10,
-		padding: 6,
-		marginRight: 10,
-		// borderWidth: 1, // Removed border
-		// borderColor: "#e9ecef",
+		borderRadius: 8,
+		padding: 4,
+		marginRight: 8,
 	},
 	requestInfo: {
 		flex: 1,
@@ -449,15 +316,14 @@ const styles = StyleSheet.create({
 	statusBadge: {
 		paddingHorizontal: 8,
 		paddingVertical: 3,
-		borderRadius: 10,
-		minWidth: 70,
+		borderRadius: 8,
+		minWidth: 65,
 		alignItems: "center",
 	},
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		textTransform: "uppercase",
-		letterSpacing: 0.5,
+		letterSpacing: 0.3,
 	},
 	productInfoSection: {
 		marginBottom: 8,
@@ -483,11 +349,11 @@ const styles = StyleSheet.create({
 	},
 	requestActions: {
 		flexDirection: "row",
-		paddingTop: 12,
+		paddingTop: 10,
 		borderTopWidth: 1,
 		borderTopColor: "#e9ecef",
 		alignItems: "center",
-		justifyContent: "space-between",
+		justifyContent: "flex-end",
 	},
 	viewDetailButton: {
 		flexDirection: "row",
@@ -512,9 +378,9 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		backgroundColor: "#ffebee",
-		paddingHorizontal: 10,
-		paddingVertical: 7,
-		borderRadius: 16,
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		borderRadius: 8,
 		borderWidth: 1,
 		borderColor: "#dc3545",
 	},

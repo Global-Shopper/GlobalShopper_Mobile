@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import {
 	ActivityIndicator,
 	ScrollView,
@@ -9,17 +10,41 @@ import {
 } from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
+import PlatformLogo from "../../components/platform-logo";
 import ProductCard from "../../components/product-card";
 import QuotationCard from "../../components/quotation-card";
 import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import {
+	formatDate,
+	getRequestTypeBorderColor,
+	getRequestTypeIcon,
+	getRequestTypeText,
+	getShortId,
+	getStatusColor,
+	getStatusText,
+	shouldShowQuotation,
+} from "../../utils/statusHandler";
+
+// Helper function to check if request/sub-request is completed/paid
+const isRequestCompleted = (status) => {
+	if (!status) return false;
+	const normalizedStatus = status.toLowerCase();
+	return (
+		normalizedStatus === "completed" ||
+		normalizedStatus === "paid" ||
+		normalizedStatus === "success" ||
+		normalizedStatus === "delivered"
+	);
+};
 
 export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 
-	const [isAcceptedQuotation, setIsAcceptedQuotation] = useState(false);
+	const [acceptedQuotations, setAcceptedQuotations] = useState({});
+	const [expandedQuotations, setExpandedQuotations] = useState({});
 
 	// Fetch purchase request detail from API - using getPurchaseRequestById
 	const {
@@ -29,49 +54,23 @@ export default function RequestDetails({ navigation, route }) {
 		refetch,
 	} = useGetPurchaseRequestByIdQuery(requestId, {
 		skip: !requestId,
+		// Force refetch to get latest data, ignore cache
+		refetchOnMountOrArgChange: true,
+		refetchOnFocus: true,
 	});
 
-	const getShortId = (fullId) => {
-		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return "#" + fullId.split("-")[0];
-		}
-		return "#" + fullId;
-	};
-
-	// Helper function to get request type text
-	const getRequestTypeText = (type) => {
-		if (!type) {
-			return "Loại yêu cầu không xác định";
-		}
-
-		switch (type?.toLowerCase()) {
-			case "offline":
-				return "Hàng nội địa/quốc tế";
-			case "online":
-				return "Hàng từ nền tảng e-commerce";
-			default:
-				return ` ${type}`;
-		}
-	};
-
-	// Format date to Vietnamese format: dd/mm/yyyy hh:mm
-	const formatDate = (dateString) => {
-		if (!dateString) return "N/A";
-
-		try {
-			const date = new Date(dateString);
-			const day = date.getDate().toString().padStart(2, "0");
-			const month = (date.getMonth() + 1).toString().padStart(2, "0");
-			const year = date.getFullYear();
-			const hours = date.getHours().toString().padStart(2, "0");
-			const minutes = date.getMinutes().toString().padStart(2, "0");
-
-			return `${day}/${month}/${year} ${hours}:${minutes}`;
-		} catch (_error) {
-			return dateString;
-		}
-	};
+	// Refetch data when screen comes into focus to get latest status
+	useFocusEffect(
+		useCallback(() => {
+			if (requestId) {
+				console.log(
+					"[RequestDetails] Screen focused, refetching data for request:",
+					requestId
+				);
+				refetch();
+			}
+		}, [requestId, refetch])
+	);
 
 	if (isLoading) {
 		return (
@@ -131,58 +130,15 @@ export default function RequestDetails({ navigation, route }) {
 		);
 	}
 
-	// Use the correct data for rendering
+	// Use the latest data from API for rendering
 	const displayData = requestDetails;
 
-	const getStatusColor = (status) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "#28a745";
-			case "checking":
-				return "#17a2b8";
-			case "quoted":
-				return "#ffc107";
-			case "confirmed":
-				return "#007bff";
-			case "cancelled":
-				return "#dc3545";
-			case "insufficient":
-				return "#fd7e14";
-			case "completed":
-				return "#6c757d";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "Đã gửi";
-			case "checking":
-				return "Đang xử lý";
-			case "quoted":
-				return "Đã báo giá";
-			case "confirmed":
-				return "Đã xác nhận";
-			case "cancelled":
-				return "Đã hủy";
-			case "insufficient":
-				return "Cập nhật";
-			case "completed":
-				return "Hoàn thành";
-			default:
-				return "Cập nhật";
-		}
-	};
-
-	const getRequestTypeIcon = (type) => {
-		return type === "with_link" ? "link-outline" : "create-outline";
-	};
-
-	const getRequestTypeBorderColor = (type) => {
-		return type === "with_link" ? "#42A5F5" : "#28a745";
-	};
+	// Debug: Log when displayData changes to track status updates
+	console.log("[RequestDetails] Display data updated:", {
+		requestId: requestId,
+		status: displayData?.status,
+		timestamp: new Date().toISOString(),
+	});
 
 	return (
 		<View style={styles.container}>
@@ -199,7 +155,7 @@ export default function RequestDetails({ navigation, route }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[
 					styles.scrollContent,
-					displayData?.status?.toLowerCase() === "quoted" &&
+					shouldShowQuotation(displayData?.status) &&
 						styles.scrollContentWithButton,
 				]}
 			>
@@ -212,21 +168,13 @@ export default function RequestDetails({ navigation, route }) {
 								<View style={styles.requestTypeContainer}>
 									<Ionicons
 										name={getRequestTypeIcon(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										)}
 										size={18}
 										color={getRequestTypeBorderColor(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										)}
 									/>
 								</View>
@@ -277,12 +225,8 @@ export default function RequestDetails({ navigation, route }) {
 									styles.typeValue,
 									{
 										color: getRequestTypeBorderColor(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										),
 									},
 								]}
@@ -518,46 +462,843 @@ export default function RequestDetails({ navigation, route }) {
 						return null;
 					})()}
 
-				{/* Product List */}
+				{/* Product List by Sub-Requests */}
 				<View style={styles.section}>
 					<View style={styles.sectionHeader}>
 						<Text style={styles.sectionTitle}>
 							Danh sách sản phẩm (
-							{displayData?.requestItems?.length ||
-								displayData?.items?.length ||
-								displayData?.products?.length ||
-								displayData?.productList?.length ||
-								displayData?.subRequests?.[0]?.requestItems
-									?.length ||
-								0}{" "}
+							{(() => {
+								// Calculate total products from all sources
+								if (displayData?.requestItems?.length > 0) {
+									return displayData.requestItems.length;
+								} else if (displayData?.items?.length > 0) {
+									return displayData.items.length;
+								} else if (displayData?.products?.length > 0) {
+									return displayData.products.length;
+								} else if (
+									displayData?.productList?.length > 0
+								) {
+									return displayData.productList.length;
+								} else if (
+									displayData?.subRequests?.length > 0
+								) {
+									let totalProducts = 0;
+									displayData.subRequests.forEach(
+										(subRequest) => {
+											if (
+												subRequest?.requestItems
+													?.length > 0
+											) {
+												totalProducts +=
+													subRequest.requestItems
+														.length;
+											}
+										}
+									);
+									return totalProducts;
+								}
+								return 0;
+							})()}{" "}
 							sản phẩm)
 						</Text>
 					</View>
 
-					{/* Check if we have any products */}
-					{displayData?.requestItems?.length > 0 ||
-					displayData?.items?.length > 0 ||
-					displayData?.products?.length > 0 ||
-					displayData?.productList?.length > 0 ||
-					displayData?.subRequests?.[0]?.requestItems?.length > 0 ? (
-						(() => {
-							// Find the product source
-							const productSource =
-								displayData?.requestItems?.length > 0
-									? displayData.requestItems
-									: displayData?.items?.length > 0
-									? displayData.items
-									: displayData?.products?.length > 0
-									? displayData.products
-									: displayData?.productList?.length > 0
-									? displayData.productList
-									: displayData?.subRequests?.[0]
-											?.requestItems?.length > 0
-									? displayData.subRequests[0].requestItems
-									: [];
+					{/* Check if we have sub-requests structure or direct products */}
+					{(() => {
+						// Method 1: If we have sub-requests, show by sub-request structure
+						if (displayData?.subRequests?.length > 0) {
+							return displayData.subRequests
+								.map((subRequest, subIndex) => {
+									if (!subRequest?.requestItems?.length)
+										return null;
 
-							return productSource.map((product, index) => {
-								// Determine product mode based on request type
+									// Check if this sub-request has quotation
+									const hasQuotation =
+										subRequest.requestItems.some(
+											(item) =>
+												item?.quotationDetail &&
+												Object.keys(
+													item.quotationDetail
+												).length > 0
+										);
+
+									// Check if request or sub-request is completed/paid
+									const isCompleted =
+										isRequestCompleted(
+											displayData?.status
+										) ||
+										isRequestCompleted(subRequest?.status);
+
+									// Debug: Log status values to understand actual values
+									console.log(
+										`[RequestDetails] Sub-request ${subIndex}:`,
+										{
+											displayDataStatus:
+												displayData?.status,
+											subRequestStatus:
+												subRequest?.status,
+											isCompleted: isCompleted,
+											hasQuotation: hasQuotation,
+										}
+									);
+
+									// Calculate sub-request total if has quotation
+									let subRequestTotal = 0;
+									if (hasQuotation) {
+										subRequest.requestItems.forEach(
+											(item) => {
+												if (
+													item?.quotationDetail
+														?.totalVNDPrice
+												) {
+													subRequestTotal +=
+														item.quotationDetail
+															.totalVNDPrice;
+												}
+											}
+										);
+									}
+									return (
+										<View
+											key={`sub-${subIndex}`}
+											style={styles.subRequestContainer}
+										>
+											{/* Sub-Request Header with Platform/Seller Info */}
+											<View
+												style={
+													styles.subRequestHeaderContainer
+												}
+											>
+												<View
+													style={
+														styles.subRequestHeaderLeft
+													}
+												>
+													<PlatformLogo
+														platform={
+															subRequest.platform ||
+															subRequest.ecommercePlatform
+														}
+														productUrl={
+															subRequest
+																.requestItems?.[0]
+																?.productURL ||
+															subRequest
+																.requestItems?.[0]
+																?.productLink ||
+															subRequest
+																.requestItems?.[0]
+																?.url
+														}
+														size={20}
+														color="#1976D2"
+													/>
+													<View
+														style={
+															styles.subRequestHeaderInfo
+														}
+													>
+														<Text
+															style={
+																styles.subRequestHeaderTitle
+															}
+														>
+															{subRequest.platform ||
+																subRequest.ecommercePlatform ||
+																"Tự tìm kiếm"}
+														</Text>
+														<Text
+															style={
+																styles.subRequestHeaderSubtitle
+															}
+														>
+															{
+																subRequest
+																	.requestItems
+																	.length
+															}{" "}
+															sản phẩm
+															{subRequest.seller &&
+																` • ${subRequest.seller}`}
+														</Text>
+													</View>
+												</View>
+												{(hasQuotation ||
+													isCompleted) && (
+													<View
+														style={
+															styles.subRequestHeaderRight
+														}
+													>
+														<View
+															style={[
+																styles.quotationBadge,
+																isCompleted && {
+																	backgroundColor:
+																		"#28a745",
+																},
+															]}
+														>
+															<Text
+																style={
+																	styles.quotationBadgeText
+																}
+															>
+																{isCompleted
+																	? "Đã thanh toán"
+																	: "Đã báo giá"}
+															</Text>
+														</View>
+													</View>
+												)}
+											</View>
+
+											{/* Products in this sub-request */}
+											<View
+												style={
+													styles.subRequestProductsContainer
+												}
+											>
+												{subRequest.requestItems.map(
+													(product, productIndex) => {
+														// Determine product mode based on request type
+														const productMode =
+															displayData?.requestType?.toLowerCase() ===
+																"online" ||
+															displayData?.type?.toLowerCase() ===
+																"online"
+																? "withLink"
+																: "manual";
+
+														// Parse variants array to extract color, size, and other info
+														const parseVariants = (
+															variants
+														) => {
+															if (
+																!variants ||
+																!Array.isArray(
+																	variants
+																)
+															)
+																return {};
+
+															const result = {};
+															variants.forEach(
+																(variant) => {
+																	if (
+																		typeof variant ===
+																		"string"
+																	) {
+																		if (
+																			variant.includes(
+																				"Màu sắc:"
+																			)
+																		) {
+																			result.color =
+																				variant
+																					.replace(
+																						"Màu sắc:",
+																						""
+																					)
+																					.trim();
+																		} else if (
+																			variant.includes(
+																				"Kích cỡ:"
+																			)
+																		) {
+																			result.size =
+																				variant
+																					.replace(
+																						"Kích cỡ:",
+																						""
+																					)
+																					.trim();
+																		} else if (
+																			variant.includes(
+																				"Chất liệu:"
+																			)
+																		) {
+																			result.material =
+																				variant
+																					.replace(
+																						"Chất liệu:",
+																						""
+																					)
+																					.trim();
+																		} else if (
+																			variant.includes(
+																				"Thương hiệu:"
+																			)
+																		) {
+																			result.brand =
+																				variant
+																					.replace(
+																						"Thương hiệu:",
+																						""
+																					)
+																					.trim();
+																		}
+																	}
+																}
+															);
+															return result;
+														};
+
+														const parsedVariants =
+															parseVariants(
+																product.variants
+															);
+
+														return (
+															<ProductCard
+																key={`${subIndex}-${productIndex}`}
+																id={
+																	product.id ||
+																	`${subIndex}-${productIndex}`
+																}
+																name={
+																	product.productName ||
+																	product.name ||
+																	"Sản phẩm không tên"
+																}
+																description={
+																	product.description ||
+																	product.productDescription
+																}
+																images={
+																	product.images ||
+																	product.productImages ||
+																	[]
+																}
+																price={
+																	productMode ===
+																	"manual"
+																		? ""
+																		: product.price ||
+																		  product.productPrice ||
+																		  ""
+																}
+																convertedPrice={
+																	productMode ===
+																	"manual"
+																		? ""
+																		: product.convertedPrice
+																}
+																exchangeRate={
+																	productMode ===
+																	"manual"
+																		? undefined
+																		: product.exchangeRate
+																}
+																category={
+																	product.category ||
+																	product.productCategory ||
+																	parsedVariants.category
+																}
+																brand={
+																	product.brand ||
+																	product.productBrand ||
+																	parsedVariants.brand
+																}
+																material={
+																	product.material ||
+																	product.productMaterial ||
+																	parsedVariants.material
+																}
+																size={
+																	product.size ||
+																	product.productSize ||
+																	parsedVariants.size
+																}
+																color={
+																	product.color ||
+																	product.productColor ||
+																	parsedVariants.color
+																}
+																platform={
+																	product.platform ||
+																	product.ecommercePlatform
+																}
+																productLink={
+																	product.productURL ||
+																	product.productLink ||
+																	product.url
+																}
+																quantity={
+																	product.quantity ||
+																	1
+																}
+																mode={
+																	productMode
+																}
+																sellerInfo={
+																	productMode ===
+																	"manual"
+																		? {
+																				name:
+																					product.sellerName ||
+																					"",
+																				phone:
+																					product.sellerPhone ||
+																					"",
+																				email:
+																					product.sellerEmail ||
+																					"",
+																				address:
+																					product.sellerAddress ||
+																					"",
+																				storeLink:
+																					product.sellerStoreLink ||
+																					"",
+																		  }
+																		: undefined
+																}
+															/>
+														);
+													}
+												)}
+											</View>
+
+											{/* Quotation for this sub-request */}
+											{(hasQuotation || isCompleted) &&
+												shouldShowQuotation(
+													displayData?.status
+												) && (
+													<View
+														style={
+															styles.subRequestQuotation
+														}
+													>
+														{/* Quotation Summary */}
+														<View
+															style={
+																styles.quotationSummaryContainer
+															}
+														>
+															<TouchableOpacity
+																style={
+																	styles.quotationSummaryHeader
+																}
+																onPress={() =>
+																	setExpandedQuotations(
+																		(
+																			prev
+																		) => ({
+																			...prev,
+																			[subIndex]:
+																				!prev[
+																					subIndex
+																				],
+																		})
+																	)
+																}
+																activeOpacity={
+																	0.7
+																}
+															>
+																<View
+																	style={
+																		styles.quotationSummaryLeft
+																	}
+																>
+																	<Ionicons
+																		name="receipt-outline"
+																		size={
+																			20
+																		}
+																		color="#1976D2"
+																	/>
+																	<Text
+																		style={
+																			styles.quotationSummaryTitle
+																		}
+																	>
+																		Báo giá
+																	</Text>
+																</View>
+																<View
+																	style={
+																		styles.quotationSummaryRight
+																	}
+																>
+																	<Text
+																		style={
+																			styles.quotationSummaryTotal
+																		}
+																	>
+																		{subRequestTotal.toLocaleString(
+																			"vi-VN"
+																		)}
+																		₫
+																	</Text>
+																	<Ionicons
+																		name={
+																			expandedQuotations[
+																				subIndex
+																			]
+																				? "chevron-up-outline"
+																				: "chevron-down-outline"
+																		}
+																		size={
+																			20
+																		}
+																		color="#666"
+																	/>
+																</View>
+															</TouchableOpacity>
+
+															{/* Expanded Quotation Details */}
+															{expandedQuotations[
+																subIndex
+															] && (
+																<View
+																	style={
+																		styles.quotationDetailsContainer
+																	}
+																>
+																	{subRequest.requestItems
+																		.map(
+																			(
+																				product,
+																				productIndex
+																			) => {
+																				const quotationDetail =
+																					product?.quotationDetail;
+																				if (
+																					!quotationDetail ||
+																					Object.keys(
+																						quotationDetail
+																					)
+																						.length ===
+																						0
+																				) {
+																					return null;
+																				}
+
+																				// Extract values from quotationDetail
+																				const basePrice =
+																					quotationDetail?.basePrice ||
+																					0;
+																				const serviceFee =
+																					quotationDetail?.serviceFee ||
+																					0;
+																				const totalTaxAmount =
+																					quotationDetail?.totalTaxAmount ||
+																					0;
+																				const totalVNDPrice =
+																					quotationDetail?.totalVNDPrice ||
+																					0;
+																				const exchangeRate =
+																					quotationDetail?.exchangeRate ||
+																					1;
+																				const currency =
+																					quotationDetail?.currency ||
+																					"USD";
+																				const taxRates =
+																					quotationDetail?.taxRates ||
+																					[];
+
+																				// Calculate VND values
+																				const productPriceVND =
+																					Math.round(
+																						basePrice *
+																							exchangeRate
+																					);
+																				const serviceFeeVND =
+																					Math.round(
+																						((serviceFee *
+																							exchangeRate) /
+																							100) *
+																							basePrice
+																					);
+																				const importTaxVND =
+																					Math.round(
+																						totalTaxAmount *
+																							exchangeRate
+																					);
+
+																				// Prepare tax details if available in quotationDetail
+																				const taxDetails =
+																					quotationDetail?.taxBreakdown
+																						? {
+																								importDuty:
+																									quotationDetail
+																										.taxBreakdown
+																										.importDuty ||
+																									0,
+																								vat:
+																									quotationDetail
+																										.taxBreakdown
+																										.vat ||
+																									0,
+																								specialConsumptionTax:
+																									quotationDetail
+																										.taxBreakdown
+																										.specialConsumptionTax ||
+																									0,
+																								environmentTax:
+																									quotationDetail
+																										.taxBreakdown
+																										.environmentTax ||
+																									0,
+																								totalTaxAmount:
+																									totalTaxAmount,
+																						  }
+																						: undefined;
+
+																				return (
+																					<View
+																						key={`${subIndex}-${productIndex}-quotation`}
+																						style={
+																							styles.quotationContainer
+																						}
+																					>
+																						<QuotationCard
+																							// Original price data
+																							originalProductPrice={
+																								basePrice
+																							}
+																							originalCurrency={
+																								currency
+																							}
+																							exchangeRate={
+																								exchangeRate
+																							}
+																							// VND converted prices
+																							productPrice={
+																								productPriceVND
+																							}
+																							serviceFee={
+																								serviceFeeVND
+																							}
+																							serviceFeePercent={
+																								serviceFee
+																							}
+																							internationalShipping={
+																								0
+																							} // Not specified in quotationDetail
+																							importTax={
+																								importTaxVND
+																							}
+																							domesticShipping={
+																								0
+																							} // Not specified in quotationDetail
+																							// Tax details (legacy format)
+																							taxDetails={
+																								taxDetails
+																							}
+																							// Tax rates from API
+																							taxRates={
+																								taxRates
+																							}
+																							// Total amount
+																							totalAmount={Math.round(
+																								totalVNDPrice
+																							)}
+																							additionalFees={
+																								undefined
+																							}
+																							updatedTotalAmount={
+																								undefined
+																							}
+																							isExpanded={
+																								false
+																							}
+																						/>
+																					</View>
+																				);
+																			}
+																		)
+																		.filter(
+																			Boolean
+																		)}
+																</View>
+															)}
+														</View>
+
+														{/* Payment Section for this sub-request - Only show if not completed */}
+														{!isCompleted && (
+															<View
+																style={
+																	styles.subRequestPayment
+																}
+															>
+																<View
+																	style={
+																		styles.subRequestCheckbox
+																	}
+																>
+																	<TouchableOpacity
+																		style={[
+																			styles.checkbox,
+																			acceptedQuotations[
+																				subIndex
+																			] &&
+																				styles.checkboxChecked,
+																		]}
+																		onPress={() =>
+																			setAcceptedQuotations(
+																				(
+																					prev
+																				) => ({
+																					...prev,
+																					[subIndex]:
+																						!prev[
+																							subIndex
+																						],
+																				})
+																			)
+																		}
+																		activeOpacity={
+																			0.7
+																		}
+																	>
+																		{acceptedQuotations[
+																			subIndex
+																		] && (
+																			<Ionicons
+																				name="checkmark"
+																				size={
+																					16
+																				}
+																				color="#FFFFFF"
+																			/>
+																		)}
+																	</TouchableOpacity>
+																	<Text
+																		style={
+																			styles.checkboxText
+																		}
+																	>
+																		Tôi đồng
+																		ý với
+																		báo giá
+																		này và
+																		chấp
+																		nhận phí
+																		phát
+																		sinh
+																		(nếu có)
+																	</Text>
+																</View>
+
+																<TouchableOpacity
+																	style={[
+																		styles.subRequestPayButton,
+																		!acceptedQuotations[
+																			subIndex
+																		] &&
+																			styles.subRequestPayButtonDisabled,
+																	]}
+																	onPress={() => {
+																		if (
+																			acceptedQuotations[
+																				subIndex
+																			]
+																		) {
+																			navigation.navigate(
+																				"ConfirmQuotation",
+																				{
+																					request:
+																						displayData,
+																					subRequest:
+																						subRequest,
+																					subRequestIndex:
+																						subIndex,
+																				}
+																			);
+																		}
+																	}}
+																	disabled={
+																		!acceptedQuotations[
+																			subIndex
+																		]
+																	}
+																	activeOpacity={
+																		0.7
+																	}
+																>
+																	<Text
+																		style={[
+																			styles.subRequestPayButtonText,
+																			!acceptedQuotations[
+																				subIndex
+																			] &&
+																				styles.subRequestPayButtonTextDisabled,
+																		]}
+																	>
+																		Thanh
+																		toán
+																	</Text>
+																</TouchableOpacity>
+															</View>
+														)}
+
+														{/* Completed status message */}
+														{isCompleted && (
+															<View
+																style={
+																	styles.completedStatusContainer
+																}
+															>
+																<View
+																	style={
+																		styles.completedStatusBadge
+																	}
+																>
+																	<Ionicons
+																		name="checkmark-circle"
+																		size={
+																			20
+																		}
+																		color="#28a745"
+																	/>
+																	<Text
+																		style={
+																			styles.completedStatusText
+																		}
+																	>
+																		Đã thanh
+																		toán
+																		thành
+																		công
+																	</Text>
+																</View>
+															</View>
+														)}
+													</View>
+												)}
+										</View>
+									);
+								})
+								.filter(Boolean);
+						}
+
+						// Method 2: Fallback for direct product arrays (legacy support)
+						else {
+							let allProducts = [];
+							if (displayData?.requestItems?.length > 0) {
+								allProducts = displayData.requestItems;
+							} else if (displayData?.items?.length > 0) {
+								allProducts = displayData.items;
+							} else if (displayData?.products?.length > 0) {
+								allProducts = displayData.products;
+							} else if (displayData?.productList?.length > 0) {
+								allProducts = displayData.productList;
+							}
+
+							if (allProducts.length === 0) {
+								return (
+									<View style={styles.emptyProductContainer}>
+										<Text style={styles.emptyProductText}>
+											Chưa có sản phẩm nào trong yêu cầu
+											này
+										</Text>
+									</View>
+								);
+							}
+
+							return allProducts.map((product, index) => {
 								const productMode =
 									displayData?.requestType?.toLowerCase() ===
 										"online" ||
@@ -701,159 +1442,107 @@ export default function RequestDetails({ navigation, route }) {
 									/>
 								);
 							});
-						})()
-					) : (
-						<View style={styles.emptyProductContainer}>
-							<Text style={styles.emptyProductText}>
-								Chưa có sản phẩm nào trong yêu cầu này
-							</Text>
-						</View>
-					)}
+						}
+					})()}
 
 					{/* Divider */}
 					<View style={styles.divider} />
 				</View>
-
-				{/* Quotation Card - Show only for quoted or confirmed requests */}
-				{(displayData?.status?.toLowerCase() === "quoted" ||
-					displayData?.status?.toLowerCase() === "confirmed") &&
-					(() => {
-						// Get quotation data from the first product's quotationDetail
-						const firstProduct =
-							displayData?.subRequests?.[0]?.requestItems?.[0];
-						const quotationDetail =
-							firstProduct?.quotationDetail || {};
-
-						// Extract values from quotationDetail
-						const basePrice = quotationDetail?.basePrice || 0;
-						const serviceFee = quotationDetail?.serviceFee || 0;
-						const totalTaxAmount =
-							quotationDetail?.totalTaxAmount || 0;
-						const totalVNDPrice =
-							quotationDetail?.totalVNDPrice || 0;
-						const exchangeRate = quotationDetail?.exchangeRate || 1;
-						const currency = quotationDetail?.currency || "USD";
-						const taxRates = quotationDetail?.taxRates || [];
-
-						// Calculate VND values
-						const productPriceVND = Math.round(
-							basePrice * exchangeRate
-						);
-						const serviceFeeVND = Math.round(
-							((serviceFee * exchangeRate) / 100) * basePrice
-						);
-						const importTaxVND = Math.round(
-							totalTaxAmount * exchangeRate
-						);
-
-						// Prepare tax details if available in quotationDetail
-						const taxDetails = quotationDetail?.taxBreakdown
-							? {
-									importDuty:
-										quotationDetail.taxBreakdown
-											.importDuty || 0,
-									vat: quotationDetail.taxBreakdown.vat || 0,
-									specialConsumptionTax:
-										quotationDetail.taxBreakdown
-											.specialConsumptionTax || 0,
-									environmentTax:
-										quotationDetail.taxBreakdown
-											.environmentTax || 0,
-									totalTaxAmount: totalTaxAmount,
-							  }
-							: undefined;
-
-						return (
-							<View style={styles.section}>
-								<QuotationCard
-									// Original price data
-									originalProductPrice={basePrice}
-									originalCurrency={currency}
-									exchangeRate={exchangeRate}
-									// VND converted prices
-									productPrice={productPriceVND}
-									serviceFee={serviceFeeVND}
-									serviceFeePercent={serviceFee}
-									internationalShipping={0} // Not specified in quotationDetail
-									importTax={importTaxVND}
-									domesticShipping={0} // Not specified in quotationDetail
-									// Tax details (legacy format)
-									taxDetails={taxDetails}
-									// Tax rates from API
-									taxRates={taxRates}
-									// Total amount
-									totalAmount={Math.round(totalVNDPrice)}
-									additionalFees={undefined}
-									updatedTotalAmount={undefined}
-									isExpanded={true}
-								/>
-							</View>
-						);
-					})()}
-
-				{/* Payment Agreement Checkbox - Show only for quoted requests */}
-				{displayData?.status?.toLowerCase() === "quoted" && (
-					<View style={styles.checkboxSection}>
-						<View style={styles.checkboxContainer}>
-							<TouchableOpacity
-								style={[
-									styles.checkbox,
-									isAcceptedQuotation &&
-										styles.checkboxChecked,
-								]}
-								onPress={() =>
-									setIsAcceptedQuotation(!isAcceptedQuotation)
-								}
-								activeOpacity={0.7}
-							>
-								{isAcceptedQuotation && (
-									<Ionicons
-										name="checkmark"
-										size={16}
-										color="#FFFFFF"
-									/>
-								)}
-							</TouchableOpacity>
-							<Text style={styles.checkboxText}>
-								Tôi đồng ý với giá tạm thời này và chấp nhận phí
-								phát sinh (nếu có)
-							</Text>
-						</View>
-					</View>
-				)}
 			</ScrollView>
 
-			{/* Fixed Payment Button - Show only for quoted requests */}
-			{displayData?.status?.toLowerCase() === "quoted" && (
-				<View style={styles.fixedButtonContainer}>
-					<TouchableOpacity
-						style={[
-							styles.fixedPaymentButton,
-							!isAcceptedQuotation &&
-								styles.fixedPaymentButtonDisabled,
-						]}
-						onPress={() => {
-							if (isAcceptedQuotation) {
-								navigation.navigate("ConfirmQuotation", {
-									request: displayData,
-								});
-							}
-						}}
-						disabled={!isAcceptedQuotation}
-						activeOpacity={0.7}
-					>
-						<Text
-							style={[
-								styles.fixedPaymentButtonText,
-								!isAcceptedQuotation &&
-									styles.fixedPaymentButtonTextDisabled,
-							]}
-						>
-							Thanh toán
-						</Text>
-					</TouchableOpacity>
-				</View>
-			)}
+			{/* Action Buttons - Show based on request status */}
+			{(() => {
+				const status = displayData?.status?.toLowerCase();
+				console.log(
+					`[RequestDetails] Request status for buttons: "${status}"`
+				);
+
+				// Show cancel button for "sent" and "checking" status
+				if (status === "sent" || status === "checking") {
+					return (
+						<View style={styles.actionButtonContainer}>
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.cancelButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Cancel request:",
+										displayData?.id
+									);
+									// TODO: Implement cancel request API call
+								}}
+							>
+								<Ionicons
+									name="close-outline"
+									size={18}
+									color="#dc3545"
+								/>
+								<Text style={styles.cancelButtonText}>
+									Hủy yêu cầu
+								</Text>
+							</TouchableOpacity>
+						</View>
+					);
+				}
+
+				// Show both cancel and update buttons for "insufficient" status
+				if (status === "insufficient") {
+					return (
+						<View style={styles.actionButtonContainer}>
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.cancelButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Cancel request:",
+										displayData?.id
+									);
+									// TODO: Implement cancel request API call
+								}}
+							>
+								<Ionicons
+									name="close-outline"
+									size={18}
+									color="#dc3545"
+								/>
+								<Text style={styles.cancelButtonText}>
+									Hủy yêu cầu
+								</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.updateButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Update request:",
+										displayData?.id
+									);
+									// TODO: Navigate to update request screen
+								}}
+							>
+								<Ionicons
+									name="create-outline"
+									size={18}
+									color="#1976D2"
+								/>
+								<Text style={styles.updateButtonText}>
+									Cập nhật
+								</Text>
+							</TouchableOpacity>
+						</View>
+					);
+				}
+
+				// No buttons for other statuses
+				return null;
+			})()}
 		</View>
 	);
 }
@@ -946,7 +1635,6 @@ const styles = StyleSheet.create({
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
 	typeSection: {
@@ -1212,5 +1900,382 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#666",
 		fontStyle: "italic",
+	},
+	// No Quotation Styles
+	noQuotationContainer: {
+		backgroundColor: "#f8f9fa",
+		padding: 40,
+		borderRadius: 12,
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		borderStyle: "dashed",
+	},
+	noQuotationText: {
+		fontSize: 16,
+		color: "#666",
+		fontStyle: "italic",
+		marginTop: 12,
+		textAlign: "center",
+	},
+	// Sub-request Styles
+	subRequestHeader: {
+		backgroundColor: "#f8f9fa",
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 12,
+		borderLeftWidth: 3,
+		borderLeftColor: "#1976D2",
+	},
+	subRequestTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 4,
+	},
+	subRequestInfo: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	subRequestProducts: {
+		fontSize: 13,
+		color: "#666",
+	},
+	subRequestTotal: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#D32F2F",
+	},
+	// Quotation Container Styles
+	quotationContainer: {
+		marginBottom: 12,
+	},
+	quotationHeader: {
+		backgroundColor: "#fff",
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 8,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	quotationProductName: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 4,
+	},
+	quotationProductQuantity: {
+		fontSize: 12,
+		color: "#666",
+	},
+	// Sub-request Payment Styles
+	subRequestPayment: {
+		backgroundColor: "#fff",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	subRequestCheckbox: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		gap: 12,
+		marginBottom: 16,
+	},
+	subRequestPayButton: {
+		backgroundColor: "#1976D2",
+		borderRadius: 8,
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	subRequestPayButtonDisabled: {
+		backgroundColor: "#E0E0E0",
+	},
+	subRequestPayButtonText: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	subRequestPayButtonTextDisabled: {
+		color: "#9E9E9E",
+	},
+	// Completed Status Styles
+	completedStatusContainer: {
+		backgroundColor: "#f8fff8",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#d4edda",
+	},
+	completedStatusBadge: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 8,
+	},
+	completedStatusText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#28a745",
+	},
+	// Quotation Summary Styles
+	quotationSummaryContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		marginBottom: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		overflow: "hidden",
+	},
+	quotationSummaryHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		padding: 16,
+		backgroundColor: "#f8f9fa",
+	},
+	quotationSummaryLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+		gap: 8,
+	},
+	quotationSummaryTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+	},
+	quotationSummaryBadge: {
+		backgroundColor: "#1976D2",
+		borderRadius: 12,
+		paddingHorizontal: 8,
+		paddingVertical: 2,
+	},
+	quotationSummaryBadgeText: {
+		fontSize: 12,
+		color: "#fff",
+		fontWeight: "500",
+	},
+	quotationSummaryRight: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+	},
+	quotationSummaryTotal: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#D32F2F",
+	},
+	quotationDetailsContainer: {
+		padding: 16,
+		paddingTop: 0,
+	},
+	// Sub-request Container Styles
+	subRequestContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 12,
+		marginBottom: 16,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		overflow: "hidden",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.08,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	subRequestHeaderContainer: {
+		backgroundColor: "#f8f9fa",
+		padding: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#E5E5E5",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	subRequestHeaderLeft: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+		gap: 10,
+	},
+	subRequestHeaderInfo: {
+		flex: 1,
+	},
+	subRequestHeaderTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 2,
+	},
+	subRequestHeaderSubtitle: {
+		fontSize: 13,
+		color: "#666",
+		fontWeight: "500",
+	},
+	subRequestHeaderRight: {
+		alignItems: "flex-end",
+	},
+	quotationBadge: {
+		backgroundColor: "#28a745",
+		borderRadius: 12,
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 4,
+	},
+	quotationBadgeText: {
+		fontSize: 12,
+		color: "#fff",
+		fontWeight: "600",
+	},
+	subRequestProductsContainer: {
+		padding: 16,
+	},
+	subRequestQuotation: {
+		paddingHorizontal: 16,
+		paddingBottom: 16,
+	},
+	subRequestTitleRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		marginBottom: 8,
+	},
+	subRequestMainTitle: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#333",
+		flex: 1,
+	},
+	subRequestBadge: {
+		backgroundColor: "#1976D2",
+		borderRadius: 10,
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		marginLeft: 8,
+	},
+	subRequestBadgeText: {
+		fontSize: 12,
+		color: "#fff",
+		fontWeight: "600",
+	},
+	subRequestMetaRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	subRequestProductCount: {
+		fontSize: 13,
+		color: "#666",
+		fontWeight: "500",
+	},
+	subRequestTotalAmount: {
+		fontSize: 15,
+		fontWeight: "700",
+		color: "#D32F2F",
+	},
+	subRequestContentContainer: {
+		padding: 16,
+	},
+	productItemContainer: {
+		backgroundColor: "#f8f9fa",
+		borderRadius: 8,
+		padding: 12,
+		marginBottom: 12,
+		borderLeftWidth: 3,
+		borderLeftColor: "#42A5F5",
+	},
+	productItemHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		marginBottom: 8,
+	},
+	productItemName: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#333",
+		flex: 1,
+		marginRight: 8,
+	},
+	productItemQuantity: {
+		fontSize: 12,
+		color: "#666",
+		backgroundColor: "#fff",
+		paddingHorizontal: 8,
+		paddingVertical: 2,
+		borderRadius: 6,
+		fontWeight: "500",
+	},
+	productItemDetails: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	productItemDetail: {
+		fontSize: 12,
+		color: "#666",
+	},
+	actionButtonContainer: {
+		flexDirection: "row",
+		paddingHorizontal: 18,
+		paddingVertical: 16,
+		paddingBottom: 30,
+		backgroundColor: "#ffffff",
+		borderTopWidth: 1,
+		borderTopColor: "#e9ecef",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 3,
+		gap: 12,
+	},
+	actionButton: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: 12,
+		gap: 8,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 2,
+	},
+	cancelButton: {
+		backgroundColor: "#ffebee",
+		borderWidth: 1.5,
+		borderColor: "#dc3545",
+	},
+	cancelButtonText: {
+		color: "#dc3545",
+		fontSize: 16,
+		fontWeight: "700",
+		letterSpacing: 0.3,
+	},
+	updateButton: {
+		backgroundColor: "#e3f2fd",
+		borderWidth: 1.5,
+		borderColor: "#1976D2",
+	},
+	updateButtonText: {
+		color: "#1976D2",
+		fontSize: 16,
+		fontWeight: "700",
+		letterSpacing: 0.3,
 	},
 });
