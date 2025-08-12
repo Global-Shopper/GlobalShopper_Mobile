@@ -3,7 +3,13 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
-import { formatDate, getStatusColor } from "../../utils/statusHandler.js";
+import {
+	formatDate,
+	getRequestTypeText,
+	getShortId,
+	getStatusColor,
+	getStatusText,
+} from "../../utils/statusHandler.js";
 
 export default function RequestHistory({ navigation, route }) {
 	const { request } = route.params || {};
@@ -33,61 +39,10 @@ export default function RequestHistory({ navigation, route }) {
 	// Use API data if available, fallback to route params
 	const currentRequest = requestDetail || request;
 
-	// Helper function to get shortened UUID like RequestScreen
-	const getShortId = (fullId) => {
-		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return "#" + fullId.split("-")[0];
-		}
-		return "#" + fullId;
-	};
-
-	// Helper function to get request type text
-	const getRequestTypeText = (type) => {
-		console.log("Getting request type text for:", type);
-
-		if (!type) {
-			return "Loại yêu cầu không xác định";
-		}
-
-		switch (type?.toLowerCase()) {
-			case "offline":
-				return "Hàng nội địa/quốc tế";
-			case "online":
-				return "Hàng từ nền tảng e-commerce";
-			case "domestic":
-				return "Hàng nội địa";
-			case "international":
-				return "Hàng quốc tế";
-			case "ecommerce":
-			case "e-commerce":
-				return "Hàng từ nền tảng e-commerce";
-			default:
-				return `Loại: ${type}`;
-		}
-	};
-
-	// Helper function to get action text from status
-	const getActionFromStatus = (status) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "Đã gửi";
-			case "checking":
-				return "Đang xử lý";
-			case "quoted":
-				return "Đã báo giá";
-			case "confirmed":
-				return "Đã xác nhận";
-			case "cancelled":
-				return "Đã hủy";
-			case "insufficient":
-				return "Cập nhật";
-			case "completed":
-				return "Hoàn thành";
-			default:
-				return "Cập nhật";
-		}
-	};
+	// Remove local functions - use statusHandler instead
+	// const getShortId = ... (removed, using statusHandler)
+	// const getRequestTypeText = ... (removed, using statusHandler)
+	// const getActionFromStatus = ... (removed, using getStatusText from statusHandler)
 
 	// Format history data from API response
 	const formatHistoryFromAPI = (requestData) => {
@@ -100,13 +55,10 @@ export default function RequestHistory({ navigation, route }) {
 			return requestData.history.map((item, index) => ({
 				id: item.id || index.toString(),
 				date: formatDate(item.createdAt || item.timestamp || item.date),
-				action:
-					getActionFromStatus(item.status) ||
-					item.action ||
-					"Cập nhật",
+				action: getStatusText(item.status) || item.action || "Cập nhật",
 				description:
 					item.description ||
-					`Cập nhật trạng thái: ${getActionFromStatus(item.status)}`,
+					`Cập nhật trạng thái: ${getStatusText(item.status)}`,
 				status: item.status || "completed",
 				isCurrent: index === 0, // First item is always current
 			}));
@@ -139,8 +91,8 @@ export default function RequestHistory({ navigation, route }) {
 						requestData?.createdAt ||
 						new Date().toISOString()
 				),
-				action: getActionFromStatus(requestData.status),
-				description: `Yêu cầu hiện tại ở trạng thái: ${getActionFromStatus(
+				action: getStatusText(requestData.status),
+				description: `Yêu cầu hiện tại ở trạng thái: ${getStatusText(
 					requestData.status
 				)}`,
 				status: requestData.status,
@@ -226,14 +178,13 @@ export default function RequestHistory({ navigation, route }) {
 												currentRequest?.type ||
 													currentRequest?.requestType ||
 													currentRequest?.category ||
-													currentRequest?.purchaseType
+													currentRequest?.purchaseType,
+												"history"
 											)}
 										</Text>
 									</View>
 									<Text style={styles.currentStatusText}>
-										{getActionFromStatus(
-											currentRequest?.status
-										)}
+										{getStatusText(currentRequest?.status)}
 									</Text>
 								</View>
 							</View>

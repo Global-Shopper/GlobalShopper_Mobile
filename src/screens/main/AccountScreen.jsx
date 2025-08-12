@@ -8,6 +8,7 @@ import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { signout } from "../../features/user";
 import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
+import { getStatusText, REQUEST_STATUS } from "../../utils/statusHandler";
 
 export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
@@ -78,7 +79,7 @@ export default function AccountScreen({ navigation }) {
 			icon: "clipboard",
 			color: "#667eea",
 			value: requestCount.toString(),
-			subtitle: "Đang xử lý",
+			subtitle: getStatusText(REQUEST_STATUS.CHECKING),
 		},
 		{
 			id: 2,
@@ -86,7 +87,7 @@ export default function AccountScreen({ navigation }) {
 			icon: "bag-check",
 			color: "#f093fb",
 			value: orderCount.toString(),
-			subtitle: "Hoàn thành",
+			subtitle: getStatusText(REQUEST_STATUS.COMPLETED),
 		},
 	];
 

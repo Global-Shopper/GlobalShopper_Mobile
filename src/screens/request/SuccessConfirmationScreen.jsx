@@ -10,6 +10,7 @@ import {
 	View,
 } from "react-native";
 import { Text } from "../../components/ui/text";
+import { getStatusText, getStatusColor, REQUEST_STATUS } from "../../utils/statusHandler";
 
 export default function SuccessConfirmationScreen({ navigation, route }) {
 	const { requestId = "REQ" + Date.now() } = route.params || {};
@@ -56,11 +57,11 @@ export default function SuccessConfirmationScreen({ navigation, route }) {
 			index: 0,
 			routes: [{ name: "Tabs" }],
 		});
-		
+
 		// After a short delay, navigate to the specific tab
 		setTimeout(() => {
 			navigation.navigate("Tabs", {
-				screen: "Request"
+				screen: "Request",
 			});
 		}, 100);
 	};
@@ -149,14 +150,20 @@ export default function SuccessConfirmationScreen({ navigation, route }) {
 
 						<View style={styles.infoRow}>
 							<Text style={styles.infoLabel}>Trạng thái:</Text>
-							<View style={styles.statusBadge}>
+							<View style={[
+								styles.statusBadge,
+								{ backgroundColor: getStatusColor(REQUEST_STATUS.CHECKING) + '20' }
+							]}>
 								<Ionicons
 									name="hourglass-outline"
 									size={14}
-									color="#FF9800"
+									color={getStatusColor(REQUEST_STATUS.CHECKING)}
 								/>
-								<Text style={styles.statusText}>
-									Đang xử lý
+								<Text style={[
+									styles.statusText,
+									{ color: getStatusColor(REQUEST_STATUS.CHECKING) }
+								]}>
+									{getStatusText(REQUEST_STATUS.CHECKING)}
 								</Text>
 							</View>
 						</View>

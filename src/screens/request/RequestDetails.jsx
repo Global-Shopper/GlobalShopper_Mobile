@@ -15,6 +15,7 @@ import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 import {
+	canPayRequest,
 	formatDate,
 	getRequestTypeBorderColor,
 	getRequestTypeIcon,
@@ -22,6 +23,7 @@ import {
 	getShortId,
 	getStatusColor,
 	getStatusText,
+	shouldShowQuotation,
 } from "../../utils/statusHandler";
 
 export default function RequestDetails({ navigation, route }) {
@@ -99,9 +101,7 @@ export default function RequestDetails({ navigation, route }) {
 	}
 
 	// Use the correct data for rendering
-	const displayData = requestDetails;
-
-	// Show error state
+	const displayData = requestDetails; // Show error state
 	if (error || !requestDetails) {
 		return (
 			<View style={styles.container}>
@@ -148,7 +148,7 @@ export default function RequestDetails({ navigation, route }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[
 					styles.scrollContent,
-					displayData?.status?.toLowerCase() === "quoted" &&
+					shouldShowQuotation(displayData?.status) &&
 						styles.scrollContentWithButton,
 				]}
 			>
@@ -161,21 +161,13 @@ export default function RequestDetails({ navigation, route }) {
 								<View style={styles.requestTypeContainer}>
 									<Ionicons
 										name={getRequestTypeIcon(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										)}
 										size={18}
 										color={getRequestTypeBorderColor(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										)}
 									/>
 								</View>
@@ -226,12 +218,8 @@ export default function RequestDetails({ navigation, route }) {
 									styles.typeValue,
 									{
 										color: getRequestTypeBorderColor(
-											displayData?.requestType?.toLowerCase() ===
-												"online" ||
-												displayData?.type?.toLowerCase() ===
-													"online"
-												? "with_link"
-												: "without_link"
+											displayData?.requestType ||
+												displayData?.type
 										),
 									},
 								]}
@@ -663,9 +651,8 @@ export default function RequestDetails({ navigation, route }) {
 					<View style={styles.divider} />
 				</View>
 
-				{/* Quotation Card - Show only for quoted or confirmed requests */}
-				{(displayData?.status?.toLowerCase() === "quoted" ||
-					displayData?.status?.toLowerCase() === "confirmed") &&
+				{/* Quotation Card - Show for requests with quotation */}
+				{shouldShowQuotation(displayData?.status) &&
 					(() => {
 						// Get quotation data from the first product's quotationDetail
 						const firstProduct =
@@ -741,7 +728,7 @@ export default function RequestDetails({ navigation, route }) {
 					})()}
 
 				{/* Payment Agreement Checkbox - Show only for quoted requests */}
-				{displayData?.status?.toLowerCase() === "quoted" && (
+				{canPayRequest(displayData?.status) && (
 					<View style={styles.checkboxSection}>
 						<View style={styles.checkboxContainer}>
 							<TouchableOpacity
@@ -773,7 +760,7 @@ export default function RequestDetails({ navigation, route }) {
 			</ScrollView>
 
 			{/* Fixed Payment Button - Show only for quoted requests */}
-			{displayData?.status?.toLowerCase() === "quoted" && (
+			{canPayRequest(displayData?.status) && (
 				<View style={styles.fixedButtonContainer}>
 					<TouchableOpacity
 						style={[
@@ -895,7 +882,6 @@ const styles = StyleSheet.create({
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
 	typeSection: {

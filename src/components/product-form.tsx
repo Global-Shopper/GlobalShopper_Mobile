@@ -302,7 +302,7 @@ export default function ProductForm({
 				if (cloudinaryUrl) {
 					// Hide loading dialog
 					hideDialog();
-					
+
 					const updatedData = {
 						...formData,
 						images: [...formData.images, cloudinaryUrl],

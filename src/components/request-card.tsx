@@ -1,5 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	formatDate,
+	getRequestTypeBorderColor,
+	getRequestTypeIcon,
+	getShortId,
+	getStatusColor,
+	getStatusText,
+} from "../utils/statusHandler";
 import { Text } from "./ui/text";
 
 interface RequestCardProps {
@@ -49,56 +57,14 @@ export default function RequestCard({
 			}
 		}
 
-		// For all requests (ONLINE without code and OFFLINE), use shortened ID
-		const fullId = request.id;
-		const shortenedId = fullId ? fullId.split("-")[0] : "N/A";
-		return `#${shortenedId}`;
+		// For all requests (ONLINE without code and OFFLINE), use getShortId from statusHandler
+		return getShortId(request.id);
 	};
-	const getStatusColor = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "#28a745";
-			case "checking":
-				return "#17a2b8";
-			case "quoted":
-				return "#ffc107";
-			case "confirmed":
-				return "#007bff";
-			case "cancelled":
-				return "#dc3545";
-			case "insufficient":
-				return "#fd7e14";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "sent":
-				return "Đã gửi";
-			case "checking":
-				return "Đang xử lý";
-			case "quoted":
-				return "Đã báo giá";
-			case "confirmed":
-				return "Đã xác nhận";
-			case "cancelled":
-				return "Đã hủy";
-			case "insufficient":
-				return "Cập nhật";
-			default:
-				return "Không xác định";
-		}
-	};
-
-	const getRequestTypeIcon = (type: string) => {
-		return type === "ONLINE" ? "link-outline" : "create-outline";
-	};
-
-	const getRequestTypeBorderColor = (type: string) => {
-		return type === "ONLINE" ? "#42A5F5" : "#28a745";
-	};
+	// Remove local status functions and use imported ones from statusHandler
+	// const getStatusColor = ... (removed)
+	// const getStatusText = ... (removed)
+	// const getRequestTypeIcon = ... (removed)
+	// const getRequestTypeBorderColor = ... (removed)
 
 	const getProductDisplayInfo = (request: any) => {
 		if (request.requestType === "ONLINE") {
@@ -269,10 +235,14 @@ export default function RequestCard({
 				<View style={styles.leftSection}>
 					<View style={styles.requestTypeContainer}>
 						<Ionicons
-							name={getRequestTypeIcon(request.requestType)}
+							name={
+								getRequestTypeIcon(
+									request.requestType?.toLowerCase() || ""
+								) as any
+							}
 							size={26}
 							color={getRequestTypeBorderColor(
-								request.requestType
+								request.requestType?.toLowerCase() || ""
 							)}
 						/>
 					</View>
@@ -282,16 +252,7 @@ export default function RequestCard({
 							{getRequestTitle(request)}
 						</Text>
 						<Text style={styles.createdDate}>
-							{new Date(
-								Number(request.createdAt)
-							).toLocaleDateString("vi-VN")}{" "}
-							-{" "}
-							{new Date(
-								Number(request.createdAt)
-							).toLocaleTimeString(["vi-VN"], {
-								hour: "2-digit",
-								minute: "2-digit",
-							})}
+							{formatDate(request.createdAt)}
 						</Text>
 					</View>
 				</View>
@@ -456,7 +417,6 @@ const styles = StyleSheet.create({
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		textTransform: "uppercase",
 		letterSpacing: 0.5,
 	},
 	productInfoSection: {

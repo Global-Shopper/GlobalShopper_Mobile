@@ -4,13 +4,13 @@ import { CLOUDINARY_NAME, CLOUDINARY_UPLOAD_PRESET } from "../const/urlconst";
 export const uploadToCloudinary = async (file) => {
 	console.log("CLOUDINARY_NAME:", CLOUDINARY_NAME);
 	console.log("CLOUDINARY_UPLOAD_PRESET:", CLOUDINARY_UPLOAD_PRESET);
-	
+
 	// Validate inputs
 	if (!CLOUDINARY_NAME || !CLOUDINARY_UPLOAD_PRESET) {
 		console.error("Missing Cloudinary configuration");
 		return null;
 	}
-	
+
 	if (!file || !file.uri) {
 		console.error("Invalid file object");
 		return null;
@@ -26,11 +26,11 @@ export const uploadToCloudinary = async (file) => {
 			formData,
 			{
 				headers: {
-					'Content-Type': 'multipart/form-data',
+					"Content-Type": "multipart/form-data",
 				},
 			}
 		);
-		
+
 		console.log("Upload successful:", response.data.secure_url);
 		return response.data.secure_url || response.data.url; // Prefer secure_url (HTTPS)
 	} catch (error) {
