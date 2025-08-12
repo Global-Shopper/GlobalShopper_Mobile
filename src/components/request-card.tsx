@@ -21,7 +21,16 @@ interface RequestCardProps {
 			| "quoted"
 			| "confirmed"
 			| "cancelled"
-			| "insufficient";
+			| "insufficient"
+			| "SENT"
+			| "CHECKING"
+			| "QUOTED"
+			| "CONFIRMED"
+			| "CANCELLED"
+			| "INSUFFICIENT"
+			| "paid"
+			| "success"
+			| "completed";
 		date: number;
 		createdAt: string;
 		requestType: "ONLINE" | "OFFLINE";
@@ -71,25 +80,44 @@ export default function RequestCard({
 		let allProducts: any[] = [];
 
 		// Method 1: Try requestItems first (common in early stages like sent, checking)
-		if (Array.isArray(request.requestItems) && request.requestItems.length > 0) {
+		if (
+			Array.isArray(request.requestItems) &&
+			request.requestItems.length > 0
+		) {
 			allProducts = [...request.requestItems];
 		}
 		// Method 2: If no requestItems, get products from subRequests (common in later stages)
-		else if (Array.isArray(request.subRequests) && request.subRequests.length > 0) {
+		else if (
+			Array.isArray(request.subRequests) &&
+			request.subRequests.length > 0
+		) {
 			request.subRequests.forEach((subReq: any) => {
-				if (Array.isArray(subReq.requestItems) && subReq.requestItems.length > 0) {
+				if (
+					Array.isArray(subReq.requestItems) &&
+					subReq.requestItems.length > 0
+				) {
 					allProducts = [...allProducts, ...subReq.requestItems];
 				}
 			});
 		}
 
 		// If we still have no products, try fallback for offline requests
-		if (allProducts.length === 0 && request.requestType === "OFFLINE" && Array.isArray(request.subRequests)) {
+		if (
+			allProducts.length === 0 &&
+			request.requestType === "OFFLINE" &&
+			Array.isArray(request.subRequests)
+		) {
 			// Fallback to store name for offline requests with no products
 			const firstSub = request.subRequests[0];
-			if (firstSub && Array.isArray(firstSub.contactInfo) && firstSub.contactInfo.length > 0) {
-				const storeInfo = firstSub.contactInfo.find((info: string) =>
-					info.includes("Tên cửa hàng:") || info.includes("Store:")
+			if (
+				firstSub &&
+				Array.isArray(firstSub.contactInfo) &&
+				firstSub.contactInfo.length > 0
+			) {
+				const storeInfo = firstSub.contactInfo.find(
+					(info: string) =>
+						info.includes("Tên cửa hàng:") ||
+						info.includes("Store:")
 				);
 
 				if (storeInfo) {
@@ -109,10 +137,15 @@ export default function RequestCard({
 
 		// Always show product names regardless of status
 		const firstProduct = allProducts[0];
-		const firstName = firstProduct.productName || firstProduct.name || "Sản phẩm không tên";
+		const firstName =
+			firstProduct.productName ||
+			firstProduct.name ||
+			"Sản phẩm không tên";
 
 		// Debug: Log product count to understand the issue
-		console.log(`[RequestCard] Request ${request.id}: Found ${allProducts.length} products`);
+		console.log(
+			`[RequestCard] Request ${request.id}: Found ${allProducts.length} products`
+		);
 
 		if (allProducts.length === 1) {
 			return firstName;
@@ -123,18 +156,7 @@ export default function RequestCard({
 	};
 
 	return (
-		<TouchableOpacity
-			style={[
-				styles.requestCard,
-				{
-					borderLeftWidth: 4,
-					borderLeftColor: getRequestTypeBorderColor(
-						request.requestType
-					),
-				},
-			]}
-			onPress={onPress}
-		>
+		<TouchableOpacity style={styles.requestCard} onPress={onPress}>
 			{/* Header Section */}
 			<View style={styles.cardHeader}>
 				<View style={styles.leftSection}>
@@ -145,7 +167,7 @@ export default function RequestCard({
 									request.requestType?.toLowerCase() || ""
 								) as any
 							}
-							size={26}
+							size={22}
 							color={getRequestTypeBorderColor(
 								request.requestType?.toLowerCase() || ""
 							)}
@@ -199,14 +221,26 @@ export default function RequestCard({
 							let allProducts: any[] = [];
 
 							// Method 1: Try requestItems first (avoid duplicates)
-							if (Array.isArray(request.requestItems) && request.requestItems.length > 0) {
+							if (
+								Array.isArray(request.requestItems) &&
+								request.requestItems.length > 0
+							) {
 								allProducts = [...request.requestItems];
 							}
 							// Method 2: If no requestItems, get from subRequests
-							else if (Array.isArray(request.subRequests) && request.subRequests.length > 0) {
+							else if (
+								Array.isArray(request.subRequests) &&
+								request.subRequests.length > 0
+							) {
 								request.subRequests.forEach((subReq: any) => {
-									if (Array.isArray(subReq.requestItems) && subReq.requestItems.length > 0) {
-										allProducts = [...allProducts, ...subReq.requestItems];
+									if (
+										Array.isArray(subReq.requestItems) &&
+										subReq.requestItems.length > 0
+									) {
+										allProducts = [
+											...allProducts,
+											...subReq.requestItems,
+										];
 									}
 								});
 							}
@@ -217,13 +251,17 @@ export default function RequestCard({
 
 							// Get quantity of first product (no sorting needed for quantity)
 							const firstProduct = allProducts[0];
-							const firstProductQuantity = parseInt(String(firstProduct.quantity || 1)) || 1;
+							const firstProductQuantity =
+								parseInt(String(firstProduct.quantity || 1)) ||
+								1;
 
 							return firstProductQuantity;
 						})()}
 					</Text>
 				</View>
 			</View>
+
+			{/* No action buttons in RequestCard - buttons will be in RequestDetails */}
 
 			{/* Actions Section removed as per user request */}
 		</TouchableOpacity>
@@ -233,23 +271,23 @@ export default function RequestCard({
 const styles = StyleSheet.create({
 	requestCard: {
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 14,
-		marginBottom: 10,
+		borderRadius: 10,
+		padding: 12,
+		marginBottom: 8,
 		shadowColor: "#000",
 		shadowOffset: {
 			width: 0,
-			height: 2,
+			height: 1,
 		},
-		shadowOpacity: 0.06,
-		shadowRadius: 4,
-		elevation: 4,
+		shadowOpacity: 0.05,
+		shadowRadius: 3,
+		elevation: 2,
 	},
 	cardHeader: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
-		marginBottom: 12,
+		marginBottom: 10,
 	},
 	leftSection: {
 		flexDirection: "row",
@@ -257,12 +295,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	requestTypeContainer: {
-		// backgroundColor: "#f8f9fa", // Removed background
-		borderRadius: 10,
-		padding: 6,
-		marginRight: 10,
-		// borderWidth: 1, // Removed border
-		// borderColor: "#e9ecef",
+		borderRadius: 8,
+		padding: 4,
+		marginRight: 8,
 	},
 	requestInfo: {
 		flex: 1,
@@ -281,14 +316,14 @@ const styles = StyleSheet.create({
 	statusBadge: {
 		paddingHorizontal: 8,
 		paddingVertical: 3,
-		borderRadius: 10,
-		minWidth: 70,
+		borderRadius: 8,
+		minWidth: 65,
 		alignItems: "center",
 	},
 	statusText: {
 		fontSize: 12,
 		fontWeight: "600",
-		letterSpacing: 0.5,
+		letterSpacing: 0.3,
 	},
 	productInfoSection: {
 		marginBottom: 8,
@@ -314,11 +349,11 @@ const styles = StyleSheet.create({
 	},
 	requestActions: {
 		flexDirection: "row",
-		paddingTop: 12,
+		paddingTop: 10,
 		borderTopWidth: 1,
 		borderTopColor: "#e9ecef",
 		alignItems: "center",
-		justifyContent: "space-between",
+		justifyContent: "flex-end",
 	},
 	viewDetailButton: {
 		flexDirection: "row",
@@ -343,9 +378,9 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		backgroundColor: "#ffebee",
-		paddingHorizontal: 10,
-		paddingVertical: 7,
-		borderRadius: 16,
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		borderRadius: 8,
 		borderWidth: 1,
 		borderColor: "#dc3545",
 	},

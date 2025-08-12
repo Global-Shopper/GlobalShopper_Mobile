@@ -31,10 +31,12 @@ import {
 const isRequestCompleted = (status) => {
 	if (!status) return false;
 	const normalizedStatus = status.toLowerCase();
-	return normalizedStatus === "completed" || 
-		   normalizedStatus === "paid" || 
-		   normalizedStatus === "success" ||
-		   normalizedStatus === "delivered";
+	return (
+		normalizedStatus === "completed" ||
+		normalizedStatus === "paid" ||
+		normalizedStatus === "success" ||
+		normalizedStatus === "delivered"
+	);
 };
 
 export default function RequestDetails({ navigation, route }) {
@@ -61,7 +63,10 @@ export default function RequestDetails({ navigation, route }) {
 	useFocusEffect(
 		useCallback(() => {
 			if (requestId) {
-				console.log('[RequestDetails] Screen focused, refetching data for request:', requestId);
+				console.log(
+					"[RequestDetails] Screen focused, refetching data for request:",
+					requestId
+				);
 				refetch();
 			}
 		}, [requestId, refetch])
@@ -129,10 +134,10 @@ export default function RequestDetails({ navigation, route }) {
 	const displayData = requestDetails;
 
 	// Debug: Log when displayData changes to track status updates
-	console.log('[RequestDetails] Display data updated:', {
+	console.log("[RequestDetails] Display data updated:", {
 		requestId: requestId,
 		status: displayData?.status,
-		timestamp: new Date().toISOString()
+		timestamp: new Date().toISOString(),
 	});
 
 	return (
@@ -502,50 +507,58 @@ export default function RequestDetails({ navigation, route }) {
 					{(() => {
 						// Method 1: If we have sub-requests, show by sub-request structure
 						if (displayData?.subRequests?.length > 0) {
-								return displayData.subRequests
-									.map((subRequest, subIndex) => {
-										if (!subRequest?.requestItems?.length)
-											return null;
+							return displayData.subRequests
+								.map((subRequest, subIndex) => {
+									if (!subRequest?.requestItems?.length)
+										return null;
 
-										// Check if this sub-request has quotation
-										const hasQuotation =
-											subRequest.requestItems.some(
-												(item) =>
-													item?.quotationDetail &&
-													Object.keys(
-														item.quotationDetail
-													).length > 0
-											);
+									// Check if this sub-request has quotation
+									const hasQuotation =
+										subRequest.requestItems.some(
+											(item) =>
+												item?.quotationDetail &&
+												Object.keys(
+													item.quotationDetail
+												).length > 0
+										);
 
-										// Check if request or sub-request is completed/paid
-										const isCompleted = 
-											isRequestCompleted(displayData?.status) ||
-											isRequestCompleted(subRequest?.status);
+									// Check if request or sub-request is completed/paid
+									const isCompleted =
+										isRequestCompleted(
+											displayData?.status
+										) ||
+										isRequestCompleted(subRequest?.status);
 
-										// Debug: Log status values to understand actual values
-										console.log(`[RequestDetails] Sub-request ${subIndex}:`, {
-											displayDataStatus: displayData?.status,
-											subRequestStatus: subRequest?.status,
+									// Debug: Log status values to understand actual values
+									console.log(
+										`[RequestDetails] Sub-request ${subIndex}:`,
+										{
+											displayDataStatus:
+												displayData?.status,
+											subRequestStatus:
+												subRequest?.status,
 											isCompleted: isCompleted,
-											hasQuotation: hasQuotation
-										});
+											hasQuotation: hasQuotation,
+										}
+									);
 
-										// Calculate sub-request total if has quotation
-										let subRequestTotal = 0;
-										if (hasQuotation) {
-											subRequest.requestItems.forEach(
-												(item) => {
-													if (
-														item?.quotationDetail
-															?.totalVNDPrice
-													) {
-														subRequestTotal +=
-															item.quotationDetail
-																.totalVNDPrice;
-													}
+									// Calculate sub-request total if has quotation
+									let subRequestTotal = 0;
+									if (hasQuotation) {
+										subRequest.requestItems.forEach(
+											(item) => {
+												if (
+													item?.quotationDetail
+														?.totalVNDPrice
+												) {
+													subRequestTotal +=
+														item.quotationDetail
+															.totalVNDPrice;
 												}
-											);
-										}									return (
+											}
+										);
+									}
+									return (
 										<View
 											key={`sub-${subIndex}`}
 											style={styles.subRequestContainer}
@@ -610,7 +623,8 @@ export default function RequestDetails({ navigation, route }) {
 														</Text>
 													</View>
 												</View>
-												{(hasQuotation || isCompleted) && (
+												{(hasQuotation ||
+													isCompleted) && (
 													<View
 														style={
 															styles.subRequestHeaderRight
@@ -620,8 +634,9 @@ export default function RequestDetails({ navigation, route }) {
 															style={[
 																styles.quotationBadge,
 																isCompleted && {
-																	backgroundColor: "#28a745"
-																}
+																	backgroundColor:
+																		"#28a745",
+																},
 															]}
 														>
 															<Text
@@ -629,7 +644,9 @@ export default function RequestDetails({ navigation, route }) {
 																	styles.quotationBadgeText
 																}
 															>
-																{isCompleted ? "Đã thanh toán" : "Đã báo giá"}
+																{isCompleted
+																	? "Đã thanh toán"
+																	: "Đã báo giá"}
 															</Text>
 														</View>
 													</View>
@@ -1153,11 +1170,14 @@ export default function RequestDetails({ navigation, route }) {
 																			styles.checkboxText
 																		}
 																	>
-																		Tôi đồng ý
-																		với báo giá
-																		này và chấp
+																		Tôi đồng
+																		ý với
+																		báo giá
+																		này và
+																		chấp
 																		nhận phí
-																		phát sinh
+																		phát
+																		sinh
 																		(nếu có)
 																	</Text>
 																</View>
@@ -1207,7 +1227,8 @@ export default function RequestDetails({ navigation, route }) {
 																				styles.subRequestPayButtonTextDisabled,
 																		]}
 																	>
-																		Thanh toán
+																		Thanh
+																		toán
 																	</Text>
 																</TouchableOpacity>
 															</View>
@@ -1227,7 +1248,9 @@ export default function RequestDetails({ navigation, route }) {
 																>
 																	<Ionicons
 																		name="checkmark-circle"
-																		size={20}
+																		size={
+																			20
+																		}
 																		color="#28a745"
 																	/>
 																	<Text
@@ -1235,7 +1258,10 @@ export default function RequestDetails({ navigation, route }) {
 																			styles.completedStatusText
 																		}
 																	>
-																		Đã thanh toán thành công
+																		Đã thanh
+																		toán
+																		thành
+																		công
 																	</Text>
 																</View>
 															</View>
@@ -1423,6 +1449,100 @@ export default function RequestDetails({ navigation, route }) {
 					<View style={styles.divider} />
 				</View>
 			</ScrollView>
+
+			{/* Action Buttons - Show based on request status */}
+			{(() => {
+				const status = displayData?.status?.toLowerCase();
+				console.log(
+					`[RequestDetails] Request status for buttons: "${status}"`
+				);
+
+				// Show cancel button for "sent" and "checking" status
+				if (status === "sent" || status === "checking") {
+					return (
+						<View style={styles.actionButtonContainer}>
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.cancelButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Cancel request:",
+										displayData?.id
+									);
+									// TODO: Implement cancel request API call
+								}}
+							>
+								<Ionicons
+									name="close-outline"
+									size={18}
+									color="#dc3545"
+								/>
+								<Text style={styles.cancelButtonText}>
+									Hủy yêu cầu
+								</Text>
+							</TouchableOpacity>
+						</View>
+					);
+				}
+
+				// Show both cancel and update buttons for "insufficient" status
+				if (status === "insufficient") {
+					return (
+						<View style={styles.actionButtonContainer}>
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.cancelButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Cancel request:",
+										displayData?.id
+									);
+									// TODO: Implement cancel request API call
+								}}
+							>
+								<Ionicons
+									name="close-outline"
+									size={18}
+									color="#dc3545"
+								/>
+								<Text style={styles.cancelButtonText}>
+									Hủy yêu cầu
+								</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity
+								style={[
+									styles.actionButton,
+									styles.updateButton,
+								]}
+								onPress={() => {
+									console.log(
+										"Update request:",
+										displayData?.id
+									);
+									// TODO: Navigate to update request screen
+								}}
+							>
+								<Ionicons
+									name="create-outline"
+									size={18}
+									color="#1976D2"
+								/>
+								<Text style={styles.updateButtonText}>
+									Cập nhật
+								</Text>
+							</TouchableOpacity>
+						</View>
+					);
+				}
+
+				// No buttons for other statuses
+				return null;
+			})()}
 		</View>
 	);
 }
@@ -2102,5 +2222,60 @@ const styles = StyleSheet.create({
 	productItemDetail: {
 		fontSize: 12,
 		color: "#666",
+	},
+	actionButtonContainer: {
+		flexDirection: "row",
+		paddingHorizontal: 18,
+		paddingVertical: 16,
+		paddingBottom: 30,
+		backgroundColor: "#ffffff",
+		borderTopWidth: 1,
+		borderTopColor: "#e9ecef",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 3,
+		gap: 12,
+	},
+	actionButton: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 14,
+		paddingHorizontal: 20,
+		borderRadius: 12,
+		gap: 8,
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.1,
+		shadowRadius: 3,
+		elevation: 2,
+	},
+	cancelButton: {
+		backgroundColor: "#ffebee",
+		borderWidth: 1.5,
+		borderColor: "#dc3545",
+	},
+	cancelButtonText: {
+		color: "#dc3545",
+		fontSize: 16,
+		fontWeight: "700",
+		letterSpacing: 0.3,
+	},
+	updateButton: {
+		backgroundColor: "#e3f2fd",
+		borderWidth: 1.5,
+		borderColor: "#1976D2",
+	},
+	updateButtonText: {
+		color: "#1976D2",
+		fontSize: 16,
+		fontWeight: "700",
+		letterSpacing: 0.3,
 	},
 });
