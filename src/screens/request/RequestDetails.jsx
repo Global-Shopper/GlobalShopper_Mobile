@@ -15,7 +15,6 @@ import StoreCard from "../../components/store-card";
 import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 import {
-	canPayRequest,
 	formatDate,
 	getRequestTypeBorderColor,
 	getRequestTypeIcon,
@@ -30,7 +29,7 @@ export default function RequestDetails({ navigation, route }) {
 	const { request } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 
-	const [isAcceptedQuotation, setIsAcceptedQuotation] = useState(false);
+	const [acceptedQuotations, setAcceptedQuotations] = useState({});
 
 	// Fetch purchase request detail from API - using getPurchaseRequestById
 	const {
@@ -651,145 +650,191 @@ export default function RequestDetails({ navigation, route }) {
 					<View style={styles.divider} />
 				</View>
 
-				{/* Quotation Card - Show for requests with quotation */}
+				{/* Quotation Cards - Show for each sub-request with quotation */}
 				{shouldShowQuotation(displayData?.status) &&
 					(() => {
-						// Get quotation data from the first product's quotationDetail
-						const firstProduct =
-							displayData?.subRequests?.[0]?.requestItems?.[0];
-						const quotationDetail =
-							firstProduct?.quotationDetail || {};
+						// Get all sub-requests that have quotation
+						const subRequestsWithQuotation = displayData?.subRequests?.filter(subRequest => {
+							// Check if any product in this sub-request has quotationDetail
+							return subRequest?.requestItems?.some(item => 
+								item?.quotationDetail && 
+								Object.keys(item.quotationDetail).length > 0
+							);
+						}) || [];
 
-						// Extract values from quotationDetail
-						const basePrice = quotationDetail?.basePrice || 0;
-						const serviceFee = quotationDetail?.serviceFee || 0;
-						const totalTaxAmount =
-							quotationDetail?.totalTaxAmount || 0;
-						const totalVNDPrice =
-							quotationDetail?.totalVNDPrice || 0;
-						const exchangeRate = quotationDetail?.exchangeRate || 1;
-						const currency = quotationDetail?.currency || "USD";
-						const taxRates = quotationDetail?.taxRates || [];
+						if (subRequestsWithQuotation.length === 0) {
+							return (
+								<View style={styles.section}>
+									<View style={styles.noQuotationContainer}>
+										<Ionicons name="document-text-outline" size={48} color="#ccc" />
+										<Text style={styles.noQuotationText}>
+											Chưa có báo giá nào cho yêu cầu này
+										</Text>
+									</View>
+								</View>
+							);
+						}
 
-						// Calculate VND values
-						const productPriceVND = Math.round(
-							basePrice * exchangeRate
-						);
-						const serviceFeeVND = Math.round(
-							((serviceFee * exchangeRate) / 100) * basePrice
-						);
-						const importTaxVND = Math.round(
-							totalTaxAmount * exchangeRate
-						);
-
-						// Prepare tax details if available in quotationDetail
-						const taxDetails = quotationDetail?.taxBreakdown
-							? {
-									importDuty:
-										quotationDetail.taxBreakdown
-											.importDuty || 0,
-									vat: quotationDetail.taxBreakdown.vat || 0,
-									specialConsumptionTax:
-										quotationDetail.taxBreakdown
-											.specialConsumptionTax || 0,
-									environmentTax:
-										quotationDetail.taxBreakdown
-											.environmentTax || 0,
-									totalTaxAmount: totalTaxAmount,
-							  }
-							: undefined;
-
-						return (
-							<View style={styles.section}>
-								<QuotationCard
-									// Original price data
-									originalProductPrice={basePrice}
-									originalCurrency={currency}
-									exchangeRate={exchangeRate}
-									// VND converted prices
-									productPrice={productPriceVND}
-									serviceFee={serviceFeeVND}
-									serviceFeePercent={serviceFee}
-									internationalShipping={0} // Not specified in quotationDetail
-									importTax={importTaxVND}
-									domesticShipping={0} // Not specified in quotationDetail
-									// Tax details (legacy format)
-									taxDetails={taxDetails}
-									// Tax rates from API
-									taxRates={taxRates}
-									// Total amount
-									totalAmount={Math.round(totalVNDPrice)}
-									additionalFees={undefined}
-									updatedTotalAmount={undefined}
-									isExpanded={true}
-								/>
-							</View>
-						);
-					})()}
-
-				{/* Payment Agreement Checkbox - Show only for quoted requests */}
-				{canPayRequest(displayData?.status) && (
-					<View style={styles.checkboxSection}>
-						<View style={styles.checkboxContainer}>
-							<TouchableOpacity
-								style={[
-									styles.checkbox,
-									isAcceptedQuotation &&
-										styles.checkboxChecked,
-								]}
-								onPress={() =>
-									setIsAcceptedQuotation(!isAcceptedQuotation)
+						return subRequestsWithQuotation.map((subRequest, subIndex) => {
+							// Calculate total for this sub-request
+							let subRequestTotal = 0;
+							let hasValidQuotation = false;
+							
+							const quotationCards = subRequest.requestItems?.map((product, productIndex) => {
+								const quotationDetail = product?.quotationDetail;
+								
+								if (!quotationDetail || Object.keys(quotationDetail).length === 0) {
+									return null; // Skip products without quotation
 								}
-								activeOpacity={0.7}
-							>
-								{isAcceptedQuotation && (
-									<Ionicons
-										name="checkmark"
-										size={16}
-										color="#FFFFFF"
-									/>
-								)}
-							</TouchableOpacity>
-							<Text style={styles.checkboxText}>
-								Tôi đồng ý với giá tạm thời này và chấp nhận phí
-								phát sinh (nếu có)
-							</Text>
-						</View>
-					</View>
-				)}
-			</ScrollView>
 
-			{/* Fixed Payment Button - Show only for quoted requests */}
-			{canPayRequest(displayData?.status) && (
-				<View style={styles.fixedButtonContainer}>
-					<TouchableOpacity
-						style={[
-							styles.fixedPaymentButton,
-							!isAcceptedQuotation &&
-								styles.fixedPaymentButtonDisabled,
-						]}
-						onPress={() => {
-							if (isAcceptedQuotation) {
-								navigation.navigate("ConfirmQuotation", {
-									request: displayData,
-								});
+								hasValidQuotation = true;
+
+								// Extract values from quotationDetail
+								const basePrice = quotationDetail?.basePrice || 0;
+								const serviceFee = quotationDetail?.serviceFee || 0;
+								const totalTaxAmount = quotationDetail?.totalTaxAmount || 0;
+								const totalVNDPrice = quotationDetail?.totalVNDPrice || 0;
+								const exchangeRate = quotationDetail?.exchangeRate || 1;
+								const currency = quotationDetail?.currency || "USD";
+								const taxRates = quotationDetail?.taxRates || [];
+
+								// Add to sub-request total
+								subRequestTotal += totalVNDPrice;
+
+								// Calculate VND values
+								const productPriceVND = Math.round(basePrice * exchangeRate);
+								const serviceFeeVND = Math.round(((serviceFee * exchangeRate) / 100) * basePrice);
+								const importTaxVND = Math.round(totalTaxAmount * exchangeRate);
+
+								// Prepare tax details if available in quotationDetail
+								const taxDetails = quotationDetail?.taxBreakdown
+									? {
+											importDuty: quotationDetail.taxBreakdown.importDuty || 0,
+											vat: quotationDetail.taxBreakdown.vat || 0,
+											specialConsumptionTax: quotationDetail.taxBreakdown.specialConsumptionTax || 0,
+											environmentTax: quotationDetail.taxBreakdown.environmentTax || 0,
+											totalTaxAmount: totalTaxAmount,
+									  }
+									: undefined;
+
+								return (
+									<View key={`${subIndex}-${productIndex}`} style={styles.quotationContainer}>
+										{/* Product Info Header */}
+										<View style={styles.quotationHeader}>
+											<Text style={styles.quotationProductName}>
+												{product.productName || product.name || "Sản phẩm"}
+											</Text>
+											<Text style={styles.quotationProductQuantity}>
+												Số lượng: {product.quantity || 1}
+											</Text>
+										</View>
+										
+										<QuotationCard
+											// Original price data
+											originalProductPrice={basePrice}
+											originalCurrency={currency}
+											exchangeRate={exchangeRate}
+											// VND converted prices
+											productPrice={productPriceVND}
+											serviceFee={serviceFeeVND}
+											serviceFeePercent={serviceFee}
+											internationalShipping={0} // Not specified in quotationDetail
+											importTax={importTaxVND}
+											domesticShipping={0} // Not specified in quotationDetail
+											// Tax details (legacy format)
+											taxDetails={taxDetails}
+											// Tax rates from API
+											taxRates={taxRates}
+											// Total amount
+											totalAmount={Math.round(totalVNDPrice)}
+											additionalFees={undefined}
+											updatedTotalAmount={undefined}
+											isExpanded={false}
+										/>
+									</View>
+								);
+							}).filter(Boolean); // Remove null items
+
+							if (!hasValidQuotation) {
+								return null;
 							}
-						}}
-						disabled={!isAcceptedQuotation}
-						activeOpacity={0.7}
-					>
-						<Text
-							style={[
-								styles.fixedPaymentButtonText,
-								!isAcceptedQuotation &&
-									styles.fixedPaymentButtonTextDisabled,
-							]}
-						>
-							Thanh toán
-						</Text>
-					</TouchableOpacity>
-				</View>
-			)}
+
+							return (
+								<View key={`sub-${subIndex}`} style={styles.section}>
+									{/* Sub-request Header */}
+									{subRequestsWithQuotation.length > 1 && (
+										<View style={styles.subRequestHeader}>
+											<Text style={styles.subRequestTitle}>
+												Báo giá #{subIndex + 1}
+											</Text>
+											<View style={styles.subRequestInfo}>
+												<Text style={styles.subRequestProducts}>
+													{subRequest.requestItems?.length || 0} sản phẩm
+												</Text>
+												<Text style={styles.subRequestTotal}>
+													Tổng: {subRequestTotal.toLocaleString('vi-VN')}₫
+												</Text>
+											</View>
+										</View>
+									)}
+									
+									{quotationCards}
+									
+									{/* Sub-request Payment Section */}
+									<View style={styles.subRequestPayment}>
+										<View style={styles.subRequestCheckbox}>
+											<TouchableOpacity
+												style={[
+													styles.checkbox,
+													acceptedQuotations[subIndex] && styles.checkboxChecked,
+												]}
+												onPress={() => setAcceptedQuotations(prev => ({
+													...prev,
+													[subIndex]: !prev[subIndex]
+												}))}
+												activeOpacity={0.7}
+											>
+												{acceptedQuotations[subIndex] && (
+													<Ionicons name="checkmark" size={16} color="#FFFFFF" />
+												)}
+											</TouchableOpacity>
+											<Text style={styles.checkboxText}>
+												Tôi đồng ý với báo giá này và chấp nhận phí phát sinh (nếu có)
+											</Text>
+										</View>
+										
+										<TouchableOpacity
+											style={[
+												styles.subRequestPayButton,
+												!acceptedQuotations[subIndex] && styles.subRequestPayButtonDisabled,
+											]}
+											onPress={() => {
+												if (acceptedQuotations[subIndex]) {
+													navigation.navigate("ConfirmQuotation", {
+														request: displayData,
+														subRequest: subRequest,
+														subRequestIndex: subIndex,
+													});
+												}
+											}}
+											disabled={!acceptedQuotations[subIndex]}
+											activeOpacity={0.7}
+										>
+											<Text
+												style={[
+													styles.subRequestPayButtonText,
+													!acceptedQuotations[subIndex] && styles.subRequestPayButtonTextDisabled,
+												]}
+											>
+												Thanh toán báo giá này ({subRequestTotal.toLocaleString('vi-VN')}₫)
+											</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							);
+						}).filter(Boolean);
+					})()}
+			</ScrollView>
 		</View>
 	);
 }
@@ -1147,5 +1192,107 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#666",
 		fontStyle: "italic",
+	},
+	// No Quotation Styles
+	noQuotationContainer: {
+		backgroundColor: "#f8f9fa",
+		padding: 40,
+		borderRadius: 12,
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		borderStyle: "dashed",
+	},
+	noQuotationText: {
+		fontSize: 16,
+		color: "#666",
+		fontStyle: "italic",
+		marginTop: 12,
+		textAlign: "center",
+	},
+	// Sub-request Styles
+	subRequestHeader: {
+		backgroundColor: "#f8f9fa",
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 12,
+		borderLeftWidth: 3,
+		borderLeftColor: "#1976D2",
+	},
+	subRequestTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 4,
+	},
+	subRequestInfo: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	subRequestProducts: {
+		fontSize: 13,
+		color: "#666",
+	},
+	subRequestTotal: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#D32F2F",
+	},
+	// Quotation Container Styles
+	quotationContainer: {
+		marginBottom: 12,
+	},
+	quotationHeader: {
+		backgroundColor: "#fff",
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 8,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	quotationProductName: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 4,
+	},
+	quotationProductQuantity: {
+		fontSize: 12,
+		color: "#666",
+	},
+	// Sub-request Payment Styles
+	subRequestPayment: {
+		backgroundColor: "#fff",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	subRequestCheckbox: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		gap: 12,
+		marginBottom: 16,
+	},
+	subRequestPayButton: {
+		backgroundColor: "#1976D2",
+		borderRadius: 8,
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	subRequestPayButtonDisabled: {
+		backgroundColor: "#E0E0E0",
+	},
+	subRequestPayButtonText: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	subRequestPayButtonTextDisabled: {
+		color: "#9E9E9E",
 	},
 });
