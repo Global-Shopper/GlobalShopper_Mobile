@@ -28,6 +28,7 @@ import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import WithdrawList from "../screens/profile/WithdrawList";
+import RequestRefund from "../screens/refund/RequestRefund";
 import AddStore from "../screens/request/AddStore";
 import ConfirmQuotation from "../screens/request/ConfirmQuotation";
 import ConfirmRequest from "../screens/request/ConfirmRequest";
@@ -241,6 +242,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="OrderDetails"
 				component={OrderDetails}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="RequestRefund"
+				component={RequestRefund}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

@@ -34,5 +34,7 @@ const endpoints = {
 	// Feedback endpoints
 	FEEDBACK: "/feedback",
 	FEEDBACK_ALL: "/feedback",
+	// Refund endpoints
+	REFUND_TICKET: "/refund-ticket",
 };
 export default endpoints;
