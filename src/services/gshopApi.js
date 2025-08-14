@@ -451,6 +451,16 @@ const gshopApi = createApi({
 			invalidatesTags: ["RefundTicket", "Order"],
 		}),
 
+		getRefundTicketsByOrderId: builder.query({
+			query: (orderId) => ({
+				url: `${endpoints.REFUND_BY_ORDER}/${orderId}`,
+				method: "GET",
+			}),
+			providesTags: (result, error, orderId) => [
+				{ type: "RefundTicket", id: orderId },
+			],
+		}),
+
 		getAllFeedback: builder.query({
 			query: ({ page = 0, size = 10 } = {}) => {
 				const params = new URLSearchParams({
@@ -523,6 +533,7 @@ export const {
 	useGetAllFeedbackQuery,
 	// Refund hooks
 	useCreateRefundTicketMutation,
+	useGetRefundTicketsByOrderIdQuery,
 } = gshopApi;
 
 export default gshopApi;

@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
 	ActivityIndicator,
 	Clipboard,
-	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -12,6 +11,7 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Dialog from "../../components/dialog";
 import Header from "../../components/header";
+import OrderProductCard from "../../components/order-product-card";
 import RefundHistorySection from "../../components/RefundHistorySection";
 import { Text } from "../../components/ui/text";
 import { useGetOrderByIdQuery } from "../../services/gshopApi";
@@ -25,9 +25,6 @@ export default function OrderDetails({ navigation, route }) {
 	// Get order data from route params
 	const routeOrderData = route?.params?.orderData;
 	const orderId = routeOrderData?.id;
-
-	// State for price breakdown
-	const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
 
 	// Dialog states
 	const [showDialog, setShowDialog] = useState(false);
@@ -43,14 +40,6 @@ export default function OrderDetails({ navigation, route }) {
 	} = useGetOrderByIdQuery(orderId, {
 		skip: !orderId, // Skip if no orderId
 	});
-
-	// Format currency without decimals
-	const formatCurrency = (amount, currency = "VND") => {
-		if (currency === "VND") {
-			return `${Math.round(amount).toLocaleString("vi-VN")} VND`;
-		}
-		return `${Math.round(amount).toLocaleString("vi-VN")} ${currency}`;
-	};
 
 	// Format order ID to show only first part before dash
 	const getShortOrderId = (fullId) => {
@@ -86,7 +75,7 @@ export default function OrderDetails({ navigation, route }) {
 	};
 
 	const handleSupportCenter = () => {
-		showInfoDialog("Thông báo", "Tính năng đang phát triển");
+		navigation.navigate("FAQScreen");
 	};
 
 	const handleReview = () => {
@@ -100,10 +89,6 @@ export default function OrderDetails({ navigation, route }) {
 
 	const handleEditAddress = () => {
 		showInfoDialog("Thông báo", "Tính năng đang phát triển");
-	};
-
-	const togglePriceBreakdown = () => {
-		setShowPriceBreakdown(!showPriceBreakdown);
 	};
 
 	const handleBackPress = () => {
@@ -275,138 +260,21 @@ export default function OrderDetails({ navigation, route }) {
 				</View>
 
 				{/* Product Info Card */}
-				<View style={styles.productCard}>
-					<Text style={styles.cardTitle}>Thông tin sản phẩm</Text>
-
-					<View style={styles.productSection}>
-						<View style={styles.productImageContainer}>
-							{orderData.orderItems?.[0]?.images?.[0] ? (
-								<Image
-									source={{
-										uri: orderData.orderItems[0].images[0],
-									}}
-									style={styles.productImage}
-									resizeMode="cover"
-								/>
-							) : (
-								<View style={styles.placeholderImage}>
-									<Ionicons
-										name="image-outline"
-										size={32}
-										color="#ccc"
-									/>
-								</View>
-							)}
-						</View>
-
-						<View style={styles.productInfo}>
-							<Text style={styles.productName} numberOfLines={2}>
-								{orderData.orderItems?.[0]?.productName ||
-									"Tên sản phẩm không có"}
-							</Text>
-
-							{/* Product Variants */}
-							{orderData.orderItems?.[0]?.variants &&
-								orderData.orderItems[0].variants.length > 0 && (
-									<View style={styles.variantsContainer}>
-										{orderData.orderItems[0].variants.map(
-											(variant, index) => (
-												<View
-													key={index}
-													style={styles.variantBadge}
-												>
-													<Text
-														style={
-															styles.variantText
-														}
-													>
-														{variant}
-													</Text>
-												</View>
-											)
-										)}
-									</View>
-								)}
-
-							<View style={styles.productDetails}>
-								<Text style={styles.quantityText}>
-									Số lượng: x
-									{orderData.orderItems?.[0]?.quantity || 1}
-								</Text>
-								<TouchableOpacity
-									style={styles.priceContainer}
-									onPress={togglePriceBreakdown}
-								>
-									<Text style={styles.priceText}>
-										{formatCurrency(orderData.totalPrice)}
-									</Text>
-									<Ionicons
-										name={
-											showPriceBreakdown
-												? "chevron-up"
-												: "chevron-down"
-										}
-										size={16}
-										color="#dc3545"
-										style={styles.priceChevron}
-									/>
-								</TouchableOpacity>
-							</View>
-
-							{/* Price Breakdown */}
-							{showPriceBreakdown && (
-								<View style={styles.priceBreakdownContainer}>
-									{orderData.orderItems?.[0]?.basePrice && (
-										<View style={styles.breakdownItem}>
-											<Text style={styles.breakdownLabel}>
-												Giá sản phẩm
-											</Text>
-											<Text style={styles.breakdownValue}>
-												{formatCurrency(
-													orderData.orderItems[0]
-														.basePrice
-												)}
-											</Text>
-										</View>
-									)}
-
-									{orderData.shippingFee && (
-										<View style={styles.breakdownItem}>
-											<Text style={styles.breakdownLabel}>
-												Phí vận chuyển
-											</Text>
-											<Text style={styles.breakdownValue}>
-												{formatCurrency(
-													orderData.shippingFee
-												)}
-											</Text>
-										</View>
-									)}
-
-									<View
-										style={[
-											styles.breakdownItem,
-											styles.totalBreakdown,
-										]}
-									>
-										<Text
-											style={styles.totalBreakdownLabel}
-										>
-											Tổng cộng
-										</Text>
-										<Text
-											style={styles.totalBreakdownValue}
-										>
-											{formatCurrency(
-												orderData.totalPrice
-											)}
-										</Text>
-									</View>
-								</View>
-							)}
-						</View>
-					</View>
-				</View>
+				<OrderProductCard
+					orderItem={{
+						id: orderData.orderItems?.[0]?.id || "",
+						productName:
+							orderData.orderItems?.[0]?.productName ||
+							"Tên sản phẩm không có",
+						images: orderData.orderItems?.[0]?.images || [],
+						quantity: orderData.orderItems?.[0]?.quantity || 1,
+						basePrice: orderData.orderItems?.[0]?.basePrice || 0,
+						currency: orderData.currency || "VND",
+						variants: orderData.orderItems?.[0]?.variants || [],
+						description: orderData.orderItems?.[0]?.description,
+					}}
+					totalPrice={orderData.totalPrice}
+				/>
 
 				{/* Support Section */}
 				<View style={styles.supportCard}>
@@ -501,9 +369,11 @@ export default function OrderDetails({ navigation, route }) {
 
 				{/* Refund History Section */}
 				<RefundHistorySection orderData={orderData} />
+			</ScrollView>
 
-				{/* Review Button (only for completed orders) */}
-				{orderData.status === "DELIVERED" && (
+			{/* Review Button (only for completed orders) - Fixed at bottom */}
+			{orderData.status === "DELIVERED" && (
+				<View style={styles.reviewButtonContainer}>
 					<TouchableOpacity
 						style={styles.reviewButton}
 						onPress={handleReview}
@@ -512,11 +382,11 @@ export default function OrderDetails({ navigation, route }) {
 							{orderData.feedback ||
 							orderData.feedbacks?.length > 0
 								? "Xem đánh giá"
-								: "Đánh giá sản phẩm"}
+								: "Đánh giá"}
 						</Text>
 					</TouchableOpacity>
-				)}
-			</ScrollView>
+				</View>
+			)}
 
 			{/* Dialog */}
 			<Dialog
@@ -662,139 +532,6 @@ const styles = StyleSheet.create({
 	addressSection: {
 		marginBottom: 8,
 	},
-	productCard: {
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
-		padding: 16,
-		marginBottom: 16,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.06,
-		shadowRadius: 4,
-		elevation: 4,
-	},
-	cardTitle: {
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#212529",
-		marginBottom: 16,
-	},
-	productSection: {
-		flexDirection: "row",
-	},
-	productImageContainer: {
-		width: 80,
-		height: 80,
-		borderRadius: 8,
-		overflow: "hidden",
-		marginRight: 16,
-	},
-	productImage: {
-		width: "100%",
-		height: "100%",
-	},
-	placeholderImage: {
-		width: "100%",
-		height: "100%",
-		backgroundColor: "#f8f9fa",
-		justifyContent: "center",
-		alignItems: "center",
-		borderWidth: 1,
-		borderColor: "#e9ecef",
-	},
-	productInfo: {
-		flex: 1,
-		justifyContent: "space-between",
-	},
-	productName: {
-		fontSize: 16,
-		color: "#212529",
-		fontWeight: "600",
-		lineHeight: 22,
-		marginBottom: 12,
-	},
-	variantsContainer: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		marginBottom: 12,
-		gap: 6,
-	},
-	variantBadge: {
-		backgroundColor: "#e3f2fd",
-		paddingHorizontal: 8,
-		paddingVertical: 3,
-		borderRadius: 6,
-		borderWidth: 1,
-		borderColor: "#42A5F5",
-	},
-	variantText: {
-		fontSize: 11,
-		color: "#1976d2",
-		fontWeight: "500",
-	},
-	productDetails: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	quantityText: {
-		fontSize: 14,
-		color: "#6c757d",
-		fontWeight: "500",
-	},
-	priceContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	priceText: {
-		fontSize: 18,
-		color: "#dc3545",
-		fontWeight: "700",
-	},
-	priceChevron: {
-		marginLeft: 4,
-	},
-	priceBreakdownContainer: {
-		marginTop: 16,
-		paddingTop: 16,
-		borderTopWidth: 1,
-		borderTopColor: "#f0f0f0",
-	},
-	breakdownItem: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		paddingVertical: 6,
-	},
-	breakdownLabel: {
-		fontSize: 14,
-		color: "#6c757d",
-		fontWeight: "500",
-	},
-	breakdownValue: {
-		fontSize: 14,
-		color: "#212529",
-		fontWeight: "600",
-	},
-	discountText: {
-		color: "#28a745",
-	},
-	totalBreakdown: {
-		marginTop: 8,
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: "#e9ecef",
-	},
-	totalBreakdownLabel: {
-		fontSize: 16,
-		color: "#212529",
-		fontWeight: "700",
-	},
-	totalBreakdownValue: {
-		fontSize: 18,
-		color: "#dc3545",
-		fontWeight: "700",
-	},
 	supportCard: {
 		backgroundColor: "#ffffff",
 		borderRadius: 12,
@@ -859,15 +596,31 @@ const styles = StyleSheet.create({
 		color: "#007bff",
 		fontWeight: "600",
 	},
+	reviewButtonContainer: {
+		backgroundColor: "#ffffff",
+		paddingHorizontal: 16,
+		paddingVertical: 22,
+		borderTopWidth: 1,
+		borderTopColor: "#f0f0f0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+	},
 	reviewButton: {
-		backgroundColor: "#1d4ed8",
+		backgroundColor: "#42A5F5",
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
 		paddingVertical: 16,
 		borderRadius: 12,
 		gap: 8,
-		marginBottom: 16,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+		elevation: 3,
 	},
 	reviewButtonText: {
 		color: "#ffffff",

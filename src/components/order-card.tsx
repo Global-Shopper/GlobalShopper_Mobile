@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { getStatusColor, getStatusText } from "../utils/statusHandler";
 import { Text } from "./ui/text";
 
 interface OrderCardProps {
@@ -62,40 +63,6 @@ export default function OrderCard({
 			return `${day}/${month}/${year} ${hours}:${minutes}`;
 		} catch {
 			return "N/A";
-		}
-	};
-
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "#007bff";
-			case "IN_TRANSIT":
-				return "#6610f2";
-			case "ARRIVED_IN_DESTINATION":
-				return "#fd7e14";
-			case "DELIVERED":
-				return "#28a745";
-			case "CANCELED":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	const getStatusText = (status: string) => {
-		switch (status) {
-			case "ORDER_REQUESTED":
-				return "Đang đặt hàng";
-			case "IN_TRANSIT":
-				return "Đang vận chuyển";
-			case "ARRIVED_IN_DESTINATION":
-				return "Đã đến nơi";
-			case "DELIVERED":
-				return "Đã giao hàng";
-			case "CANCELED":
-				return "Đã hủy";
-			default:
-				return "Không xác định";
 		}
 	};
 

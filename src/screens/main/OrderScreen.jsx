@@ -181,6 +181,7 @@ export default function OrderScreen({ navigation }) {
 			label: "Đang đặt hàng",
 			status: "ORDER_REQUESTED",
 		},
+		{ id: "PURCHASED", label: "Đã mua", status: "PURCHASED" },
 		{ id: "IN_TRANSIT", label: "Đang vận chuyển", status: "IN_TRANSIT" },
 		{
 			id: "ARRIVED_IN_DESTINATION",

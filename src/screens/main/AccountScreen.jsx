@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -98,15 +97,13 @@ export default function AccountScreen({ navigation }) {
 			title: "Cài đặt tài khoản",
 			subtitle: "Cập nhật thông tin cá nhân",
 			icon: "settings-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("AccountSettingList"),
 		},
 		{
 			id: 2,
 			title: "Thay đổi mật khẩu",
 			subtitle: "Bảo mật tài khoản",
-			icon: "lock-closed-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
+			icon: "key-outline",
 			action: () => navigation.navigate("ChangePassword"),
 		},
 		{
@@ -114,7 +111,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Thông tin rút tiền",
 			subtitle: "Quản lý tài khoản ngân hàng",
 			icon: "card-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("WithdrawList"),
 		},
 		{
@@ -122,7 +118,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Ngôn ngữ / Language",
 			subtitle: "Tiếng Việt",
 			icon: "language-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to language"),
 		},
 	];
@@ -134,7 +129,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Câu hỏi thường gặp (FAQ)",
 			subtitle: "Tìm câu trả lời nhanh chóng",
 			icon: "help-circle-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("FAQScreen"),
 		},
 		{
@@ -142,7 +136,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Gửi yêu cầu hỗ trợ",
 			subtitle: "Liên hệ đội ngũ hỗ trợ",
 			icon: "mail-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to support request"),
 		},
 		{
@@ -150,7 +143,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Điều khoản sử dụng",
 			subtitle: "Quy định và điều khoản",
 			icon: "document-text-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("TermsScreen"),
 		},
 		{
@@ -158,7 +150,6 @@ export default function AccountScreen({ navigation }) {
 			title: "Chính sách bảo mật",
 			subtitle: "Quyền riêng tư của bạn",
 			icon: "shield-checkmark-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("PolicyScreen"),
 		},
 	];
@@ -223,21 +214,18 @@ export default function AccountScreen({ navigation }) {
 									)
 								}
 							>
-								<LinearGradient
-									colors={[
-										stat.color + "40",
-										stat.color + "10",
+								<View
+									style={[
+										styles.statIcon,
+										{ backgroundColor: stat.color + "20" },
 									]}
-									start={{ x: 0, y: 0 }}
-									end={{ x: 1, y: 1 }}
-									style={styles.statIcon}
 								>
 									<Ionicons
 										name={stat.icon}
 										size={26}
 										color={stat.color}
 									/>
-								</LinearGradient>
+								</View>
 								<Text style={styles.statValue}>
 									{stat.value}
 								</Text>
@@ -265,16 +253,13 @@ export default function AccountScreen({ navigation }) {
 							>
 								<View style={styles.menuItemLeft}>
 									<View style={styles.iconContainer}>
-										<LinearGradient
-											colors={item.gradientColors}
-											style={styles.iconGradient}
-										>
+										<View style={styles.iconBackground}>
 											<Ionicons
 												name={item.icon}
 												size={24}
-												color="#FFFFFF"
+												color="#007AFF"
 											/>
-										</LinearGradient>
+										</View>
 									</View>
 									<View style={styles.menuItemContent}>
 										<Text style={styles.menuTitle}>
@@ -308,16 +293,13 @@ export default function AccountScreen({ navigation }) {
 							>
 								<View style={styles.menuItemLeft}>
 									<View style={styles.iconContainer}>
-										<LinearGradient
-											colors={item.gradientColors}
-											style={styles.iconGradient}
-										>
+										<View style={styles.iconBackground}>
 											<Ionicons
 												name={item.icon}
 												size={24}
-												color="#FFFFFF"
+												color="#007AFF"
 											/>
-										</LinearGradient>
+										</View>
 									</View>
 									<View style={styles.menuItemContent}>
 										<Text style={styles.menuTitle}>
@@ -495,6 +477,14 @@ const styles = StyleSheet.create({
 	},
 	iconContainer: {
 		marginRight: 15,
+	},
+	iconBackground: {
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+		backgroundColor: "#F0F8FF",
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	iconGradient: {
 		width: 44,

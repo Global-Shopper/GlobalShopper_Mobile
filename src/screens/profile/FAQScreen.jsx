@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ScrollView,
@@ -9,6 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 
 export default function FAQScreen({ navigation }) {
 	const [expandedSections, setExpandedSections] = useState({});
@@ -200,16 +200,13 @@ export default function FAQScreen({ navigation }) {
 				onPress={() => toggleSection(section.id)}
 			>
 				<View style={styles.sectionLeft}>
-					<LinearGradient
-						colors={section.color}
-						style={styles.sectionIconContainer}
-					>
+					<View style={styles.sectionIconBackground}>
 						<Ionicons
 							name={section.icon}
 							size={24}
-							color="#FFFFFF"
+							color="#007AFF"
 						/>
-					</LinearGradient>
+					</View>
 					<Text style={styles.sectionTitle}>{section.title}</Text>
 				</View>
 				<Ionicons
@@ -235,24 +232,16 @@ export default function FAQScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Câu hỏi thường gặp</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Câu hỏi thường gặp"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView

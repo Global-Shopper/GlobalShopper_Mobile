@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	KeyboardAvoidingView,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import BottomPicker from "../../components/BottomPicker";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { useCreateShippingAddressMutation } from "../../services/gshopApi";
 import { getDistricts, getProvinces, getWards } from "../../services/vnGeoAPI";
 
@@ -247,21 +247,16 @@ export default function AddAddress({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Thêm địa chỉ mới</Text>
+			<Header
+				title="Thêm địa chỉ mới"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+				rightButton={
 					<TouchableOpacity
 						onPress={handleSave}
 						style={[
@@ -279,8 +274,8 @@ export default function AddAddress({ navigation }) {
 							Lưu
 						</Text>
 					</TouchableOpacity>
-				</View>
-			</LinearGradient>
+				}
+			/>
 
 			{/* Content */}
 			<KeyboardAvoidingView
@@ -547,49 +542,24 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#F5F5F5",
 	},
-	header: {
-		paddingTop: 50,
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	headerContent: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	headerTitle: {
-		fontSize: 20,
-		fontWeight: "600",
-		color: "#FFFFFF",
-		textAlign: "center",
-		flex: 1,
-	},
 	saveButton: {
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		backgroundColor: "rgba(0, 0, 0, 0.1)",
 		minWidth: 60,
 		alignItems: "center",
 	},
 	saveButtonActive: {
-		backgroundColor: "#FFFFFF",
+		backgroundColor: "#007AFF",
 	},
 	saveButtonText: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "rgba(255, 255, 255, 0.6)",
+		color: "rgba(0, 0, 0, 0.4)",
 	},
 	saveButtonTextActive: {
-		color: "#1976D2",
+		color: "#FFFFFF",
 	},
 	content: {
 		flex: 1,

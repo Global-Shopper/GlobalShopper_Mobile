@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import {
 	ScrollView,
 	StatusBar,
@@ -8,6 +7,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 
 export default function AccountSettingList({ navigation }) {
 	// Nhóm "Tài khoản của tôi"
@@ -25,13 +25,6 @@ export default function AccountSettingList({ navigation }) {
 			subtitle: "Quản lý địa chỉ giao hàng",
 			icon: "location-outline",
 			action: () => navigation.navigate("MyAddress"),
-		},
-		{
-			id: 3,
-			title: "Phương thức thanh toán",
-			subtitle: "Thẻ & ví điện tử",
-			icon: "card-outline",
-			action: () => navigation.navigate("PaymentMethod"),
 		},
 	];
 
@@ -62,12 +55,9 @@ export default function AccountSettingList({ navigation }) {
 		>
 			<View style={styles.menuItemLeft}>
 				<View style={styles.iconContainer}>
-					<LinearGradient
-						colors={["#4FC3F7", "#29B6F6"]}
-						style={styles.iconGradient}
-					>
-						<Ionicons name={item.icon} size={24} color="#FFFFFF" />
-					</LinearGradient>
+					<View style={styles.iconBackground}>
+						<Ionicons name={item.icon} size={24} color="#007AFF" />
+					</View>
 				</View>
 				<View style={styles.textContainer}>
 					<Text style={styles.menuTitle}>{item.title}</Text>
@@ -80,24 +70,16 @@ export default function AccountSettingList({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Cài đặt tài khoản</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Cài đặt tài khoản"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView
@@ -128,34 +110,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#F5F5F5",
-	},
-	header: {
-		paddingTop: 50,
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	headerContent: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	headerTitle: {
-		fontSize: 20,
-		fontWeight: "600",
-		color: "#FFFFFF",
-		textAlign: "center",
-		flex: 1,
-	},
-	placeholder: {
-		width: 40,
 	},
 	content: {
 		flex: 1,
@@ -201,10 +155,11 @@ const styles = StyleSheet.create({
 	iconContainer: {
 		marginRight: 15,
 	},
-	iconGradient: {
+	iconBackground: {
 		width: 44,
 		height: 44,
 		borderRadius: 22,
+		backgroundColor: "#F0F8FF",
 		alignItems: "center",
 		justifyContent: "center",
 	},

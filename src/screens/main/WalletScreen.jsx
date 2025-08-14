@@ -291,7 +291,14 @@ export default function WalletScreen({ navigation }) {
 							</View>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.secondaryActionButton}>
+						<TouchableOpacity
+							style={styles.secondaryActionButton}
+							onPress={() =>
+								navigation.navigate("TransactionHistory", {
+									initialTab: "refund",
+								})
+							}
+						>
 							<View style={styles.actionContainer}>
 								<Ionicons
 									name="refresh-circle-outline"

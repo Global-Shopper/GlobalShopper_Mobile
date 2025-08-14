@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { LinearGradient } from "expo-linear-gradient";
 import { Alert, Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { setAvatar } from "../features/user";
@@ -35,6 +34,15 @@ interface HeaderProps {
 	// Control visibility of icons
 	showNotificationIcon?: boolean;
 	showChatIcon?: boolean;
+
+	// Header variant control
+	variant?: "gradient" | "clean";
+
+	// Right side button support (for clean variant)
+	rightButton?: {
+		icon: string;
+		onPress: () => void;
+	};
 }
 
 export default function Header({
@@ -54,6 +62,8 @@ export default function Header({
 	navigation,
 	showNotificationIcon = true,
 	showChatIcon = true,
+	variant = "gradient",
+	rightButton,
 }: HeaderProps) {
 	// Determine if this is a simple title header or avatar header
 	const isSimpleHeader = !!title;
@@ -270,9 +280,11 @@ export default function Header({
 		}
 	};
 
-	// Default notification handler - always navigate to NotificationScreen
+	// Default notification handler
 	const handleNotificationPress = () => {
-		if (navigation) {
+		if (onNotificationPress) {
+			onNotificationPress();
+		} else if (navigation) {
 			navigation.navigate("NotificationScreen");
 		}
 	};
@@ -288,13 +300,38 @@ export default function Header({
 
 	console.log(email, name);
 
+	// Render clean variant (for blog screens)
+	if (variant === "clean") {
+		return (
+			<View style={styles.cleanHeader}>
+				<TouchableOpacity
+					style={styles.cleanBackButton}
+					onPress={onBackPress}
+				>
+					<Ionicons name="arrow-back" size={24} color="#1e293b" />
+				</TouchableOpacity>
+				<Text style={styles.cleanHeaderTitle}>{title}</Text>
+				{rightButton ? (
+					<TouchableOpacity
+						style={styles.cleanRightButton}
+						onPress={rightButton.onPress}
+					>
+						<Ionicons
+							name={rightButton.icon as any}
+							size={24}
+							color="#1e293b"
+						/>
+					</TouchableOpacity>
+				) : (
+					<View style={styles.cleanHeaderRight} />
+				)}
+			</View>
+		);
+	}
+
+	// Original clean variant (now default style)
 	return (
-		<LinearGradient
-			colors={["#42A5F5", "#1976D2"]}
-			start={{ x: 0, y: 0 }}
-			end={{ x: 1, y: 1 }}
-			style={styles.header}
-		>
+		<View style={isSimpleHeader ? styles.header : styles.avatarHeader}>
 			<View style={styles.headerContent}>
 				{/* Left side - Title or Avatar */}
 				{isSimpleHeader ? (
@@ -309,7 +346,7 @@ export default function Header({
 								<Ionicons
 									name="arrow-back"
 									size={24}
-									color="#FFFFFF"
+									color="#1e293b"
 								/>
 							</TouchableOpacity>
 						)}
@@ -347,7 +384,7 @@ export default function Header({
 										<Ionicons
 											name="camera"
 											size={20}
-											color="#FFFFFF"
+											color="#1e293b"
 										/>
 									</View>
 								)}
@@ -374,6 +411,21 @@ export default function Header({
 				)}
 
 				<View style={styles.headerRight}>
+					{/* Right button for simple headers */}
+					{isSimpleHeader && rightButton && (
+						<TouchableOpacity
+							style={styles.rightButton}
+							onPress={rightButton.onPress}
+							activeOpacity={0.7}
+						>
+							<Ionicons
+								name={rightButton.icon as any}
+								size={24}
+								color="#1e293b"
+							/>
+						</TouchableOpacity>
+					)}
+
 					{/* Notification Icon */}
 					{showNotificationIcon && (
 						<TouchableOpacity
@@ -384,7 +436,7 @@ export default function Header({
 							<Ionicons
 								name="notifications-outline"
 								size={24}
-								color="#FFFFFF"
+								color="#1e293b"
 							/>
 							{notificationCount > 0 && (
 								<View style={styles.notificationBadge}>
@@ -408,7 +460,7 @@ export default function Header({
 							<Ionicons
 								name="chatbubble-outline"
 								size={24}
-								color="#FFFFFF"
+								color="#1e293b"
 							/>
 							{chatCount > 0 && (
 								<View style={styles.chatBadge}>
@@ -421,25 +473,45 @@ export default function Header({
 					)}
 				</View>
 			</View>
-		</LinearGradient>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	header: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 16,
+		paddingTop: 50,
+		paddingBottom: 16,
+		backgroundColor: "#fff",
+		borderBottomWidth: 1,
+		borderBottomColor: "#e2e8f0",
+		shadowColor: "#007AFF",
+		shadowOffset: {
+			width: 0,
+			height: 3,
+		},
+		shadowOpacity: 0.15,
+		shadowRadius: 5,
+		elevation: 8,
+	},
+	avatarHeader: {
 		paddingHorizontal: 20,
 		paddingTop: 60,
 		paddingBottom: 25,
-		borderBottomLeftRadius: 25,
-		borderBottomRightRadius: 25,
-		shadowColor: "#000",
+		backgroundColor: "#fff",
+		borderBottomWidth: 1,
+		borderBottomColor: "#e2e8f0",
+		shadowColor: "#007AFF",
 		shadowOffset: {
 			width: 0,
-			height: 8,
+			height: 3,
 		},
-		shadowOpacity: 0.15,
-		shadowRadius: 12,
-		elevation: 10,
+		shadowOpacity: 0.12,
+		shadowRadius: 5,
+		elevation: 6,
 	},
 	headerContent: {
 		flexDirection: "row",
@@ -452,9 +524,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	headerTitle: {
-		fontSize: 24,
+		fontSize: 18,
 		fontWeight: "700",
-		color: "#FFFFFF",
+		color: "#1e293b",
 	},
 	avatarContainer: {
 		position: "relative",
@@ -506,16 +578,25 @@ const styles = StyleSheet.create({
 	greetingText: {
 		fontSize: 18,
 		fontWeight: "600",
-		color: "#FFFFFF",
+		color: "#1e293b",
 		marginBottom: 2,
 	},
 	subGreeting: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.8)",
+		color: "#64748b",
 	},
 	headerRight: {
 		flexDirection: "row",
 		alignItems: "center",
+	},
+	rightButton: {
+		width: 40,
+		height: 40,
+		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 8,
+		backgroundColor: "#f1f5f9",
+		marginRight: 8,
 	},
 	notificationContainer: {
 		position: "relative",
@@ -559,7 +640,48 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	backButton: {
+		width: 40,
+		height: 40,
+		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 8,
+		backgroundColor: "#f1f5f9",
 		marginRight: 12,
-		padding: 8,
+	},
+	// Clean variant styles
+	cleanHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingHorizontal: 16,
+		paddingTop: 50,
+		paddingBottom: 16,
+		backgroundColor: "#fff",
+		borderBottomWidth: 1,
+		borderBottomColor: "#e2e8f0",
+	},
+	cleanBackButton: {
+		width: 40,
+		height: 40,
+		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 8,
+		backgroundColor: "#f1f5f9",
+	},
+	cleanHeaderTitle: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#1e293b",
+	},
+	cleanRightButton: {
+		width: 40,
+		height: 40,
+		justifyContent: "center",
+		alignItems: "center",
+		borderRadius: 8,
+		backgroundColor: "#f1f5f9",
+	},
+	cleanHeaderRight: {
+		width: 40,
 	},
 });
