@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import { View, StyleSheet } from "react-native";
-import { Text } from "../ui/text";
+import { StyleSheet, View } from "react-native";
 import {
-	getRequestTypeIcon,
+	formatDate,
 	getRequestTypeBorderColor,
+	getRequestTypeIcon,
 	getRequestTypeText,
 	getShortId,
 	getStatusColor,
 	getStatusText,
-	formatDate,
 } from "../../utils/statusHandler";
+import { Text } from "../ui/text";
 
 const RequestDetailHeader = ({ requestData }) => {
 	return (

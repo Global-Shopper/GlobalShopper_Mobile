@@ -1,7 +1,7 @@
-import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Text } from "../ui/text";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import StoreCard from "../store-card";
+import { Text } from "../ui/text";
 
 const RequestDetailsInfo = ({ requestData, navigation }) => {
 	return (

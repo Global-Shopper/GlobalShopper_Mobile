@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../ui/text";
 
 const RequestActionButtons = ({ status, onCancel, onUpdate }) => {

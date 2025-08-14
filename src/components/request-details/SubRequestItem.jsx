@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
-import { Text } from "../ui/text";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
 import QuotationCard from "../quotation-card";
+import { Text } from "../ui/text";
 
 const SubRequestItem = ({
 	subRequest,
@@ -22,7 +22,8 @@ const SubRequestItem = ({
 	// Check if this sub-request has quotation
 	const hasQuotation = subRequest.requestItems.some(
 		(item) =>
-			item?.quotationDetail && Object.keys(item.quotationDetail).length > 0
+			item?.quotationDetail &&
+			Object.keys(item.quotationDetail).length > 0
 	);
 
 	// Calculate sub-request total if has quotation
@@ -114,10 +115,7 @@ const SubRequestItem = ({
 					return (
 						<ProductCard
 							key={`${subIndex}-${productIndex}`}
-							id={
-								product.id ||
-								`${subIndex}-${productIndex}`
-							}
+							id={product.id || `${subIndex}-${productIndex}`}
 							name={
 								product.productName ||
 								product.name ||
@@ -128,9 +126,7 @@ const SubRequestItem = ({
 								product.productDescription
 							}
 							images={
-								product.images ||
-								product.productImages ||
-								[]
+								product.images || product.productImages || []
 							}
 							price={
 								productMode === "manual"
@@ -175,8 +171,7 @@ const SubRequestItem = ({
 								parsedVariants.color
 							}
 							platform={
-								product.platform ||
-								product.ecommercePlatform
+								product.platform || product.ecommercePlatform
 							}
 							productLink={
 								product.productURL ||
@@ -188,21 +183,13 @@ const SubRequestItem = ({
 							sellerInfo={
 								productMode === "manual"
 									? {
-											name:
-												product.sellerName ||
-												"",
-											phone:
-												product.sellerPhone ||
-												"",
-											email:
-												product.sellerEmail ||
-												"",
+											name: product.sellerName || "",
+											phone: product.sellerPhone || "",
+											email: product.sellerEmail || "",
 											address:
-												product.sellerAddress ||
-												"",
+												product.sellerAddress || "",
 											storeLink:
-												product.sellerStoreLink ||
-												"",
+												product.sellerStoreLink || "",
 									  }
 									: undefined
 							}
@@ -276,8 +263,7 @@ const SubRequestItem = ({
 											quotationDetail?.totalTaxAmount ||
 											0;
 										const totalVNDPrice =
-											quotationDetail?.totalVNDPrice ||
-											0;
+											quotationDetail?.totalVNDPrice || 0;
 										const exchangeRate =
 											quotationDetail?.exchangeRate || 1;
 										const currency =
@@ -299,31 +285,32 @@ const SubRequestItem = ({
 										);
 
 										// Prepare tax details
-										const taxDetails = quotationDetail
-											?.taxBreakdown
-											? {
-													importDuty:
-														quotationDetail
-															.taxBreakdown
-															.importDuty || 0,
-													vat:
-														quotationDetail
-															.taxBreakdown
-															.vat || 0,
-													specialConsumptionTax:
-														quotationDetail
-															.taxBreakdown
-															.specialConsumptionTax ||
-														0,
-													environmentTax:
-														quotationDetail
-															.taxBreakdown
-															.environmentTax ||
-														0,
-													totalTaxAmount:
-														totalTaxAmount,
-											  }
-											: undefined;
+										const taxDetails =
+											quotationDetail?.taxBreakdown
+												? {
+														importDuty:
+															quotationDetail
+																.taxBreakdown
+																.importDuty ||
+															0,
+														vat:
+															quotationDetail
+																.taxBreakdown
+																.vat || 0,
+														specialConsumptionTax:
+															quotationDetail
+																.taxBreakdown
+																.specialConsumptionTax ||
+															0,
+														environmentTax:
+															quotationDetail
+																.taxBreakdown
+																.environmentTax ||
+															0,
+														totalTaxAmount:
+															totalTaxAmount,
+												  }
+												: undefined;
 
 										return (
 											<View
