@@ -7,6 +7,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 const BlogDetail = ({ navigation, route }) => {
@@ -100,21 +101,17 @@ const BlogDetail = ({ navigation, route }) => {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<TouchableOpacity
-					style={styles.backButton}
-					onPress={() => navigation.goBack()}
-				>
-					<Ionicons name="arrow-back" size={24} color="#1e293b" />
-				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Chi tiết bài viết</Text>
-				<TouchableOpacity
-					style={styles.shareButton}
-					onPress={handleShare}
-				>
-					<Ionicons name="share-outline" size={24} color="#1e293b" />
-				</TouchableOpacity>
-			</View>
+			<Header
+				title="Chi tiết bài viết"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				rightButton={{
+					icon: "share-outline",
+					onPress: handleShare,
+				}}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			<ScrollView
 				style={styles.scrollView}
@@ -218,38 +215,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#fff",
-	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: 16,
-		paddingTop: 50,
-		paddingBottom: 16,
-		backgroundColor: "#fff",
-		borderBottomWidth: 1,
-		borderBottomColor: "#e2e8f0",
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		justifyContent: "center",
-		alignItems: "center",
-		borderRadius: 8,
-		backgroundColor: "#f1f5f9",
-	},
-	headerTitle: {
-		fontSize: 18,
-		fontWeight: "700",
-		color: "#1e293b",
-	},
-	shareButton: {
-		width: 40,
-		height: 40,
-		justifyContent: "center",
-		alignItems: "center",
-		borderRadius: 8,
-		backgroundColor: "#f1f5f9",
 	},
 	scrollView: {
 		flex: 1,

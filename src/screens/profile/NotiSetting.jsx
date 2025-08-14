@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ScrollView,
@@ -10,6 +9,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 
 export default function NotiSetting({ navigation }) {
 	const [settings, setSettings] = useState({
@@ -52,12 +52,9 @@ export default function NotiSetting({ navigation }) {
 		<View style={styles.settingItem} key={settingKey}>
 			<View style={styles.settingLeft}>
 				<View style={styles.iconContainer}>
-					<LinearGradient
-						colors={["#64B5F6", "#42A5F5"]}
-						style={styles.iconGradient}
-					>
-						<Ionicons name={icon} size={20} color="#FFFFFF" />
-					</LinearGradient>
+					<View style={styles.iconBackground}>
+						<Ionicons name={icon} size={20} color="#007AFF" />
+					</View>
 				</View>
 				<View style={styles.textContainer}>
 					<Text style={styles.settingTitle}>{title}</Text>
@@ -117,24 +114,16 @@ export default function NotiSetting({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Cài đặt thông báo</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Cài đặt thông báo"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView

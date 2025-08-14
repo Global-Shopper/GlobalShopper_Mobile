@@ -1,13 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import {
-	ScrollView,
-	StatusBar,
-	StyleSheet,
-	Text,
-	TouchableOpacity,
-	View,
-} from "react-native";
+import { ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import Header from "../../components/header";
 
 export default function PolicyScreen({ navigation }) {
 	const policyData = [
@@ -76,24 +69,16 @@ export default function PolicyScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Chính sách bảo mật</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Chính sách bảo mật"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView
@@ -103,16 +88,13 @@ export default function PolicyScreen({ navigation }) {
 				{/* Header info */}
 				<View style={styles.headerInfo}>
 					<View style={styles.titleContainer}>
-						<LinearGradient
-							colors={["#4CAF50", "#45A049"]}
-							style={styles.titleIcon}
-						>
+						<View style={styles.titleIconBackground}>
 							<Ionicons
 								name="shield-checkmark"
 								size={24}
 								color="#FFFFFF"
 							/>
-						</LinearGradient>
+						</View>
 						<Text style={styles.titleMain}>
 							CHÍNH SÁCH BẢO MẬT – GSHOP
 						</Text>
@@ -139,37 +121,31 @@ export default function PolicyScreen({ navigation }) {
 
 						<View style={styles.contactInfo}>
 							<View style={styles.contactItem}>
-								<LinearGradient
-									colors={["#4CAF50", "#45A049"]}
-									style={styles.contactIcon}
-								>
+								<View style={styles.contactIconEmail}>
 									<Ionicons
 										name="mail"
 										size={16}
 										color="#FFFFFF"
 									/>
-								</LinearGradient>
+								</View>
 								<View style={styles.contactDetail}>
 									<Text style={styles.contactLabel}>
 										Email
 									</Text>
 									<Text style={styles.contactValue}>
-										support@gshop.vn
+										sep490gshop@gmail.com
 									</Text>
 								</View>
 							</View>
 
 							<View style={styles.contactItem}>
-								<LinearGradient
-									colors={["#2196F3", "#1976D2"]}
-									style={styles.contactIcon}
-								>
+								<View style={styles.contactIconPhone}>
 									<Ionicons
 										name="call"
 										size={16}
 										color="#FFFFFF"
 									/>
-								</LinearGradient>
+								</View>
 								<View style={styles.contactDetail}>
 									<Text style={styles.contactLabel}>
 										Hotline
@@ -190,32 +166,26 @@ export default function PolicyScreen({ navigation }) {
 					</Text>
 					<View style={styles.securityFeatures}>
 						<View style={styles.securityItem}>
-							<LinearGradient
-								colors={["#FF9800", "#F57C00"]}
-								style={styles.securityIcon}
-							>
+							<View style={styles.securityIconOrange}>
 								<Ionicons
 									name="eye-off"
 									size={16}
 									color="#FFFFFF"
 								/>
-							</LinearGradient>
+							</View>
 							<Text style={styles.securityText}>
 								Không chia sẻ thông tin
 							</Text>
 						</View>
 
 						<View style={styles.securityItem}>
-							<LinearGradient
-								colors={["#2196F3", "#1976D2"]}
-								style={styles.securityIcon}
-							>
+							<View style={styles.securityIconBlue}>
 								<Ionicons
 									name="server"
 									size={16}
 									color="#FFFFFF"
 								/>
-							</LinearGradient>
+							</View>
 							<Text style={styles.securityText}>
 								Máy chủ an toàn đạt chuẩn
 							</Text>
@@ -468,6 +438,51 @@ const styles = StyleSheet.create({
 	footerContent: {
 		flexDirection: "row",
 		alignItems: "center",
+	},
+	titleIconBackground: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "#4CAF50",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
+	},
+	contactIconEmail: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "#4CAF50",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
+	},
+	contactIconPhone: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "#2196F3",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
+	},
+	securityIconOrange: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "#FF9800",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
+	},
+	securityIconBlue: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: "#2196F3",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 12,
 	},
 	footerText: {
 		fontSize: 14,

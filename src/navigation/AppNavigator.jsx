@@ -26,7 +26,6 @@ import EditAddress from "../screens/profile/EditAddress";
 import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
-import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import WithdrawList from "../screens/profile/WithdrawList";
@@ -119,11 +118,6 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="EditAddress"
 				component={EditAddress}
-				options={{ headerShown: false }}
-			/>
-			<Stack.Screen
-				name="PaymentMethod"
-				component={PaymentMethod}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
@@ -11,6 +10,7 @@ import {
 	View,
 } from "react-native";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import {
 	useCreateBankAccountMutation,
@@ -123,7 +123,7 @@ const WithdrawScreen = ({ navigation }) => {
 		setShowNewAccountForm(savedBankAccounts?.length === 0);
 	}, [savedBankAccounts?.length, isLoadingSavedAccounts]);
 
-	// Fetch banks from VietQR 
+	// Fetch banks from VietQR
 	useEffect(() => {
 		const fetchBanks = async () => {
 			setIsLoadingBanks(true);
@@ -387,24 +387,16 @@ const WithdrawScreen = ({ navigation }) => {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Rút tiền</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Rút tiền"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			<ScrollView
 				style={styles.content}
@@ -750,34 +742,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#F5F5F5",
-	},
-	header: {
-		paddingTop: 50,
-		paddingBottom: 20,
-		paddingHorizontal: 20,
-	},
-	headerContent: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	headerTitle: {
-		fontSize: 20,
-		fontWeight: "600",
-		color: "#FFFFFF",
-		textAlign: "center",
-		flex: 1,
-	},
-	placeholder: {
-		width: 40,
 	},
 	content: {
 		flex: 1,

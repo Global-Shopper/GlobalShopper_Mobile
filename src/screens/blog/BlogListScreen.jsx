@@ -8,6 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import blogData from "./blog.json";
 
@@ -130,16 +131,13 @@ const BlogListScreen = ({ navigation }) => {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<TouchableOpacity
-					style={styles.backButton}
-					onPress={() => navigation.goBack()}
-				>
-					<Ionicons name="arrow-back" size={24} color="#1e293b" />
-				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Blog</Text>
-				<View style={styles.headerRight} />
-			</View>
+			<Header
+				title="Blog"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Category Filter */}
 			{renderCategoryFilter()}
@@ -161,33 +159,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8fafc",
-	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		paddingHorizontal: 16,
-		paddingTop: 50,
-		paddingBottom: 16,
-		backgroundColor: "#fff",
-		borderBottomWidth: 1,
-		borderBottomColor: "#e2e8f0",
-	},
-	backButton: {
-		width: 40,
-		height: 40,
-		justifyContent: "center",
-		alignItems: "center",
-		borderRadius: 8,
-		backgroundColor: "#f1f5f9",
-	},
-	headerTitle: {
-		fontSize: 20,
-		fontWeight: "700",
-		color: "#1e293b",
-	},
-	headerRight: {
-		width: 40,
 	},
 	categoryWrapper: {
 		backgroundColor: "#fff",

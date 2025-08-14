@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -14,6 +13,7 @@ import {
 	View,
 } from "react-native";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import {
 	useCreateBankAccountMutation,
@@ -513,26 +513,16 @@ const AddWithdraw = ({ navigation, route }) => {
 			style={styles.container}
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>
-						{isEdit ? "Sửa tài khoản" : "Thêm tài khoản"}
-					</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title={isEdit ? "Sửa tài khoản" : "Thêm tài khoản"}
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView
