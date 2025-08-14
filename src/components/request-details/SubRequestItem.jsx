@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { formatDate } from "../../utils/statusHandler";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
 import QuotationCard from "../quotation-card";
 import { Text } from "../ui/text";
-import { formatDate } from "../../utils/statusHandler";
 
 // Helper function to check if quotation is expired
 const isQuotationExpired = (subRequest, displayData) => {
@@ -14,7 +14,7 @@ const isQuotationExpired = (subRequest, displayData) => {
 		const expiry = new Date(displayData.expiredAt);
 		return currentDate > expiry;
 	}
-	
+
 	// Then check expiredDate in quotationForPurchase
 	if (!subRequest?.quotationForPurchase?.expiredDate) {
 		return false; // No expiry date set, assume not expired
@@ -22,9 +22,9 @@ const isQuotationExpired = (subRequest, displayData) => {
 
 	const expiredDays = subRequest.quotationForPurchase.expiredDate;
 	const currentDate = new Date();
-	
+
 	// If expiredDate is a number of days, need to calculate from creation date
-	if (typeof expiredDays === 'number') {
+	if (typeof expiredDays === "number") {
 		// If it's a small number, it's likely days from creation
 		if (expiredDays < 1000) {
 			// For very small numbers like 1, assume it's expired
@@ -50,12 +50,12 @@ const getExpiryDate = (subRequest, displayData) => {
 	if (displayData?.expiredAt) {
 		return new Date(displayData.expiredAt);
 	}
-	
+
 	if (!subRequest?.quotationForPurchase?.expiredDate) return null;
 
 	const expiredDays = subRequest.quotationForPurchase.expiredDate;
-	
-	if (typeof expiredDays === 'number') {
+
+	if (typeof expiredDays === "number") {
 		if (expiredDays >= 1000) {
 			// It's a timestamp
 			return new Date(expiredDays);
@@ -63,7 +63,9 @@ const getExpiryDate = (subRequest, displayData) => {
 			// It's days from creation - calculate from createdAt if available
 			if (displayData?.createdAt) {
 				const creationDate = new Date(displayData.createdAt);
-				const expiryDate = new Date(creationDate.getTime() + (expiredDays * 24 * 60 * 60 * 1000));
+				const expiryDate = new Date(
+					creationDate.getTime() + expiredDays * 24 * 60 * 60 * 1000
+				);
 				return expiryDate;
 			}
 		}
@@ -96,14 +98,14 @@ const SubRequestItem = ({
 	// Check if quotations are expired
 	const isExpired = hasExpiredQuotations(subRequest, displayData);
 	const expiryDate = getExpiryDate(subRequest, displayData);
-	
+
 	// Debug logging
-	console.log('SubRequestItem Debug:', {
+	console.log("SubRequestItem Debug:", {
 		subRequestId: subRequest?.id,
 		requestExpiredAt: displayData?.expiredAt,
 		quotationExpiredDate: subRequest?.quotationForPurchase?.expiredDate,
 		isExpired,
-		expiryDate: expiryDate?.toString()
+		expiryDate: expiryDate?.toString(),
 	});
 
 	// Calculate sub-request total if has quotation
@@ -467,8 +469,8 @@ const SubRequestItem = ({
 										)}
 									</TouchableOpacity>
 									<Text style={styles.checkboxText}>
-										Tôi đồng ý với báo giá này và chấp nhận phí
-										phát sinh (nếu có)
+										Tôi đồng ý với báo giá này và chấp nhận
+										phí phát sinh (nếu có)
 									</Text>
 								</View>
 							)}
@@ -489,11 +491,13 @@ const SubRequestItem = ({
 											Yêu cầu đã hết hạn
 										</Text>
 										<Text style={styles.expiredMessage}>
-											Bạn không thể thực hiện thanh toán cho yêu cầu này vì đã quá hạn.
+											Bạn không thể thực hiện thanh toán
+											cho yêu cầu này vì đã quá hạn.
 										</Text>
 										{expiryDate && (
 											<Text style={styles.expiredDate}>
-												Hạn thanh toán: {formatDate(expiryDate)}
+												Hạn thanh toán:{" "}
+												{formatDate(expiryDate)}
 											</Text>
 										)}
 									</View>

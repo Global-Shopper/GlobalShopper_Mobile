@@ -143,28 +143,26 @@ export default function AddStore({ navigation }) {
 						showSubmitButton={false}
 						onDataChange={handleStoreDataChange}
 					/>
-
-					{/* Add Product Button */}
-					<TouchableOpacity
-						style={styles.addProductButton}
-						onPress={handleAddProduct}
-					>
-						<LinearGradient
-							colors={["#4FC3F7", "#29B6F6"]}
-							style={styles.addProductButtonGradient}
-						>
-							<Ionicons
-								name="add-circle-outline"
-								size={24}
-								color="#FFFFFF"
-							/>
-							<Text style={styles.addProductButtonText}>
-								Thêm sản phẩm
-							</Text>
-						</LinearGradient>
-					</TouchableOpacity>
 				</ScrollView>
 			</KeyboardAvoidingView>
+
+			{/* Fixed Add Product Button */}
+			<View style={styles.fixedButtonContainer}>
+				<TouchableOpacity
+					style={styles.addProductButton}
+					onPress={handleAddProduct}
+				>
+					<LinearGradient
+						colors={["#4FC3F7", "#29B6F6"]}
+						style={styles.addProductButtonGradient}
+					>
+						<Text style={styles.addProductButtonText}>
+							Thêm sản phẩm
+						</Text>
+					</LinearGradient>
+				</TouchableOpacity>
+			</View>
+
 			<Dialog />
 		</View>
 	);
@@ -185,7 +183,7 @@ const styles = StyleSheet.create({
 		flexGrow: 1,
 		paddingHorizontal: 20,
 		paddingTop: 10,
-		paddingBottom: 30,
+		paddingBottom: 100, // Extra padding for fixed button
 	},
 	helpButtonContainer: {
 		alignItems: "flex-end",
@@ -238,8 +236,6 @@ const styles = StyleSheet.create({
 		lineHeight: 20,
 	},
 	addProductButton: {
-		marginTop: 20,
-		marginBottom: 30,
 		borderRadius: 12,
 		overflow: "hidden",
 		shadowColor: "#000",
@@ -259,6 +255,22 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#FFFFFF",
-		marginLeft: 8,
+	},
+	fixedButtonContainer: {
+		position: "absolute",
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: "#f8f9fa",
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+		paddingBottom: 30,
+		borderTopWidth: 1,
+		borderTopColor: "#E5E5E5",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
 	},
 });
