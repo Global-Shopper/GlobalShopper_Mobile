@@ -79,7 +79,12 @@ export default function OrderDetails({ navigation, route }) {
 	};
 
 	const handleReview = () => {
-		navigation.navigate("FeedbackDetails", { orderData });
+		// Nếu đã có feedback thì xem feedback, nếu chưa thì tạo feedback
+		if (orderData.feedback || orderData.feedbacks?.length > 0) {
+			navigation.navigate("FeedbackOrder", { orderData });
+		} else {
+			navigation.navigate("FeedbackDetails", { orderData });
+		}
 	};
 
 	const handleEditAddress = () => {
@@ -489,9 +494,11 @@ export default function OrderDetails({ navigation, route }) {
 						style={styles.reviewButton}
 						onPress={handleReview}
 					>
-						<Ionicons name="star-outline" size={20} color="#fff" />
 						<Text style={styles.reviewButtonText}>
-							Đánh giá sản phẩm
+							{orderData.feedback ||
+							orderData.feedbacks?.length > 0
+								? "Xem đánh giá"
+								: "Đánh giá sản phẩm"}
 						</Text>
 					</TouchableOpacity>
 				)}
@@ -827,7 +834,7 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	reviewButton: {
-		backgroundColor: "#ffc107",
+		backgroundColor: "#1d4ed8",
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
