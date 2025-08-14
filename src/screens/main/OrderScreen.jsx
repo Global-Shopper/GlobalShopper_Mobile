@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -105,6 +106,14 @@ export default function OrderScreen({ navigation }) {
 			loadFeedbackStatus();
 		}
 	}, [orders, getOrderById]);
+
+	// Refresh orders when screen comes into focus (e.g., after checkout)
+	useFocusEffect(
+		useCallback(() => {
+			console.log("OrderScreen focused, refreshing orders...");
+			refetch();
+		}, [refetch])
+	);
 
 	const onRefresh = async () => {
 		setRefreshing(true);

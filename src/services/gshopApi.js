@@ -406,6 +406,25 @@ const gshopApi = createApi({
 			invalidatesTags: ["Order"],
 		}),
 
+		// Checkout endpoints
+		checkout: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.CHECKOUT,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest", "Wallet", "Order"],
+		}),
+
+		directCheckout: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.DIRECT_CHECKOUT,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest", "Wallet", "Order"],
+		}),
+
 		// Feedback endpoints
 		createFeedback: builder.mutation({
 			query: (feedbackData) => {
@@ -483,6 +502,9 @@ export const {
 	useGetOrderByIdQuery,
 	useLazyGetOrderByIdQuery,
 	useCancelOrderMutation,
+	// Checkout hooks
+	useCheckoutMutation,
+	useDirectCheckoutMutation,
 	// Feedback hooks
 	useCreateFeedbackMutation,
 	useGetAllFeedbackQuery,

@@ -1,18 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getShortId } from "../../utils/statusHandler";
 
 const SuccessPaymentScreen = ({ navigation, route }) => {
 	const { paymentMethod, amount, requestId } = route.params || {};
-
-	// Helper function to get shortened UUID with #
-	const getShortId = (fullId) => {
-		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return "#" + fullId.split("-")[0];
-		}
-		return "#" + fullId;
-	};
 
 	const getPaymentMethodDisplay = (method) => {
 		switch (method) {
@@ -28,11 +20,11 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 	};
 
 	const handleBackToHome = () => {
-		navigation.navigate("Tabs", { screen: "Home" });
+		navigation.navigate("Tabs", { screen: "HomeScreen" });
 	};
 
 	const handleViewOrders = () => {
-		navigation.navigate("Tabs", { screen: "Order" });
+		navigation.navigate("Tabs", { screen: "OrderScreen" });
 	};
 
 	return (
@@ -63,7 +55,7 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 						Thanh toán thành công!
 					</Text>
 					<Text style={styles.successSubtitle}>
-						Yêu cầu của bạn đã được xác nhận
+						Đơn hàng đã được tạo và tiền đã được trừ khỏi ví
 					</Text>
 				</LinearGradient>
 			</View>
