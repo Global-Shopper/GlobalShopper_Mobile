@@ -18,17 +18,17 @@ export default function RequestScreen({ navigation }) {
 
 	const tabs = [
 		{ id: "all", label: "Tất cả", status: null },
-		{ id: "sent", label: "Đã gửi", status: "sent" },
-		{ id: "checking", label: "Đang xử lý", status: "checking" },
-		{ id: "quoted", label: "Đã báo giá", status: "quoted" },
+		{ id: "sent", label: "Đã gửi", status: "SENT" },
+		{ id: "checking", label: "Đang xử lý", status: "CHECKING" },
+		{ id: "quoted", label: "Đã báo giá", status: "QUOTED" },
 		{
 			id: "completed",
 			label: "Đã thanh toán",
-			status: "completed",
-			alternativeStatuses: ["paid", "success"],
+			status: "PAID",
+			alternativeStatuses: ["COMPLETED", "CONFIRMED", "SUCCESS"],
 		},
-		{ id: "cancelled", label: "Đã hủy", status: "cancelled" },
-		{ id: "insufficient", label: "Cập nhật", status: "insufficient" },
+		{ id: "cancelled", label: "Đã hủy", status: "CANCELLED" },
+		{ id: "insufficient", label: "Cập nhật", status: "INSUFFICIENT" },
 	];
 
 	const getAPIParams = () => {
@@ -40,7 +40,7 @@ export default function RequestScreen({ navigation }) {
 		if (activeTab !== "all") {
 			const selectedTab = tabs.find((tab) => tab.id === activeTab);
 			if (selectedTab?.status) {
-				baseParams.status = selectedTab.status.toUpperCase();
+				baseParams.status = selectedTab.status; // Send exact status to API
 			}
 		}
 		return baseParams;
@@ -126,12 +126,26 @@ export default function RequestScreen({ navigation }) {
 
 		const selectedTab = tabs.find((tab) => tab.id === activeTab);
 		if (selectedTab?.status) {
-			const filtered = allRequests.filter((request) => {
-				const requestStatus = request.status?.toLowerCase();
-				const primaryStatus = selectedTab.status.toLowerCase();
+			console.log(
+				`Looking for requests with status: ${selectedTab.status}`
+			);
+			if (selectedTab.alternativeStatuses) {
+				console.log(
+					`Alternative statuses: ${selectedTab.alternativeStatuses.join(
+						", "
+					)}`
+				);
+			}
 
-				// Check primary status
+			const filtered = allRequests.filter((request) => {
+				const requestStatus = request.status; // Keep original case from API
+				const primaryStatus = selectedTab.status; // Use uppercase status
+
+				// Check primary status (exact match)
 				if (requestStatus === primaryStatus) {
+					console.log(
+						`✅ Match found: ${requestStatus} === ${primaryStatus}`
+					);
 					return true;
 				}
 
@@ -140,9 +154,17 @@ export default function RequestScreen({ navigation }) {
 					selectedTab.alternativeStatuses &&
 					Array.isArray(selectedTab.alternativeStatuses)
 				) {
-					return selectedTab.alternativeStatuses.some(
-						(altStatus) => requestStatus === altStatus.toLowerCase()
+					const isAltMatch = selectedTab.alternativeStatuses.some(
+						(altStatus) => requestStatus === altStatus
 					);
+					if (isAltMatch) {
+						console.log(
+							`✅ Alternative match found: ${requestStatus} in [${selectedTab.alternativeStatuses.join(
+								", "
+							)}]`
+						);
+						return true;
+					}
 				}
 
 				return false;
