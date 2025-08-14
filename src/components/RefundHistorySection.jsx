@@ -1,7 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { formatDate } from "../utils/statusHandler";
+import {
+	formatDate,
+	getStatusColor,
+	getStatusText,
+} from "../utils/statusHandler";
 import { Text } from "./ui/text";
 
 const RefundHistorySection = ({ orderData }) => {
@@ -36,34 +40,6 @@ const RefundHistorySection = ({ orderData }) => {
 	]);
 
 	const [expandedItems, setExpandedItems] = useState({});
-
-	// Get status color
-	const getStatusColor = (status) => {
-		switch (status) {
-			case "PENDING":
-				return "#ffc107";
-			case "APPROVED":
-				return "#28a745";
-			case "REJECTED":
-				return "#dc3545";
-			default:
-				return "#6c757d";
-		}
-	};
-
-	// Get status text
-	const getStatusText = (status) => {
-		switch (status) {
-			case "PENDING":
-				return "Đang xử lý";
-			case "APPROVED":
-				return "Đã chấp nhận";
-			case "REJECTED":
-				return "Bị từ chối";
-			default:
-				return "Không xác định";
-		}
-	};
 
 	// Toggle expand item
 	const toggleExpand = (itemId) => {
