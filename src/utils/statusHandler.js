@@ -104,7 +104,7 @@ export const getStatusText = (status) => {
 		[REQUEST_STATUS.REJECTED]: "Bị từ chối",
 		// Refund statuses
 		[REFUND_STATUS.PENDING]: "Đang xử lý",
-		[REFUND_STATUS.APPROVED]: "Đã chấp nhận",
+		[REFUND_STATUS.APPROVED]: "Chấp nhận",
 		[REFUND_STATUS.REJECTED]: "Bị từ chối",
 	};
 
