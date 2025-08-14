@@ -38,29 +38,6 @@ export default function OrderScreen({ navigation }) {
 	// Lazy query to get order details with feedback info
 	const [getOrderById] = useLazyGetOrderByIdQuery();
 
-	// Function to manually refresh feedback status for a specific order
-	/* const refreshFeedbackStatus = async (orderId) => {
-		try {
-			const result = await getOrderById(orderId);
-			if (result.data) {
-				const hasFeedback =
-					result.data.feedback &&
-					(result.data.feedback.id ||
-						result.data.feedback.rating ||
-						result.data.feedback.comment);
-
-				setFeedbackMap((prev) => ({
-					...prev,
-					[orderId]: hasFeedback,
-				}));
-
-				console.log(`Refreshed feedback status for order ${orderId}: ${hasFeedback}`);
-			}
-		} catch (error) {
-			console.error(`Error refreshing feedback for order ${orderId}:`, error);
-		}
-	}; */
-
 	// Extract orders from API response and sort by newest first
 	const orders = useMemo(() => {
 		const ordersList = ordersResponse?.content || [];
@@ -423,6 +400,9 @@ export default function OrderScreen({ navigation }) {
 					filteredOrders.length === 0 && styles.emptyListContent,
 				]}
 				showsVerticalScrollIndicator={true}
+				bounces={true}
+				alwaysBounceVertical={false}
+				removeClippedSubviews={false}
 				refreshControl={
 					<RefreshControl
 						refreshing={refreshing}
@@ -516,7 +496,8 @@ const styles = StyleSheet.create({
 	},
 	flatListContent: {
 		paddingHorizontal: 16,
-		paddingVertical: 8,
+		paddingTop: 8,
+		paddingBottom: 100, // Add more bottom padding for better scrolling
 		flexGrow: 1,
 	},
 	emptyListContent: {
@@ -527,6 +508,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		paddingVertical: 80,
+		minHeight: 200, // Ensure minimum height for empty state
 	},
 	emptyStateText: {
 		color: "#6b7280",
