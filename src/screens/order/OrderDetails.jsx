@@ -75,7 +75,7 @@ export default function OrderDetails({ navigation, route }) {
 	};
 
 	const handleSupportCenter = () => {
-		showInfoDialog("Thông báo", "Tính năng đang phát triển");
+		navigation.navigate("FAQScreen");
 	};
 
 	const handleReview = () => {
