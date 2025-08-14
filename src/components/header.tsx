@@ -280,9 +280,11 @@ export default function Header({
 		}
 	};
 
-	// Default notification handler - always navigate to NotificationScreen
+	// Default notification handler
 	const handleNotificationPress = () => {
-		if (navigation) {
+		if (onNotificationPress) {
+			onNotificationPress();
+		} else if (navigation) {
 			navigation.navigate("NotificationScreen");
 		}
 	};

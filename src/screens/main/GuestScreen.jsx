@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
 export default function GuestScreen({ navigation, route }) {
@@ -56,40 +57,14 @@ export default function GuestScreen({ navigation, route }) {
 	return (
 		<View style={styles.container}>
 			{/* Header */}
-			<View style={styles.header}>
-				<LinearGradient
-					colors={["#42A5F5", "#1976D2"]}
-					start={{ x: 0, y: 0 }}
-					end={{ x: 1, y: 1 }}
-					style={styles.headerGradient}
-				>
-					<View style={styles.headerContent}>
-						<Text style={styles.headerTitle}>{tabName}</Text>
-						<View style={styles.headerIcons}>
-							<TouchableOpacity
-								style={styles.iconButton}
-								onPress={handleChatPress}
-							>
-								<Ionicons
-									name="chatbubble-outline"
-									size={24}
-									color="#fff"
-								/>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.iconButton}
-								onPress={handleNotificationPress}
-							>
-								<Ionicons
-									name="notifications-outline"
-									size={24}
-									color="#fff"
-								/>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</LinearGradient>
-			</View>
+			<Header
+				title={tabName}
+				onNotificationPress={handleNotificationPress}
+				onChatPress={handleChatPress}
+				showNotificationIcon={true}
+				showChatIcon={true}
+				variant="gradient"
+			/>
 
 			{/* Content */}
 			<View style={styles.content}>
@@ -151,30 +126,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8f9fa",
-	},
-	header: {
-		paddingTop: 50,
-	},
-	headerGradient: {
-		paddingHorizontal: 20,
-		paddingVertical: 20,
-	},
-	headerContent: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	headerTitle: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-	},
-	headerIcons: {
-		flexDirection: "row",
-		gap: 12,
-	},
-	iconButton: {
-		padding: 8,
 	},
 	content: {
 		flex: 1,
