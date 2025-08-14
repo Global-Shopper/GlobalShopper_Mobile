@@ -47,7 +47,7 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			onPress: () =>
 				showLoginDialog
 					? showLoginDialog()
-					: console.log("Navigate to statistics"),
+					: navigation?.navigate("StatisticScreen"),
 		},
 		{
 			id: 7,

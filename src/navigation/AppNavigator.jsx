@@ -38,6 +38,7 @@ import RequestDetails from "../screens/request/RequestDetails";
 import RequestHistory from "../screens/request/RequestHistory";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
+import StatisticScreen from "../screens/statistic/StatisticScreen";
 import SuccessWithdrawScreen from "../screens/wallet/SuccessWithdrawScreen";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
@@ -273,6 +274,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="BlogDetail"
 				component={BlogDetail}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="StatisticScreen"
+				component={StatisticScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>
