@@ -33,34 +33,37 @@ const BlogListScreen = ({ navigation }) => {
 	};
 
 	const renderCategoryFilter = () => (
-		<ScrollView
-			horizontal
-			showsHorizontalScrollIndicator={false}
-			style={styles.categoryContainer}
-			contentContainerStyle={styles.categoryContent}
-		>
-			{categories.map((category, index) => (
-				<TouchableOpacity
-					key={index}
-					style={[
-						styles.categoryButton,
-						selectedCategory === category &&
-							styles.categoryButtonActive,
-					]}
-					onPress={() => setSelectedCategory(category)}
-				>
-					<Text
+		<View style={styles.categoryWrapper}>
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				style={styles.categoryContainer}
+				contentContainerStyle={styles.categoryContent}
+			>
+				{categories.map((category, index) => (
+					<TouchableOpacity
+						key={index}
 						style={[
-							styles.categoryText,
+							styles.categoryButton,
 							selectedCategory === category &&
-								styles.categoryTextActive,
+								styles.categoryButtonActive,
 						]}
+						onPress={() => setSelectedCategory(category)}
+						activeOpacity={0.7}
 					>
-						{category}
-					</Text>
-				</TouchableOpacity>
-			))}
-		</ScrollView>
+						<Text
+							style={[
+								styles.categoryText,
+								selectedCategory === category &&
+									styles.categoryTextActive,
+							]}
+						>
+							{category}
+						</Text>
+					</TouchableOpacity>
+				))}
+			</ScrollView>
+		</View>
 	);
 
 	const renderBlogItem = ({ item }) => (
@@ -186,35 +189,46 @@ const styles = StyleSheet.create({
 	headerRight: {
 		width: 40,
 	},
-	categoryContainer: {
+	categoryWrapper: {
 		backgroundColor: "#fff",
-		paddingVertical: 12,
+		paddingTop: 12,
+		paddingBottom: 8,
 		borderBottomWidth: 1,
 		borderBottomColor: "#e2e8f0",
 	},
+	categoryContainer: {
+		backgroundColor: "transparent",
+		paddingVertical: 8,
+	},
 	categoryContent: {
 		paddingHorizontal: 16,
+		paddingRight: 32,
 	},
 	categoryButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		marginRight: 8,
-		borderRadius: 20,
+		paddingHorizontal: 18,
+		paddingVertical: 10,
+		marginRight: 10,
+		borderRadius: 22,
 		backgroundColor: "#f1f5f9",
 		borderWidth: 1,
-		borderColor: "#e2e8f0",
+		borderColor: "#cbd5e1",
+		minHeight: 44,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	categoryButtonActive: {
 		backgroundColor: "#42A5F5",
 		borderColor: "#42A5F5",
+		transform: [{ scale: 1.05 }],
 	},
 	categoryText: {
 		fontSize: 14,
-		fontWeight: "500",
-		color: "#64748b",
+		fontWeight: "600",
+		color: "#475569",
 	},
 	categoryTextActive: {
 		color: "#fff",
+		fontWeight: "700",
 	},
 	listContainer: {
 		padding: 16,

@@ -39,12 +39,35 @@ const BlogDetail = ({ navigation, route }) => {
 		const paragraphs = blog.content.split("\n\n");
 
 		return paragraphs.map((paragraph, index) => {
-			if (paragraph.startsWith("**") && paragraph.endsWith("**")) {
-				// Bold headers
+			// Check if paragraph contains bold text (like **Bước 1:** or **Title**)
+			if (paragraph.includes("**")) {
+				// Split by bold markers and process each part
+				const parts = paragraph.split(/(\*\*[^*]+\*\*)/);
+
 				return (
-					<Text key={index} style={styles.contentHeader}>
-						{paragraph.replace(/\*\*/g, "")}
-					</Text>
+					<View key={index} style={styles.paragraphContainer}>
+						<Text style={styles.contentText}>
+							{parts.map((part, partIndex) => {
+								if (
+									part.startsWith("**") &&
+									part.endsWith("**")
+								) {
+									// Bold text
+									return (
+										<Text
+											key={partIndex}
+											style={styles.contentBold}
+										>
+											{part.replace(/\*\*/g, "")}
+										</Text>
+									);
+								} else {
+									// Regular text
+									return part;
+								}
+							})}
+						</Text>
+					</View>
 				);
 			} else if (paragraph.includes("- ")) {
 				// List items
@@ -296,12 +319,21 @@ const styles = StyleSheet.create({
 	contentSection: {
 		marginBottom: 24,
 	},
+	paragraphContainer: {
+		marginBottom: 16,
+	},
 	contentHeader: {
 		fontSize: 18,
 		fontWeight: "700",
 		color: "#1e293b",
 		marginTop: 20,
 		marginBottom: 12,
+		lineHeight: 24,
+	},
+	contentBold: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#1e293b",
 		lineHeight: 24,
 	},
 	contentText: {
