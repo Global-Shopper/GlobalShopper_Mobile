@@ -314,18 +314,16 @@ export default function ChangePassword({ navigation }) {
 					activeOpacity={0.8}
 					disabled={isChangingPassword}
 				>
-					<View
-						style={[
-							styles.changeButtonBackground,
-							isChangingPassword && styles.changeButtonDisabled,
-						]}
-					>
-						{isChangingPassword ? (
+					<View style={styles.changeButtonBackground}>
+						{isChangingPassword && (
 							<ActivityIndicator size="small" color="#FFFFFF" />
-						) : (
-							<Ionicons name="key" size={20} color="#FFFFFF" />
 						)}
-						<Text style={styles.changeButtonText}>
+						<Text
+							style={[
+								styles.changeButtonText,
+								isChangingPassword && { marginLeft: 8 },
+							]}
+						>
 							{isChangingPassword
 								? "Đang thay đổi..."
 								: "Thay đổi mật khẩu"}
@@ -477,6 +475,16 @@ const styles = StyleSheet.create({
 	changeButtonDisabled: {
 		elevation: 1,
 		shadowOpacity: 0.1,
+		opacity: 0.7,
+	},
+	changeButtonBackground: {
+		backgroundColor: "#007AFF",
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 20,
+		borderRadius: 12,
 	},
 	changeButtonGradient: {
 		flexDirection: "row",
@@ -489,6 +497,5 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
-		marginLeft: 8,
 	},
 });
