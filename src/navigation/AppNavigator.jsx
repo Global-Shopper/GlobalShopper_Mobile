@@ -6,6 +6,8 @@ import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
 import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
+import BlogDetail from "../screens/blog/BlogDetail";
+import BlogListScreen from "../screens/blog/BlogListScreen";
 import FeedbackDetails from "../screens/feedback/FeedbackDetails";
 import FeedbackOrder from "../screens/feedback/FeedbackOrder";
 import NotificationScreen from "../screens/notification/NotificationScreen";
@@ -267,6 +269,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="FeedbackOrder"
 				component={FeedbackOrder}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="BlogListScreen"
+				component={BlogListScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="BlogDetail"
+				component={BlogDetail}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

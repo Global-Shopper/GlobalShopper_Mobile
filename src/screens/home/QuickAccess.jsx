@@ -54,7 +54,7 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			title: "Blog",
 			icon: "library-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to blog"),
+			onPress: () => navigation?.navigate("BlogListScreen"),
 		},
 	];
 
