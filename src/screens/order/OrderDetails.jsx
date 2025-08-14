@@ -501,9 +501,11 @@ export default function OrderDetails({ navigation, route }) {
 
 				{/* Refund History Section */}
 				<RefundHistorySection orderData={orderData} />
+			</ScrollView>
 
-				{/* Review Button (only for completed orders) */}
-				{orderData.status === "DELIVERED" && (
+			{/* Review Button (only for completed orders) - Fixed at bottom */}
+			{orderData.status === "DELIVERED" && (
+				<View style={styles.reviewButtonContainer}>
 					<TouchableOpacity
 						style={styles.reviewButton}
 						onPress={handleReview}
@@ -512,11 +514,11 @@ export default function OrderDetails({ navigation, route }) {
 							{orderData.feedback ||
 							orderData.feedbacks?.length > 0
 								? "Xem đánh giá"
-								: "Đánh giá sản phẩm"}
+								: "Đánh giá"}
 						</Text>
 					</TouchableOpacity>
-				)}
-			</ScrollView>
+				</View>
+			)}
 
 			{/* Dialog */}
 			<Dialog
@@ -859,15 +861,31 @@ const styles = StyleSheet.create({
 		color: "#007bff",
 		fontWeight: "600",
 	},
+	reviewButtonContainer: {
+		backgroundColor: "#ffffff",
+		paddingHorizontal: 16,
+		paddingVertical: 22,
+		borderTopWidth: 1,
+		borderTopColor: "#f0f0f0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+	},
 	reviewButton: {
-		backgroundColor: "#1d4ed8",
+		backgroundColor: "#42A5F5",
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
 		paddingVertical: 16,
 		borderRadius: 12,
 		gap: 8,
-		marginBottom: 16,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+		elevation: 3,
 	},
 	reviewButtonText: {
 		color: "#ffffff",
