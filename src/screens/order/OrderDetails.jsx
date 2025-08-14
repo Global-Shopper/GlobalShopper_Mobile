@@ -12,6 +12,7 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Dialog from "../../components/dialog";
 import Header from "../../components/header";
+import RefundHistorySection from "../../components/RefundHistorySection";
 import { Text } from "../../components/ui/text";
 import { useGetOrderByIdQuery } from "../../services/gshopApi";
 import {
@@ -497,6 +498,9 @@ export default function OrderDetails({ navigation, route }) {
 						</View>
 					)}
 				</View>
+
+				{/* Refund History Section */}
+				<RefundHistorySection orderData={orderData} />
 
 				{/* Review Button (only for completed orders) */}
 				{orderData.status === "DELIVERED" && (

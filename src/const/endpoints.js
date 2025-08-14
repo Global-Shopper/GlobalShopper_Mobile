@@ -36,5 +36,6 @@ const endpoints = {
 	FEEDBACK_ALL: "/feedback",
 	// Refund endpoints
 	REFUND_TICKET: "/refund-ticket",
+	REFUND_HISTORY: "/refund-ticket", // for getting refund history by order
 };
 export default endpoints;
