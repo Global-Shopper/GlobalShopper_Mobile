@@ -4,6 +4,7 @@ import { CLOUDINARY_NAME, CLOUDINARY_UPLOAD_PRESET } from "../const/urlconst";
 export const uploadToCloudinary = async (file) => {
 	console.log("CLOUDINARY_NAME:", CLOUDINARY_NAME);
 	console.log("CLOUDINARY_UPLOAD_PRESET:", CLOUDINARY_UPLOAD_PRESET);
+	console.log("File object:", file);
 
 	// Validate inputs
 	if (!CLOUDINARY_NAME || !CLOUDINARY_UPLOAD_PRESET) {
@@ -17,7 +18,14 @@ export const uploadToCloudinary = async (file) => {
 	}
 
 	const formData = new FormData();
-	formData.append("file", file);
+
+	// Append file with proper format for React Native
+	formData.append("file", {
+		uri: file.uri,
+		name: file.name || `image_${Date.now()}.jpg`,
+		type: file.type || "image/jpeg",
+	});
+
 	formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
 	try {

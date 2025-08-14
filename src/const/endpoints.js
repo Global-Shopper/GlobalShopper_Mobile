@@ -29,8 +29,14 @@ const endpoints = {
 	ORDERS: "/orders",
 	ORDER_DETAIL: "/orders", // for specific order by ID
 	CANCEL_ORDER: "/orders", // for cancel order by ID
+	DIRECT_CHECKOUT: "/orders/direct-checkout",
+	CHECKOUT: "/orders/checkout",
 	// Feedback endpoints
 	FEEDBACK: "/feedback",
 	FEEDBACK_ALL: "/feedback",
+	// Refund endpoints
+	REFUND_TICKET: "/refund-ticket",
+	REFUND_HISTORY: "/refund-ticket", // for getting refund history by order
+	REFUND_BY_ORDER: "/refund-ticket/order", // for getting refund tickets by orderId
 };
 export default endpoints;

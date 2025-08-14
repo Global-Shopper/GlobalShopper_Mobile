@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	Clipboard,
 	Image,
 	ScrollView,
@@ -11,7 +10,9 @@ import {
 	View,
 } from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
+import RefundHistorySection from "../../components/RefundHistorySection";
 import { Text } from "../../components/ui/text";
 import { useGetOrderByIdQuery } from "../../services/gshopApi";
 import {
@@ -27,6 +28,11 @@ export default function OrderDetails({ navigation, route }) {
 
 	// State for price breakdown
 	const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
+
+	// Dialog states
+	const [showDialog, setShowDialog] = useState(false);
+	const [dialogTitle, setDialogTitle] = useState("");
+	const [dialogMessage, setDialogMessage] = useState("");
 
 	// API query for order details
 	const {
@@ -56,34 +62,44 @@ export default function OrderDetails({ navigation, route }) {
 	};
 
 	// Copy order ID to clipboard
-	const copyOrderId = () => {
+	const copyToClipboard = () => {
 		Clipboard.setString(orderData.id);
-		Alert.alert("Thành công", "Đã sao chép mã đơn hàng");
+		showInfoDialog("Thành công", "Đã sao chép mã đơn hàng");
 	};
 
-	// Navigation handlers
+	// Helper function to show dialog
+	const showInfoDialog = (title, message) => {
+		setDialogTitle(title);
+		setDialogMessage(message);
+		setShowDialog(true);
+	}; // Navigation handlers
 	const handleOrderHistory = () => {
 		navigation.navigate("OrderHistory", { orderId: orderData.id });
 	};
 
 	const handleReturnRefund = () => {
-		Alert.alert("Thông báo", "Tính năng đang phát triển");
+		navigation.navigate("RequestRefund", { orderData });
 	};
 
 	const handleContactGShop = () => {
-		Alert.alert("Thông báo", "Tính năng đang phát triển");
+		showInfoDialog("Thông báo", "Tính năng đang phát triển");
 	};
 
 	const handleSupportCenter = () => {
-		Alert.alert("Thông báo", "Tính năng đang phát triển");
+		showInfoDialog("Thông báo", "Tính năng đang phát triển");
 	};
 
 	const handleReview = () => {
-		navigation.navigate("FeedbackDetails", { orderData });
+		// Nếu đã có feedback thì xem feedback, nếu chưa thì tạo feedback
+		if (orderData.feedback || orderData.feedbacks?.length > 0) {
+			navigation.navigate("FeedbackOrder", { orderData });
+		} else {
+			navigation.navigate("FeedbackDetails", { orderData });
+		}
 	};
 
 	const handleEditAddress = () => {
-		Alert.alert("Thông báo", "Tính năng đang phát triển");
+		showInfoDialog("Thông báo", "Tính năng đang phát triển");
 	};
 
 	const togglePriceBreakdown = () => {
@@ -457,7 +473,7 @@ export default function OrderDetails({ navigation, route }) {
 						<Text style={styles.detailLabel}>Mã đơn hàng</Text>
 						<TouchableOpacity
 							style={styles.copyButton}
-							onPress={copyOrderId}
+							onPress={copyToClipboard}
 						>
 							<Text style={styles.orderIdText}>
 								{getShortOrderId(orderData.id)}
@@ -483,19 +499,36 @@ export default function OrderDetails({ navigation, route }) {
 					)}
 				</View>
 
+				{/* Refund History Section */}
+				<RefundHistorySection orderData={orderData} />
+
 				{/* Review Button (only for completed orders) */}
 				{orderData.status === "DELIVERED" && (
 					<TouchableOpacity
 						style={styles.reviewButton}
 						onPress={handleReview}
 					>
-						<Ionicons name="star-outline" size={20} color="#fff" />
 						<Text style={styles.reviewButtonText}>
-							Đánh giá sản phẩm
+							{orderData.feedback ||
+							orderData.feedbacks?.length > 0
+								? "Xem đánh giá"
+								: "Đánh giá sản phẩm"}
 						</Text>
 					</TouchableOpacity>
 				)}
 			</ScrollView>
+
+			{/* Dialog */}
+			<Dialog
+				visible={showDialog}
+				title={dialogTitle}
+				message={dialogMessage}
+				onClose={() => setShowDialog(false)}
+				primaryButton={{
+					text: "OK",
+					onPress: () => setShowDialog(false),
+				}}
+			/>
 		</View>
 	);
 }
@@ -827,7 +860,7 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	reviewButton: {
-		backgroundColor: "#ffc107",
+		backgroundColor: "#1d4ed8",
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",

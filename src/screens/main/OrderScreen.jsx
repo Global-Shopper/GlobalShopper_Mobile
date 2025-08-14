@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -58,11 +59,10 @@ export default function OrderScreen({ navigation }) {
 				`Loading feedback status for ${deliveredOrders.length} delivered orders...`
 			);
 
-			const newFeedbackMap = {};
-
-			// Check feedback status for each delivered order
+			// Always load feedback for all delivered orders to ensure fresh data
 			for (const order of deliveredOrders) {
 				try {
+					console.log(`Loading feedback for order ${order.id}...`);
 					const result = await getOrderById(order.id);
 					if (result.data) {
 						console.log(
@@ -78,23 +78,33 @@ export default function OrderScreen({ navigation }) {
 						const hasFeedback =
 							result.data.feedback &&
 							(result.data.feedback.id ||
-								result.data.feedback.rating);
+								result.data.feedback.rating ||
+								result.data.feedback.comment);
 
-						newFeedbackMap[order.id] = hasFeedback;
 						console.log(
-							`Order ${order.id}: hasFeedback = ${hasFeedback}`
+							`Order ${order.id}: hasFeedback = ${hasFeedback}`,
+							`feedback object:`,
+							result.data.feedback
 						);
+
+						// Update feedback map for this specific order
+						setFeedbackMap((prev) => ({
+							...prev,
+							[order.id]: hasFeedback,
+						}));
 					}
 				} catch (error) {
 					console.error(
 						`Error loading feedback for order ${order.id}:`,
 						error
 					);
-					newFeedbackMap[order.id] = false;
+					// Set to false on error
+					setFeedbackMap((prev) => ({
+						...prev,
+						[order.id]: false,
+					}));
 				}
 			}
-
-			setFeedbackMap(newFeedbackMap);
 		};
 
 		// Only load feedback if we have delivered orders
@@ -106,9 +116,60 @@ export default function OrderScreen({ navigation }) {
 		}
 	}, [orders, getOrderById]);
 
+	// Refresh orders when screen comes into focus (e.g., after checkout or feedback)
+	useFocusEffect(
+		useCallback(() => {
+			console.log("OrderScreen focused, refreshing orders...");
+			refetch();
+
+			// Force refresh feedback status for delivered orders when screen comes back into focus
+			// This ensures we get updated feedback status after user creates/updates feedback
+			const deliveredOrders = orders.filter(
+				(order) => order.status === "DELIVERED"
+			);
+
+			if (deliveredOrders.length > 0) {
+				console.log(
+					"Screen focused: Force reloading feedback status for delivered orders"
+				);
+				// Force reload feedback for all delivered orders
+				deliveredOrders.forEach(async (order) => {
+					try {
+						console.log(
+							`Force loading feedback for order ${order.id}`
+						);
+						const result = await getOrderById(order.id);
+						if (result.data) {
+							const hasFeedback =
+								result.data.feedback &&
+								(result.data.feedback.id ||
+									result.data.feedback.rating ||
+									result.data.feedback.comment);
+
+							console.log(`Order ${order.id} feedback check:`, {
+								feedback: result.data.feedback,
+								hasFeedback: hasFeedback,
+							});
+
+							setFeedbackMap((prev) => ({
+								...prev,
+								[order.id]: hasFeedback,
+							}));
+						}
+					} catch (error) {
+						console.error(
+							`Error force loading feedback for order ${order.id}:`,
+							error
+						);
+					}
+				});
+			}
+		}, [refetch, orders, getOrderById])
+	);
+
 	const onRefresh = async () => {
 		setRefreshing(true);
-		setFeedbackMap({}); // Clear feedback map on refresh
+		// Don't clear feedback map on refresh to maintain feedback state
 		await refetch();
 		setRefreshing(false);
 	};
@@ -167,9 +228,26 @@ export default function OrderScreen({ navigation }) {
 				const orderDetail = result.data;
 				console.log("Order detail with feedback info:", orderDetail);
 
-				// Check if order has feedback
-				const hasFeedback = feedbackMap[orderId] || false;
-				console.log("Order has feedback from map:", hasFeedback);
+				// Check if order has feedback - use fresh data from API
+				const hasFeedback =
+					orderDetail.feedback &&
+					(orderDetail.feedback.id ||
+						orderDetail.feedback.rating ||
+						orderDetail.feedback.comment);
+
+				console.log("Order has feedback from API:", hasFeedback);
+				console.log("Feedback object structure:", {
+					feedback: orderDetail.feedback,
+					hasId: !!orderDetail.feedback?.id,
+					hasRating: !!orderDetail.feedback?.rating,
+					hasComment: !!orderDetail.feedback?.comment,
+				});
+
+				// Update feedback map with fresh data
+				setFeedbackMap((prev) => ({
+					...prev,
+					[orderId]: hasFeedback,
+				}));
 
 				if (hasFeedback) {
 					// Navigate to view feedback
@@ -322,6 +400,9 @@ export default function OrderScreen({ navigation }) {
 					filteredOrders.length === 0 && styles.emptyListContent,
 				]}
 				showsVerticalScrollIndicator={true}
+				bounces={true}
+				alwaysBounceVertical={false}
+				removeClippedSubviews={false}
 				refreshControl={
 					<RefreshControl
 						refreshing={refreshing}
@@ -415,7 +496,8 @@ const styles = StyleSheet.create({
 	},
 	flatListContent: {
 		paddingHorizontal: 16,
-		paddingVertical: 8,
+		paddingTop: 8,
+		paddingBottom: 100, // Add more bottom padding for better scrolling
 		flexGrow: 1,
 	},
 	emptyListContent: {
@@ -426,6 +508,7 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		paddingVertical: 80,
+		minHeight: 200, // Ensure minimum height for empty state
 	},
 	emptyStateText: {
 		color: "#6b7280",

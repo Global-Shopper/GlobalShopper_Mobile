@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
 	ActivityIndicator,
+	Alert,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -14,6 +15,7 @@ import { Text } from "../../components/ui/text";
 import {
 	useGetPurchaseRequestByIdQuery,
 	useGetWalletQuery,
+	useDirectCheckoutMutation,
 } from "../../services/gshopApi";
 import { formatDate } from "../../utils/statusHandler.js";
 
@@ -33,7 +35,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 	});
 
 	// Fetch wallet balance
-	const { data: walletData } = useGetWalletQuery();
+	const { data: walletData, refetch: refetchWallet } = useGetWalletQuery();
+
+	// API hook for checkout
+	const [directCheckout, { isLoading: isCheckingOut }] =
+		useDirectCheckoutMutation();
 
 	// Helper function to get shortened UUID with #
 	const getShortId = (fullId) => {
@@ -80,30 +86,86 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return normalizedType === "online" ? "link-outline" : "create-outline";
 	};
 
-	const handleConfirmPayment = () => {
+	const handleConfirmPayment = async () => {
 		if (selectedPaymentMethod) {
-			// Handle payment confirmation
-			console.log(
-				"Payment confirmed with method:",
-				selectedPaymentMethod
-			);
+			try {
+				console.log(
+					"Payment confirmed with method:",
+					selectedPaymentMethod
+				);
 
-			// Get total amount from quotation or fallback to default
-			const firstProduct =
-				displayData?.subRequests?.[0]?.requestItems?.[0];
-			const quotationDetail = firstProduct?.quotationDetail || {};
-			const totalVNDPrice = quotationDetail?.totalVNDPrice;
+				// Get sub-request data for checkout
+				const subRequestData = displayData?.subRequests?.[0];
+				if (!subRequestData) {
+					console.error("No sub-request data found");
+					Alert.alert("Lỗi", "Không tìm thấy thông tin sub-request");
+					return;
+				}
 
-			const totalAmount = totalVNDPrice
-				? `${Math.round(totalVNDPrice).toLocaleString("vi-VN")} VND`
-				: "1,615,000 VND";
+				// Check wallet balance if using wallet
+				if (selectedPaymentMethod === "wallet") {
+					const totalAmount =
+						subRequestData.requestItems?.reduce((total, item) => {
+							return (
+								total +
+								(item.quotationDetail?.totalVNDPrice || 0)
+							);
+						}, 0) || 0;
 
-			// Navigate to success payment screen
-			navigation.navigate("SuccessPaymentScreen", {
-				paymentMethod: selectedPaymentMethod,
-				amount: totalAmount,
-				requestId: displayData?.id || "REQ001",
-			});
+					if (walletData?.balance < totalAmount) {
+						Alert.alert(
+							"Số dư không đủ",
+							"Số dư trong ví không đủ để thanh toán. Vui lòng nạp thêm tiền."
+						);
+						return;
+					}
+				}
+
+				// Prepare checkout data
+				const checkoutData = {
+					subRequestId: subRequestData.id,
+					paymentMethod: selectedPaymentMethod.toUpperCase(),
+				};
+
+				console.log("Direct checkout data:", checkoutData);
+
+				// Call checkout API
+				const result = await directCheckout(checkoutData).unwrap();
+				console.log("Checkout result:", result);
+
+				// Refresh wallet balance
+				await refetchWallet();
+
+				// Calculate total amount for display
+				const totalAmount =
+					subRequestData.requestItems?.reduce((total, item) => {
+						return (
+							total + (item.quotationDetail?.totalVNDPrice || 0)
+						);
+					}, 0) || 0;
+
+				const formattedAmount =
+					new Intl.NumberFormat("vi-VN", {
+						style: "decimal",
+						minimumFractionDigits: 0,
+					}).format(totalAmount) + " VNĐ";
+
+				// Navigate to success payment screen
+				navigation.navigate("SuccessPaymentScreen", {
+					paymentMethod: selectedPaymentMethod,
+					amount: formattedAmount,
+					requestId: displayData?.id,
+					orderId: result?.orderId || result?.id,
+				});
+			} catch (error) {
+				console.error("Checkout error:", error);
+				Alert.alert(
+					"Lỗi thanh toán",
+					error?.data?.message ||
+						error?.message ||
+						"Không thể thực hiện thanh toán. Vui lòng thử lại."
+				);
+			}
 		}
 	};
 
@@ -343,21 +405,26 @@ export default function ConfirmQuotation({ navigation, route }) {
 				<TouchableOpacity
 					style={[
 						styles.confirmButton,
-						!selectedPaymentMethod && styles.confirmButtonDisabled,
+						(!selectedPaymentMethod || isCheckingOut) &&
+							styles.confirmButtonDisabled,
 					]}
 					onPress={handleConfirmPayment}
-					disabled={!selectedPaymentMethod}
+					disabled={!selectedPaymentMethod || isCheckingOut}
 					activeOpacity={0.7}
 				>
-					<Text
-						style={[
-							styles.confirmButtonText,
-							!selectedPaymentMethod &&
-								styles.confirmButtonTextDisabled,
-						]}
-					>
-						Xác nhận thanh toán
-					</Text>
+					{isCheckingOut ? (
+						<ActivityIndicator size="small" color="#ffffff" />
+					) : (
+						<Text
+							style={[
+								styles.confirmButtonText,
+								(!selectedPaymentMethod || isCheckingOut) &&
+									styles.confirmButtonTextDisabled,
+							]}
+						>
+							Xác nhận thanh toán
+						</Text>
+					)}
 				</TouchableOpacity>
 			</View>
 		</View>

@@ -14,6 +14,7 @@ const gshopApi = createApi({
 		"BankAccounts",
 		"Order",
 		"Feedback",
+		"RefundTicket",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -406,6 +407,25 @@ const gshopApi = createApi({
 			invalidatesTags: ["Order"],
 		}),
 
+		// Checkout endpoints
+		checkout: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.CHECKOUT,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest", "Wallet", "Order"],
+		}),
+
+		directCheckout: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.DIRECT_CHECKOUT,
+				method: "POST",
+			}),
+			invalidatesTags: ["PurchaseRequest", "Wallet", "Order"],
+		}),
+
 		// Feedback endpoints
 		createFeedback: builder.mutation({
 			query: (feedbackData) => {
@@ -417,6 +437,18 @@ const gshopApi = createApi({
 				};
 			},
 			invalidatesTags: ["Feedback", "Order"],
+		}),
+
+		createRefundTicket: builder.mutation({
+			query: (refundData) => {
+				console.log("Creating refund ticket with data:", refundData);
+				return {
+					url: endpoints.REFUND_TICKET,
+					method: "POST",
+					data: refundData,
+				};
+			},
+			invalidatesTags: ["RefundTicket", "Order"],
 		}),
 
 		getAllFeedback: builder.query({
@@ -483,9 +515,14 @@ export const {
 	useGetOrderByIdQuery,
 	useLazyGetOrderByIdQuery,
 	useCancelOrderMutation,
+	// Checkout hooks
+	useCheckoutMutation,
+	useDirectCheckoutMutation,
 	// Feedback hooks
 	useCreateFeedbackMutation,
 	useGetAllFeedbackQuery,
+	// Refund hooks
+	useCreateRefundTicketMutation,
 } = gshopApi;
 
 export default gshopApi;

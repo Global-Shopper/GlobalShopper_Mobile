@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "../../components/header";
 import LinkCard from "../../components/link-card";
 import { Text } from "../../components/ui/text";
@@ -11,6 +12,7 @@ import {
 } from "../../services/gshopApi";
 
 export default function WithLink({ navigation }) {
+	const insets = useSafeAreaInsets();
 	const [productLinks, setProductLinks] = useState([
 		{ link: "", status: "idle", data: null, error: null },
 	]);
@@ -93,7 +95,10 @@ export default function WithLink({ navigation }) {
 				console.error("API Error details:", rawDataResponse.error);
 				console.error("Error status:", rawDataResponse.error.status);
 				console.error("Error data:", rawDataResponse.error.data);
-				console.error("Error message:", rawDataResponse.error.data?.message);
+				console.error(
+					"Error message:",
+					rawDataResponse.error.data?.message
+				);
 				throw new Error(
 					"API_ERROR: " +
 						(rawDataResponse.error.data?.message ||
@@ -347,7 +352,16 @@ export default function WithLink({ navigation }) {
 			<ScrollView
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
-				contentContainerStyle={styles.scrollContent}
+				contentContainerStyle={[
+					styles.scrollContent,
+					{ paddingBottom: 2 + Math.max(insets.bottom, 0) },
+				]}
+				bounces={true}
+				alwaysBounceVertical={false}
+				keyboardShouldPersistTaps="always"
+				keyboardDismissMode="none"
+				nestedScrollEnabled={true}
+				automaticallyAdjustKeyboardInsets={false}
 			>
 				{/* Collapsible Instructions */}
 				{showInstructions && (
@@ -411,7 +425,12 @@ export default function WithLink({ navigation }) {
 			</ScrollView>
 
 			{/* Check Button */}
-			<View style={styles.bottomContainer}>
+			<View
+				style={[
+					styles.bottomContainer,
+					{ paddingBottom: Math.max(insets.bottom, 16) },
+				]}
+			>
 				<TouchableOpacity
 					style={[
 						styles.submitButton,
@@ -493,9 +512,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 	},
+	keyboardAvoidingView: {
+		flex: 1,
+	},
 	scrollContent: {
 		paddingTop: 5,
-		paddingBottom: 100,
+		// paddingBottom is set dynamically with safe area insets
 	},
 	instructionCard: {
 		backgroundColor: "#E3F2FD",
@@ -575,7 +597,8 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		backgroundColor: "#FFFFFF",
-		padding: 20,
+		paddingHorizontal: 20,
+		paddingVertical: 16, // Reduce vertical padding slightly
 		borderTopWidth: 1,
 		borderTopColor: "#E8F2FF",
 		shadowColor: "#000",
