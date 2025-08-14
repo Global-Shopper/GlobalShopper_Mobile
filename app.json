@@ -1,56 +1,61 @@
 {
-	"expo": {
-		"name": "GlobalShopper_Mobile",
-		"slug": "GlobalShopper_Mobile",
-		"version": "1.0.0",
-		"orientation": "portrait",
-		"icon": "./src/assets/images/icon.png",
-		"scheme": "globalshoppermobile",
-		"userInterfaceStyle": "automatic",
-		"newArchEnabled": true,
-
-		"ios": {
-			"supportsTablet": true,
-			"infoPlist": {
-				"NSCameraUsageDescription": "This app needs access to camera to take photos for your profile.",
-				"NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images for your profile."
-			}
-		},
-		"android": {
-			"adaptiveIcon": {
-				"foregroundImage": "./src/assets/images/adaptive-icon.png",
-				"backgroundColor": "#ffffff"
-			},
-			"package": "com.globalshopper.globalshoppermobile",
-			"edgeToEdgeEnabled": true,
-			"permissions": [
-				"android.permission.CAMERA",
-				"android.permission.READ_EXTERNAL_STORAGE",
-				"android.permission.WRITE_EXTERNAL_STORAGE"
-			]
-		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./src/assets/images/favicon.png"
-		},
-		"plugins": [
-			[
-				"expo-splash-screen",
-				{
-					"image": "./src/assets/images/splash-icon.png",
-					"imageWidth": 200,
-					"resizeMode": "contain",
-					"backgroundColor": "#ffffff"
-				}
-			],
-			[
-				"expo-image-picker",
-				{
-					"photosPermission": "The app accesses your photos to let you share them.",
-					"cameraPermission": "The app accesses your camera to let you take photos."
-				}
-			]
-		]
-	}
+  "expo": {
+    "name": "GlobalShopper_Mobile",
+    "slug": "GlobalShopper_Mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "globalshoppermobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to camera to take photos for your profile.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images for your profile."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.globalshopper.globalshoppermobile",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./src/assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./src/assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them.",
+          "cameraPermission": "The app accesses your camera to let you take photos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ce464c60-0007-4426-bf03-7301307c2527"
+      }
+    }
+  }
 }
