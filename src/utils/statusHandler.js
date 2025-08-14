@@ -349,6 +349,21 @@ export const formatDate = (dateString) => {
 };
 
 /**
+ * Tạo short ID từ full ID
+ * @param {string} fullId - Full ID
+ * @returns {string} - Short ID with #
+ */
+export const getShortId = (fullId) => {
+	if (!fullId) return "";
+
+	if (typeof fullId === "string" && fullId.includes("-")) {
+		return "#" + fullId.split("-")[0];
+	}
+
+	return "#" + fullId;
+};
+
+/**
  * Validate status value
  * @param {string} status - Status to validate
  * @returns {boolean} - Is valid status
