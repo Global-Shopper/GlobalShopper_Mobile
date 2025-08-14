@@ -1,9 +1,78 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { formatDate } from "../../utils/statusHandler";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
 import QuotationCard from "../quotation-card";
 import { Text } from "../ui/text";
+
+// Helper function to check if quotation is expired
+const isQuotationExpired = (subRequest, displayData) => {
+	// First check expiredAt from main request
+	if (displayData?.expiredAt) {
+		const currentDate = new Date();
+		const expiry = new Date(displayData.expiredAt);
+		return currentDate > expiry;
+	}
+
+	// Then check expiredDate in quotationForPurchase
+	if (!subRequest?.quotationForPurchase?.expiredDate) {
+		return false; // No expiry date set, assume not expired
+	}
+
+	const expiredDays = subRequest.quotationForPurchase.expiredDate;
+	const currentDate = new Date();
+
+	// If expiredDate is a number of days, need to calculate from creation date
+	if (typeof expiredDays === "number") {
+		// If it's a small number, it's likely days from creation
+		if (expiredDays < 1000) {
+			// For very small numbers like 1, assume it's expired
+			return expiredDays <= 1;
+		} else {
+			// If it's a large number, treat it as timestamp
+			const expiry = new Date(expiredDays);
+			return currentDate > expiry;
+		}
+	}
+
+	return false;
+};
+
+// Helper function to check if any quotation in sub-request is expired
+const hasExpiredQuotations = (subRequest, displayData) => {
+	return isQuotationExpired(subRequest, displayData);
+};
+
+// Helper function to get expiry date
+const getExpiryDate = (subRequest, displayData) => {
+	// First check expiredAt from main request
+	if (displayData?.expiredAt) {
+		return new Date(displayData.expiredAt);
+	}
+
+	if (!subRequest?.quotationForPurchase?.expiredDate) return null;
+
+	const expiredDays = subRequest.quotationForPurchase.expiredDate;
+
+	if (typeof expiredDays === "number") {
+		if (expiredDays >= 1000) {
+			// It's a timestamp
+			return new Date(expiredDays);
+		} else {
+			// It's days from creation - calculate from createdAt if available
+			if (displayData?.createdAt) {
+				const creationDate = new Date(displayData.createdAt);
+				const expiryDate = new Date(
+					creationDate.getTime() + expiredDays * 24 * 60 * 60 * 1000
+				);
+				return expiryDate;
+			}
+		}
+	}
+
+	return null;
+};
 
 const SubRequestItem = ({
 	subRequest,
@@ -25,6 +94,19 @@ const SubRequestItem = ({
 			item?.quotationDetail &&
 			Object.keys(item.quotationDetail).length > 0
 	);
+
+	// Check if quotations are expired
+	const isExpired = hasExpiredQuotations(subRequest, displayData);
+	const expiryDate = getExpiryDate(subRequest, displayData);
+
+	// Debug logging
+	console.log("SubRequestItem Debug:", {
+		subRequestId: subRequest?.id,
+		requestExpiredAt: displayData?.expiredAt,
+		quotationExpiredDate: subRequest?.quotationForPurchase?.expiredDate,
+		isExpired,
+		expiryDate: expiryDate?.toString(),
+	});
 
 	// Calculate sub-request total if has quotation
 	let subRequestTotal = 0;
@@ -361,66 +443,99 @@ const SubRequestItem = ({
 					{/* Payment Section - Only show if not completed */}
 					{!isCompleted && (
 						<View style={styles.subRequestPayment}>
-							<View style={styles.subRequestCheckbox}>
+							{/* Checkbox - Only show if not expired */}
+							{!isExpired && (
+								<View style={styles.subRequestCheckbox}>
+									<TouchableOpacity
+										style={[
+											styles.checkbox,
+											acceptedQuotations[subIndex] &&
+												styles.checkboxChecked,
+										]}
+										onPress={() =>
+											setAcceptedQuotations((prev) => ({
+												...prev,
+												[subIndex]: !prev[subIndex],
+											}))
+										}
+										activeOpacity={0.7}
+									>
+										{acceptedQuotations[subIndex] && (
+											<Ionicons
+												name="checkmark"
+												size={16}
+												color="#FFFFFF"
+											/>
+										)}
+									</TouchableOpacity>
+									<Text style={styles.checkboxText}>
+										Tôi đồng ý với báo giá này và chấp nhận
+										phí phát sinh (nếu có)
+									</Text>
+								</View>
+							)}
+
+							{/* Payment Section */}
+							{isExpired ? (
+								/* Expired Quotation Message */
+								<View style={styles.expiredContainer}>
+									<View style={styles.expiredIcon}>
+										<Ionicons
+											name="time-outline"
+											size={24}
+											color="#E53E3E"
+										/>
+									</View>
+									<View style={styles.expiredContent}>
+										<Text style={styles.expiredTitle}>
+											Yêu cầu đã hết hạn
+										</Text>
+										<Text style={styles.expiredMessage}>
+											Bạn không thể thực hiện thanh toán
+											cho yêu cầu này vì đã quá hạn.
+										</Text>
+										{expiryDate && (
+											<Text style={styles.expiredDate}>
+												Hạn thanh toán:{" "}
+												{formatDate(expiryDate)}
+											</Text>
+										)}
+									</View>
+								</View>
+							) : (
+								/* Normal Payment Button */
 								<TouchableOpacity
 									style={[
-										styles.checkbox,
-										acceptedQuotations[subIndex] &&
-											styles.checkboxChecked,
+										styles.subRequestPayButton,
+										!acceptedQuotations[subIndex] &&
+											styles.subRequestPayButtonDisabled,
 									]}
-									onPress={() =>
-										setAcceptedQuotations((prev) => ({
-											...prev,
-											[subIndex]: !prev[subIndex],
-										}))
-									}
+									onPress={() => {
+										if (acceptedQuotations[subIndex]) {
+											navigation.navigate(
+												"ConfirmQuotation",
+												{
+													request: displayData,
+													subRequest: subRequest,
+													subRequestIndex: subIndex,
+												}
+											);
+										}
+									}}
+									disabled={!acceptedQuotations[subIndex]}
 									activeOpacity={0.7}
 								>
-									{acceptedQuotations[subIndex] && (
-										<Ionicons
-											name="checkmark"
-											size={16}
-											color="#FFFFFF"
-										/>
-									)}
+									<Text
+										style={[
+											styles.subRequestPayButtonText,
+											!acceptedQuotations[subIndex] &&
+												styles.subRequestPayButtonTextDisabled,
+										]}
+									>
+										Thanh toán
+									</Text>
 								</TouchableOpacity>
-								<Text style={styles.checkboxText}>
-									Tôi đồng ý với báo giá này và chấp nhận phí
-									phát sinh (nếu có)
-								</Text>
-							</View>
-
-							<TouchableOpacity
-								style={[
-									styles.subRequestPayButton,
-									!acceptedQuotations[subIndex] &&
-										styles.subRequestPayButtonDisabled,
-								]}
-								onPress={() => {
-									if (acceptedQuotations[subIndex]) {
-										navigation.navigate(
-											"ConfirmQuotation",
-											{
-												request: displayData,
-												subRequest: subRequest,
-												subRequestIndex: subIndex,
-											}
-										);
-									}
-								}}
-								disabled={!acceptedQuotations[subIndex]}
-								activeOpacity={0.7}
-							>
-								<Text
-									style={[
-										styles.subRequestPayButtonText,
-										!acceptedQuotations[subIndex] &&
-											styles.subRequestPayButtonTextDisabled,
-									]}
-								>
-									Thanh toán
-								</Text>
-							</TouchableOpacity>
+							)}
 						</View>
 					)}
 
@@ -627,6 +742,40 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#28a745",
+	},
+	expiredContainer: {
+		backgroundColor: "#FFF5F5",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#FEB2B2",
+		flexDirection: "row",
+		alignItems: "flex-start",
+		gap: 12,
+	},
+	expiredIcon: {
+		marginTop: 2,
+	},
+	expiredContent: {
+		flex: 1,
+	},
+	expiredTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#E53E3E",
+		marginBottom: 4,
+	},
+	expiredMessage: {
+		fontSize: 14,
+		color: "#666",
+		lineHeight: 20,
+		marginBottom: 8,
+	},
+	expiredDate: {
+		fontSize: 12,
+		color: "#E53E3E",
+		fontWeight: "600",
 	},
 });
 

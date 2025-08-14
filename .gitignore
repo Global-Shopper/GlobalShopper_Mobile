@@ -40,4 +40,8 @@ app-example
 
 package-lock.json
 
+<<<<<<< HEAD
 google-services.json
+=======
+google-services.json
+>>>>>>> fix/purchase-request

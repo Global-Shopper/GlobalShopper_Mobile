@@ -13,16 +13,23 @@ import PaymentSmCard from "../../components/payment-sm-card";
 import QuotationCard from "../../components/quotation-card";
 import { Text } from "../../components/ui/text";
 import {
+	useDirectCheckoutMutation,
 	useGetPurchaseRequestByIdQuery,
 	useGetWalletQuery,
-	useDirectCheckoutMutation,
 } from "../../services/gshopApi";
 import { formatDate } from "../../utils/statusHandler.js";
 
 export default function ConfirmQuotation({ navigation, route }) {
-	const { request } = route.params || {};
+	const { request, subRequest, subRequestIndex } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+
+	console.log("ConfirmQuotation params:", {
+		request: !!request,
+		subRequest: !!subRequest,
+		subRequestIndex,
+	});
+	console.log("Selected subRequest:", subRequest);
 
 	// Fetch purchase request detail from API
 	const {
@@ -52,6 +59,63 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 	// Use the correct data for rendering
 	const displayData = requestDetails || request;
+
+	// Get the specific sub-request for this payment
+	const selectedSubRequest =
+		subRequest || displayData?.subRequests?.[subRequestIndex ?? 0];
+
+	console.log("ConfirmQuotation - subRequest param:", subRequest);
+	console.log("ConfirmQuotation - subRequestIndex param:", subRequestIndex);
+	console.log("ConfirmQuotation - selectedSubRequest:", selectedSubRequest);
+
+	// Helper function to check if quotation is expired
+	const isQuotationExpired = (quotationDetail) => {
+		if (
+			!quotationDetail?.expiryDate &&
+			!quotationDetail?.expiredAt &&
+			!quotationDetail?.validUntil
+		) {
+			return false; // No expiry date set, assume not expired
+		}
+
+		const expiryDate =
+			quotationDetail.expiryDate ||
+			quotationDetail.expiredAt ||
+			quotationDetail.validUntil;
+		const currentDate = new Date();
+		const expiry = new Date(expiryDate);
+
+		return currentDate > expiry;
+	};
+
+	// Helper function to check if any quotation in sub-request is expired
+	const hasExpiredQuotations = () => {
+		if (!selectedSubRequest?.requestItems) return false;
+
+		return selectedSubRequest.requestItems.some(
+			(item) =>
+				item.quotationDetail && isQuotationExpired(item.quotationDetail)
+		);
+	};
+
+	// Helper function to get expired quotations info
+	const getExpiredQuotationsInfo = () => {
+		if (!selectedSubRequest?.requestItems) return [];
+
+		return selectedSubRequest.requestItems
+			.filter(
+				(item) =>
+					item.quotationDetail &&
+					isQuotationExpired(item.quotationDetail)
+			)
+			.map((item) => ({
+				productName: item.productName || item.name || "Sản phẩm",
+				expiryDate:
+					item.quotationDetail.expiryDate ||
+					item.quotationDetail.expiredAt ||
+					item.quotationDetail.validUntil,
+			}));
+	};
 
 	// Format wallet balance
 	const formatWalletBalance = (balance) => {
@@ -95,23 +159,47 @@ export default function ConfirmQuotation({ navigation, route }) {
 				);
 
 				// Get sub-request data for checkout
-				const subRequestData = displayData?.subRequests?.[0];
+				const subRequestData = selectedSubRequest;
 				if (!subRequestData) {
 					console.error("No sub-request data found");
 					Alert.alert("Lỗi", "Không tìm thấy thông tin sub-request");
 					return;
 				}
 
+				// Check if any quotations are expired
+				if (hasExpiredQuotations()) {
+					const expiredInfo = getExpiredQuotationsInfo();
+					const expiredProducts = expiredInfo
+						.map((info) => info.productName)
+						.join(", ");
+
+					Alert.alert(
+						"Báo giá đã hết hạn",
+						`Một số sản phẩm có báo giá đã hết hạn: ${expiredProducts}. Vui lòng yêu cầu báo giá mới trước khi thanh toán.`,
+						[{ text: "OK", onPress: () => navigation.goBack() }]
+					);
+					return;
+				}
+
+				// Calculate total amount from all quotations in sub-request
+				const totalAmount =
+					subRequestData.requestItems?.reduce((total, item) => {
+						return (
+							total + (item.quotationDetail?.totalVNDPrice || 0)
+						);
+					}, 0) || 0;
+
+				console.log(
+					"Calculated total amount from all quotations:",
+					totalAmount
+				);
+				console.log(
+					"Number of quotations:",
+					subRequestData.requestItems?.length || 0
+				);
+
 				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
-					const totalAmount =
-						subRequestData.requestItems?.reduce((total, item) => {
-							return (
-								total +
-								(item.quotationDetail?.totalVNDPrice || 0)
-							);
-						}, 0) || 0;
-
 					if (walletData?.balance < totalAmount) {
 						Alert.alert(
 							"Số dư không đủ",
@@ -121,13 +209,21 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}
 				}
 
-				// Prepare checkout data
+				// Prepare checkout data with total amount
 				const checkoutData = {
 					subRequestId: subRequestData.id,
 					paymentMethod: selectedPaymentMethod.toUpperCase(),
+					totalAmount: totalAmount, // Add total amount to match server validation
 				};
 
 				console.log("Direct checkout data:", checkoutData);
+				console.log("SubRequest items:", subRequestData.requestItems);
+				console.log(
+					"QuotationDetails:",
+					subRequestData.requestItems?.map(
+						(item) => item.quotationDetail
+					)
+				);
 
 				// Call checkout API
 				const result = await directCheckout(checkoutData).unwrap();
@@ -136,14 +232,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 				// Refresh wallet balance
 				await refetchWallet();
 
-				// Calculate total amount for display
-				const totalAmount =
-					subRequestData.requestItems?.reduce((total, item) => {
-						return (
-							total + (item.quotationDetail?.totalVNDPrice || 0)
-						);
-					}, 0) || 0;
-
+				// Use the already calculated totalAmount for display
 				const formattedAmount =
 					new Intl.NumberFormat("vi-VN", {
 						style: "decimal",
@@ -308,18 +397,16 @@ export default function ConfirmQuotation({ navigation, route }) {
 					{/* Quotation */}
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>
-							Chi tiết báo giá
+							Chi tiết báo giá (
+							{selectedSubRequest?.requestItems?.length || 0} sản
+							phẩm)
 						</Text>
 						{(() => {
-							// Get quotation detail from first product in subRequests
-							const firstProduct =
-								displayData?.subRequests?.[0]
-									?.requestItems?.[0];
-							const quotationDetail =
-								firstProduct?.quotationDetail || {};
-
-							// If no quotation detail found, show fallback message
-							if (!quotationDetail?.basePrice) {
+							// Check if we have quotations
+							if (
+								!selectedSubRequest?.requestItems ||
+								selectedSubRequest.requestItems.length === 0
+							) {
 								return (
 									<View style={styles.noQuotationContainer}>
 										<Text style={styles.noQuotationText}>
@@ -329,71 +416,199 @@ export default function ConfirmQuotation({ navigation, route }) {
 								);
 							}
 
-							// Extract values from quotationDetail
-							const basePrice = quotationDetail?.basePrice || 0;
-							const serviceFee = quotationDetail?.serviceFee || 0;
-							const totalTaxAmount =
-								quotationDetail?.totalTaxAmount || 0;
-							const totalVNDPrice =
-								quotationDetail?.totalVNDPrice || 0;
-							const exchangeRate =
-								quotationDetail?.exchangeRate || 1;
-							const currency = quotationDetail?.currency || "USD";
-							const taxRates = quotationDetail?.taxRates || [];
-
-							// Calculate VND values
-							const productPriceVND = Math.round(
-								basePrice * exchangeRate
-							);
-							const serviceFeeVND = Math.round(
-								((serviceFee * exchangeRate) / 100) * basePrice
-							);
-							const importTaxVND = Math.round(
-								totalTaxAmount * exchangeRate
-							);
-
-							// Prepare tax details if available in quotationDetail
-							const taxDetails = quotationDetail?.taxBreakdown
-								? {
-										importDuty:
-											quotationDetail.taxBreakdown
-												.importDuty || 0,
-										vat:
-											quotationDetail.taxBreakdown.vat ||
-											0,
-										specialConsumptionTax:
-											quotationDetail.taxBreakdown
-												.specialConsumptionTax || 0,
-										environmentTax:
-											quotationDetail.taxBreakdown
-												.environmentTax || 0,
-										totalTaxAmount: totalTaxAmount,
-								  }
-								: undefined;
-
+							// Display all quotations in the sub-request
 							return (
-								<QuotationCard
-									// Original price data
-									originalProductPrice={basePrice}
-									originalCurrency={currency}
-									exchangeRate={exchangeRate}
-									// VND converted prices
-									productPrice={productPriceVND}
-									serviceFee={serviceFeeVND}
-									serviceFeePercent={serviceFee}
-									internationalShipping={0} // Not specified in quotationDetail
-									importTax={importTaxVND}
-									domesticShipping={0} // Not specified in quotationDetail
-									// Tax details (legacy format)
-									taxDetails={taxDetails}
-									// Tax rates from API
-									taxRates={taxRates}
-									// Total amount
-									totalAmount={Math.round(totalVNDPrice)}
-									additionalFees={undefined}
-									updatedTotalAmount={undefined}
-									isExpanded={true}
-								/>
+								<>
+									{selectedSubRequest.requestItems.map(
+										(item, index) => {
+											const quotationDetail =
+												item.quotationDetail;
+
+											if (!quotationDetail) {
+												return (
+													<View
+														key={index}
+														style={
+															styles.quotationItem
+														}
+													>
+														<Text
+															style={
+																styles.productName
+															}
+														>
+															{item.productName ||
+																item.name ||
+																`Sản phẩm ${
+																	index + 1
+																}`}
+														</Text>
+														<Text
+															style={
+																styles.noQuotationText
+															}
+														>
+															Chưa có báo giá
+														</Text>
+													</View>
+												);
+											}
+
+											// Check if this quotation is expired
+											const isExpired =
+												isQuotationExpired(
+													quotationDetail
+												);
+
+											// Extract values from quotationDetail
+											const basePrice =
+												quotationDetail?.basePrice || 0;
+											const serviceFee =
+												quotationDetail?.serviceFee ||
+												0;
+											const totalTaxAmount =
+												quotationDetail?.totalTaxAmount ||
+												0;
+											const totalVNDPrice =
+												quotationDetail?.totalVNDPrice ||
+												0;
+											const exchangeRate =
+												quotationDetail?.exchangeRate ||
+												1;
+											const currency =
+												quotationDetail?.currency ||
+												"USD";
+											const expiryDate =
+												quotationDetail.expiryDate ||
+												quotationDetail.expiredAt ||
+												quotationDetail.validUntil;
+
+											return (
+												<View
+													key={index}
+													style={[
+														styles.quotationItem,
+														isExpired &&
+															styles.expiredQuotation,
+													]}
+												>
+													<View
+														style={
+															styles.quotationHeader
+														}
+													>
+														<Text
+															style={
+																styles.productName
+															}
+														>
+															{item.productName ||
+																item.name ||
+																`Sản phẩm ${
+																	index + 1
+																}`}
+														</Text>
+														{isExpired && (
+															<View
+																style={
+																	styles.expiredBadge
+																}
+															>
+																<Text
+																	style={
+																		styles.expiredText
+																	}
+																>
+																	Hết hạn
+																</Text>
+															</View>
+														)}
+													</View>
+
+													{expiryDate && (
+														<Text
+															style={[
+																styles.expiryText,
+																isExpired &&
+																	styles.expiredDate,
+															]}
+														>
+															Hạn báo giá:{" "}
+															{formatDate(
+																expiryDate
+															)}
+														</Text>
+													)}
+
+													<QuotationCard
+														originalProductPrice={
+															basePrice
+														}
+														originalCurrency={
+															currency
+														}
+														exchangeRate={
+															exchangeRate
+														}
+														productPrice={Math.round(
+															basePrice *
+																exchangeRate
+														)}
+														serviceFee={Math.round(
+															serviceFee *
+																exchangeRate
+														)}
+														serviceFeePercent={
+															serviceFee
+														}
+														internationalShipping={
+															0
+														}
+														importTax={Math.round(
+															totalTaxAmount *
+																exchangeRate
+														)}
+														domesticShipping={0}
+														totalAmount={Math.round(
+															totalVNDPrice
+														)}
+														isExpanded={true}
+													/>
+												</View>
+											);
+										}
+									)}
+
+									{/* Total amount for all quotations */}
+									<View style={styles.totalSummary}>
+										<View style={styles.totalRow}>
+											<Text style={styles.totalLabel}>
+												Tổng cộng (
+												{
+													selectedSubRequest
+														.requestItems.length
+												}{" "}
+												sản phẩm):
+											</Text>
+											<Text style={styles.totalAmount}>
+												{selectedSubRequest.requestItems
+													.reduce((total, item) => {
+														return (
+															total +
+															(item
+																.quotationDetail
+																?.totalVNDPrice ||
+																0)
+														);
+													}, 0)
+													.toLocaleString(
+														"vi-VN"
+													)}{" "}
+												VND
+											</Text>
+										</View>
+									</View>
+								</>
 							);
 						})()}
 					</View>
@@ -623,5 +838,72 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#666",
 		textAlign: "center",
+	},
+	quotationItem: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		marginBottom: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	expiredQuotation: {
+		backgroundColor: "#FFF5F5",
+		borderColor: "#FEB2B2",
+	},
+	quotationHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	productName: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		flex: 1,
+	},
+	expiredBadge: {
+		backgroundColor: "#E53E3E",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 4,
+	},
+	expiredText: {
+		fontSize: 12,
+		color: "#FFFFFF",
+		fontWeight: "600",
+	},
+	expiryText: {
+		fontSize: 12,
+		color: "#666",
+		marginBottom: 12,
+	},
+	expiredDate: {
+		color: "#E53E3E",
+		fontWeight: "600",
+	},
+	totalSummary: {
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 2,
+		borderColor: "#1976D2",
+	},
+	totalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	totalLabel: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+	},
+	totalAmount: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#1976D2",
 	},
 });

@@ -54,7 +54,6 @@ export default function GuestAccountScreen({ navigation }) {
 			title: "Câu hỏi thường gặp (FAQ)",
 			subtitle: "Tìm câu trả lời nhanh chóng",
 			icon: "help-circle-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("FAQScreen"),
 		},
 		{
@@ -62,7 +61,6 @@ export default function GuestAccountScreen({ navigation }) {
 			title: "Gửi yêu cầu hỗ trợ",
 			subtitle: "Liên hệ đội ngũ hỗ trợ",
 			icon: "mail-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => console.log("Navigate to support request"),
 		},
 		{
@@ -70,7 +68,6 @@ export default function GuestAccountScreen({ navigation }) {
 			title: "Điều khoản sử dụng",
 			subtitle: "Quy định và điều khoản",
 			icon: "document-text-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("TermsScreen"),
 		},
 		{
@@ -78,7 +75,6 @@ export default function GuestAccountScreen({ navigation }) {
 			title: "Chính sách bảo mật",
 			subtitle: "Quyền riêng tư của bạn",
 			icon: "shield-checkmark-outline",
-			gradientColors: ["#4FC3F7", "#29B6F6"],
 			action: () => navigation.navigate("PolicyScreen"),
 		},
 	];
@@ -100,7 +96,7 @@ export default function GuestAccountScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			{/* Header */}
+			{/* Custom Header for Auth Actions */}
 			<View style={styles.header}>
 				<LinearGradient
 					colors={["#42A5F5", "#1976D2"]}
@@ -133,20 +129,20 @@ export default function GuestAccountScreen({ navigation }) {
 						<View style={styles.headerIcons}>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={handleChatPress}
+								onPress={handleNotificationPress}
 							>
 								<Ionicons
-									name="chatbubble-outline"
+									name="notifications-outline"
 									size={24}
 									color="#fff"
 								/>
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.iconButton}
-								onPress={handleNotificationPress}
+								onPress={handleChatPress}
 							>
 								<Ionicons
-									name="notifications-outline"
+									name="chatbubble-outline"
 									size={24}
 									color="#fff"
 								/>
@@ -174,16 +170,13 @@ export default function GuestAccountScreen({ navigation }) {
 							>
 								<View style={styles.menuItemLeft}>
 									<View style={styles.iconContainer}>
-										<LinearGradient
-											colors={item.gradientColors}
-											style={styles.iconGradient}
-										>
+										<View style={styles.iconBackground}>
 											<Ionicons
 												name={item.icon}
 												size={24}
-												color="#FFFFFF"
+												color="#007AFF"
 											/>
-										</LinearGradient>
+										</View>
 									</View>
 									<View style={styles.menuItemContent}>
 										<Text style={styles.menuTitle}>
@@ -237,6 +230,14 @@ const styles = StyleSheet.create({
 	headerGradient: {
 		paddingHorizontal: 20,
 		paddingVertical: 20,
+		shadowColor: "#007AFF",
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 8,
 	},
 	headerContent: {
 		flexDirection: "row",
@@ -325,12 +326,13 @@ const styles = StyleSheet.create({
 	iconContainer: {
 		marginRight: 15,
 	},
-	iconGradient: {
+	iconBackground: {
 		width: 44,
 		height: 44,
 		borderRadius: 22,
 		alignItems: "center",
 		justifyContent: "center",
+		backgroundColor: "#F0F8FF",
 	},
 	menuItemContent: {
 		flex: 1,

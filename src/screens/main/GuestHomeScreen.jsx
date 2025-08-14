@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import {
 	Image,
 	ScrollView,
@@ -8,6 +7,7 @@ import {
 	View,
 } from "react-native";
 import { DialogTemplates, useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import QuickAccess from "../home/QuickAccess";
 import SliceBanner from "../home/SliceBanner";
@@ -259,48 +259,16 @@ export default function GuestHomeScreen({ navigation }) {
 	return (
 		<View style={styles.container}>
 			{/* Header for Guest */}
-			<View style={styles.guestHeader}>
-				<LinearGradient
-					colors={["#42A5F5", "#1976D2"]}
-					start={{ x: 0, y: 0 }}
-					end={{ x: 1, y: 1 }}
-					style={styles.headerGradient}
-				>
-					<View style={styles.headerContent}>
-						<View style={styles.headerLeft}>
-							<Text style={styles.welcomeText}>
-								Chào mừng đến với
-							</Text>
-							<Text style={styles.appName}>Global Shopper</Text>
-							<Text style={styles.subtitle}>
-								Mua hàng quốc tế chưa bao giờ dễ hơn đến thế
-							</Text>
-						</View>
-						<View style={styles.headerIcons}>
-							<TouchableOpacity
-								style={styles.iconButton}
-								onPress={handleChatPress}
-							>
-								<Ionicons
-									name="chatbubble-outline"
-									size={24}
-									color="#fff"
-								/>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.iconButton}
-								onPress={handleNotificationPress}
-							>
-								<Ionicons
-									name="notifications-outline"
-									size={24}
-									color="#fff"
-								/>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</LinearGradient>
-			</View>
+			<Header
+				userName="Chào mừng đến với"
+				userEmail="Global Shopper"
+				subtitle="Mua hàng quốc tế chưa bao giờ dễ hơn đến thế"
+				onNotificationPress={handleNotificationPress}
+				onChatPress={handleChatPress}
+				showNotificationIcon={true}
+				showChatIcon={true}
+				variant="gradient"
+			/>
 
 			<ScrollView
 				style={styles.content}
@@ -820,50 +788,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#f8fafc",
-	},
-	guestHeader: {
-		paddingTop: 50,
-	},
-	headerGradient: {
-		paddingHorizontal: 24,
-		paddingVertical: 24,
-		borderBottomLeftRadius: 28,
-		borderBottomRightRadius: 28,
-	},
-	headerContent: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-	},
-	headerLeft: {
-		flex: 1,
-	},
-	welcomeText: {
-		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.8)",
-		marginBottom: 4,
-		fontWeight: "500",
-	},
-	appName: {
-		fontSize: 28,
-		fontWeight: "700",
-		color: "#fff",
-		marginBottom: 6,
-		letterSpacing: 0.5,
-	},
-	subtitle: {
-		fontSize: 15,
-		color: "rgba(255, 255, 255, 0.85)",
-		lineHeight: 20,
-	},
-	headerIcons: {
-		flexDirection: "row",
-		gap: 16,
-	},
-	iconButton: {
-		padding: 10,
-		borderRadius: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.15)",
 	},
 	content: {
 		flex: 1,

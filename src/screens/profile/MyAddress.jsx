@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ScrollView,
@@ -9,6 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Header from "../../components/header";
 import {
 	useDefaultShippingAddressMutation,
 	useGetShippingAddressQuery,
@@ -223,24 +223,16 @@ export default function MyAddress({ navigation, route }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title={getHeaderTitle()}
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView
@@ -260,16 +252,13 @@ export default function MyAddress({ navigation, route }) {
 				>
 					<View style={styles.addButtonContent}>
 						<View style={styles.addIconContainer}>
-							<LinearGradient
-								colors={["#4FC3F7", "#29B6F6"]}
-								style={styles.addIconGradient}
-							>
+							<View style={styles.addIconBackground}>
 								<Ionicons
 									name="add"
 									size={24}
-									color="#FFFFFF"
+									color="#007AFF"
 								/>
-							</LinearGradient>
+							</View>
 						</View>
 						<View style={styles.addTextContainer}>
 							<Text style={styles.addButtonTitle}>

@@ -34,37 +34,27 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 		},
 		{
 			id: 5,
-			title: "Hoàn tiền",
-			icon: "return-up-back-outline",
-			color: "#42A5F5",
-			onPress: () =>
-				showLoginDialog
-					? showLoginDialog()
-					: console.log("Navigate to refunds"),
-		},
-		{
-			id: 6,
 			title: "Phí dịch vụ",
 			icon: "calculator-outline",
 			color: "#42A5F5",
 			onPress: () => console.log("Navigate to service fees"),
 		},
 		{
-			id: 7,
+			id: 6,
 			title: "Thống kê",
 			icon: "stats-chart-outline",
 			color: "#42A5F5",
 			onPress: () =>
 				showLoginDialog
 					? showLoginDialog()
-					: console.log("Navigate to statistics"),
+					: navigation?.navigate("StatisticScreen"),
 		},
 		{
-			id: 8,
+			id: 7,
 			title: "Blog",
 			icon: "library-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to blog"),
+			onPress: () => navigation?.navigate("BlogListScreen"),
 		},
 	];
 
@@ -73,10 +63,14 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			<View style={styles.quickAccessContainer}>
 				<Text style={styles.sectionTitle}>Truy cập nhanh</Text>
 				<View style={styles.quickAccessGrid}>
-					{quickAccessItems.map((item) => (
+					{quickAccessItems.map((item, index) => (
 						<TouchableOpacity
 							key={item.id}
-							style={styles.quickAccessItem}
+							style={[
+								styles.quickAccessItem,
+								// Remove margin for every 4th item (item 4, 8, 12, etc.)
+								(index + 1) % 4 === 0 && { marginRight: 0 },
+							]}
 							onPress={item.onPress}
 							activeOpacity={0.7}
 						>
@@ -136,18 +130,19 @@ const styles = StyleSheet.create({
 	quickAccessGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		justifyContent: "space-between",
-		gap: 6,
+		justifyContent: "flex-start",
+		gap: 0, // Remove gap to ensure items fit properly
 	},
 	quickAccessItem: {
 		backgroundColor: "transparent",
 		borderRadius: 12,
 		padding: 12,
 		alignItems: "center",
-		width: "23%",
+		width: "24%", // Slightly larger width for better spacing
+		marginRight: "1.33%", // Smaller margin: 24% * 4 + 1.33% * 3 = 100%
 	},
 	quickAccessIcon: {
-		width: 40,
+		width: 40, // Back to original size for 4 columns
 		height: 40,
 		borderRadius: 12,
 		justifyContent: "center",
@@ -155,7 +150,7 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 	},
 	quickAccessText: {
-		fontSize: 11,
+		fontSize: 11, // Back to smaller size for 4 columns layout
 		fontWeight: "600",
 		color: "#334155",
 		textAlign: "center",

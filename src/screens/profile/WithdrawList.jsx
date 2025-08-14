@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -11,6 +10,7 @@ import {
 	View,
 } from "react-native";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import {
 	useDeleteBankAccountMutation,
@@ -464,29 +464,24 @@ const WithdrawList = ({ navigation }) => {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Tài khoản rút tiền</Text>
+			<Header
+				title="Tài khoản rút tiền"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+				rightButton={
 					<TouchableOpacity
 						style={styles.addButton}
 						onPress={handleAddAccount}
 					>
-						<Ionicons name="add" size={24} color="#FFFFFF" />
+						<Ionicons name="add" size={24} color="#007AFF" />
 					</TouchableOpacity>
-				</View>
-			</LinearGradient>
+				}
+			/>
 
 			{/* Content */}
 			<View style={styles.content}>{renderContent()}</View>

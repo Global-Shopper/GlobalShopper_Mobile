@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import {
 	useGetCustomerInfoQuery,
 	useUpdateCustomerProfileMutation,
@@ -333,30 +333,16 @@ export default function ChangeProfile({ navigation }) {
 	if (isLoadingProfile) {
 		return (
 			<View style={styles.container}>
-				<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
-				<LinearGradient
-					colors={["#42A5F5", "#1976D2"]}
-					style={styles.header}
-				>
-					<View style={styles.headerContent}>
-						<TouchableOpacity
-							onPress={handleBackPress}
-							style={styles.backButton}
-						>
-							<Ionicons
-								name="arrow-back"
-								size={24}
-								color="#FFFFFF"
-							/>
-						</TouchableOpacity>
-						<Text style={styles.headerTitle}>
-							Thông tin cá nhân
-						</Text>
-						<View style={styles.placeholder} />
-					</View>
-				</LinearGradient>
+				<StatusBar backgroundColor="#fff" barStyle="dark-content" />
+				<Header
+					title="Thông tin cá nhân"
+					showBackButton={true}
+					onBackPress={handleBackPress}
+					showNotificationIcon={false}
+					showChatIcon={false}
+				/>
 				<View style={styles.loadingContainer}>
-					<ActivityIndicator size="large" color="#1976D2" />
+					<ActivityIndicator size="large" color="#007AFF" />
 					<Text style={styles.loadingText}>
 						Đang tải thông tin...
 					</Text>
@@ -369,28 +355,14 @@ export default function ChangeProfile({ navigation }) {
 	if (profileError) {
 		return (
 			<View style={styles.container}>
-				<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
-				<LinearGradient
-					colors={["#42A5F5", "#1976D2"]}
-					style={styles.header}
-				>
-					<View style={styles.headerContent}>
-						<TouchableOpacity
-							onPress={handleBackPress}
-							style={styles.backButton}
-						>
-							<Ionicons
-								name="arrow-back"
-								size={24}
-								color="#FFFFFF"
-							/>
-						</TouchableOpacity>
-						<Text style={styles.headerTitle}>
-							Thông tin cá nhân
-						</Text>
-						<View style={styles.placeholder} />
-					</View>
-				</LinearGradient>
+				<StatusBar backgroundColor="#fff" barStyle="dark-content" />
+				<Header
+					title="Thông tin cá nhân"
+					showBackButton={true}
+					onBackPress={handleBackPress}
+					showNotificationIcon={false}
+					showChatIcon={false}
+				/>
 				<View style={styles.errorContainer}>
 					<Ionicons name="alert-circle" size={48} color="#dc3545" />
 					<Text style={styles.errorText}>
@@ -411,24 +383,16 @@ export default function ChangeProfile({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={handleBackPress}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Thông tin cá nhân</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Thông tin cá nhân"
+				showBackButton={true}
+				onBackPress={handleBackPress}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView

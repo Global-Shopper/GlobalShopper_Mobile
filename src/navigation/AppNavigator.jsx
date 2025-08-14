@@ -6,6 +6,8 @@ import OTPVerificationScreen from "../screens/authen/OTPVerificationScreen";
 import ResetPasswordScreen from "../screens/authen/ResetPasswordScreen";
 import SignupScreen from "../screens/authen/SignupScreen";
 import SplashScreen from "../screens/authen/SplashScreen";
+import BlogDetail from "../screens/blog/BlogDetail";
+import BlogListScreen from "../screens/blog/BlogListScreen";
 import FeedbackDetails from "../screens/feedback/FeedbackDetails";
 import FeedbackOrder from "../screens/feedback/FeedbackOrder";
 import NotificationScreen from "../screens/notification/NotificationScreen";
@@ -24,7 +26,6 @@ import EditAddress from "../screens/profile/EditAddress";
 import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
 import NotiSetting from "../screens/profile/NotiSetting";
-import PaymentMethod from "../screens/profile/PaymentMethod";
 import PolicyScreen from "../screens/profile/PolicyScreen";
 import TermsScreen from "../screens/profile/TermsScreen";
 import WithdrawList from "../screens/profile/WithdrawList";
@@ -37,6 +38,7 @@ import RequestDetails from "../screens/request/RequestDetails";
 import RequestHistory from "../screens/request/RequestHistory";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
+import StatisticScreen from "../screens/statistic/StatisticScreen";
 import SuccessWithdrawScreen from "../screens/wallet/SuccessWithdrawScreen";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
@@ -117,11 +119,6 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="EditAddress"
 				component={EditAddress}
-				options={{ headerShown: false }}
-			/>
-			<Stack.Screen
-				name="PaymentMethod"
-				component={PaymentMethod}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
@@ -267,6 +264,21 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="FeedbackOrder"
 				component={FeedbackOrder}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="BlogListScreen"
+				component={BlogListScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="BlogDetail"
+				component={BlogDetail}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="StatisticScreen"
+				component={StatisticScreen}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

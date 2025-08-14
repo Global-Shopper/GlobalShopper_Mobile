@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -12,6 +11,7 @@ import {
 	View,
 } from "react-native";
 import { useDialog } from "../../components/dialogHelpers";
+import Header from "../../components/header";
 import { useChangePasswordMutation } from "../../services/gshopApi";
 
 export default function ChangePassword({ navigation }) {
@@ -216,24 +216,16 @@ export default function ChangePassword({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<StatusBar backgroundColor="#1976D2" barStyle="light-content" />
+			<StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
 			{/* Header */}
-			<LinearGradient
-				colors={["#42A5F5", "#1976D2"]}
-				style={styles.header}
-			>
-				<View style={styles.headerContent}>
-					<TouchableOpacity
-						onPress={() => navigation.goBack()}
-						style={styles.backButton}
-					>
-						<Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-					</TouchableOpacity>
-					<Text style={styles.headerTitle}>Thay đổi mật khẩu</Text>
-					<View style={styles.placeholder} />
-				</View>
-			</LinearGradient>
+			<Header
+				title="Thay đổi mật khẩu"
+				showBackButton={true}
+				onBackPress={() => navigation.goBack()}
+				showNotificationIcon={false}
+				showChatIcon={false}
+			/>
 
 			{/* Content */}
 			<ScrollView
@@ -322,25 +314,21 @@ export default function ChangePassword({ navigation }) {
 					activeOpacity={0.8}
 					disabled={isChangingPassword}
 				>
-					<LinearGradient
-						colors={
-							isChangingPassword
-								? ["#CCCCCC", "#AAAAAA"]
-								: ["#4CAF50", "#45A049"]
-						}
-						style={styles.changeButtonGradient}
-					>
-						{isChangingPassword ? (
+					<View style={styles.changeButtonBackground}>
+						{isChangingPassword && (
 							<ActivityIndicator size="small" color="#FFFFFF" />
-						) : (
-							<Ionicons name="key" size={20} color="#FFFFFF" />
 						)}
-						<Text style={styles.changeButtonText}>
+						<Text
+							style={[
+								styles.changeButtonText,
+								isChangingPassword && { marginLeft: 8 },
+							]}
+						>
 							{isChangingPassword
 								? "Đang thay đổi..."
 								: "Thay đổi mật khẩu"}
 						</Text>
-					</LinearGradient>
+					</View>
 				</TouchableOpacity>
 			</ScrollView>
 			<Dialog />
@@ -487,6 +475,16 @@ const styles = StyleSheet.create({
 	changeButtonDisabled: {
 		elevation: 1,
 		shadowOpacity: 0.1,
+		opacity: 0.7,
+	},
+	changeButtonBackground: {
+		backgroundColor: "#007AFF",
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 16,
+		paddingHorizontal: 20,
+		borderRadius: 12,
 	},
 	changeButtonGradient: {
 		flexDirection: "row",
@@ -499,6 +497,5 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
-		marginLeft: 8,
 	},
 });

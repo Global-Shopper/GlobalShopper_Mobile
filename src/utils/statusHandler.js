@@ -44,6 +44,15 @@ export const TRANSACTION_STATUS = {
 };
 
 /**
+ * Danh sách các Refund Status
+ */
+export const REFUND_STATUS = {
+	PENDING: "PENDING",
+	APPROVED: "APPROVED",
+	REJECTED: "REJECTED",
+};
+
+/**
  * Danh sách các request type
  */
 export const REQUEST_TYPE = {
@@ -93,6 +102,10 @@ export const getStatusText = (status) => {
 		[REQUEST_STATUS.SHIPPING]: "Đang giao hàng",
 		[REQUEST_STATUS.DELIVERED]: "Đã giao hàng",
 		[REQUEST_STATUS.REJECTED]: "Bị từ chối",
+		// Refund statuses
+		[REFUND_STATUS.PENDING]: "Đang xử lý",
+		[REFUND_STATUS.APPROVED]: "Chấp nhận",
+		[REFUND_STATUS.REJECTED]: "Bị từ chối",
 	};
 
 	return statusMap[status] || statusMap[status?.toLowerCase()] || status;
@@ -137,6 +150,10 @@ export const getStatusColor = (status) => {
 		[REQUEST_STATUS.SHIPPING]: "#29B6F6", // Light Blue - Đang giao hàng
 		[REQUEST_STATUS.DELIVERED]: "#9CCC65", // Light Green - Đã giao hàng
 		[REQUEST_STATUS.REJECTED]: "#F44336", // Dark Red - Bị từ chối
+		// Refund statuses
+		[REFUND_STATUS.PENDING]: "#ffc107", // Yellow - Đang xử lý
+		[REFUND_STATUS.APPROVED]: "#28a745", // Green - Đã chấp nhận
+		[REFUND_STATUS.REJECTED]: "#dc3545", // Red - Bị từ chối
 	};
 
 	return colorMap[status] || colorMap[status?.toLowerCase()] || "#999999";
