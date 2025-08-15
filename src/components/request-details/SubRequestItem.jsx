@@ -127,32 +127,31 @@ const SubRequestItem = ({
 	// Calculate sub-request total if has quotation
 	let subRequestTotal = 0;
 	if (hasQuotation) {
-		// Calculate total for each item including shipping
-		subRequest.requestItems.forEach((item) => {
-			if (item?.quotationDetail) {
-				const qd = item.quotationDetail;
-				const basePrice = qd.basePrice || 0;
-				const serviceFeeUSD = qd.serviceFee || 0; // This is in USD
-				const exchangeRate = qd.exchangeRate || 25000;
-				const totalTaxAmount = qd.totalTaxAmount || 0;
+		// Use quotationForPurchase.totalPriceEstimate + shippingEstimate for consistency with ConfirmQuotation
+		const basePrice =
+			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
+		const shippingEstimate =
+			subRequest?.quotationForPurchase?.shippingEstimate || 0;
+		subRequestTotal = basePrice + shippingEstimate;
 
-				const productPriceVND = Math.round(basePrice * exchangeRate);
-				const serviceFeeVND = Math.round(serviceFeeUSD * exchangeRate);
-				const importTaxVND = Math.round(totalTaxAmount * exchangeRate);
-
-				// Get shipping for this sub-request
-				const shippingEstimate =
-					subRequest?.quotationForPurchase?.shippingEstimate || 0;
-				const shippingVND = Math.round(shippingEstimate);
-
-				// Add calculated total including shipping
-				subRequestTotal +=
-					productPriceVND +
-					serviceFeeVND +
-					importTaxVND +
-					shippingVND;
-			}
+		console.log("SubRequestItem Quotation Debug:", {
+			subRequestId: subRequest?.id,
+			totalPriceEstimate: basePrice,
+			shippingEstimate: shippingEstimate,
+			subRequestTotal,
+			quotationForPurchase: subRequest?.quotationForPurchase,
 		});
+
+		// Fallback: If no quotationForPurchase, calculate from individual items
+		if (basePrice === 0) {
+			subRequest.requestItems.forEach((item) => {
+				if (item?.quotationDetail) {
+					const qd = item.quotationDetail;
+					const totalVNDPrice = qd.totalVNDPrice || 0;
+					subRequestTotal += totalVNDPrice;
+				}
+			});
+		}
 	}
 
 	// Parse variants helper function
@@ -348,7 +347,10 @@ const SubRequestItem = ({
 							</View>
 							<View style={styles.quotationSummaryRight}>
 								<Text style={styles.quotationSummaryTotal}>
-									{subRequestTotal.toLocaleString("vi-VN")}₫
+									{Math.round(subRequestTotal).toLocaleString(
+										"vi-VN"
+									)}{" "}
+									VNĐ
 								</Text>
 								<Ionicons
 									name={

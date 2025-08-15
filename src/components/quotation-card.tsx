@@ -77,18 +77,23 @@ export default function QuotationCard({
 	updatedTotalAmount,
 	isExpanded = false,
 }: QuotationCardProps) {
-	const formatCurrency = (amount: number) => {
-		return `${Math.round(amount).toLocaleString("vi-VN")} VNĐ`;
+	const formatCurrency = (amount: number): string => {
+		return amount.toLocaleString("vi-VN");
 	};
 
-	const formatOriginalCurrency = (amount: number, currency: string) => {
-		return `${amount.toLocaleString("en-US")} ${currency}`;
+	const formatOriginalCurrency = (
+		amount: number,
+		currency: string = "CNY"
+	): string => {
+		return `${amount.toLocaleString("vi-VN")} ${currency}`;
 	};
 
-	const formatExchangeRate = (rate: number, currency: string) => {
-		return `1 ${currency} = ${rate.toLocaleString("vi-VN")} VND`;
+	const formatExchangeRate = (rate: number): string => {
+		return rate.toLocaleString("vi-VN", {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 2,
+		});
 	};
-
 	const totalDifference = additionalFees
 		? (additionalFees.importTaxIncrease || 0) +
 		  (additionalFees.shippingIncrease || 0)
@@ -125,10 +130,7 @@ export default function QuotationCard({
 									</Text>
 								</View>
 								<Text style={styles.exchangeRate}>
-									{formatExchangeRate(
-										exchangeRate,
-										originalCurrency
-									)}
+									{formatExchangeRate(exchangeRate)} VNĐ
 								</Text>
 							</View>
 						</View>

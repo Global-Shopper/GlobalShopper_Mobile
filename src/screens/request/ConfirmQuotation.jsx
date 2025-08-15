@@ -120,7 +120,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Format wallet balance
 	const formatWalletBalance = (balance) => {
 		if (!balance && balance !== 0) return "0 VND";
-		return `${balance.toLocaleString("vi-VN")} VND`;
+		return `${balance} VND`;
 	};
 
 	const getRequestTypeText = (type) => {
@@ -181,17 +181,27 @@ export default function ConfirmQuotation({ navigation, route }) {
 					return;
 				}
 
-				// Calculate total amount from quotationForPurchase.totalPriceEstimate
-				const totalAmount =
+				// Calculate total amount like in SubRequestItem (basePrice + shipping)
+				const basePrice =
 					subRequestData.quotationForPurchase?.totalPriceEstimate ||
 					0;
+				const shippingEstimate =
+					subRequestData.quotationForPurchase?.shippingEstimate || 0;
 
+				// Use same calculation as SubRequestItem: basePrice + shippingEstimate
+				const totalAmount = basePrice + shippingEstimate;
+
+				console.log("=== PAYMENT DEBUG ===");
+				console.log("SubRequest ID:", subRequestData.id);
+				console.log("Payment Method:", selectedPaymentMethod);
+				console.log("Total amount calculation:", {
+					basePrice,
+					shippingEstimate,
+					totalAmount,
+					expectedFromUI: 866529.53,
+				});
 				console.log(
-					"Total amount from quotationForPurchase:",
-					totalAmount
-				);
-				console.log(
-					"QuotationForPurchase data:",
+					"QuotationForPurchase:",
 					subRequestData.quotationForPurchase
 				);
 
@@ -206,45 +216,33 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}
 				}
 
-				// Prepare checkout data with total amount
-				const checkoutData = {
+				// Try a completely different approach - maybe server expects quotation ID
+				const response = await directCheckout({
 					subRequestId: subRequestData.id,
 					paymentMethod: selectedPaymentMethod.toUpperCase(),
-					totalAmount: totalAmount, // Add total amount to match server validation
-				};
+					totalAmount: totalAmount,
+				}).unwrap();
 
-				console.log("Direct checkout data:", checkoutData);
-				console.log("SubRequest items:", subRequestData.requestItems);
-				console.log(
-					"QuotationDetails:",
-					subRequestData.requestItems?.map(
-						(item) => item.quotationDetail
-					)
-				);
+				console.log("Payment success:", response);
 
-				// Call checkout API
-				const result = await directCheckout(checkoutData).unwrap();
-				console.log("Checkout result:", result);
-
-				// Refresh wallet balance
+				// Success - continue with navigation
 				await refetchWallet();
-
-				// Use the already calculated totalAmount for display
 				const formattedAmount =
-					new Intl.NumberFormat("vi-VN", {
-						style: "decimal",
-						minimumFractionDigits: 0,
-					}).format(totalAmount) + " VNĐ";
-
-				// Navigate to success payment screen
+					totalAmount.toLocaleString("vi-VN") + " VNĐ";
 				navigation.navigate("SuccessPaymentScreen", {
 					paymentMethod: selectedPaymentMethod,
 					amount: formattedAmount,
 					requestId: displayData?.id,
-					orderId: result?.orderId || result?.id,
+					orderId: response?.orderId || response?.id,
 				});
 			} catch (error) {
 				console.error("Checkout error:", error);
+				console.error("Error details:", {
+					status: error?.status,
+					data: error?.data,
+					message: error?.message,
+					originalStatus: error?.originalStatus,
+				});
 				Alert.alert(
 					"Lỗi thanh toán",
 					error?.data?.message ||
@@ -480,6 +478,12 @@ export default function ConfirmQuotation({ navigation, route }) {
 												quotationDetail.expiredAt ||
 												quotationDetail.validUntil;
 
+											// Get shipping estimate from quotationForPurchase
+											const shippingEstimate =
+												selectedSubRequest
+													?.quotationForPurchase
+													?.shippingEstimate || 0;
+
 											return (
 												<View
 													key={index}
@@ -568,16 +572,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 																  )
 																: 0
 														}
-														internationalShipping={
-															0
-														}
+														internationalShipping={Math.round(
+															shippingEstimate
+														)}
 														importTax={Math.round(
 															totalTaxAmount *
 																exchangeRate
 														)}
 														domesticShipping={0}
 														totalAmount={Math.round(
-															totalVNDPrice
+															totalVNDPrice +
+																shippingEstimate
 														)}
 														isExpanded={true}
 													/>
@@ -598,17 +603,22 @@ export default function ConfirmQuotation({ navigation, route }) {
 												sản phẩm):
 											</Text>
 											<Text style={styles.totalAmount}>
-												{(
-													selectedSubRequest
-														.quotationForPurchase
-														?.totalPriceEstimate ||
-													0
-												).toLocaleString("vi-VN", {
-													style: "decimal",
-													minimumFractionDigits: 0,
-													maximumFractionDigits: 0,
-												})}{" "}
-												VND
+												{(() => {
+													const basePrice =
+														selectedSubRequest
+															.quotationForPurchase
+															?.totalPriceEstimate ||
+														0;
+													const shippingEstimate =
+														selectedSubRequest
+															.quotationForPurchase
+															?.shippingEstimate ||
+														0;
+													const total =
+														basePrice +
+														shippingEstimate;
+													return Math.round(total).toLocaleString('vi-VN');
+												})()} VNĐ
 											</Text>
 										</View>
 									</View>

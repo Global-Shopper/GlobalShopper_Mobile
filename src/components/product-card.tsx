@@ -197,7 +197,11 @@ export default function ProductCard({
 							{exchangeRate && exchangeRate > 0 && (
 								<Text style={styles.exchangeRate}>
 									Tỷ giá:{" "}
-									{exchangeRate.toLocaleString("vi-VN")} VNĐ
+									{exchangeRate.toLocaleString("vi-VN", {
+										minimumFractionDigits: 0,
+										maximumFractionDigits: 2,
+									})}{" "}
+									VNĐ
 								</Text>
 							)}
 						</View>
