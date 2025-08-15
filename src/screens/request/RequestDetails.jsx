@@ -11,11 +11,11 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
-import { Text } from "../../components/ui/text";
+import RequestActionButtons from "../../components/request-details/RequestActionButtons";
 import RequestDetailHeader from "../../components/request-details/RequestDetailHeader";
 import RequestDetailsInfo from "../../components/request-details/RequestDetailsInfo";
 import SubRequestItem from "../../components/request-details/SubRequestItem";
-import RequestActionButtons from "../../components/request-details/RequestActionButtons";
+import { Text } from "../../components/ui/text";
 import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
 import { shouldShowQuotation } from "../../utils/statusHandler";
 
@@ -294,6 +294,7 @@ export default function RequestDetails({ navigation, route }) {
 							product.productColor ||
 							parsedVariants.color
 						}
+						unit={product.unit || ""}
 						platform={product.platform || product.ecommercePlatform}
 						productLink={
 							product.productURL ||

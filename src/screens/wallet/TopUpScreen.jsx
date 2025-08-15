@@ -27,12 +27,6 @@ export default function TopUpScreen({ navigation }) {
 
 	const paymentMethods = [
 		{
-			id: "payos",
-			name: "PayOS",
-			icon: require("../../assets/images/payment/payos-logo.png"),
-			description: "Miễn phí - Xử lý ngay lập tức",
-		},
-		{
 			id: "vnpay",
 			name: "VNPay",
 			icon: require("../../assets/images/payment/vnpay-logo.png"),
@@ -69,6 +63,14 @@ export default function TopUpScreen({ navigation }) {
 			showDialog({
 				title: "Lỗi",
 				message: "Số tiền nạp tối thiểu là 10.000 VND",
+			});
+			return;
+		}
+
+		if (amount > 50000000) {
+			showDialog({
+				title: "Lỗi",
+				message: "Số tiền nạp tối đa là 50.000.000 VND trong 1 lần",
 			});
 			return;
 		}
@@ -178,6 +180,18 @@ export default function TopUpScreen({ navigation }) {
 								{formatCurrency(parseInt(customAmount) || 0)}
 							</Text>
 						)}
+					</View>
+
+					{/* Limit Note */}
+					<View style={styles.limitNoteContainer}>
+						<Ionicons
+							name="information-circle-outline"
+							size={16}
+							color="#6c757d"
+						/>
+						<Text style={styles.limitNoteText}>
+							Tối thiểu 10.000 VND - Tối đa 50.000.000 VND/lần
+						</Text>
 					</View>
 				</View>
 
@@ -511,5 +525,21 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
+	},
+	limitNoteContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#f8f9fa",
+		padding: 12,
+		borderRadius: 8,
+		marginTop: 16,
+		borderLeftWidth: 3,
+		borderLeftColor: "#42A5F5",
+	},
+	limitNoteText: {
+		fontSize: 14,
+		color: "#6c757d",
+		marginLeft: 8,
+		flex: 1,
 	},
 });

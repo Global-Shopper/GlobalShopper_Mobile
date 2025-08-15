@@ -181,21 +181,18 @@ export default function ConfirmQuotation({ navigation, route }) {
 					return;
 				}
 
-				// Calculate total amount from all quotations in sub-request
+				// Calculate total amount from quotationForPurchase.totalPriceEstimate
 				const totalAmount =
-					subRequestData.requestItems?.reduce((total, item) => {
-						return (
-							total + (item.quotationDetail?.totalVNDPrice || 0)
-						);
-					}, 0) || 0;
+					subRequestData.quotationForPurchase?.totalPriceEstimate ||
+					0;
 
 				console.log(
-					"Calculated total amount from all quotations:",
+					"Total amount from quotationForPurchase:",
 					totalAmount
 				);
 				console.log(
-					"Number of quotations:",
-					subRequestData.requestItems?.length || 0
+					"QuotationForPurchase data:",
+					subRequestData.quotationForPurchase
 				);
 
 				// Check wallet balance if using wallet
@@ -559,7 +556,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 																exchangeRate
 														)}
 														serviceFeePercent={
-															serviceFee
+															basePrice > 0
+																? Number(
+																		(
+																			(serviceFee /
+																				basePrice) *
+																			100
+																		).toFixed(
+																			1
+																		)
+																  )
+																: 0
 														}
 														internationalShipping={
 															0
@@ -591,21 +598,16 @@ export default function ConfirmQuotation({ navigation, route }) {
 												sản phẩm):
 											</Text>
 											<Text style={styles.totalAmount}>
-												{selectedSubRequest.requestItems
-													.reduce((total, item) => {
-														return (
-															total +
-															(item
-																.quotationDetail
-																?.totalVNDPrice ||
-																0)
-														);
-													}, 0)
-													.toLocaleString("vi-VN", {
-														style: "decimal",
-														minimumFractionDigits: 0,
-														maximumFractionDigits: 0,
-													})}{" "}
+												{(
+													selectedSubRequest
+														.quotationForPurchase
+														?.totalPriceEstimate ||
+													0
+												).toLocaleString("vi-VN", {
+													style: "decimal",
+													minimumFractionDigits: 0,
+													maximumFractionDigits: 0,
+												})}{" "}
 												VND
 											</Text>
 										</View>
