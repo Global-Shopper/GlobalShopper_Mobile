@@ -74,6 +74,21 @@ const getExpiryDate = (subRequest, displayData) => {
 	return null;
 };
 
+// Helper function to extract store name from contactInfo
+const getStoreNameFromContactInfo = (contactInfo) => {
+	if (!contactInfo || !Array.isArray(contactInfo)) return null;
+
+	const storeNameEntry = contactInfo.find(
+		(info) => typeof info === "string" && info.startsWith("Tên cửa hàng:")
+	);
+
+	if (storeNameEntry) {
+		return storeNameEntry.replace("Tên cửa hàng:", "").trim();
+	}
+
+	return null;
+};
+
 const SubRequestItem = ({
 	subRequest,
 	subIndex,
@@ -185,6 +200,10 @@ const SubRequestItem = ({
 						<Text style={styles.subRequestHeaderTitle}>
 							{subRequest.platform ||
 								subRequest.ecommercePlatform ||
+								getStoreNameFromContactInfo(
+									subRequest.contactInfo
+								) ||
+								subRequest.requestItems?.[0]?.sellerName ||
 								"Tự tìm kiếm"}
 						</Text>
 						<Text style={styles.subRequestHeaderSubtitle}>
@@ -448,6 +467,14 @@ const SubRequestItem = ({
 													}
 													originalCurrency={currency}
 													exchangeRate={exchangeRate}
+													// USD prices for fees
+													originalServiceFee={
+														serviceFeeUSD
+													}
+													originalShipping={
+														shippingEstimate /
+														exchangeRate
+													} // Convert back to USD
 													// VND converted prices
 													productPrice={
 														productPriceVND

@@ -601,9 +601,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 																0)
 														);
 													}, 0)
-													.toLocaleString(
-														"vi-VN"
-													)}{" "}
+													.toLocaleString("vi-VN", {
+														style: "decimal",
+														minimumFractionDigits: 0,
+														maximumFractionDigits: 0,
+													})}{" "}
 												VND
 											</Text>
 										</View>

@@ -85,9 +85,6 @@ export default function StoreForm({
 		if (mode === "manual" && !formData.storeAddress.trim()) {
 			return;
 		}
-		if (mode === "manual" && !formData.shopLink.trim()) {
-			return;
-		}
 
 		// Validate phone number format if provided
 		if (formData.phoneNumber.trim()) {
@@ -251,10 +248,7 @@ export default function StoreForm({
 			{/* Shop Link - Always show */}
 			<View style={styles.inputGroup}>
 				<Text style={styles.label}>
-					{mode === "manual" ? "Đường dẫn cửa hàng" : "Link cửa hàng"}{" "}
-					{mode === "manual" && (
-						<Text style={styles.required}>*</Text>
-					)}
+					{mode === "manual" ? "Đường dẫn cửa hàng" : "Link cửa hàng"}
 				</Text>
 				<View style={styles.inputContainer}>
 					<Ionicons
@@ -274,7 +268,7 @@ export default function StoreForm({
 						}
 						placeholder={
 							mode === "manual"
-								? "Nhập link website/fanpage cửa hàng"
+								? "Nhập link website/fanpage cửa hàng (tùy chọn)"
 								: "Nhập link cửa hàng (tùy chọn)"
 						}
 						placeholderTextColor="#B0BEC5"

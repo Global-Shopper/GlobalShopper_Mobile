@@ -8,6 +8,10 @@ interface QuotationCardProps {
 	originalCurrency?: string;
 	exchangeRate?: number;
 
+	// USD prices for fees
+	originalServiceFee?: number;
+	originalShipping?: number;
+
 	// VND converted prices
 	productPrice?: number;
 	serviceFee?: number;
@@ -49,6 +53,10 @@ export default function QuotationCard({
 	originalProductPrice,
 	originalCurrency = "USD",
 	exchangeRate = 1,
+
+	// USD prices for fees
+	originalServiceFee,
+	originalShipping,
 
 	// VND converted prices
 	productPrice = 1200000,
@@ -153,9 +161,19 @@ export default function QuotationCard({
 						<Text style={styles.label}>
 							Phí dịch vụ ({serviceFeePercent}%):
 						</Text>
-						<Text style={styles.value}>
-							{formatCurrency(serviceFee)}
-						</Text>
+						<View style={styles.priceColumn}>
+							{originalServiceFee && (
+								<Text style={styles.originalPrice}>
+									{formatOriginalCurrency(
+										originalServiceFee,
+										originalCurrency
+									)}
+								</Text>
+							)}
+							<Text style={styles.value}>
+								{formatCurrency(serviceFee)}
+							</Text>
+						</View>
 					</View>
 
 					{/* Total before conversion (for online requests) */}
@@ -307,11 +325,21 @@ export default function QuotationCard({
 					{/* Combined Shipping Fee */}
 					<View style={styles.priceRow}>
 						<Text style={styles.label}>Phí vận chuyển:</Text>
-						<Text style={styles.value}>
-							{formatCurrency(
-								internationalShipping + domesticShipping
+						<View style={styles.priceColumn}>
+							{originalShipping && (
+								<Text style={styles.originalPrice}>
+									{formatOriginalCurrency(
+										originalShipping,
+										originalCurrency
+									)}
+								</Text>
 							)}
-						</Text>
+							<Text style={styles.value}>
+								{formatCurrency(
+									internationalShipping + domesticShipping
+								)}
+							</Text>
+						</View>
 					</View>
 				</View>
 
