@@ -89,11 +89,12 @@ const SubRequestItem = ({
 	if (!subRequest?.requestItems?.length) return null;
 
 	// Check if this sub-request has quotation
-	const hasQuotation = subRequest.requestItems.some(
-		(item) =>
+	const hasQuotation = subRequest.requestItems.some((item) => {
+		return (
 			item?.quotationDetail &&
 			Object.keys(item.quotationDetail).length > 0
-	);
+		);
+	});
 
 	// Check if quotations are expired
 	const isExpired = hasExpiredQuotations(subRequest, displayData);
@@ -111,9 +112,30 @@ const SubRequestItem = ({
 	// Calculate sub-request total if has quotation
 	let subRequestTotal = 0;
 	if (hasQuotation) {
+		// Calculate total for each item including shipping
 		subRequest.requestItems.forEach((item) => {
-			if (item?.quotationDetail?.totalVNDPrice) {
-				subRequestTotal += item.quotationDetail.totalVNDPrice;
+			if (item?.quotationDetail) {
+				const qd = item.quotationDetail;
+				const basePrice = qd.basePrice || 0;
+				const serviceFeeUSD = qd.serviceFee || 0; // This is in USD
+				const exchangeRate = qd.exchangeRate || 25000;
+				const totalTaxAmount = qd.totalTaxAmount || 0;
+
+				const productPriceVND = Math.round(basePrice * exchangeRate);
+				const serviceFeeVND = Math.round(serviceFeeUSD * exchangeRate);
+				const importTaxVND = Math.round(totalTaxAmount * exchangeRate);
+
+				// Get shipping for this sub-request
+				const shippingEstimate =
+					subRequest?.quotationForPurchase?.shippingEstimate || 0;
+				const shippingVND = Math.round(shippingEstimate);
+
+				// Add calculated total including shipping
+				subRequestTotal +=
+					productPriceVND +
+					serviceFeeVND +
+					importTaxVND +
+					shippingVND;
 			}
 		});
 	}
@@ -328,6 +350,7 @@ const SubRequestItem = ({
 									.map((product, productIndex) => {
 										const quotationDetail =
 											product?.quotationDetail;
+
 										if (
 											!quotationDetail ||
 											Object.keys(quotationDetail)
@@ -339,32 +362,49 @@ const SubRequestItem = ({
 										// Extract values from quotationDetail
 										const basePrice =
 											quotationDetail?.basePrice || 0;
-										const serviceFee =
-											quotationDetail?.serviceFee || 0;
+										const serviceFeeUSD =
+											quotationDetail?.serviceFee || 0; // This is in USD
+										const serviceRate =
+											quotationDetail?.serviceRate || 0.1; // This is the percentage (0.1 = 10%)
 										const totalTaxAmount =
 											quotationDetail?.totalTaxAmount ||
 											0;
-										const totalVNDPrice =
-											quotationDetail?.totalVNDPrice || 0;
 										const exchangeRate =
-											quotationDetail?.exchangeRate || 1;
+											quotationDetail?.exchangeRate ||
+											25000; // Default VND exchange rate
 										const currency =
 											quotationDetail?.currency || "USD";
 										const taxRates =
 											quotationDetail?.taxRates || [];
+
+										// Get shipping info from quotationForPurchase level
+										const shippingEstimate =
+											subRequest?.quotationForPurchase
+												?.shippingEstimate || 0;
+										const shippingVND =
+											Math.round(shippingEstimate);
 
 										// Calculate VND values
 										const productPriceVND = Math.round(
 											basePrice * exchangeRate
 										);
 										const serviceFeeVND = Math.round(
-											((serviceFee * exchangeRate) /
-												100) *
-												basePrice
+											serviceFeeUSD * exchangeRate
 										);
 										const importTaxVND = Math.round(
 											totalTaxAmount * exchangeRate
 										);
+
+										// Calculate total including shipping
+										const calculatedTotal =
+											productPriceVND +
+											serviceFeeVND +
+											importTaxVND +
+											shippingVND;
+
+										// Use calculated total (which includes shipping) instead of API totalVNDPrice
+										const finalTotalVND =
+											Math.round(calculatedTotal);
 
 										// Prepare tax details
 										const taxDetails =
@@ -414,18 +454,22 @@ const SubRequestItem = ({
 													}
 													serviceFee={serviceFeeVND}
 													serviceFeePercent={
-														serviceFee
+														Math.round(
+															serviceRate *
+																100 *
+																10
+														) / 10 // Convert 0.1 to 10.0%
 													}
-													internationalShipping={0}
+													internationalShipping={
+														shippingVND
+													}
 													importTax={importTaxVND}
 													domesticShipping={0}
 													// Tax details
 													taxDetails={taxDetails}
 													taxRates={taxRates}
-													// Total amount
-													totalAmount={Math.round(
-														totalVNDPrice
-													)}
+													// Total amount - use finalTotalVND
+													totalAmount={finalTotalVND}
 													additionalFees={undefined}
 													updatedTotalAmount={
 														undefined

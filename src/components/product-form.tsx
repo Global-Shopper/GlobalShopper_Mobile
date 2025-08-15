@@ -136,6 +136,11 @@ function getPlatformLogo(platform: string) {
 	if (platformLower.includes("shein")) {
 		return require("../assets/images/ecommerce/shein-logo.png");
 	}
+	// Fallback for other platforms
+	if (platformLower.includes("shopee")) return null;
+	if (platformLower.includes("lazada")) return null;
+	if (platformLower.includes("tiki")) return null;
+	if (platformLower.includes("sendo")) return null;
 	return null;
 }
 

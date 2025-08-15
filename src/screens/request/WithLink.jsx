@@ -46,6 +46,10 @@ export default function WithLink({ navigation }) {
 		if (urlLower.includes("amazon")) return "Amazon";
 		if (urlLower.includes("aliexpress")) return "AliExpress";
 		if (urlLower.includes("ebay")) return "eBay";
+		if (urlLower.includes("asos")) return "ASOS";
+		if (urlLower.includes("dhgate")) return "DHgate";
+		if (urlLower.includes("gmarket")) return "Gmarket";
+		if (urlLower.includes("shein")) return "Shein";
 		if (urlLower.includes("shopee")) return "Shopee";
 		if (urlLower.includes("lazada")) return "Lazada";
 		if (urlLower.includes("tiki")) return "Tiki";

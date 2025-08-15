@@ -70,7 +70,7 @@ export default function QuotationCard({
 	isExpanded = false,
 }: QuotationCardProps) {
 	const formatCurrency = (amount: number) => {
-		return `${amount.toLocaleString("vi-VN")} VND`;
+		return `${Math.round(amount).toLocaleString("vi-VN")} VNĐ`;
 	};
 
 	const formatOriginalCurrency = (amount: number, currency: string) => {
@@ -148,6 +148,7 @@ export default function QuotationCard({
 						</View>
 					</View>
 
+					{/* Service Fee */}
 					<View style={styles.priceRow}>
 						<Text style={styles.label}>
 							Phí dịch vụ ({serviceFeePercent}%):
@@ -156,6 +157,24 @@ export default function QuotationCard({
 							{formatCurrency(serviceFee)}
 						</Text>
 					</View>
+
+					{/* Total before conversion (for online requests) */}
+					{originalProductPrice && exchangeRate > 1 && (
+						<View style={styles.priceRow}>
+							<Text style={styles.label}>
+								Tổng trước quy đổi:
+							</Text>
+							<Text style={styles.value}>
+								{formatOriginalCurrency(
+									originalProductPrice +
+										(originalProductPrice *
+											serviceFeePercent) /
+											100,
+									originalCurrency
+								)}
+							</Text>
+						</View>
+					)}
 
 					{/* Tax Details Section */}
 					{taxRates && taxRates.length > 0 ? (
@@ -285,25 +304,14 @@ export default function QuotationCard({
 						</View>
 					)}
 
-					{/* Shipping Fees Section */}
-					<View style={styles.shippingSection}>
-						<View style={styles.priceRow}>
-							<Text style={styles.label}>
-								Phí vận chuyển quốc tế (tạm tính):
-							</Text>
-							<Text style={styles.value}>
-								{formatCurrency(internationalShipping)}
-							</Text>
-						</View>
-
-						<View style={styles.priceRow}>
-							<Text style={styles.label}>
-								Phí giao hàng nội địa (tạm tính):
-							</Text>
-							<Text style={styles.value}>
-								{formatCurrency(domesticShipping)}
-							</Text>
-						</View>
+					{/* Combined Shipping Fee */}
+					<View style={styles.priceRow}>
+						<Text style={styles.label}>Phí vận chuyển:</Text>
+						<Text style={styles.value}>
+							{formatCurrency(
+								internationalShipping + domesticShipping
+							)}
+						</Text>
 					</View>
 				</View>
 
@@ -330,7 +338,7 @@ export default function QuotationCard({
 					{/* VND Total */}
 					<View style={styles.totalRowCompact}>
 						<Text style={styles.totalLabelCompact}>
-							Tổng thanh toán (VND)
+							Tổng (VNĐ):
 						</Text>
 						<Text style={styles.totalValue}>
 							{formatCurrency(updatedTotalAmount || totalAmount)}
