@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -25,6 +25,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 	const { request, subRequest, subRequestIndex } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+	const [selectedShipping, setSelectedShipping] = useState(null);
 
 	console.log("ConfirmQuotation params:", {
 		request: !!request,
@@ -56,6 +57,16 @@ export default function ConfirmQuotation({ navigation, route }) {
 		useCheckoutMutation(); // For Wallet
 
 	const isCheckingOut = isDirectCheckingOut || isWalletCheckingOut;
+
+	// Debug selectedShipping changes
+	useEffect(() => {
+		if (selectedShipping) {
+			console.log(
+				"🚢 Shipping method updated in ConfirmQuotation:",
+				selectedShipping
+			);
+		}
+	}, [selectedShipping]);
 
 	// Helper function to get shortened UUID with #
 	const getShortId = (fullId) => {
@@ -155,9 +166,20 @@ export default function ConfirmQuotation({ navigation, route }) {
 	const calculateTotalAmount = (subRequest) => {
 		const basePrice =
 			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
-		const shippingEstimate =
-			subRequest?.quotationForPurchase?.shippingEstimate || 0;
-		return basePrice + shippingEstimate;
+
+		// For offline requests, use selected shipping cost
+		const requestType = displayData?.requestType || displayData?.type;
+		const isOfflineRequest = requestType?.toLowerCase() === "offline";
+
+		let shippingCost = 0;
+		if (isOfflineRequest && selectedShipping) {
+			shippingCost = selectedShipping.totalCost || 0;
+		} else {
+			shippingCost =
+				subRequest?.quotationForPurchase?.shippingEstimate || 0;
+		}
+
+		return basePrice + shippingCost;
 	};
 
 	const getRequestTypeText = (type) => {
@@ -185,6 +207,30 @@ export default function ConfirmQuotation({ navigation, route }) {
 		// Match logic from RequestDetails
 		const normalizedType = type?.toLowerCase();
 		return normalizedType === "online" ? "link-outline" : "create-outline";
+	};
+
+	// Function to navigate to shipping selection
+	const handleSelectShipping = () => {
+		if (!displayData || !displayData.subRequests?.[subRequestIndex]) {
+			console.log("No data available for shipping selection");
+			return;
+		}
+
+		const currentSubRequest = displayData.subRequests[subRequestIndex];
+		const quotation = currentSubRequest?.quotationForPurchase;
+
+		if (!quotation) {
+			console.log("No quotation available for shipping selection");
+			return;
+		}
+
+		navigation.navigate("SelectShipping", {
+			quotation,
+			onShippingSelect: (shipping) => {
+				console.log("Selected shipping method:", shipping);
+				setSelectedShipping(shipping);
+			},
+		});
 	};
 
 	const handleConfirmPayment = async () => {
@@ -618,20 +664,22 @@ export default function ConfirmQuotation({ navigation, route }) {
 										</Text>
 										<TouchableOpacity
 											style={styles.shippingSelectButton}
-											onPress={() => {
-												// TODO: Navigate to shipping selection screen
-												Alert.alert(
-													"Thông báo",
-													"Tính năng chọn vận chuyển sẽ được cập nhật soon"
-												);
-											}}
+											onPress={handleSelectShipping}
 										>
 											<Text
 												style={
 													styles.shippingSelectText
 												}
 											>
-												Chọn phương thức vận chuyển
+												{selectedShipping
+													? `${
+															selectedShipping.serviceName
+													  } - ${Math.round(
+															selectedShipping.totalCost
+													  ).toLocaleString(
+															"vi-VN"
+													  )} VNĐ`
+													: "Chọn phương thức vận chuyển"}
 											</Text>
 											<Ionicons
 												name="chevron-forward"
@@ -911,12 +959,34 @@ export default function ConfirmQuotation({ navigation, route }) {
 											Phí vận chuyển:
 										</Text>
 										<Text style={styles.shippingValue}>
-											{Math.round(
-												selectedSubRequest
-													?.quotationForPurchase
-													?.shippingEstimate || 0
-											).toLocaleString("vi-VN")}{" "}
-											VNĐ
+											{(() => {
+												const requestType =
+													displayData?.requestType ||
+													displayData?.type;
+												const isOfflineRequest =
+													requestType?.toLowerCase() ===
+													"offline";
+
+												let shippingCost = 0;
+												if (
+													isOfflineRequest &&
+													selectedShipping
+												) {
+													shippingCost =
+														selectedShipping.totalCost ||
+														0;
+												} else {
+													shippingCost =
+														selectedSubRequest
+															?.quotationForPurchase
+															?.shippingEstimate ||
+														0;
+												}
+
+												return `${Math.round(
+													shippingCost
+												).toLocaleString("vi-VN")} VNĐ`;
+											})()}
 										</Text>
 									</View>
 

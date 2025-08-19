@@ -148,6 +148,34 @@ const gshopApi = createApi({
 			}),
 			invalidatesTags: ["ShippingAddress"],
 		}),
+		getShipmentRate: builder.query({
+			query: (data) => ({
+				data: data,
+				url: endpoints.SHIPMENT_RATE,
+				method: "POST",
+			}),
+		}),
+		getShippingRates: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.SHIPMENT_RATE, // Try the single rate endpoint first
+				method: "POST",
+			}),
+		}),
+		createShipment: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.CREATE_SHIPMENT,
+				method: "POST",
+			}),
+		}),
+		getShippingTracking: builder.query({
+			query: (data) => ({
+				params: data,
+				url: `${endpoints.SHIPMENT_TRACKING}`,
+				method: "GET",
+			}),
+		}),
 		changePassword: builder.mutation({
 			query: (data) => ({
 				data: data,
@@ -499,6 +527,9 @@ export const {
 	useGetCustomerInfoQuery,
 	useUpdateCustomerProfileMutation,
 	useDefaultShippingAddressMutation,
+	useGetShipmentRateQuery,
+	useGetShippingRatesMutation,
+	useCreateShipmentMutation,
 	useUploadAvatarMutation,
 	useGetPurchaseRequestQuery,
 	useGetPurchaseRequestByIdQuery,
@@ -512,26 +543,22 @@ export const {
 	useWithdrawWalletMutation,
 	useLazyCheckPaymentQuery,
 	useGetPurchaseRequestDetailQuery,
+	useLazyGetShippingTrackingQuery,
 	useTransactionHistoryQuery,
 	useCurrentUserTransactionsQuery,
-	// Bank Account hooks
 	useGetBankAccountsQuery,
 	useGetBanksQuery,
 	useCreateBankAccountMutation,
 	useUpdateBankAccountMutation,
 	useDeleteBankAccountMutation,
-	// Order hooks
 	useGetAllOrdersQuery,
 	useGetOrderByIdQuery,
 	useLazyGetOrderByIdQuery,
 	useCancelOrderMutation,
-	// Checkout hooks
 	useCheckoutMutation,
 	useDirectCheckoutMutation,
-	// Feedback hooks
 	useCreateFeedbackMutation,
 	useGetAllFeedbackQuery,
-	// Refund hooks
 	useCreateRefundTicketMutation,
 	useGetRefundTicketsByOrderIdQuery,
 } = gshopApi;

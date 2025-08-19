@@ -36,6 +36,7 @@ import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
 import RequestDetails from "../screens/request/RequestDetails";
 import RequestHistory from "../screens/request/RequestHistory";
+import SelectShipping from "../screens/request/SelectShipping";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import StatisticScreen from "../screens/statistic/StatisticScreen";
@@ -216,6 +217,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ConfirmQuotation"
 				component={ConfirmQuotation}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="SelectShipping"
+				component={SelectShipping}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
