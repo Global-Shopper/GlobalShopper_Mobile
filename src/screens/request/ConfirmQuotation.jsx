@@ -770,7 +770,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 																		{totalPrice.toLocaleString(
 																			"vi-VN"
 																		)}{" "}
-																		₫
+																		VNĐ
 																	</Text>
 																) : (
 																	<Text
@@ -886,7 +886,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 																	{totalPrice.toLocaleString(
 																		"vi-VN"
 																	)}{" "}
-																	₫
+																	VNĐ
 																</Text>
 															) : (
 																<Text
@@ -904,6 +904,21 @@ export default function ConfirmQuotation({ navigation, route }) {
 											);
 										}
 									)}
+
+									{/* Shipping Fee */}
+									<View style={styles.shippingContainer}>
+										<Text style={styles.shippingLabel}>
+											Phí vận chuyển:
+										</Text>
+										<Text style={styles.shippingValue}>
+											{Math.round(
+												selectedSubRequest
+													?.quotationForPurchase
+													?.shippingEstimate || 0
+											).toLocaleString("vi-VN")}{" "}
+											VNĐ
+										</Text>
+									</View>
 
 									{/* Total amount for all quotations - only for online requests */}
 									{!isOfflineRequest && (
@@ -1212,13 +1227,34 @@ const styles = StyleSheet.create({
 		color: "#E53E3E",
 		fontWeight: "600",
 	},
+	shippingContainer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 12,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingLabel: {
+		fontSize: 15,
+		fontWeight: "500",
+		color: "#333",
+	},
+	shippingValue: {
+		fontSize: 15,
+		fontWeight: "600",
+		color: "#666",
+	},
 	totalSummary: {
 		backgroundColor: "#F8F9FA",
 		borderRadius: 8,
 		padding: 16,
 		marginTop: 12,
-		borderWidth: 2,
-		borderColor: "#1976D2",
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
 	},
 	totalRow: {
 		flexDirection: "row",
@@ -1233,7 +1269,7 @@ const styles = StyleSheet.create({
 	totalAmount: {
 		fontSize: 18,
 		fontWeight: "700",
-		color: "#1976D2",
+		color: "#E53E3E",
 	},
 	// Shipping section styles
 	shippingSection: {
