@@ -1,0 +1,285 @@
+{
+	"taxTypes": [
+		{
+			"id": 1,
+			"name": "Thuế tối huệ quốc (MFN)",
+			"shortName": "Thuế tối huệ quốc",
+			"description": "Nguyên tắc thuế ưu đãi nhất áp dụng trong thương mại quốc tế",
+			"icon": "globe-outline",
+			"color": "#96CEB4",
+			"details": {
+				"definition": "Thuế tối huệ quốc (Most Favoured Nation - MFN) là nguyên tắc áp dụng thuế suất thấp nhất mà một quốc gia đang áp dụng cho tất cả các đối tác thương mại.",
+				"principle": "Khi Việt Nam áp dụng thuế suất ưu đãi cho một nước, thuế suất này sẽ được áp dụng tự động cho tất cả các nước có quan hệ MFN với Việt Nam.",
+				"benefits": [
+					"Giảm thuế nhập khẩu cho hàng hóa từ các nước đối tác",
+					"Tạo điều kiện thuận lợi cho thương mại quốc tế",
+					"Giảm chi phí nhập khẩu cho doanh nghiệp và người tiêu dùng",
+					"Thúc đẩy cạnh tranh và đa dạng hóa nguồn cung"
+				],
+				"applicableProducts": [
+					"Việt Nam là thành viên WTO nên được hưởng thuế MFN từ các nước thành viên",
+					"Nhiều mặt hàng được áp dụng thuế suất 0% hoặc rất thấp",
+					"Ưu tiên cho hàng hóa từ các nước ASEAN, CPTPP, EVFTA"
+				],
+				"examples": [
+					{
+						"product": "Hàng điện tử từ Hàn Quốc",
+						"calculation": "0-5% (thay vì 15-20%)"
+					},
+					{
+						"product": "Hàng dệt may từ Thái Lan",
+						"calculation": "0% (thay vì 12%)"
+					},
+					{
+						"product": "Thực phẩm từ EU",
+						"calculation": "0-3% (thay vì 10-25%)"
+					}
+				]
+			}
+		},
+		{
+			"id": 2,
+			"name": "Thuế tiêu thụ đặc biệt (Excise Tax)",
+			"shortName": "Thuế tiêu thụ đặc biệt",
+			"description": "Thuế áp dụng cho các sản phẩm có tác động tiêu cực đến sức khỏe và môi trường",
+			"icon": "warning-outline",
+			"color": "#FF6B35",
+			"details": {
+				"definition": "Thuế tiêu thụ đặc biệt là loại thuế gián thu được áp dụng đối với các sản phẩm, hàng hóa có tác động tiêu cực đến sức khỏe con người và môi trường.",
+				"applicableProducts": [
+					"Rượu, bia và các loại đồ uống có cồn",
+					"Thuốc lá và các sản phẩm thuốc lá",
+					"Xăng, dầu và các sản phẩm dầu mỏ",
+					"Ô tô dưới 9 chỗ ngồi",
+					"Điều hòa nhiệt độ dưới 90.000 BTU",
+					"Phương tiện bay dân dụng",
+					"Bài lá và vỏ bài lá"
+				],
+				"taxRates": [
+					{
+						"product": "Rượu (độ cồn >15%)",
+						"rate": "65.000 đồng/lít"
+					},
+					{
+						"product": "Bia",
+						"rate": "3.000 đồng/lít"
+					},
+					{
+						"product": "Thuốc lá",
+						"rate": "75% giá tính thuế"
+					},
+					{
+						"product": "Xăng",
+						"rate": "3.500 đồng/lít"
+					},
+					{
+						"product": "Ô tô dưới 9 chỗ",
+						"rate": "10-150% tùy dung tích"
+					}
+				],
+				"importNote": "Khi nhập khẩu các sản phẩm này, người tiêu dùng sẽ phải chịu thêm thuế tiêu thụ đặc biệt ngoài thuế nhập khẩu và VAT."
+			}
+		},
+		{
+			"id": 3,
+			"name": "Thuế nhập khẩu (Import Tax)",
+			"shortName": "Thuế nhập khẩu",
+			"description": "Thuế áp dụng cho hàng hóa nhập khẩu từ nước ngoài về Việt Nam",
+			"icon": "airplane-outline",
+			"color": "#4ECDC4",
+			"details": {
+				"definition": "Thuế nhập khẩu là khoản thuế mà người nhập khẩu phải trả khi đưa hàng hóa từ nước ngoài về Việt Nam.",
+				"calculation": "Thuế nhập khẩu = Giá tính thuế × Thuế suất nhập khẩu",
+				"taxBase": [
+					"Giá FOB (Free On Board) + Chi phí bảo hiểm + Chi phí vận chuyển",
+					"Tỷ giá USD/VND do Ngân hàng Nhà nước công bố tại thời điểm làm thủ tục hải quan"
+				],
+				"commonRates": [
+					{
+						"category": "Hàng tiêu dùng thông thường",
+						"rate": "0-20%"
+					},
+					{
+						"category": "Máy móc, thiết bị",
+						"rate": "0-10%"
+					},
+					{
+						"category": "Nguyên liệu sản xuất",
+						"rate": "0-5%"
+					},
+					{
+						"category": "Hàng xa xỉ",
+						"rate": "20-45%"
+					},
+					{
+						"category": "Ô tô",
+						"rate": "70-78%"
+					}
+				],
+				"exemptions": [
+					"Hàng hóa trong danh mục miễn thuế",
+					"Quà tặng dưới 1 triệu đồng",
+					"Hành lý cá nhân trong định mức",
+					"Hàng viện trợ nhân đạo"
+				],
+				"note": "Thuế suất có thể thay đổi theo từng loại hàng hóa và thỏa thuận thương mại quốc tế."
+			}
+		},
+		{
+			"id": 4,
+			"name": "Thuế giá trị gia tăng (VAT)",
+			"shortName": "VAT",
+			"description": "Thuế áp dụng cho hầu hết các giao dịch mua bán hàng hóa và dịch vụ",
+			"icon": "calculator-outline",
+			"color": "#45B7D1",
+			"details": {
+				"definition": "VAT là thuế gián thu được tính trên giá trị gia tăng của hàng hóa, dịch vụ trong quá trình lưu thông từ sản xuất đến tiêu dùng.",
+				"taxRates": [
+					{
+						"rate": "0%",
+						"applies": "Hàng xuất khẩu, máy móc thiết bị phục vụ sản xuất"
+					},
+					{
+						"rate": "5%",
+						"applies": "Nhu yếu phẩm: gạo, thịt, cá, rau củ, sách giáo khoa, thuốc chữa bệnh"
+					},
+					{
+						"rate": "10%",
+						"applies": "Hàng hóa, dịch vụ thông thường"
+					}
+				],
+				"calculation": "VAT = Giá chưa thuế × Thuế suất VAT",
+				"forImports": "VAT nhập khẩu = (Giá tính thuế nhập khẩu + Thuế nhập khẩu + Thuế tiêu thụ đặc biệt) × 10%",
+				"examples": [
+					{
+						"product": "Điện thoại iPhone (giá $1000)",
+						"calculation": "Thuế nhập khẩu: $1000 × 12% = $120\nVAT: ($1000 + $120) × 10% = $112\nTổng thuế: $232"
+					},
+					{
+						"product": "Quần áo (giá $50)",
+						"calculation": "Thuế nhập khẩu: $50 × 15% = $7.5\nVAT: ($50 + $7.5) × 10% = $5.75\nTổng thuế: $13.25"
+					}
+				]
+			}
+		},
+		{
+			"id": 5,
+			"name": "Thuế bảo vệ môi trường",
+			"shortName": "Thuế môi trường",
+			"description": "Thuế áp dụng cho các sản phẩm có tác động tiêu cực đến môi trường",
+			"icon": "leaf-outline",
+			"color": "#50C878",
+			"details": {
+				"definition": "Thuế bảo vệ môi trường được áp dụng đối với hàng hóa, sản phẩm gây tác động tiêu cực đến môi trường nhằm hạn chế sản xuất, tiêu thụ và khuyến khích sử dụng năng lượng sạch.",
+				"applicableProducts": [
+					"Xăng các loại",
+					"Dầu diesel",
+					"Dầu mazut",
+					"Dầu nhờn",
+					"Than đá",
+					"Túi nilon khó phân hủy",
+					"Hoá chất phá hủy tầng ozone"
+				],
+				"taxRates": [
+					{
+						"product": "Xăng RON 95",
+						"rate": "3.000 đồng/lít"
+					},
+					{
+						"product": "Dầu diesel",
+						"rate": "2.000 đồng/lít"
+					},
+					{
+						"product": "Than đá",
+						"rate": "20.000 đồng/tấn"
+					},
+					{
+						"product": "Túi nilon",
+						"rate": "50.000 đồng/kg"
+					},
+					{
+						"product": "CFCs",
+						"rate": "200.000 đồng/kg"
+					}
+				],
+				"purpose": [
+					"Hạn chế tiêu thụ sản phẩm gây ô nhiễm",
+					"Tạo nguồn thu để bảo vệ môi trường",
+					"Khuyến khích sử dụng năng lượng tái tạo",
+					"Giảm thiểu tác động tiêu cực đến hệ sinh thái"
+				],
+				"importNote": "Người nhập khẩu các sản phẩm này phải nộp cả thuế nhập khẩu, VAT và thuế bảo vệ môi trường."
+			}
+		},
+		{
+			"id": 6,
+			"name": "Sales Tax (Thuế bán hàng)",
+			"shortName": "Sales Tax",
+			"description": "Thuế bán hàng áp dụng tại các nước như Mỹ, Canada khi mua hàng",
+			"icon": "storefront-outline",
+			"color": "#FFA07A",
+			"details": {
+				"definition": "Sales Tax là thuế được thu tại điểm bán hàng, áp dụng chủ yếu ở Mỹ và Canada. Thuế này được tính trên giá bán cuối cùng của hàng hóa.",
+				"characteristics": [
+					"Thuế suất thay đổi theo từng bang/tỉnh",
+					"Được thu tại thời điểm mua hàng",
+					"Không được hoàn lại khi xuất khẩu",
+					"Áp dụng cho cả hàng hóa và dịch vụ"
+				],
+				"ratesByState": [
+					{
+						"state": "California",
+						"rate": "7.25% - 10.5%"
+					},
+					{
+						"state": "New York",
+						"rate": "4% - 8.5%"
+					},
+					{
+						"state": "Texas",
+						"rate": "6.25% - 8.25%"
+					},
+					{
+						"state": "Florida",
+						"rate": "6% - 8%"
+					},
+					{
+						"state": "Washington",
+						"rate": "6.5% - 10.4%"
+					}
+				],
+				"canadaGST": [
+					{
+						"province": "Ontario",
+						"GST": "5%",
+						"PST": "8%",
+						"total": "13% (HST)"
+					},
+					{
+						"province": "Quebec",
+						"GST": "5%",
+						"PST": "9.975%",
+						"total": "14.975%"
+					},
+					{
+						"province": "British Columbia",
+						"GST": "5%",
+						"PST": "7%",
+						"total": "12%"
+					}
+				],
+				"forVietnamBuyers": [
+					"Khi mua hàng online từ Mỹ/Canada, bạn sẽ phải trả Sales Tax tại thời điểm thanh toán",
+					"Sales Tax không được hoàn lại ngay cả khi hàng được ship quốc tế",
+					"Một số bang miễn Sales Tax cho hàng xuất khẩu (như Delaware, New Hampshire)",
+					"Nên chọn địa chỉ giao hàng tại các bang có thuế thấp để tiết kiệm chi phí"
+				],
+				"tips": [
+					"Sử dụng dịch vụ mail forwarding tại bang không thuế",
+					"Tìm hiểu chính sách thuế của từng website bán hàng",
+					"Tính toán tổng chi phí bao gồm cả Sales Tax trước khi đặt hàng"
+				]
+			}
+		}
+	]
+}

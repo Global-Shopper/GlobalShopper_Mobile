@@ -23,7 +23,7 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			title: "Thông tin thuế",
 			icon: "receipt-outline",
 			color: "#42A5F5",
-			onPress: () => console.log("Navigate to tax info"),
+			onPress: () => navigation?.navigate("TaxListScreen"),
 		},
 		{
 			id: 4,
