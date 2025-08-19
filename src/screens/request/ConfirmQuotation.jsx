@@ -266,29 +266,83 @@ export default function ConfirmQuotation({ navigation, route }) {
 				}
 
 				// Calculate total amount using consistent method
-				const totalAmount = calculateTotalAmount(subRequestData);
-				const basePrice =
-					subRequestData.quotationForPurchase?.totalPriceEstimate ||
-					0;
-				const shippingEstimate =
-					subRequestData.quotationForPurchase?.shippingEstimate || 0;
+				const requestType =
+					displayData?.requestType || displayData?.type;
+				const isOfflineRequest =
+					requestType?.toLowerCase() === "offline";
+
+				// Try calculating base price from individual item totals instead of totalPriceEstimate
+				let basePrice = 0;
+				if (subRequestData.requestItems) {
+					basePrice = subRequestData.requestItems.reduce(
+						(sum, item) => {
+							const itemTotal =
+								item.quotationDetail?.totalVNDPrice || 0;
+							console.log(
+								`Item "${item.productName}" totalVNDPrice:`,
+								itemTotal
+							);
+							return sum + itemTotal;
+						},
+						0
+					);
+					console.log(
+						"Calculated basePrice from individual items:",
+						basePrice
+					);
+				}
+
+				// Fallback to totalPriceEstimate if no individual totals
+				if (basePrice === 0) {
+					basePrice =
+						subRequestData.quotationForPurchase
+							?.totalPriceEstimate || 0;
+					console.log(
+						"Using fallback totalPriceEstimate:",
+						basePrice
+					);
+				}
+
+				// Get shipping cost based on request type
+				let shippingCost = 0;
+				if (isOfflineRequest && selectedShipping) {
+					shippingCost = selectedShipping.totalCost || 0;
+				} else {
+					shippingCost =
+						subRequestData.quotationForPurchase?.shippingEstimate ||
+						0;
+				}
+
+				// Total = base price + shipping
+				const totalAmount = basePrice + shippingCost;
 
 				console.log("=== PAYMENT DEBUG ===");
 				console.log("SubRequest ID:", subRequestData.id);
 				console.log("Payment Method:", selectedPaymentMethod);
-				console.log("Total amount calculation:", {
+				console.log(
+					"Request Type:",
+					requestType,
+					"isOffline:",
+					isOfflineRequest
+				);
+				console.log("Payment calculation breakdown:", {
 					basePrice,
-					shippingEstimate,
+					shippingCost,
 					totalAmount,
-					expectedFromUI: 866529.53,
+					calculationMethod:
+						basePrice > 0
+							? "individual items"
+							: "totalPriceEstimate",
+					selectedShippingDetails: selectedShipping
+						? {
+								serviceName: selectedShipping.serviceName,
+								totalCost: selectedShipping.totalCost,
+						  }
+						: null,
 				});
 				console.log(
 					"Full QuotationForPurchase:",
 					JSON.stringify(subRequestData.quotationForPurchase, null, 2)
-				);
-				console.log(
-					"Fees details:",
-					subRequestData.quotationForPurchase?.fees
 				);
 
 				// Calculate all fees to understand the total structure
@@ -304,19 +358,34 @@ export default function ConfirmQuotation({ navigation, route }) {
 					);
 				}
 				console.log("Total calculated fees:", totalFees);
-				console.log(
-					"Expected grand total:",
-					Number(basePrice) + Number(shippingEstimate) + totalFees
-				);
 
-				// Use the pre-calculated total from the client (matches UI display)
-				// This is the total that user sees and server expects
-				const payload = {
+				// Create payload - try using individual item calculation
+				let payload = {
 					subRequestId: subRequestData.id,
-					totalPriceEstimate: totalAmount, // Use the client-calculated total
+					totalPriceEstimate: basePrice, // Use calculated basePrice (individual items)
 					trackingNumber: "",
-					shippingFee: Number(shippingEstimate), // Shipping fee separate
+					shippingFee: shippingCost, // Send actual shipping cost separately
 				};
+
+				// For offline requests, maybe we need to include shipping method info
+				if (isOfflineRequest && selectedShipping) {
+					console.log(
+						"Adding shipping method info for offline request"
+					);
+					payload.shippingMethod = {
+						serviceCode: selectedShipping.serviceCode,
+						serviceName: selectedShipping.serviceName,
+						totalCost: selectedShipping.totalCost,
+						currency: selectedShipping.currency || "VND",
+					};
+				}
+
+				console.log("=== FINAL PAYLOAD APPROACH ===");
+				console.log("Using individual item totals for basePrice");
+				console.log("basePrice sent:", basePrice, "VND");
+				console.log("shippingFee sent:", shippingCost, "VND");
+				console.log("totalAmount expected:", totalAmount, "VND");
+				console.log("Full payload:", JSON.stringify(payload, null, 2));
 
 				// Add redirectUri for VNPay (direct-checkout) using deep linking
 				if (selectedPaymentMethod !== "wallet") {
@@ -690,7 +759,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 						})()}
 
 						<Text style={styles.sectionTitle}>
-							<Text>Chi tiết báo giá (</Text>
+							<Text>Thông tin sản phẩm (</Text>
 							<Text>
 								{selectedSubRequest?.requestItems?.length || 0}
 							</Text>
@@ -1020,6 +1089,201 @@ export default function ConfirmQuotation({ navigation, route }) {
 									)}
 								</>
 							);
+						})()}
+
+						{/* Payment Summary Section for offline requests with selected shipping */}
+						{(() => {
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest && selectedShipping) {
+								// Debug logging to check data
+								console.log("=== PAYMENT SUMMARY DEBUG ===");
+								console.log(
+									"selectedSubRequest:",
+									selectedSubRequest
+								);
+								console.log(
+									"quotationForPurchase:",
+									selectedSubRequest?.quotationForPurchase
+								);
+								console.log(
+									"quotationDetails:",
+									selectedSubRequest?.quotationForPurchase
+										?.quotationDetails
+								);
+								console.log(
+									"requestItems:",
+									selectedSubRequest?.requestItems
+								);
+								console.log(
+									"totalPriceEstimate from quotationForPurchase:",
+									selectedSubRequest?.quotationForPurchase
+										?.totalPriceEstimate
+								);
+
+								// Check individual item quotationDetail
+								if (selectedSubRequest?.requestItems) {
+									selectedSubRequest.requestItems.forEach(
+										(item, index) => {
+											console.log(
+												`Item ${index + 1}:`,
+												item.productName
+											);
+											console.log(
+												`Item ${
+													index + 1
+												} quotationDetail:`,
+												item.quotationDetail
+											);
+										}
+									);
+								}
+
+								// Calculate subtotal from quotations
+								let subtotal = 0;
+
+								// Try method 1: Use totalPriceEstimate from quotationForPurchase
+								if (
+									selectedSubRequest?.quotationForPurchase
+										?.totalPriceEstimate
+								) {
+									subtotal =
+										selectedSubRequest.quotationForPurchase
+											.totalPriceEstimate;
+									console.log(
+										"Using totalPriceEstimate:",
+										subtotal
+									);
+								}
+								// Try method 2: Sum from individual item quotationDetail
+								else if (selectedSubRequest?.requestItems) {
+									subtotal =
+										selectedSubRequest.requestItems.reduce(
+											(sum, item) => {
+												const itemTotal =
+													item.quotationDetail
+														?.totalPrice || 0;
+												console.log(
+													`Item "${item.productName}" total:`,
+													itemTotal
+												);
+												return sum + itemTotal;
+											},
+											0
+										);
+									console.log(
+										"Calculated from individual items:",
+										subtotal
+									);
+								}
+								// Try method 3: quotationDetails array (original approach)
+								else if (
+									selectedSubRequest?.quotationForPurchase
+										?.quotationDetails
+								) {
+									const details =
+										selectedSubRequest.quotationForPurchase
+											.quotationDetails;
+									console.log(
+										"Processing quotation details:",
+										details
+									);
+
+									subtotal = details.reduce((sum, detail) => {
+										console.log(
+											"Detail:",
+											detail,
+											"totalPrice:",
+											detail.totalPrice
+										);
+										return sum + (detail.totalPrice || 0);
+									}, 0);
+								}
+
+								const shippingCost =
+									selectedShipping.totalCost || 0;
+								const totalAmount = subtotal + shippingCost;
+
+								console.log("Final calculations:");
+								console.log("subtotal:", subtotal);
+								console.log("shippingCost:", shippingCost);
+								console.log("totalAmount:", totalAmount);
+								console.log("=== END DEBUG ===");
+
+								return (
+									<View style={styles.paymentSummarySection}>
+										<Text style={styles.sectionTitle}>
+											Chi tiết thanh toán
+										</Text>
+										<View style={styles.paymentSummaryCard}>
+											<View style={styles.summaryRow}>
+												<Text
+													style={styles.summaryLabel}
+												>
+													Tổng tiền hàng
+												</Text>
+												<Text
+													style={styles.summaryValue}
+												>
+													{Math.round(
+														subtotal
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+											<View style={styles.summaryRow}>
+												<Text
+													style={styles.summaryLabel}
+												>
+													Phí vận chuyển
+												</Text>
+												<Text
+													style={styles.summaryValue}
+												>
+													{Math.round(
+														shippingCost
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+											<View
+												style={styles.summaryDivider}
+											/>
+											<View
+												style={styles.summaryTotalRow}
+											>
+												<Text
+													style={
+														styles.summaryTotalLabel
+													}
+												>
+													Tổng thanh toán
+												</Text>
+												<Text
+													style={
+														styles.summaryTotalValue
+													}
+												>
+													{Math.round(
+														totalAmount
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+										</View>
+									</View>
+								);
+							}
+							return null;
 						})()}
 					</View>
 				</ScrollView>
@@ -1369,6 +1633,54 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		flex: 1,
 		marginRight: 8,
+	},
+	// Payment Summary Section styles
+	paymentSummarySection: {
+		marginBottom: 16,
+	},
+	paymentSummaryCard: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	summaryRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+	},
+	summaryLabel: {
+		fontSize: 15,
+		color: "#666",
+		fontWeight: "500",
+	},
+	summaryValue: {
+		fontSize: 15,
+		color: "#333",
+		fontWeight: "600",
+	},
+	summaryDivider: {
+		height: 1,
+		backgroundColor: "#E5E5E5",
+		marginVertical: 8,
+	},
+	summaryTotalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+	},
+	summaryTotalLabel: {
+		fontSize: 16,
+		color: "#333",
+		fontWeight: "600",
+	},
+	summaryTotalValue: {
+		fontSize: 18,
+		color: "#E53E3E",
+		fontWeight: "700",
 	},
 	// Simple quotation item styles
 	simpleQuotationItem: {
