@@ -1,6 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { formatDate } from "../../utils/statusHandler";
+import {
+	formatDate,
+	getStatusColor,
+	getStatusText,
+} from "../../utils/statusHandler";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
 import QuotationCard from "../quotation-card";
@@ -103,13 +107,32 @@ const SubRequestItem = ({
 }) => {
 	if (!subRequest?.requestItems?.length) return null;
 
-	// Check if this sub-request has quotation
-	const hasQuotation = subRequest.requestItems.some((item) => {
-		return (
-			item?.quotationDetail &&
-			Object.keys(item.quotationDetail).length > 0
-		);
+	// Check if sub-request is rejected
+	const statusLower = subRequest.status?.toLowerCase();
+	const isRejected =
+		statusLower === "rejected" || statusLower === "cancelled";
+	const rejectionReason = subRequest.rejectionReason;
+
+	// Debug rejected status
+	console.log("SubRequestItem - Rejected Debug:", {
+		subRequestId: subRequest.id,
+		status: subRequest.status,
+		statusLower: statusLower,
+		isRejected,
+		rejectionReason,
+		platform: subRequest.ecommercePlatform,
+		hasRequestItems: !!subRequest?.requestItems?.length,
 	});
+
+	// Check if this sub-request has quotation (only for non-rejected items)
+	const hasQuotation =
+		!isRejected &&
+		subRequest.requestItems.some((item) => {
+			return (
+				item?.quotationDetail &&
+				Object.keys(item.quotationDetail).length > 0
+			);
+		});
 
 	// Check if quotations are expired
 	const isExpired = hasExpiredQuotations(subRequest, displayData);
@@ -211,23 +234,57 @@ const SubRequestItem = ({
 						</Text>
 					</View>
 				</View>
-				{(hasQuotation || isCompleted) && (
-					<View style={styles.subRequestHeaderRight}>
+				{/* Always show status badge */}
+				<View style={styles.subRequestHeaderRight}>
+					{isRejected ? (
 						<View
 							style={[
 								styles.quotationBadge,
-								isCompleted && {
-									backgroundColor: "#28a745",
+								{
+									backgroundColor: getStatusColor(
+										subRequest.status
+									),
 								},
 							]}
 						>
 							<Text style={styles.quotationBadgeText}>
-								{isCompleted ? "Đã thanh toán" : "Đã báo giá"}
+								{getStatusText(subRequest.status)}
 							</Text>
 						</View>
-					</View>
-				)}
+					) : hasQuotation || isCompleted ? (
+						<View
+							style={[
+								styles.quotationBadge,
+								isCompleted && {
+									backgroundColor:
+										getStatusColor("COMPLETED"),
+								},
+								!isCompleted &&
+									hasQuotation && {
+										backgroundColor:
+											getStatusColor("QUOTED"),
+									},
+							]}
+						>
+							<Text style={styles.quotationBadgeText}>
+								{isCompleted
+									? getStatusText("COMPLETED")
+									: getStatusText("QUOTED")}
+							</Text>
+						</View>
+					) : null}
+				</View>
 			</View>
+
+			{/* Show rejection reason if rejected */}
+			{isRejected && subRequest.rejectionReason && (
+				<View style={styles.rejectionContainer}>
+					<Text style={styles.rejectionLabel}>Lý do từ chối:</Text>
+					<Text style={styles.rejectionText}>
+						{subRequest.rejectionReason}
+					</Text>
+				</View>
+			)}
 
 			{/* Products in this sub-request */}
 			<View style={styles.subRequestProductsContainer}>
@@ -553,7 +610,47 @@ const SubRequestItem = ({
 							)}
 
 							{/* Payment Section */}
-							{isExpired ? (
+							{isRejected ? (
+								/* Rejected Sub-request Message */
+								<View style={styles.rejectedContainer}>
+									<View style={styles.rejectedIcon}>
+										<Ionicons
+											name="close-circle-outline"
+											size={24}
+											color="#E53E3E"
+										/>
+									</View>
+									<View style={styles.rejectedContent}>
+										<Text style={styles.rejectedTitle}>
+											{statusLower === "cancelled"
+												? "Yêu cầu đã hủy"
+												: "Yêu cầu bị từ chối"}
+										</Text>
+										<Text style={styles.rejectedMessage}>
+											{rejectionReason ||
+												"Sản phẩm này không thể được xử lý"}
+										</Text>
+										<View style={styles.rejectedStatus}>
+											<Text
+												style={
+													styles.rejectedStatusLabel
+												}
+											>
+												Trạng thái:
+											</Text>
+											<Text
+												style={
+													styles.rejectedStatusValue
+												}
+											>
+												{statusLower === "cancelled"
+													? "Đã hủy"
+													: "Bị từ chối"}
+											</Text>
+										</View>
+									</View>
+								</View>
+							) : isExpired ? (
 								/* Expired Quotation Message */
 								<View style={styles.expiredContainer}>
 									<View style={styles.expiredIcon}>
@@ -872,6 +969,69 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: "#E53E3E",
 		fontWeight: "600",
+	},
+	rejectedContainer: {
+		backgroundColor: "#FFF5F5",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#FEB2B2",
+		flexDirection: "row",
+		alignItems: "flex-start",
+		gap: 12,
+	},
+	rejectedIcon: {
+		marginTop: 2,
+	},
+	rejectedContent: {
+		flex: 1,
+	},
+	rejectedTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#E53E3E",
+		marginBottom: 4,
+	},
+	rejectedMessage: {
+		fontSize: 14,
+		color: "#666",
+		lineHeight: 20,
+		marginBottom: 8,
+	},
+	rejectedStatus: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginTop: 4,
+	},
+	rejectedStatusLabel: {
+		fontSize: 12,
+		color: "#666",
+		marginRight: 6,
+	},
+	rejectedStatusValue: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: "#E53E3E",
+	},
+	rejectionContainer: {
+		backgroundColor: "#FEF5F5",
+		borderColor: "#FED7D7",
+		borderWidth: 1,
+		borderRadius: 8,
+		padding: 12,
+		marginHorizontal: 12,
+		marginTop: 8,
+	},
+	rejectionLabel: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: "#E53E3E",
+	},
+	rejectionText: {
+		fontSize: 14,
+		color: "#2D3748",
+		lineHeight: 20,
 	},
 });
 

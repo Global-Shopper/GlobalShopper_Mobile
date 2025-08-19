@@ -26,6 +26,23 @@ import { shouldShowQuotation } from "../../utils/statusHandler";
 const isRequestCompleted = (subRequest, ordersData = null) => {
 	if (!subRequest) return false;
 
+	// First check: If sub-request is rejected, it's definitely not completed
+	const currentStatus =
+		subRequest.status || subRequest.orderStatus || subRequest.paymentStatus;
+	const currentNormalizedStatus = currentStatus?.toLowerCase();
+
+	if (
+		currentNormalizedStatus === "rejected" ||
+		currentNormalizedStatus === "cancelled"
+	) {
+		console.log("RequestDetails - Sub-request is rejected/cancelled:", {
+			subRequestId: subRequest.id,
+			status: subRequest.status,
+			rejectionReason: subRequest.rejectionReason,
+		});
+		return false;
+	}
+
 	// Primary check: If orderId exists, payment was successful
 	if (subRequest.orderId) {
 		console.log(
