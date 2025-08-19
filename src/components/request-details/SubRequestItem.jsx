@@ -469,15 +469,11 @@ const SubRequestItem = ({
 													}
 													originalCurrency={currency}
 													exchangeRate={exchangeRate}
-													// USD prices for fees
+													// USD service fee
 													originalServiceFee={
 														serviceFeeUSD
 													}
-													originalShipping={
-														shippingEstimate /
-														exchangeRate
-													} // Convert back to USD
-													// VND converted prices
+													// VND converted prices (fallback only)
 													productPrice={
 														productPriceVND
 													}
@@ -489,19 +485,27 @@ const SubRequestItem = ({
 																10
 														) / 10 // Convert 0.1 to 10.0%
 													}
-													internationalShipping={
-														shippingVND
+													// New API props
+													totalVNDPrice={
+														quotationDetail?.totalVNDPrice
 													}
-													importTax={importTaxVND}
-													domesticShipping={0}
-													// Tax details
-													taxDetails={taxDetails}
-													taxRates={taxRates}
-													// Total amount - use finalTotalVND
-													totalAmount={finalTotalVND}
-													additionalFees={undefined}
-													updatedTotalAmount={
-														undefined
+													totalPriceEstimate={
+														subRequest
+															?.quotationForPurchase
+															?.totalPriceEstimate
+													}
+													totalPriceBeforeExchange={
+														quotationDetail?.totalPriceBeforeExchange
+													}
+													shippingEstimate={
+														subRequest
+															?.quotationForPurchase
+															?.shippingEstimate
+													}
+													adminFees={
+														subRequest
+															?.quotationForPurchase
+															?.fees
 													}
 													isExpanded={false}
 												/>

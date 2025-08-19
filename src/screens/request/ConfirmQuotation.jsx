@@ -461,18 +461,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 											const serviceFee =
 												quotationDetail?.serviceFee ||
 												0;
-											const totalTaxAmount =
-												quotationDetail?.totalTaxAmount ||
-												0;
 											const totalVNDPrice =
 												quotationDetail?.totalVNDPrice ||
 												0;
 											const exchangeRate =
 												quotationDetail?.exchangeRate ||
 												1;
+											// Get currency from quotationForPurchase instead of quotationDetail
 											const currency =
-												quotationDetail?.currency ||
-												"USD";
+												selectedSubRequest
+													?.quotationForPurchase
+													?.currency || "USD";
 											const expiryDate =
 												quotationDetail.expiryDate ||
 												quotationDetail.expiredAt ||
@@ -551,14 +550,9 @@ export default function ConfirmQuotation({ navigation, route }) {
 														exchangeRate={
 															exchangeRate
 														}
-														productPrice={Math.round(
-															basePrice *
-																exchangeRate
-														)}
-														serviceFee={Math.round(
-															serviceFee *
-																exchangeRate
-														)}
+														originalServiceFee={
+															serviceFee
+														}
 														serviceFeePercent={
 															basePrice > 0
 																? Number(
@@ -572,14 +566,25 @@ export default function ConfirmQuotation({ navigation, route }) {
 																  )
 																: 0
 														}
-														internationalShipping={Math.round(
+														totalVNDPrice={
+															totalVNDPrice
+														}
+														totalPriceEstimate={
+															selectedSubRequest
+																?.quotationForPurchase
+																?.totalPriceEstimate
+														}
+														totalPriceBeforeExchange={
+															quotationDetail?.totalPriceBeforeExchange
+														}
+														shippingEstimate={
 															shippingEstimate
-														)}
-														importTax={Math.round(
-															totalTaxAmount *
-																exchangeRate
-														)}
-														domesticShipping={0}
+														}
+														adminFees={
+															selectedSubRequest
+																?.quotationForPurchase
+																?.fees
+														}
 														totalAmount={Math.round(
 															totalVNDPrice +
 																shippingEstimate
@@ -617,8 +622,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 													const total =
 														basePrice +
 														shippingEstimate;
-													return Math.round(total).toLocaleString('vi-VN');
-												})()} VNĐ
+													return Math.round(
+														total
+													).toLocaleString("vi-VN");
+												})()}{" "}
+												VNĐ
 											</Text>
 										</View>
 									</View>
