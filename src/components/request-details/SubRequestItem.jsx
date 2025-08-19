@@ -900,16 +900,21 @@ const SubRequestItem = ({
 			{/* Sub-Request Summary - Show shipping fee and total */}
 			{hasQuotation && (
 				<View style={styles.subRequestSummaryContainer}>
-					<View style={styles.summaryRow}>
-						<Text style={styles.summaryLabel}>Phí vận chuyển:</Text>
-						<Text style={styles.summaryValue}>
-							{Math.round(
-								subRequest?.quotationForPurchase
-									?.shippingEstimate || 0
-							).toLocaleString("vi-VN")}{" "}
-							VNĐ
-						</Text>
-					</View>
+					{/* Only show shipping fee for online requests */}
+					{requestType?.toLowerCase() === "online" && (
+						<View style={styles.summaryRow}>
+							<Text style={styles.summaryLabel}>
+								Phí vận chuyển:
+							</Text>
+							<Text style={styles.summaryValue}>
+								{Math.round(
+									subRequest?.quotationForPurchase
+										?.shippingEstimate || 0
+								).toLocaleString("vi-VN")}{" "}
+								VNĐ
+							</Text>
+						</View>
+					)}
 					<View style={styles.summaryTotalRow}>
 						<Text style={styles.summaryTotalLabel}>
 							Tổng thanh toán:
