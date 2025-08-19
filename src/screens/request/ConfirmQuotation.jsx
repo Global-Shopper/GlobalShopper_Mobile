@@ -656,11 +656,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 										<Text
 											style={styles.shippingSectionTitle}
 										>
-											Chọn phương thức vận chuyển
-										</Text>
-										<Text style={styles.shippingNote}>
-											Vui lòng chọn phương thức vận chuyển
-											để tính phí chính xác
+											Phương thức vận chuyển
 										</Text>
 										<TouchableOpacity
 											style={styles.shippingSelectButton}
@@ -684,7 +680,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 											<Ionicons
 												name="chevron-forward"
 												size={20}
-												color="#1976D2"
+												color="#666"
 											/>
 										</TouchableOpacity>
 									</View>
@@ -1345,9 +1341,8 @@ const styles = StyleSheet.create({
 	shippingSection: {
 		backgroundColor: "#FFFFFF",
 		borderRadius: 8,
-		padding: 16,
-		marginTop: 2,
-		marginBottom: 12,
+		padding: 10,
+		marginBottom: 16,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 	},
@@ -1355,13 +1350,7 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#333",
-		marginBottom: 8,
-	},
-	shippingNote: {
-		fontSize: 14,
-		color: "#666",
 		marginBottom: 16,
-		lineHeight: 20,
 	},
 	shippingSelectButton: {
 		flexDirection: "row",
@@ -1369,14 +1358,17 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		backgroundColor: "#F8F9FA",
 		borderRadius: 8,
-		padding: 16,
+		padding: 10,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
+		minHeight: 50,
 	},
 	shippingSelectText: {
 		fontSize: 16,
-		color: "#1976D2",
+		color: "#333",
 		fontWeight: "600",
+		flex: 1,
+		marginRight: 8,
 	},
 	// Simple quotation item styles
 	simpleQuotationItem: {
