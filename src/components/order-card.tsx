@@ -168,7 +168,9 @@ export default function OrderCard({
 
 					<View style={styles.priceRow}>
 						<Text style={styles.totalPrice}>
-							{formatCurrency(order.totalPrice)}
+							{formatCurrency(
+								order.totalPrice + (order.shippingFee || 0)
+							)}
 						</Text>
 					</View>
 				</View>

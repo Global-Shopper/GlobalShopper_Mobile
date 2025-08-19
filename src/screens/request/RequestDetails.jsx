@@ -16,18 +16,129 @@ import RequestDetailHeader from "../../components/request-details/RequestDetailH
 import RequestDetailsInfo from "../../components/request-details/RequestDetailsInfo";
 import SubRequestItem from "../../components/request-details/SubRequestItem";
 import { Text } from "../../components/ui/text";
-import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import {
+	useGetAllOrdersQuery,
+	useGetPurchaseRequestByIdQuery,
+} from "../../services/gshopApi";
 import { shouldShowQuotation } from "../../utils/statusHandler";
 
 // Helper function to check if request/sub-request is completed/paid
-const isRequestCompleted = (status) => {
+const isRequestCompleted = (subRequest, ordersData = null) => {
+	if (!subRequest) return false;
+
+	// Primary check: If orderId exists, payment was successful
+	if (subRequest.orderId) {
+		console.log(
+			"RequestDetails - Payment completed (has orderId):",
+			subRequest.orderId
+		);
+		return true;
+	}
+
+	// NEW: Check if there's an order created for this sub-request
+	if (
+		ordersData?.content?.length > 0 &&
+		subRequest.requestItems?.length > 0
+	) {
+		console.log("RequestDetails - Checking orders for sub-request:", {
+			subRequestId: subRequest.id,
+			platform: subRequest.ecommercePlatform,
+			status: subRequest.status,
+			totalOrders: ordersData.content.length,
+			requestItemsCount: subRequest.requestItems.length,
+		});
+
+		const hasMatchingOrder = ordersData.content.some((order) => {
+			// Check if order has items matching this sub-request
+			if (!order.orderItems?.length) return false;
+
+			console.log("RequestDetails - Comparing order:", {
+				orderId: order.id,
+				orderStatus: order.status,
+				orderItemsCount: order.orderItems.length,
+				createdAt: order.createdAt,
+			});
+
+			return subRequest.requestItems.some((subRequestItem) => {
+				return order.orderItems.some((orderItem) => {
+					// Match by product URL or product name
+					const urlMatch =
+						subRequestItem.productURL &&
+						orderItem.productURL &&
+						subRequestItem.productURL === orderItem.productURL;
+					const nameMatch =
+						subRequestItem.productName &&
+						orderItem.productName &&
+						subRequestItem.productName === orderItem.productName;
+
+					if (urlMatch || nameMatch) {
+						console.log(
+							"✅ RequestDetails - Found matching order for sub-request:",
+							{
+								subRequestId: subRequest.id,
+								orderId: order.id,
+								orderStatus: order.status,
+								productMatch: urlMatch ? "URL" : "Name",
+								productURL: subRequestItem.productURL,
+								productName: subRequestItem.productName,
+							}
+						);
+						return true;
+					}
+					return false;
+				});
+			});
+		});
+
+		if (hasMatchingOrder) {
+			console.log(
+				"🎯 RequestDetails - Payment completed (has matching order):",
+				subRequest.id
+			);
+			return true;
+		} else {
+			console.log(
+				"❌ RequestDetails - No matching order found for sub-request:",
+				subRequest.id
+			);
+		}
+	}
+
+	// Secondary check: Check multiple possible status fields
+	const status =
+		subRequest.status ||
+		subRequest.orderStatus ||
+		subRequest.paymentStatus ||
+		subRequest?.quotationForPurchase?.status;
+
 	if (!status) return false;
+
 	const normalizedStatus = status.toLowerCase();
+
+	// Debug log to see actual status values
+	console.log("RequestDetails - isRequestCompleted check:", {
+		subRequestId: subRequest.id,
+		status: subRequest.status,
+		orderStatus: subRequest.orderStatus,
+		paymentStatus: subRequest.paymentStatus,
+		quotationStatus: subRequest?.quotationForPurchase?.status,
+		normalizedStatus: normalizedStatus,
+		orderId: subRequest.orderId,
+		hasOrderId: !!subRequest.orderId,
+	});
+
 	return (
 		normalizedStatus === "completed" ||
 		normalizedStatus === "paid" ||
 		normalizedStatus === "success" ||
-		normalizedStatus === "delivered"
+		normalizedStatus === "delivered" ||
+		// Additional statuses for orders after payment
+		normalizedStatus === "order_requested" ||
+		normalizedStatus === "purchased" ||
+		normalizedStatus === "confirmed" ||
+		normalizedStatus === "processing" ||
+		normalizedStatus === "awaiting_shipment" ||
+		normalizedStatus === "in_transit"
 	);
 };
 
@@ -50,6 +161,12 @@ export default function RequestDetails({ navigation, route }) {
 		refetchOnFocus: true,
 	});
 
+	// Fetch user orders to check for completed payments
+	const { data: ordersData } = useGetAllOrdersQuery({
+		page: 0,
+		size: 50, // Get recent orders to check payment status
+	});
+
 	// Refetch data when screen comes into focus
 	useFocusEffect(
 		useCallback(() => {
@@ -58,7 +175,14 @@ export default function RequestDetails({ navigation, route }) {
 					"[RequestDetails] Screen focused, refetching data for request:",
 					requestId
 				);
+				// Force refetch to ensure fresh data after payment
 				refetch();
+
+				// Also refetch with a delay to ensure server has processed the payment
+				setTimeout(() => {
+					console.log("[RequestDetails] Delayed refetch after focus");
+					refetch();
+				}, 1000);
 			}
 		}, [requestId, refetch])
 	);
@@ -154,9 +278,31 @@ export default function RequestDetails({ navigation, route }) {
 				.map((subRequest, subIndex) => {
 					if (!subRequest?.requestItems?.length) return null;
 
+					// Debug log sub-request data to understand status structure
+					console.log(
+						`RequestDetails - SubRequest ${subIndex} debug:`,
+						{
+							subRequestId: subRequest.id,
+							status: subRequest.status,
+							orderId: subRequest.orderId,
+							ecommercePlatform: subRequest.ecommercePlatform,
+							quotationForPurchase:
+								subRequest.quotationForPurchase,
+							fullSubRequest: subRequest,
+						}
+					);
+
 					// Check if this specific sub-request is completed/paid
-					// Only check sub-request status, not parent request status
-					const isCompleted = isRequestCompleted(subRequest?.status);
+					// Pass ordersData to check for matching orders
+					const isCompleted = isRequestCompleted(
+						subRequest,
+						ordersData
+					);
+
+					console.log(
+						`SubRequest ${subIndex} (${subRequest.ecommercePlatform} - ${subRequest.id}) isCompleted:`,
+						isCompleted
+					);
 
 					return (
 						<SubRequestItem

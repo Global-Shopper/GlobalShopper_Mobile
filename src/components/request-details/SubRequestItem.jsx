@@ -589,6 +589,25 @@ const SubRequestItem = ({
 									]}
 									onPress={() => {
 										if (acceptedQuotations[subIndex]) {
+											console.log(
+												`🚀 PAYMENT NAVIGATION DEBUG:`
+											);
+											console.log(
+												`SubIndex: ${subIndex}`
+											);
+											console.log(
+												`SubRequest ID: ${subRequest.id}`
+											);
+											console.log(
+												`SubRequest Platform: ${subRequest.ecommercePlatform}`
+											);
+											console.log(
+												`SubRequest Status: ${subRequest.status}`
+											);
+											console.log(
+												`Display Data Request ID: ${displayData?.id}`
+											);
+
 											navigation.navigate(
 												"ConfirmQuotation",
 												{

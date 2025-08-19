@@ -66,6 +66,17 @@ export default function WalletScreen({ navigation }) {
 
 	// Transform and format transactions with Vietnamese descriptions
 	const formatTransactionForDisplay = (transaction) => {
+		// Debug log transaction data
+		console.log("WalletScreen - Raw transaction data:", {
+			id: transaction.id,
+			type: transaction.type || transaction.transactionType,
+			status: transaction.status || transaction.transactionStatus,
+			amount: transaction.amount,
+			description: transaction.description,
+			createdAt: transaction.createdAt,
+			fullTransaction: transaction,
+		});
+
 		// Get Vietnamese description based on transaction type and data
 		const getVietnameseDescription = (item) => {
 			const type = (

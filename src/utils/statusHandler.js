@@ -78,7 +78,7 @@ export const getStatusText = (status) => {
 		// Transaction statuses
 		[TRANSACTION_STATUS.SUCCESS]: "Thành công",
 		[TRANSACTION_STATUS.COMPLETED]: "Hoàn thành",
-		[TRANSACTION_STATUS.PENDING]: "Đang chờ",
+		[TRANSACTION_STATUS.PENDING]: "Đang xử lý", // Changed from "Đang chờ" to "Đang xử lý"
 		[TRANSACTION_STATUS.PROCESSING]: "Đang xử lý",
 		[TRANSACTION_STATUS.FAILED]: "Thất bại",
 		[TRANSACTION_STATUS.CANCELLED]: "Đã hủy",
@@ -134,7 +134,7 @@ export const getStatusColor = (status) => {
 		// Transaction statuses
 		[TRANSACTION_STATUS.SUCCESS]: "#4CAF50", // Green - Thành công
 		[TRANSACTION_STATUS.COMPLETED]: "#4CAF50", // Green - Hoàn thành
-		[TRANSACTION_STATUS.PENDING]: "#FF9800", // Orange - Đang chờ
+		[TRANSACTION_STATUS.PENDING]: "#4CAF50", // Green - Đang xử lý (treat as success for wallet payments)
 		[TRANSACTION_STATUS.PROCESSING]: "#2196F3", // Blue - Đang xử lý
 		[TRANSACTION_STATUS.FAILED]: "#f44336", // Red - Thất bại
 		[TRANSACTION_STATUS.CANCELLED]: "#9E9E9E", // Gray - Đã hủy

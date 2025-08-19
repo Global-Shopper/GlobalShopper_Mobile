@@ -13,6 +13,7 @@ import PaymentSmCard from "../../components/payment-sm-card";
 import QuotationCard from "../../components/quotation-card";
 import { Text } from "../../components/ui/text";
 import {
+	useCheckoutMutation,
 	useDirectCheckoutMutation,
 	useGetPurchaseRequestByIdQuery,
 	useGetWalletQuery,
@@ -28,8 +29,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 		request: !!request,
 		subRequest: !!subRequest,
 		subRequestIndex,
+		requestId,
 	});
 	console.log("Selected subRequest:", subRequest);
+	console.log("SubRequest ID being processed:", subRequest?.id);
+	console.log("SubRequest status:", subRequest?.status);
 
 	// Fetch purchase request detail from API
 	const {
@@ -44,9 +48,13 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Fetch wallet balance
 	const { data: walletData, refetch: refetchWallet } = useGetWalletQuery();
 
-	// API hook for checkout
-	const [directCheckout, { isLoading: isCheckingOut }] =
-		useDirectCheckoutMutation();
+	// API hooks for checkout
+	const [directCheckout, { isLoading: isDirectCheckingOut }] =
+		useDirectCheckoutMutation(); // For VNPay
+	const [walletCheckout, { isLoading: isWalletCheckingOut }] =
+		useCheckoutMutation(); // For Wallet
+
+	const isCheckingOut = isDirectCheckingOut || isWalletCheckingOut;
 
 	// Helper function to get shortened UUID with #
 	const getShortId = (fullId) => {
@@ -60,6 +68,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Use the correct data for rendering
 	const displayData = requestDetails || request;
 
+	// Debug all subRequests to understand the array order
+	console.log(
+		"ConfirmQuotation - displayData.subRequests:",
+		displayData?.subRequests?.map((sr, i) => ({
+			index: i,
+			id: sr.id,
+			platform: sr.ecommercePlatform,
+			status: sr.status,
+		}))
+	);
+
 	// Get the specific sub-request for this payment
 	const selectedSubRequest =
 		subRequest || displayData?.subRequests?.[subRequestIndex ?? 0];
@@ -67,6 +86,14 @@ export default function ConfirmQuotation({ navigation, route }) {
 	console.log("ConfirmQuotation - subRequest param:", subRequest);
 	console.log("ConfirmQuotation - subRequestIndex param:", subRequestIndex);
 	console.log("ConfirmQuotation - selectedSubRequest:", selectedSubRequest);
+	console.log(
+		"ConfirmQuotation - selectedSubRequest platform:",
+		selectedSubRequest?.ecommercePlatform
+	);
+	console.log(
+		"ConfirmQuotation - selectedSubRequest status:",
+		selectedSubRequest?.status
+	);
 
 	// Helper function to check if quotation is expired
 	const isQuotationExpired = (quotationDetail) => {
@@ -242,21 +269,22 @@ export default function ConfirmQuotation({ navigation, route }) {
 					totalPriceEstimate: totalAmount, // Use the client-calculated total
 					trackingNumber: "",
 					shippingFee: Number(shippingEstimate), // Shipping fee separate
-					redirectUri: "globalshopper://payment-success", // Add redirect URI for mobile app
 				};
-				console.log("=== SENDING PAYLOAD (USING CLIENT TOTAL) ===");
+
+				// Add redirectUri only for VNPay (direct-checkout)
+				if (selectedPaymentMethod !== "wallet") {
+					payload.redirectUri = "globalshopper://payment-success";
+				}
+
+				console.log("=== SENDING PAYLOAD ===");
+				console.log("Payment method:", selectedPaymentMethod);
 				console.log(
-					"Using totalAmount from calculateTotalAmount:",
-					totalAmount
+					"API endpoint:",
+					selectedPaymentMethod === "wallet"
+						? "/orders/checkout"
+						: "/orders/direct-checkout"
 				);
-				console.log("Base price:", Number(basePrice));
-				console.log("Shipping fee:", Number(shippingEstimate));
-				console.log(
-					"Additional fees (not included in payload):",
-					totalFees
-				);
-				console.log("Server expects this total in UI:", totalAmount);
-				console.log(JSON.stringify(payload, null, 2));
+				console.log("Payload:", JSON.stringify(payload, null, 2));
 
 				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
@@ -269,13 +297,33 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}
 				}
 
-				// Try a completely different approach - use API spec format
-				const response = await directCheckout(payload).unwrap();
+				// Use correct API based on payment method
+				let response;
+				if (selectedPaymentMethod === "wallet") {
+					console.log(
+						"💰 Using WALLET CHECKOUT API (/orders/checkout)"
+					);
+					response = await walletCheckout(payload).unwrap();
+				} else {
+					console.log(
+						"💳 Using VNPAY CHECKOUT API (/orders/direct-checkout)"
+					);
+					response = await directCheckout(payload).unwrap();
+				}
 
 				console.log("🎉 PAYMENT SUCCESS RESPONSE 🎉");
 				console.log("Response:", JSON.stringify(response, null, 2));
 				console.log("Paid SubRequest ID:", subRequestData.id);
-				console.log("Should only update this sub-request, not others!");
+				console.log("Expected changes after payment:");
+				console.log(
+					"1. Sub-request status should change from 'QUOTED' to 'PAID'"
+				);
+				console.log(
+					"2. Wallet transaction should be created with 'SUCCESS' status"
+				);
+				console.log(
+					"3. Order should be created with 'ORDER_REQUESTED' status"
+				);
 
 				// Success - refetch all related data
 				console.log(
@@ -285,17 +333,79 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 				// Also refetch the request data to update order status
 				if (refetch) {
-					await refetch();
+					console.log("🔄 Immediate refetch after payment...");
+					const updatedData = await refetch();
+					console.log(
+						"Updated request data:",
+						JSON.stringify(updatedData?.data, null, 2)
+					);
+
+					// Check if sub-request status was updated
+					const updatedSubRequest =
+						updatedData?.data?.subRequests?.find(
+							(sr) => sr.id === subRequestData.id
+						);
+					if (updatedSubRequest) {
+						console.log("✅ Updated sub-request found:", {
+							id: updatedSubRequest.id,
+							oldStatus: subRequestData.status,
+							newStatus: updatedSubRequest.status,
+							statusChanged:
+								subRequestData.status !==
+								updatedSubRequest.status,
+						});
+					} else {
+						console.log(
+							"❌ Sub-request not found in updated data!"
+						);
+					}
 				}
 
-				// Small delay to ensure data is updated on server
+				// Multiple delayed refetches to ensure server-side processing is complete
 				setTimeout(async () => {
-					console.log("Additional refetch after delay...");
+					console.log("First delayed refetch (2s)...");
 					await refetchWallet();
 					if (refetch) {
 						await refetch();
 					}
 				}, 2000);
+
+				setTimeout(async () => {
+					console.log("Second delayed refetch (5s)...");
+					await refetchWallet();
+					if (refetch) {
+						await refetch();
+					}
+				}, 5000);
+
+				setTimeout(async () => {
+					console.log("Final delayed refetch (10s)...");
+					await refetchWallet();
+					if (refetch) {
+						const finalData = await refetch();
+						console.log("Final refetch result:");
+
+						// Check final sub-request status
+						const finalSubRequest =
+							finalData?.data?.subRequests?.find(
+								(sr) => sr.id === subRequestData.id
+							);
+						if (finalSubRequest) {
+							console.log("🔍 Final sub-request status:", {
+								id: finalSubRequest.id,
+								status: finalSubRequest.status,
+								isPaid: finalSubRequest.status === "PAID",
+								platform: finalSubRequest.ecommercePlatform,
+							});
+
+							if (finalSubRequest.status !== "PAID") {
+								console.warn(
+									"⚠️ Sub-request status is still not 'PAID' after 10s. API might need more time or there's an issue."
+								);
+							}
+						}
+					}
+				}, 10000);
 
 				const formattedAmount =
 					totalAmount.toLocaleString("vi-VN") + " VNĐ";
