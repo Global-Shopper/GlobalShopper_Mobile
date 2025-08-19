@@ -7,7 +7,6 @@ import {
 } from "../../utils/statusHandler";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
-import QuotationCard from "../quotation-card";
 import { Text } from "../ui/text";
 
 // Helper function to check if quotation is expired
@@ -113,17 +112,6 @@ const SubRequestItem = ({
 		statusLower === "rejected" || statusLower === "cancelled";
 	const rejectionReason = subRequest.rejectionReason;
 
-	// Debug rejected status
-	console.log("SubRequestItem - Rejected Debug:", {
-		subRequestId: subRequest.id,
-		status: subRequest.status,
-		statusLower: statusLower,
-		isRejected,
-		rejectionReason,
-		platform: subRequest.ecommercePlatform,
-		hasRequestItems: !!subRequest?.requestItems?.length,
-	});
-
 	// Check if this sub-request has quotation (only for non-rejected items)
 	const hasQuotation =
 		!isRejected &&
@@ -142,30 +130,6 @@ const SubRequestItem = ({
 	const isExpired = hasExpiredQuotations(subRequest, displayData);
 	const expiryDate = getExpiryDate(subRequest, displayData);
 
-	// Debug logging for offline requests
-	if (requestType?.toLowerCase() === "offline") {
-		console.log("SubRequestItem - Offline Debug:", {
-			subRequestId: subRequest?.id,
-			requestType,
-			hasQuotation,
-			isRejected,
-			hasQuotationForPurchase: !!subRequest?.quotationForPurchase,
-			hasItemQuotations: subRequest.requestItems.some(
-				(item) => !!item?.quotationDetail
-			),
-			quotationKeys: Object.keys(subRequest?.quotationForPurchase || {}),
-		});
-	}
-
-	// Debug logging
-	console.log("SubRequestItem Debug:", {
-		subRequestId: subRequest?.id,
-		requestExpiredAt: displayData?.expiredAt,
-		quotationExpiredDate: subRequest?.quotationForPurchase?.expiredDate,
-		isExpired,
-		expiryDate: expiryDate?.toString(),
-	});
-
 	// Calculate sub-request total if has quotation
 	let subRequestTotal = 0;
 	if (hasQuotation) {
@@ -175,14 +139,6 @@ const SubRequestItem = ({
 		const shippingEstimate =
 			subRequest?.quotationForPurchase?.shippingEstimate || 0;
 		subRequestTotal = basePrice + shippingEstimate;
-
-		console.log("SubRequestItem Quotation Debug:", {
-			subRequestId: subRequest?.id,
-			totalPriceEstimate: basePrice,
-			shippingEstimate: shippingEstimate,
-			subRequestTotal,
-			quotationForPurchase: subRequest?.quotationForPurchase,
-		});
 
 		// Fallback: If no quotationForPurchase, calculate from individual items
 		if (basePrice === 0) {
@@ -617,587 +573,481 @@ const SubRequestItem = ({
 								</View>
 							);
 					  })
-					: /* Online: Show products separately as before */
+					: /* Online: Show each product with its individual quotation (same as offline) */
 					  subRequest.requestItems.map((product, productIndex) => {
 							const parsedVariants = parseVariants(
 								product.variants
 							);
+							const productQuotation = product.quotationDetail;
 
 							return (
-								<ProductCard
+								<View
 									key={`${subIndex}-${productIndex}`}
-									id={
-										product.id ||
-										`${subIndex}-${productIndex}`
-									}
-									name={
-										product.productName ||
-										product.name ||
-										"Sản phẩm không tên"
-									}
-									description={
-										product.description ||
-										product.productDescription
-									}
-									images={
-										product.images ||
-										product.productImages ||
-										[]
-									}
-									price={
-										productMode === "manual"
-											? ""
-											: product.price ||
-											  product.productPrice ||
-											  ""
-									}
-									convertedPrice={
-										productMode === "manual"
-											? ""
-											: product.convertedPrice
-									}
-									exchangeRate={
-										productMode === "manual"
-											? undefined
-											: product.exchangeRate
-									}
-									category={
-										product.category ||
-										product.productCategory ||
-										parsedVariants.category
-									}
-									brand={
-										product.brand ||
-										product.productBrand ||
-										parsedVariants.brand
-									}
-									material={
-										product.material ||
-										product.productMaterial ||
-										parsedVariants.material
-									}
-									size={
-										product.size ||
-										product.productSize ||
-										parsedVariants.size
-									}
-									color={
-										product.color ||
-										product.productColor ||
-										parsedVariants.color
-									}
-									platform={
-										product.platform ||
-										product.ecommercePlatform
-									}
-									productLink={
-										product.productURL ||
-										product.productLink ||
-										product.url
-									}
-									quantity={product.quantity || 1}
-									mode={productMode}
-									sellerInfo={
-										productMode === "manual"
-											? {
-													name:
-														product.sellerName ||
-														"",
-													phone:
-														product.sellerPhone ||
-														"",
-													email:
-														product.sellerEmail ||
-														"",
-													address:
-														product.sellerAddress ||
-														"",
-													storeLink:
-														product.sellerStoreLink ||
-														"",
-											  }
-											: undefined
-									}
-								/>
+									style={styles.productWithQuotationContainer}
+								>
+									{/* Product Card */}
+									<ProductCard
+										id={
+											product.id ||
+											`${subIndex}-${productIndex}`
+										}
+										name={
+											product.productName ||
+											product.name ||
+											"Sản phẩm không tên"
+										}
+										description={
+											product.description ||
+											product.productDescription
+										}
+										images={
+											product.images ||
+											product.productImages ||
+											[]
+										}
+										price={
+											productMode === "manual"
+												? ""
+												: product.price ||
+												  product.productPrice ||
+												  ""
+										}
+										convertedPrice={
+											productMode === "manual"
+												? ""
+												: product.convertedPrice
+										}
+										exchangeRate={
+											productMode === "manual"
+												? undefined
+												: product.exchangeRate
+										}
+										category={
+											product.category ||
+											product.productCategory ||
+											parsedVariants.category
+										}
+										brand={
+											product.brand ||
+											product.productBrand ||
+											parsedVariants.brand
+										}
+										material={
+											product.material ||
+											product.productMaterial ||
+											parsedVariants.material
+										}
+										size={
+											product.size ||
+											product.productSize ||
+											parsedVariants.size
+										}
+										color={
+											product.color ||
+											product.productColor ||
+											parsedVariants.color
+										}
+										platform={
+											product.platform ||
+											product.ecommercePlatform
+										}
+										productLink={
+											product.productURL ||
+											product.productLink ||
+											product.url
+										}
+										quantity={product.quantity || 1}
+										mode={productMode}
+										sellerInfo={
+											productMode === "manual"
+												? {
+														name:
+															product.sellerName ||
+															"",
+														phone:
+															product.sellerPhone ||
+															"",
+														email:
+															product.sellerEmail ||
+															"",
+														address:
+															product.sellerAddress ||
+															"",
+														storeLink:
+															product.sellerStoreLink ||
+															"",
+												  }
+												: undefined
+										}
+									/>
+
+									{/* Individual Product Quotation for online - Same as offline */}
+									{productQuotation && (
+										<View
+											style={
+												styles.individualQuotationContainer
+											}
+										>
+											<Text style={styles.quotationTitle}>
+												Báo giá sản phẩm
+											</Text>
+
+											{/* Exchange Rate */}
+											<View style={styles.quotationRow}>
+												<Text
+													style={
+														styles.quotationLabel
+													}
+												>
+													Tỉ giá:
+												</Text>
+												<Text
+													style={
+														styles.quotationValue
+													}
+												>
+													1 USD ={" "}
+													{Number(
+														productQuotation.exchangeRate ||
+															0
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+
+											{/* Base Price */}
+											<View style={styles.quotationRow}>
+												<Text
+													style={
+														styles.quotationLabel
+													}
+												>
+													Giá gốc:
+												</Text>
+												<Text
+													style={
+														styles.quotationValue
+													}
+												>
+													$
+													{Number(
+														productQuotation.basePrice ||
+															0
+													).toFixed(2)}{" "}
+													USD
+												</Text>
+											</View>
+
+											{/* Service Fee */}
+											<View style={styles.quotationRow}>
+												<Text
+													style={
+														styles.quotationLabel
+													}
+												>
+													Phí dịch vụ (
+													{(
+														(productQuotation.serviceRate ||
+															0) * 100
+													).toFixed(0)}
+													%):
+												</Text>
+												<Text
+													style={
+														styles.quotationValue
+													}
+												>
+													$
+													{Number(
+														productQuotation.serviceFee ||
+															0
+													).toFixed(2)}{" "}
+													USD
+												</Text>
+											</View>
+
+											{/* Tax Details */}
+											{productQuotation.taxAmounts &&
+												Object.keys(
+													productQuotation.taxAmounts
+												).length > 0 && (
+													<>
+														{Object.entries(
+															productQuotation.taxAmounts
+														).map(
+															([
+																taxType,
+																amount,
+															]) => {
+																const taxRate =
+																	productQuotation.taxRates?.find(
+																		(tax) =>
+																			tax.taxType ===
+																			taxType
+																	);
+																return (
+																	<View
+																		key={
+																			taxType
+																		}
+																		style={
+																			styles.quotationRow
+																		}
+																	>
+																		<Text
+																			style={
+																				styles.quotationLabel
+																			}
+																		>
+																			{taxRate?.taxName ||
+																				taxType}{" "}
+																			(
+																			{taxRate?.rate ||
+																				0}
+																			%):
+																		</Text>
+																		<Text
+																			style={
+																				styles.quotationValue
+																			}
+																		>
+																			$
+																			{Number(
+																				amount ||
+																					0
+																			).toFixed(
+																				2
+																			)}{" "}
+																			USD
+																		</Text>
+																	</View>
+																);
+															}
+														)}
+													</>
+												)}
+
+											{/* Total Before Exchange */}
+											<View
+												style={[
+													styles.quotationRow,
+													styles.totalRow,
+												]}
+											>
+												<Text style={styles.totalLabel}>
+													Tổng trước quy đổi:
+												</Text>
+												<Text style={styles.totalValue}>
+													$
+													{Number(
+														productQuotation.totalPriceBeforeExchange ||
+															0
+													).toFixed(2)}{" "}
+													USD
+												</Text>
+											</View>
+
+											{/* Total VND */}
+											<View
+												style={[
+													styles.quotationRow,
+													styles.finalTotalRow,
+												]}
+											>
+												<Text
+													style={
+														styles.finalTotalLabel
+													}
+												>
+													Tổng (VNĐ):
+												</Text>
+												<Text
+													style={
+														styles.finalTotalValue
+													}
+												>
+													{Number(
+														productQuotation.totalVNDPrice ||
+															0
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+										</View>
+									)}
+
+									{/* Show "No quotation yet" if no quotation */}
+									{!productQuotation && (
+										<View
+											style={styles.noQuotationContainer}
+										>
+											<Text
+												style={styles.noQuotationText}
+											>
+												Chưa có báo giá cho sản phẩm này
+											</Text>
+										</View>
+									)}
+								</View>
 							);
 					  })}
 			</View>
 
-			{/* Quotation Section - Only show for ONLINE requests */}
-			{requestType?.toLowerCase() !== "offline" &&
-				(hasQuotation || isCompleted) && (
-					<View style={styles.subRequestQuotation}>
-						{/* Quotation Summary */}
-						<View style={styles.quotationSummaryContainer}>
-							<TouchableOpacity
-								style={styles.quotationSummaryHeader}
-								onPress={() =>
-									setExpandedQuotations((prev) => ({
-										...prev,
-										[subIndex]: !prev[subIndex],
-									}))
-								}
-								activeOpacity={0.7}
-							>
-								<View style={styles.quotationSummaryLeft}>
-									<Ionicons
-										name="receipt-outline"
-										size={20}
-										color="#1976D2"
-									/>
-									<Text style={styles.quotationSummaryTitle}>
-										Báo giá
-									</Text>
-								</View>
-								<View style={styles.quotationSummaryRight}>
-									<Text style={styles.quotationSummaryTotal}>
-										{Math.round(
-											subRequestTotal || 0
-										).toLocaleString("vi-VN")}{" "}
-										VNĐ
-									</Text>
-									<Ionicons
-										name={
-											expandedQuotations[subIndex]
-												? "chevron-up-outline"
-												: "chevron-down-outline"
-										}
-										size={20}
-										color="#666"
-									/>
-								</View>
-							</TouchableOpacity>
-
-							{/* Expanded Quotation Details */}
-							{expandedQuotations[subIndex] && (
-								<View style={styles.quotationDetailsContainer}>
-									{subRequest.requestItems
-										.map((product, productIndex) => {
-											const quotationDetail =
-												product?.quotationDetail;
-
-											if (
-												!quotationDetail ||
-												Object.keys(quotationDetail)
-													.length === 0
-											) {
-												return null;
-											}
-
-											// Extract values from quotationDetail
-											const basePrice =
-												quotationDetail?.basePrice || 0;
-											const serviceFeeUSD =
-												quotationDetail?.serviceFee ||
-												0; // This is in USD
-											const serviceRate =
-												quotationDetail?.serviceRate ||
-												0.1; // This is the percentage (0.1 = 10%)
-											const totalTaxAmount =
-												quotationDetail?.totalTaxAmount ||
-												0;
-											const exchangeRate =
-												quotationDetail?.exchangeRate ||
-												25000; // Default VND exchange rate
-											const currency =
-												quotationDetail?.currency ||
-												"USD";
-											const taxRates =
-												quotationDetail?.taxRates || [];
-
-											// Get shipping info from quotationForPurchase level
-											const shippingEstimate =
-												subRequest?.quotationForPurchase
-													?.shippingEstimate || 0;
-											const shippingVND =
-												Math.round(shippingEstimate);
-
-											// Calculate VND values
-											const productPriceVND = Math.round(
-												basePrice * exchangeRate
-											);
-											const serviceFeeVND = Math.round(
-												serviceFeeUSD * exchangeRate
-											);
-											const importTaxVND = Math.round(
-												totalTaxAmount * exchangeRate
-											);
-
-											// Calculate total including shipping
-											const calculatedTotal =
-												productPriceVND +
-												serviceFeeVND +
-												importTaxVND +
-												shippingVND;
-
-											// Use calculated total (which includes shipping) instead of API totalVNDPrice
-											const finalTotalVND =
-												Math.round(calculatedTotal);
-
-											// Prepare tax details
-											const taxDetails =
-												quotationDetail?.taxBreakdown
-													? {
-															importDuty:
-																quotationDetail
-																	.taxBreakdown
-																	.importDuty ||
-																0,
-															vat:
-																quotationDetail
-																	.taxBreakdown
-																	.vat || 0,
-															specialConsumptionTax:
-																quotationDetail
-																	.taxBreakdown
-																	.specialConsumptionTax ||
-																0,
-															environmentTax:
-																quotationDetail
-																	.taxBreakdown
-																	.environmentTax ||
-																0,
-															totalTaxAmount:
-																totalTaxAmount,
-													  }
-													: undefined;
-
-											return (
-												<View
-													key={`${subIndex}-${productIndex}-quotation`}
-													style={
-														styles.quotationContainer
-													}
-												>
-													<QuotationCard
-														// Original price data
-														originalProductPrice={
-															basePrice
-														}
-														originalCurrency={
-															currency
-														}
-														exchangeRate={
-															exchangeRate
-														}
-														// USD service fee
-														originalServiceFee={
-															serviceFeeUSD
-														}
-														// VND converted prices (fallback only)
-														productPrice={
-															productPriceVND
-														}
-														serviceFee={
-															serviceFeeVND
-														}
-														serviceFeePercent={
-															Math.round(
-																serviceRate *
-																	100 *
-																	10
-															) / 10 // Convert 0.1 to 10.0%
-														}
-														// New API props
-														totalVNDPrice={
-															quotationDetail?.totalVNDPrice
-														}
-														totalPriceEstimate={
-															subRequest
-																?.quotationForPurchase
-																?.totalPriceEstimate
-														}
-														totalPriceBeforeExchange={
-															quotationDetail?.totalPriceBeforeExchange
-														}
-														shippingEstimate={
-															subRequest
-																?.quotationForPurchase
-																?.shippingEstimate
-														}
-														adminFees={
-															subRequest
-																?.quotationForPurchase
-																?.fees
-														}
-														isExpanded={false}
-													/>
-												</View>
-											);
-										})
-										.filter(Boolean)}
-								</View>
-							)}
-						</View>
-
-						{/* Payment Section - Only show if not completed */}
-						{!isCompleted && (
-							<View style={styles.subRequestPayment}>
-								{/* Checkbox - Only show if not expired */}
-								{!isExpired && (
-									<View style={styles.subRequestCheckbox}>
-										<TouchableOpacity
-											style={[
-												styles.checkbox,
-												acceptedQuotations[subIndex] &&
-													styles.checkboxChecked,
-											]}
-											onPress={() =>
-												setAcceptedQuotations(
-													(prev) => ({
-														...prev,
-														[subIndex]:
-															!prev[subIndex],
-													})
-												)
-											}
-											activeOpacity={0.7}
-										>
-											{acceptedQuotations[subIndex] && (
-												<Ionicons
-													name="checkmark"
-													size={16}
-													color="#FFFFFF"
-												/>
-											)}
-										</TouchableOpacity>
-										<Text style={styles.checkboxText}>
-											Tôi đồng ý với báo giá này và chấp
-											nhận phí phát sinh (nếu có)
-										</Text>
-									</View>
-								)}
-
-								{/* Payment Section */}
-								{isRejected ? (
-									/* Rejected Sub-request Message */
-									<View style={styles.rejectedContainer}>
-										<View style={styles.rejectedIcon}>
-											<Ionicons
-												name="close-circle-outline"
-												size={24}
-												color="#E53E3E"
-											/>
-										</View>
-										<View style={styles.rejectedContent}>
-											<Text style={styles.rejectedTitle}>
-												{statusLower === "cancelled"
-													? "Yêu cầu đã hủy"
-													: "Yêu cầu bị từ chối"}
-											</Text>
-											<Text
-												style={styles.rejectedMessage}
-											>
-												{rejectionReason ||
-													"Sản phẩm này không thể được xử lý"}
-											</Text>
-											<View style={styles.rejectedStatus}>
-												<Text
-													style={
-														styles.rejectedStatusLabel
-													}
-												>
-													Trạng thái:
-												</Text>
-												<Text
-													style={
-														styles.rejectedStatusValue
-													}
-												>
-													{statusLower === "cancelled"
-														? "Đã hủy"
-														: "Bị từ chối"}
-												</Text>
-											</View>
-										</View>
-									</View>
-								) : isExpired ? (
-									/* Expired Quotation Message */
-									<View style={styles.expiredContainer}>
-										<View style={styles.expiredIcon}>
-											<Ionicons
-												name="time-outline"
-												size={24}
-												color="#E53E3E"
-											/>
-										</View>
-										<View style={styles.expiredContent}>
-											<Text style={styles.expiredTitle}>
-												Yêu cầu đã hết hạn
-											</Text>
-											<Text style={styles.expiredMessage}>
-												Bạn không thể thực hiện thanh
-												toán cho yêu cầu này vì đã quá
-												hạn.
-											</Text>
-											{expiryDate && (
-												<Text
-													style={styles.expiredDate}
-												>
-													Hạn thanh toán:{" "}
-													{formatDate(expiryDate)}
-												</Text>
-											)}
-										</View>
-									</View>
-								) : (
-									/* Normal Payment Button */
-									<TouchableOpacity
-										style={[
-											styles.subRequestPayButton,
-											!acceptedQuotations[subIndex] &&
-												styles.subRequestPayButtonDisabled,
-										]}
-										onPress={() => {
-											if (acceptedQuotations[subIndex]) {
-												console.log(
-													`🚀 PAYMENT NAVIGATION DEBUG:`
-												);
-												console.log(
-													`SubIndex: ${subIndex}`
-												);
-												console.log(
-													`SubRequest ID: ${subRequest.id}`
-												);
-												console.log(
-													`SubRequest Platform: ${subRequest.ecommercePlatform}`
-												);
-												console.log(
-													`SubRequest Status: ${subRequest.status}`
-												);
-												console.log(
-													`Display Data Request ID: ${displayData?.id}`
-												);
-
-												navigation.navigate(
-													"ConfirmQuotation",
-													{
-														request: displayData,
-														subRequest: subRequest,
-														subRequestIndex:
-															subIndex,
-													}
-												);
-											}
-										}}
-										disabled={!acceptedQuotations[subIndex]}
-										activeOpacity={0.7}
-									>
-										<Text
-											style={[
-												styles.subRequestPayButtonText,
-												!acceptedQuotations[subIndex] &&
-													styles.subRequestPayButtonTextDisabled,
-											]}
-										>
-											Thanh toán
-										</Text>
-									</TouchableOpacity>
-								)}
-							</View>
-						)}
-
-						{/* Completed status message */}
-						{isCompleted && (
-							<View style={styles.completedStatusContainer}>
-								<View style={styles.completedStatusBadge}>
-									<Ionicons
-										name="checkmark-circle"
-										size={20}
-										color="#28a745"
-									/>
-									<Text style={styles.completedStatusText}>
-										Đã thanh toán thành công
-									</Text>
-								</View>
-							</View>
-						)}
-					</View>
-				)}
-
-			{/* Offline Request Agreement Section */}
-			{requestType?.toLowerCase() === "offline" && hasQuotation && (
-				<View style={styles.offlineAgreementContainer}>
-					{/* Total Price Row */}
-					<View style={styles.totalPriceRow}>
-						<Text style={styles.offlineTotalLabel}>
-							Tổng giá trị:
+			{/* Sub-Request Summary - Show shipping fee and total */}
+			{hasQuotation && (
+				<View style={styles.subRequestSummaryContainer}>
+					<View style={styles.summaryRow}>
+						<Text style={styles.summaryLabel}>Phí vận chuyển:</Text>
+						<Text style={styles.summaryValue}>
+							{Math.round(
+								subRequest?.quotationForPurchase
+									?.shippingEstimate || 0
+							).toLocaleString("vi-VN")}{" "}
+							VNĐ
 						</Text>
-						<Text style={styles.offlineTotalValue}>
+					</View>
+					<View style={styles.summaryTotalRow}>
+						<Text style={styles.summaryTotalLabel}>
+							Tổng thanh toán:
+						</Text>
+						<Text style={styles.summaryTotalValue}>
 							{Math.round(subRequestTotal || 0).toLocaleString(
 								"vi-VN"
 							)}{" "}
 							VNĐ
 						</Text>
 					</View>
+				</View>
+			)}
 
-					{/* Agreement Checkbox */}
-					<View style={styles.checkboxContainer}>
+			{/* Payment Section - Only show if not completed */}
+			{!isCompleted && (
+				<View style={styles.subRequestPayment}>
+					{/* Checkbox - Only show if not expired */}
+					{!isExpired && (
+						<View style={styles.subRequestCheckbox}>
+							<TouchableOpacity
+								style={[
+									styles.checkbox,
+									acceptedQuotations[subIndex] &&
+										styles.checkboxChecked,
+								]}
+								onPress={() =>
+									setAcceptedQuotations((prev) => ({
+										...prev,
+										[subIndex]: !prev[subIndex],
+									}))
+								}
+								activeOpacity={0.7}
+							>
+								{acceptedQuotations[subIndex] && (
+									<Ionicons
+										name="checkmark"
+										size={16}
+										color="#FFFFFF"
+									/>
+								)}
+							</TouchableOpacity>
+							<Text style={styles.checkboxText}>
+								Tôi đồng ý với báo giá này và chấp nhận phí phát
+								sinh (nếu có)
+							</Text>
+						</View>
+					)}
+
+					{/* Payment Section */}
+					{isRejected ? (
+						/* Rejected Sub-request Message */
+						<View style={styles.rejectedContainer}>
+							<View style={styles.rejectedIcon}>
+								<Ionicons
+									name="close-circle-outline"
+									size={24}
+									color="#E53E3E"
+								/>
+							</View>
+							<View style={styles.rejectedContent}>
+								<Text style={styles.rejectedTitle}>
+									{statusLower === "cancelled"
+										? "Yêu cầu đã hủy"
+										: "Yêu cầu bị từ chối"}
+								</Text>
+								<Text style={styles.rejectedMessage}>
+									{rejectionReason ||
+										"Sản phẩm này không thể được xử lý"}
+								</Text>
+								<View style={styles.rejectedStatus}>
+									<Text style={styles.rejectedStatusLabel}>
+										Trạng thái:
+									</Text>
+									<Text style={styles.rejectedStatusValue}>
+										{statusLower === "cancelled"
+											? "Đã hủy"
+											: "Bị từ chối"}
+									</Text>
+								</View>
+							</View>
+						</View>
+					) : isExpired ? (
+						/* Expired Quotation Message */
+						<View style={styles.expiredContainer}>
+							<View style={styles.expiredIcon}>
+								<Ionicons
+									name="time-outline"
+									size={24}
+									color="#E53E3E"
+								/>
+							</View>
+							<View style={styles.expiredContent}>
+								<Text style={styles.expiredTitle}>
+									Yêu cầu đã hết hạn
+								</Text>
+								<Text style={styles.expiredMessage}>
+									Bạn không thể thực hiện thanh toán cho yêu
+									cầu này vì đã quá hạn.
+								</Text>
+								{expiryDate && (
+									<Text style={styles.expiredDate}>
+										Hạn thanh toán: {formatDate(expiryDate)}
+									</Text>
+								)}
+							</View>
+						</View>
+					) : (
+						/* Normal Payment Button */
 						<TouchableOpacity
 							style={[
-								styles.checkbox,
-								acceptedQuotations[subIndex] &&
-									styles.checkboxChecked,
+								styles.subRequestPayButton,
+								!acceptedQuotations[subIndex] &&
+									styles.subRequestPayButtonDisabled,
 							]}
 							onPress={() => {
-								setAcceptedQuotations((prev) => ({
-									...prev,
-									[subIndex]: !prev[subIndex],
-								}));
+								if (acceptedQuotations[subIndex]) {
+									navigation.navigate("ConfirmQuotation", {
+										request: displayData,
+										subRequest: subRequest,
+										subRequestIndex: subIndex,
+									});
+								}
 							}}
+							disabled={!acceptedQuotations[subIndex]}
+							activeOpacity={0.7}
 						>
-							{acceptedQuotations[subIndex] && (
-								<Ionicons
-									name="checkmark"
-									size={16}
-									color="#FFFFFF"
-								/>
-							)}
+							<Text
+								style={[
+									styles.subRequestPayButtonText,
+									!acceptedQuotations[subIndex] &&
+										styles.subRequestPayButtonTextDisabled,
+								]}
+							>
+								Thanh toán
+							</Text>
 						</TouchableOpacity>
-						<Text style={styles.checkboxLabel}>
-							Tôi đồng ý với báo giá này và chấp nhận phí phát
-							sinh (nếu có)
-						</Text>
-					</View>
-
-					{/* Payment Button for Offline - Always visible */}
-					<TouchableOpacity
-						style={[
-							styles.paymentButton,
-							!acceptedQuotations[subIndex] &&
-								styles.paymentButtonDisabled,
-						]}
-						disabled={!acceptedQuotations[subIndex] || isCompleted}
-						onPress={() => {
-							if (acceptedQuotations[subIndex] && !isCompleted) {
-								console.log(
-									"Navigate to payment for offline request:",
-									{
-										subRequest,
-										subIndex,
-										totalAmount: subRequestTotal,
-									}
-								);
-
-								// Navigate to payment screen with offline request data
-								navigation?.navigate?.("ConfirmQuotation", {
-									request: displayData,
-									subRequest: subRequest,
-									subRequestIndex: subIndex,
-								});
-							}
-						}}
-					>
-						<Text
-							style={[
-								styles.paymentButtonText,
-								!acceptedQuotations[subIndex] &&
-									styles.paymentButtonTextDisabled,
-							]}
-						>
-							Thanh toán
-						</Text>
-					</TouchableOpacity>
+					)}
 				</View>
 			)}
 		</View>
@@ -1595,6 +1445,100 @@ const styles = StyleSheet.create({
 	},
 	paymentButtonTextDisabled: {
 		color: "#9E9E9E", // Gray text when disabled
+	},
+	// Simple quotation display styles
+	simpleQuotationDisplay: {
+		paddingTop: 8,
+		paddingHorizontal: 4,
+	},
+	priceText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#E53E3E", // Red color for price
+		textAlign: "right",
+	},
+	exchangeRateText: {
+		fontSize: 12,
+		color: "#666",
+		textAlign: "right",
+		marginTop: 2,
+	},
+	// Shipping summary styles
+	shippingSummaryContainer: {
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 12,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingSummaryRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 4,
+	},
+	shippingSummaryLabel: {
+		fontSize: 14,
+		color: "#666",
+	},
+	shippingSummaryValue: {
+		fontSize: 14,
+		color: "#333",
+		fontWeight: "500",
+	},
+	shippingSummaryTotalLabel: {
+		fontSize: 15,
+		fontWeight: "600",
+		color: "#333",
+	},
+	shippingSummaryTotalValue: {
+		fontSize: 15,
+		fontWeight: "700",
+		color: "#E53E3E", // Red color for total
+	},
+	// Sub-request summary styles
+	subRequestSummaryContainer: {
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 12,
+		marginHorizontal: 16,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	summaryRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	summaryLabel: {
+		fontSize: 14,
+		color: "#666",
+	},
+	summaryValue: {
+		fontSize: 14,
+		color: "#333",
+		fontWeight: "500",
+	},
+	summaryTotalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		borderTopWidth: 1,
+		borderTopColor: "#E5E5E5",
+		paddingTop: 8,
+	},
+	summaryTotalLabel: {
+		fontSize: 15,
+		fontWeight: "600",
+		color: "#333",
+	},
+	summaryTotalValue: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#E53E3E", // Red color for total
 	},
 });
 

@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import Header from "../../components/header";
 import PaymentSmCard from "../../components/payment-sm-card";
-import QuotationCard from "../../components/quotation-card";
 import { Text } from "../../components/ui/text";
 import {
 	useCheckoutMutation,
@@ -793,186 +792,114 @@ export default function ConfirmQuotation({ navigation, route }) {
 								);
 							}
 
-							// For online requests, use existing logic
+							// For online requests, use simple layout like offline
 							return (
 								<>
 									{selectedSubRequest.requestItems.map(
 										(item, index) => {
 											const quotationDetail =
 												item.quotationDetail;
-
-											if (!quotationDetail) {
-												return (
-													<View
-														key={index}
-														style={
-															styles.quotationItem
-														}
-													>
-														<Text
-															style={
-																styles.productName
-															}
-														>
-															{item.productName ||
-																item.name ||
-																`Sản phẩm ${
-																	index + 1
-																}`}
-														</Text>
-														<Text
-															style={
-																styles.noQuotationText
-															}
-														>
-															Chưa có báo giá
-														</Text>
-													</View>
-												);
-											}
-
-											// Check if this quotation is expired
-											const isExpired =
-												isQuotationExpired(
-													quotationDetail
-												);
-
-											// Extract values from quotationDetail
-											const basePrice =
-												quotationDetail?.basePrice || 0;
-											const serviceFee =
-												quotationDetail?.serviceFee ||
-												0;
-											const totalVNDPrice =
+											const totalPrice =
 												quotationDetail?.totalVNDPrice ||
 												0;
-											const exchangeRate =
-												quotationDetail?.exchangeRate ||
-												1;
-											// Get currency from quotationForPurchase instead of quotationDetail
-											const currency =
-												selectedSubRequest
-													?.quotationForPurchase
-													?.currency || "USD";
-											const expiryDate =
-												quotationDetail.expiryDate ||
-												quotationDetail.expiredAt ||
-												quotationDetail.validUntil;
-
-											// Get shipping estimate from quotationForPurchase
-											const shippingEstimate =
-												selectedSubRequest
-													?.quotationForPurchase
-													?.shippingEstimate || 0;
 
 											return (
 												<View
 													key={index}
-													style={[
-														styles.quotationItem,
-														isExpired &&
-															styles.expiredQuotation,
-													]}
+													style={
+														styles.simpleQuotationItem
+													}
 												>
 													<View
 														style={
-															styles.quotationHeader
+															styles.productRow
 														}
 													>
-														<Text
+														{/* Product Image */}
+														<View
 															style={
-																styles.productName
+																styles.productImageContainer
 															}
 														>
-															{item.productName ||
-																item.name ||
-																`Sản phẩm ${
-																	index + 1
-																}`}
-														</Text>
-														{isExpired && (
-															<View
-																style={
-																	styles.expiredBadge
-																}
-															>
-																<Text
+															{item.images &&
+															item.images.length >
+																0 ? (
+																<Image
+																	source={{
+																		uri: item
+																			.images[0],
+																	}}
 																	style={
-																		styles.expiredText
+																		styles.productImage
+																	}
+																	resizeMode="cover"
+																/>
+															) : (
+																<View
+																	style={
+																		styles.placeholderImage
 																	}
 																>
-																	Hết hạn
-																</Text>
-															</View>
-														)}
-													</View>
-
-													{expiryDate && (
-														<Text
-															style={[
-																styles.expiryText,
-																isExpired &&
-																	styles.expiredDate,
-															]}
-														>
-															Hạn báo giá:{" "}
-															{formatDate(
-																expiryDate
+																	<Ionicons
+																		name="image-outline"
+																		size={
+																			24
+																		}
+																		color="#999"
+																	/>
+																</View>
 															)}
-														</Text>
-													)}
+														</View>
 
-													<QuotationCard
-														originalProductPrice={
-															basePrice
-														}
-														originalCurrency={
-															currency
-														}
-														exchangeRate={
-															exchangeRate
-														}
-														originalServiceFee={
-															serviceFee
-														}
-														serviceFeePercent={
-															basePrice > 0
-																? Number(
-																		(
-																			(serviceFee /
-																				basePrice) *
-																			100
-																		).toFixed(
-																			1
-																		)
-																  )
-																: 0
-														}
-														totalVNDPrice={
-															totalVNDPrice
-														}
-														totalPriceEstimate={
-															selectedSubRequest
-																?.quotationForPurchase
-																?.totalPriceEstimate
-														}
-														totalPriceBeforeExchange={
-															quotationDetail?.totalPriceBeforeExchange
-														}
-														shippingEstimate={
-															shippingEstimate
-														}
-														adminFees={
-															selectedSubRequest
-																?.quotationForPurchase
-																?.fees
-														}
-														totalAmount={Math.round(
-															totalVNDPrice +
-																shippingEstimate
-														)}
-														isExpanded={true}
-													/>
+														{/* Product Info */}
+														<View
+															style={
+																styles.productInfo
+															}
+														>
+															<Text
+																style={
+																	styles.simpleProductName
+																}
+															>
+																{item.productName ||
+																	item.name ||
+																	`Sản phẩm ${
+																		index +
+																		1
+																	}`}
+															</Text>
+														</View>
+
+														{/* Price */}
+														<View
+															style={
+																styles.priceContainer
+															}
+														>
+															{quotationDetail ? (
+																<Text
+																	style={
+																		styles.totalPrice
+																	}
+																>
+																	{totalPrice.toLocaleString(
+																		"vi-VN"
+																	)}{" "}
+																	₫
+																</Text>
+															) : (
+																<Text
+																	style={
+																		styles.noQuotationText
+																	}
+																>
+																	Chưa có báo
+																	giá
+																</Text>
+															)}
+														</View>
+													</View>
 												</View>
 											);
 										}
