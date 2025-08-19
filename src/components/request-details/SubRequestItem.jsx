@@ -404,9 +404,9 @@ const SubRequestItem = ({
 							</View>
 							<View style={styles.quotationSummaryRight}>
 								<Text style={styles.quotationSummaryTotal}>
-									{Math.round(subRequestTotal).toLocaleString(
-										"vi-VN"
-									)}{" "}
+									{Math.round(
+										subRequestTotal || 0
+									).toLocaleString("vi-VN")}{" "}
 									VNĐ
 								</Text>
 								<Ionicons

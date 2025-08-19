@@ -30,7 +30,7 @@ export default function TopUpScreen({ navigation }) {
 			id: "vnpay",
 			name: "VNPay",
 			icon: require("../../assets/images/payment/vnpay-logo.png"),
-			description: "Phí 1.1% - Xử lý ngay lập tức",
+			description: "Xử lý ngay lập tức",
 		},
 	];
 

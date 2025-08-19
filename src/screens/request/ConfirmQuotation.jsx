@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import {
 	ActivityIndicator,
@@ -271,9 +272,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 					shippingFee: Number(shippingEstimate), // Shipping fee separate
 				};
 
-				// Add redirectUri only for VNPay (direct-checkout)
+				// Add redirectUri for VNPay (direct-checkout) using deep linking
 				if (selectedPaymentMethod !== "wallet") {
-					payload.redirectUri = "globalshopper://payment-success";
+					payload.redirectUri = `${Linking.createURL(
+						"/"
+					)}payment-success`;
 				}
 
 				console.log("=== SENDING PAYLOAD ===");
@@ -313,108 +316,131 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 				console.log("🎉 PAYMENT SUCCESS RESPONSE 🎉");
 				console.log("Response:", JSON.stringify(response, null, 2));
-				console.log("Paid SubRequest ID:", subRequestData.id);
-				console.log("Expected changes after payment:");
-				console.log(
-					"1. Sub-request status should change from 'QUOTED' to 'PAID'"
-				);
-				console.log(
-					"2. Wallet transaction should be created with 'SUCCESS' status"
-				);
-				console.log(
-					"3. Order should be created with 'ORDER_REQUESTED' status"
-				);
 
-				// Success - refetch all related data
-				console.log(
-					"Refetching wallet and request data after payment..."
-				);
-				await refetchWallet();
-
-				// Also refetch the request data to update order status
-				if (refetch) {
-					console.log("🔄 Immediate refetch after payment...");
-					const updatedData = await refetch();
+				// Handle different payment methods
+				if (selectedPaymentMethod === "wallet") {
+					// Wallet payment - process success immediately
+					console.log("Paid SubRequest ID:", subRequestData.id);
+					console.log("Expected changes after payment:");
 					console.log(
-						"Updated request data:",
-						JSON.stringify(updatedData?.data, null, 2)
+						"1. Sub-request status should change from 'QUOTED' to 'PAID'"
+					);
+					console.log(
+						"2. Wallet transaction should be created with 'SUCCESS' status"
+					);
+					console.log(
+						"3. Order should be created with 'ORDER_REQUESTED' status"
 					);
 
-					// Check if sub-request status was updated
-					const updatedSubRequest =
-						updatedData?.data?.subRequests?.find(
-							(sr) => sr.id === subRequestData.id
+					// Success - refetch all related data
+					console.log(
+						"Refetching wallet and request data after payment..."
+					);
+					await refetchWallet();
+
+					// Also refetch the request data to update order status
+					if (refetch) {
+						console.log("🔄 Immediate refetch after payment...");
+						const updatedData = await refetch();
+						console.log(
+							"Updated request data:",
+							JSON.stringify(updatedData?.data, null, 2)
 						);
-					if (updatedSubRequest) {
-						console.log("✅ Updated sub-request found:", {
-							id: updatedSubRequest.id,
-							oldStatus: subRequestData.status,
-							newStatus: updatedSubRequest.status,
-							statusChanged:
-								subRequestData.status !==
-								updatedSubRequest.status,
+
+						// Check if sub-request status was updated
+						const updatedSubRequest =
+							updatedData?.data?.subRequests?.find(
+								(sr) => sr.id === subRequestData.id
+							);
+						if (updatedSubRequest) {
+							console.log("✅ Updated sub-request found:", {
+								id: updatedSubRequest.id,
+								oldStatus: subRequestData.status,
+								newStatus: updatedSubRequest.status,
+								statusChanged:
+									subRequestData.status !==
+									updatedSubRequest.status,
+							});
+						} else {
+							console.log(
+								"❌ Sub-request not found in updated data!"
+							);
+						}
+					}
+
+					// Multiple delayed refetches to ensure server-side processing is complete
+					setTimeout(async () => {
+						console.log("First delayed refetch (2s)...");
+						await refetchWallet();
+						if (refetch) {
+							await refetch();
+						}
+					}, 2000);
+
+					setTimeout(async () => {
+						console.log("Second delayed refetch (5s)...");
+						await refetchWallet();
+						if (refetch) {
+							await refetch();
+						}
+					}, 5000);
+
+					setTimeout(async () => {
+						console.log("Final delayed refetch (10s)...");
+						await refetchWallet();
+						if (refetch) {
+							const finalData = await refetch();
+							console.log("Final refetch result:");
+
+							// Check final sub-request status
+							const finalSubRequest =
+								finalData?.data?.subRequests?.find(
+									(sr) => sr.id === subRequestData.id
+								);
+							if (finalSubRequest) {
+								console.log("🔍 Final sub-request status:", {
+									id: finalSubRequest.id,
+									status: finalSubRequest.status,
+									isPaid: finalSubRequest.status === "PAID",
+									platform: finalSubRequest.ecommercePlatform,
+								});
+
+								if (finalSubRequest.status !== "PAID") {
+									console.warn(
+										"⚠️ Sub-request status is still not 'PAID' after 10s. API might need more time or there's an issue."
+									);
+								}
+							}
+						}
+					}, 10000);
+
+					const formattedAmount =
+						totalAmount.toLocaleString("vi-VN") + " VNĐ";
+					navigation.navigate("SuccessPaymentScreen", {
+						paymentMethod: selectedPaymentMethod,
+						amount: formattedAmount,
+						requestId: displayData?.id,
+						orderId: response?.orderId || response?.id,
+					});
+				} else {
+					// VNPay payment - navigate to VNPay gateway
+					console.log("💳 VNPay response:", response);
+					if (response.url) {
+						console.log(
+							"🔗 Redirecting to VNPay URL:",
+							response.url
+						);
+						navigation.navigate("VNPayGateWay", {
+							url: response.url,
 						});
 					} else {
-						console.log(
-							"❌ Sub-request not found in updated data!"
+						console.error("❌ No VNPay URL in response");
+						Alert.alert(
+							"Lỗi thanh toán",
+							"Không nhận được URL thanh toán từ VNPay"
 						);
 					}
 				}
-
-				// Multiple delayed refetches to ensure server-side processing is complete
-				setTimeout(async () => {
-					console.log("First delayed refetch (2s)...");
-					await refetchWallet();
-					if (refetch) {
-						await refetch();
-					}
-				}, 2000);
-
-				setTimeout(async () => {
-					console.log("Second delayed refetch (5s)...");
-					await refetchWallet();
-					if (refetch) {
-						await refetch();
-					}
-				}, 5000);
-
-				setTimeout(async () => {
-					console.log("Final delayed refetch (10s)...");
-					await refetchWallet();
-					if (refetch) {
-						const finalData = await refetch();
-						console.log("Final refetch result:");
-
-						// Check final sub-request status
-						const finalSubRequest =
-							finalData?.data?.subRequests?.find(
-								(sr) => sr.id === subRequestData.id
-							);
-						if (finalSubRequest) {
-							console.log("🔍 Final sub-request status:", {
-								id: finalSubRequest.id,
-								status: finalSubRequest.status,
-								isPaid: finalSubRequest.status === "PAID",
-								platform: finalSubRequest.ecommercePlatform,
-							});
-
-							if (finalSubRequest.status !== "PAID") {
-								console.warn(
-									"⚠️ Sub-request status is still not 'PAID' after 10s. API might need more time or there's an issue."
-								);
-							}
-						}
-					}
-				}, 10000);
-
-				const formattedAmount =
-					totalAmount.toLocaleString("vi-VN") + " VNĐ";
-				navigation.navigate("SuccessPaymentScreen", {
-					paymentMethod: selectedPaymentMethod,
-					amount: formattedAmount,
-					requestId: displayData?.id,
-					orderId: response?.orderId || response?.id,
-				});
 			} catch (error) {
 				console.error("Checkout error:", error);
 				console.error("Error details:", {
