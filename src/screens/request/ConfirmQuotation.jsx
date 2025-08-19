@@ -120,7 +120,16 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Format wallet balance
 	const formatWalletBalance = (balance) => {
 		if (!balance && balance !== 0) return "0 VND";
-		return `${balance} VND`;
+		return `${balance.toLocaleString("vi-VN")} VND`;
+	};
+
+	// Calculate total amount consistently
+	const calculateTotalAmount = (subRequest) => {
+		const basePrice =
+			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
+		const shippingEstimate =
+			subRequest?.quotationForPurchase?.shippingEstimate || 0;
+		return basePrice + shippingEstimate;
 	};
 
 	const getRequestTypeText = (type) => {
@@ -151,6 +160,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 	};
 
 	const handleConfirmPayment = async () => {
+		console.log("🚀 STARTING PAYMENT PROCESS 🚀");
 		if (selectedPaymentMethod) {
 			try {
 				console.log(
@@ -181,15 +191,13 @@ export default function ConfirmQuotation({ navigation, route }) {
 					return;
 				}
 
-				// Calculate total amount like in SubRequestItem (basePrice + shipping)
+				// Calculate total amount using consistent method
+				const totalAmount = calculateTotalAmount(subRequestData);
 				const basePrice =
 					subRequestData.quotationForPurchase?.totalPriceEstimate ||
 					0;
 				const shippingEstimate =
 					subRequestData.quotationForPurchase?.shippingEstimate || 0;
-
-				// Use same calculation as SubRequestItem: basePrice + shippingEstimate
-				const totalAmount = basePrice + shippingEstimate;
 
 				console.log("=== PAYMENT DEBUG ===");
 				console.log("SubRequest ID:", subRequestData.id);
@@ -201,9 +209,54 @@ export default function ConfirmQuotation({ navigation, route }) {
 					expectedFromUI: 866529.53,
 				});
 				console.log(
-					"QuotationForPurchase:",
-					subRequestData.quotationForPurchase
+					"Full QuotationForPurchase:",
+					JSON.stringify(subRequestData.quotationForPurchase, null, 2)
 				);
+				console.log(
+					"Fees details:",
+					subRequestData.quotationForPurchase?.fees
+				);
+
+				// Calculate all fees to understand the total structure
+				let totalFees = 0;
+				if (subRequestData.quotationForPurchase?.fees) {
+					subRequestData.quotationForPurchase.fees.forEach(
+						(fee, index) => {
+							console.log(`Fee ${index}:`, fee);
+							if (fee.amount) {
+								totalFees += fee.amount;
+							}
+						}
+					);
+				}
+				console.log("Total calculated fees:", totalFees);
+				console.log(
+					"Expected grand total:",
+					Number(basePrice) + Number(shippingEstimate) + totalFees
+				);
+
+				// Use the pre-calculated total from the client (matches UI display)
+				// This is the total that user sees and server expects
+				const payload = {
+					subRequestId: subRequestData.id,
+					totalPriceEstimate: totalAmount, // Use the client-calculated total
+					trackingNumber: "",
+					shippingFee: Number(shippingEstimate), // Shipping fee separate
+					redirectUri: "globalshopper://payment-success", // Add redirect URI for mobile app
+				};
+				console.log("=== SENDING PAYLOAD (USING CLIENT TOTAL) ===");
+				console.log(
+					"Using totalAmount from calculateTotalAmount:",
+					totalAmount
+				);
+				console.log("Base price:", Number(basePrice));
+				console.log("Shipping fee:", Number(shippingEstimate));
+				console.log(
+					"Additional fees (not included in payload):",
+					totalFees
+				);
+				console.log("Server expects this total in UI:", totalAmount);
+				console.log(JSON.stringify(payload, null, 2));
 
 				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
@@ -216,17 +269,34 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}
 				}
 
-				// Try a completely different approach - maybe server expects quotation ID
-				const response = await directCheckout({
-					subRequestId: subRequestData.id,
-					paymentMethod: selectedPaymentMethod.toUpperCase(),
-					totalAmount: totalAmount,
-				}).unwrap();
+				// Try a completely different approach - use API spec format
+				const response = await directCheckout(payload).unwrap();
 
-				console.log("Payment success:", response);
+				console.log("🎉 PAYMENT SUCCESS RESPONSE 🎉");
+				console.log("Response:", JSON.stringify(response, null, 2));
+				console.log("Paid SubRequest ID:", subRequestData.id);
+				console.log("Should only update this sub-request, not others!");
 
-				// Success - continue with navigation
+				// Success - refetch all related data
+				console.log(
+					"Refetching wallet and request data after payment..."
+				);
 				await refetchWallet();
+
+				// Also refetch the request data to update order status
+				if (refetch) {
+					await refetch();
+				}
+
+				// Small delay to ensure data is updated on server
+				setTimeout(async () => {
+					console.log("Additional refetch after delay...");
+					await refetchWallet();
+					if (refetch) {
+						await refetch();
+					}
+				}, 2000);
+
 				const formattedAmount =
 					totalAmount.toLocaleString("vi-VN") + " VNĐ";
 				navigation.navigate("SuccessPaymentScreen", {
@@ -608,24 +678,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 												sản phẩm):
 											</Text>
 											<Text style={styles.totalAmount}>
-												{(() => {
-													const basePrice =
+												{Math.round(
+													calculateTotalAmount(
 														selectedSubRequest
-															.quotationForPurchase
-															?.totalPriceEstimate ||
-														0;
-													const shippingEstimate =
-														selectedSubRequest
-															.quotationForPurchase
-															?.shippingEstimate ||
-														0;
-													const total =
-														basePrice +
-														shippingEstimate;
-													return Math.round(
-														total
-													).toLocaleString("vi-VN");
-												})()}{" "}
+													)
+												).toLocaleString("vi-VN")}{" "}
 												VNĐ
 											</Text>
 										</View>

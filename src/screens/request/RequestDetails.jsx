@@ -154,10 +154,9 @@ export default function RequestDetails({ navigation, route }) {
 				.map((subRequest, subIndex) => {
 					if (!subRequest?.requestItems?.length) return null;
 
-					// Check if request or sub-request is completed/paid
-					const isCompleted =
-						isRequestCompleted(displayData?.status) ||
-						isRequestCompleted(subRequest?.status);
+					// Check if this specific sub-request is completed/paid
+					// Only check sub-request status, not parent request status
+					const isCompleted = isRequestCompleted(subRequest?.status);
 
 					return (
 						<SubRequestItem
