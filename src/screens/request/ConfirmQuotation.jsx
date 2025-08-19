@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
+	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -597,10 +598,60 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 					{/* Quotation */}
 					<View style={styles.section}>
+						{/* Shipping Section for Offline Requests - moved to top */}
+						{(() => {
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest) {
+								return (
+									<View style={styles.shippingSection}>
+										<Text
+											style={styles.shippingSectionTitle}
+										>
+											Chọn phương thức vận chuyển
+										</Text>
+										<Text style={styles.shippingNote}>
+											Vui lòng chọn phương thức vận chuyển
+											để tính phí chính xác
+										</Text>
+										<TouchableOpacity
+											style={styles.shippingSelectButton}
+											onPress={() => {
+												// TODO: Navigate to shipping selection screen
+												Alert.alert(
+													"Thông báo",
+													"Tính năng chọn vận chuyển sẽ được cập nhật soon"
+												);
+											}}
+										>
+											<Text
+												style={
+													styles.shippingSelectText
+												}
+											>
+												Chọn phương thức vận chuyển
+											</Text>
+											<Ionicons
+												name="chevron-forward"
+												size={20}
+												color="#1976D2"
+											/>
+										</TouchableOpacity>
+									</View>
+								);
+							}
+							return null;
+						})()}
+
 						<Text style={styles.sectionTitle}>
-							Chi tiết báo giá (
-							{selectedSubRequest?.requestItems?.length || 0} sản
-							phẩm)
+							<Text>Chi tiết báo giá (</Text>
+							<Text>
+								{selectedSubRequest?.requestItems?.length || 0}
+							</Text>
+							<Text> sản phẩm)</Text>
 						</Text>
 						{(() => {
 							// Check if we have quotations
@@ -618,6 +669,131 @@ export default function ConfirmQuotation({ navigation, route }) {
 							}
 
 							// Display all quotations in the sub-request
+							// Check if this is an offline request
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest) {
+								// Simple display - just product name and total price
+								return (
+									<>
+										{selectedSubRequest.requestItems.map(
+											(item, index) => {
+												const quotationDetail =
+													item.quotationDetail;
+												const totalPrice =
+													quotationDetail?.totalVNDPrice ||
+													0;
+
+												return (
+													<View
+														key={index}
+														style={
+															styles.simpleQuotationItem
+														}
+													>
+														<View
+															style={
+																styles.productRow
+															}
+														>
+															{/* Product Image */}
+															<View
+																style={
+																	styles.productImageContainer
+																}
+															>
+																{item.images &&
+																item.images
+																	.length >
+																	0 ? (
+																	<Image
+																		source={{
+																			uri: item
+																				.images[0],
+																		}}
+																		style={
+																			styles.productImage
+																		}
+																		resizeMode="cover"
+																	/>
+																) : (
+																	<View
+																		style={
+																			styles.placeholderImage
+																		}
+																	>
+																		<Ionicons
+																			name="image-outline"
+																			size={
+																				24
+																			}
+																			color="#999"
+																		/>
+																	</View>
+																)}
+															</View>
+
+															{/* Product Info */}
+															<View
+																style={
+																	styles.productInfo
+																}
+															>
+																<Text
+																	style={
+																		styles.simpleProductName
+																	}
+																>
+																	{item.productName ||
+																		item.name ||
+																		`Sản phẩm ${
+																			index +
+																			1
+																		}`}
+																</Text>
+															</View>
+
+															{/* Price */}
+															<View
+																style={
+																	styles.priceContainer
+																}
+															>
+																{quotationDetail ? (
+																	<Text
+																		style={
+																			styles.totalPrice
+																		}
+																	>
+																		{totalPrice.toLocaleString(
+																			"vi-VN"
+																		)}{" "}
+																		₫
+																	</Text>
+																) : (
+																	<Text
+																		style={
+																			styles.noQuotationText
+																		}
+																	>
+																		Chưa có
+																		báo giá
+																	</Text>
+																)}
+															</View>
+														</View>
+													</View>
+												);
+											}
+										)}
+									</>
+								);
+							}
+
+							// For online requests, use existing logic
 							return (
 								<>
 									{selectedSubRequest.requestItems.map(
@@ -802,27 +978,38 @@ export default function ConfirmQuotation({ navigation, route }) {
 										}
 									)}
 
-									{/* Total amount for all quotations */}
-									<View style={styles.totalSummary}>
-										<View style={styles.totalRow}>
-											<Text style={styles.totalLabel}>
-												Tổng cộng (
-												{
-													selectedSubRequest
-														.requestItems.length
-												}{" "}
-												sản phẩm):
-											</Text>
-											<Text style={styles.totalAmount}>
-												{Math.round(
-													calculateTotalAmount(
-														selectedSubRequest
-													)
-												).toLocaleString("vi-VN")}{" "}
-												VNĐ
-											</Text>
+									{/* Total amount for all quotations - only for online requests */}
+									{!isOfflineRequest && (
+										<View style={styles.totalSummary}>
+											<View style={styles.totalRow}>
+												<Text style={styles.totalLabel}>
+													<Text>Tổng cộng (</Text>
+													<Text>
+														{
+															selectedSubRequest
+																.requestItems
+																.length
+														}
+													</Text>
+													<Text> sản phẩm):</Text>
+												</Text>
+												<Text
+													style={styles.totalAmount}
+												>
+													<Text>
+														{Math.round(
+															calculateTotalAmount(
+																selectedSubRequest
+															)
+														).toLocaleString(
+															"vi-VN"
+														)}
+													</Text>
+													<Text> VNĐ</Text>
+												</Text>
+											</View>
 										</View>
-									</View>
+									)}
 								</>
 							);
 						})()}
@@ -872,7 +1059,7 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		paddingHorizontal: 18,
 		paddingVertical: 10,
-		paddingBottom: 100, // Space for fixed button
+		paddingBottom: 100,
 	},
 	section: {
 		marginBottom: 16,
@@ -1120,5 +1307,96 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "700",
 		color: "#1976D2",
+	},
+	// Shipping section styles
+	shippingSection: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		marginTop: 2,
+		marginBottom: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingSectionTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 8,
+	},
+	shippingNote: {
+		fontSize: 14,
+		color: "#666",
+		marginBottom: 16,
+		lineHeight: 20,
+	},
+	shippingSelectButton: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingSelectText: {
+		fontSize: 16,
+		color: "#1976D2",
+		fontWeight: "600",
+	},
+	// Simple quotation item styles
+	simpleQuotationItem: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		marginBottom: 8,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	productRow: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+	},
+	productImageContainer: {
+		marginRight: 12,
+	},
+	productImage: {
+		width: 50,
+		height: 50,
+		borderRadius: 8,
+	},
+	placeholderImage: {
+		width: 50,
+		height: 50,
+		borderRadius: 8,
+		backgroundColor: "#F5F5F5",
+		justifyContent: "center",
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#E0E0E0",
+	},
+	productInfo: {
+		flex: 1,
+		marginRight: 12,
+	},
+	simpleProductName: {
+		fontSize: 14,
+		fontWeight: "500",
+		color: "#333",
+		lineHeight: 20,
+		flexWrap: "wrap",
+	},
+	priceContainer: {
+		alignItems: "flex-end",
+		minWidth: 80,
+		flexShrink: 0,
+	},
+	totalPrice: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#E53E3E",
+		textAlign: "right",
+		flexWrap: "wrap",
 	},
 });
