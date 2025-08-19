@@ -23,7 +23,11 @@ import {
 import { shouldShowQuotation } from "../../utils/statusHandler";
 
 // Helper function to check if request/sub-request is completed/paid
-const isRequestCompleted = (subRequest, ordersData = null) => {
+const isRequestCompleted = (
+	subRequest,
+	ordersData = null,
+	requestData = null
+) => {
 	if (!subRequest) return false;
 
 	// First check: If sub-request is rejected, it's definitely not completed
@@ -39,6 +43,16 @@ const isRequestCompleted = (subRequest, ordersData = null) => {
 			subRequestId: subRequest.id,
 			status: subRequest.status,
 			rejectionReason: subRequest.rejectionReason,
+		});
+		return false;
+	}
+
+	// NEW: Quick check using paidCount - if 0, no payments made yet
+	if (requestData && requestData.paidCount === 0) {
+		console.log("RequestDetails - No payments made yet (paidCount: 0):", {
+			subRequestId: subRequest.id,
+			paidCount: requestData.paidCount,
+			status: subRequest.status,
 		});
 		return false;
 	}
@@ -310,10 +324,11 @@ export default function RequestDetails({ navigation, route }) {
 					);
 
 					// Check if this specific sub-request is completed/paid
-					// Pass ordersData to check for matching orders
+					// Pass ordersData and requestDetails to check for matching orders and paidCount
 					const isCompleted = isRequestCompleted(
 						subRequest,
-						ordersData
+						ordersData,
+						requestDetails
 					);
 
 					console.log(
