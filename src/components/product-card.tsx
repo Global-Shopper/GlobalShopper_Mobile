@@ -15,6 +15,7 @@ interface ProductCardProps {
 	material?: string;
 	size?: string;
 	color?: string;
+	unit?: string; // Unit of product (chiếc, quyển, cái, chai, etc.)
 	platform?: string;
 	productLink?: string;
 	quantity?: number;
@@ -41,6 +42,7 @@ export default function ProductCard({
 	material,
 	size,
 	color,
+	unit,
 	platform,
 	productLink,
 	quantity = 1,
@@ -146,6 +148,16 @@ export default function ProductCard({
 							<Text style={styles.tagText}>{material}</Text>
 						</View>
 					)}
+					{unit && (
+						<View style={styles.tag}>
+							<Ionicons
+								name="cube-outline"
+								size={12}
+								color="#666"
+							/>
+							<Text style={styles.tagText}>Đơn vị: {unit}</Text>
+						</View>
+					)}
 				</View>
 
 				{/* Product Link - Show for both modes */}
@@ -185,7 +197,11 @@ export default function ProductCard({
 							{exchangeRate && exchangeRate > 0 && (
 								<Text style={styles.exchangeRate}>
 									Tỷ giá:{" "}
-									{exchangeRate.toLocaleString("vi-VN")} VNĐ
+									{exchangeRate.toLocaleString("vi-VN", {
+										minimumFractionDigits: 0,
+										maximumFractionDigits: 2,
+									})}{" "}
+									VNĐ
 								</Text>
 							)}
 						</View>

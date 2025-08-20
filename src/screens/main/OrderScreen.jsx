@@ -192,19 +192,6 @@ export default function OrderScreen({ navigation }) {
 		{ id: "CANCELED", label: "Đã hủy", status: "CANCELED" },
 	];
 
-	const handleCancelOrder = async (orderId) => {
-		// Find the selected order
-		const selectedOrder = orders.find((order) => order.id === orderId);
-
-		if (!selectedOrder) {
-			Alert.alert("Lỗi", "Không tìm thấy thông tin đơn hàng");
-			return;
-		}
-
-		// Navigate to CancelOrder screen
-		navigation.navigate("CancelOrder", { orderData: selectedOrder });
-	};
-
 	const handleReviewOrder = async (orderId) => {
 		console.log("Review order:", orderId);
 		// Find the selected order
@@ -348,7 +335,6 @@ export default function OrderScreen({ navigation }) {
 			<OrderCard
 				order={item}
 				onPress={() => handleOrderPress(item.id)}
-				onCancel={() => handleCancelOrder(item.id)}
 				onReview={() => handleReviewOrder(item.id)}
 				hasFeedback={hasFeedback}
 			/>

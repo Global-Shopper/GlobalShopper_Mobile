@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import * as Linking from "expo-linking";
+import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
+	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -10,9 +12,9 @@ import {
 } from "react-native";
 import Header from "../../components/header";
 import PaymentSmCard from "../../components/payment-sm-card";
-import QuotationCard from "../../components/quotation-card";
 import { Text } from "../../components/ui/text";
 import {
+	useCheckoutMutation,
 	useDirectCheckoutMutation,
 	useGetPurchaseRequestByIdQuery,
 	useGetWalletQuery,
@@ -23,13 +25,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 	const { request, subRequest, subRequestIndex } = route.params || {};
 	const requestId = request?.id || route.params?.requestId;
 	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+	const [selectedShipping, setSelectedShipping] = useState(null);
 
 	console.log("ConfirmQuotation params:", {
 		request: !!request,
 		subRequest: !!subRequest,
 		subRequestIndex,
+		requestId,
 	});
 	console.log("Selected subRequest:", subRequest);
+	console.log("SubRequest ID being processed:", subRequest?.id);
+	console.log("SubRequest status:", subRequest?.status);
 
 	// Fetch purchase request detail from API
 	const {
@@ -44,9 +50,23 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Fetch wallet balance
 	const { data: walletData, refetch: refetchWallet } = useGetWalletQuery();
 
-	// API hook for checkout
-	const [directCheckout, { isLoading: isCheckingOut }] =
-		useDirectCheckoutMutation();
+	// API hooks for checkout
+	const [directCheckout, { isLoading: isDirectCheckingOut }] =
+		useDirectCheckoutMutation(); // For VNPay
+	const [walletCheckout, { isLoading: isWalletCheckingOut }] =
+		useCheckoutMutation(); // For Wallet
+
+	const isCheckingOut = isDirectCheckingOut || isWalletCheckingOut;
+
+	// Debug selectedShipping changes
+	useEffect(() => {
+		if (selectedShipping) {
+			console.log(
+				"🚢 Shipping method updated in ConfirmQuotation:",
+				selectedShipping
+			);
+		}
+	}, [selectedShipping]);
 
 	// Helper function to get shortened UUID with #
 	const getShortId = (fullId) => {
@@ -60,6 +80,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 	// Use the correct data for rendering
 	const displayData = requestDetails || request;
 
+	// Debug all subRequests to understand the array order
+	console.log(
+		"ConfirmQuotation - displayData.subRequests:",
+		displayData?.subRequests?.map((sr, i) => ({
+			index: i,
+			id: sr.id,
+			platform: sr.ecommercePlatform,
+			status: sr.status,
+		}))
+	);
+
 	// Get the specific sub-request for this payment
 	const selectedSubRequest =
 		subRequest || displayData?.subRequests?.[subRequestIndex ?? 0];
@@ -67,6 +98,14 @@ export default function ConfirmQuotation({ navigation, route }) {
 	console.log("ConfirmQuotation - subRequest param:", subRequest);
 	console.log("ConfirmQuotation - subRequestIndex param:", subRequestIndex);
 	console.log("ConfirmQuotation - selectedSubRequest:", selectedSubRequest);
+	console.log(
+		"ConfirmQuotation - selectedSubRequest platform:",
+		selectedSubRequest?.ecommercePlatform
+	);
+	console.log(
+		"ConfirmQuotation - selectedSubRequest status:",
+		selectedSubRequest?.status
+	);
 
 	// Helper function to check if quotation is expired
 	const isQuotationExpired = (quotationDetail) => {
@@ -123,6 +162,26 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return `${balance.toLocaleString("vi-VN")} VND`;
 	};
 
+	// Calculate total amount consistently
+	const calculateTotalAmount = (subRequest) => {
+		const basePrice =
+			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
+
+		// For offline requests, use selected shipping cost
+		const requestType = displayData?.requestType || displayData?.type;
+		const isOfflineRequest = requestType?.toLowerCase() === "offline";
+
+		let shippingCost = 0;
+		if (isOfflineRequest && selectedShipping) {
+			shippingCost = selectedShipping.totalCost || 0;
+		} else {
+			shippingCost =
+				subRequest?.quotationForPurchase?.shippingEstimate || 0;
+		}
+
+		return basePrice + shippingCost;
+	};
+
 	const getRequestTypeText = (type) => {
 		if (!type) {
 			return "Loại yêu cầu không xác định";
@@ -150,7 +209,32 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return normalizedType === "online" ? "link-outline" : "create-outline";
 	};
 
+	// Function to navigate to shipping selection
+	const handleSelectShipping = () => {
+		if (!displayData || !displayData.subRequests?.[subRequestIndex]) {
+			console.log("No data available for shipping selection");
+			return;
+		}
+
+		const currentSubRequest = displayData.subRequests[subRequestIndex];
+		const quotation = currentSubRequest?.quotationForPurchase;
+
+		if (!quotation) {
+			console.log("No quotation available for shipping selection");
+			return;
+		}
+
+		navigation.navigate("SelectShipping", {
+			quotation,
+			onShippingSelect: (shipping) => {
+				console.log("Selected shipping method:", shipping);
+				setSelectedShipping(shipping);
+			},
+		});
+	};
+
 	const handleConfirmPayment = async () => {
+		console.log("🚀 STARTING PAYMENT PROCESS 🚀");
 		if (selectedPaymentMethod) {
 			try {
 				console.log(
@@ -181,22 +265,169 @@ export default function ConfirmQuotation({ navigation, route }) {
 					return;
 				}
 
-				// Calculate total amount from all quotations in sub-request
-				const totalAmount =
-					subRequestData.requestItems?.reduce((total, item) => {
-						return (
-							total + (item.quotationDetail?.totalVNDPrice || 0)
-						);
-					}, 0) || 0;
+				// Calculate total amount using consistent method
+				const requestType =
+					displayData?.requestType || displayData?.type;
+				const isOfflineRequest =
+					requestType?.toLowerCase() === "offline";
 
+				// Try calculating base price from individual item totals instead of totalPriceEstimate
+				let basePrice = 0;
+				if (subRequestData.requestItems) {
+					basePrice = subRequestData.requestItems.reduce(
+						(sum, item) => {
+							const itemTotal =
+								item.quotationDetail?.totalVNDPrice || 0;
+							console.log(
+								`Item "${item.productName}" totalVNDPrice:`,
+								itemTotal
+							);
+							return sum + itemTotal;
+						},
+						0
+					);
+					console.log(
+						"Calculated basePrice from individual items:",
+						basePrice
+					);
+				}
+
+				// Fallback to totalPriceEstimate if no individual totals
+				if (basePrice === 0) {
+					basePrice =
+						subRequestData.quotationForPurchase
+							?.totalPriceEstimate || 0;
+					console.log(
+						"Using fallback totalPriceEstimate:",
+						basePrice
+					);
+				}
+
+				// Get shipping cost based on request type
+				let shippingCost = 0;
+				if (isOfflineRequest && selectedShipping) {
+					shippingCost = selectedShipping.totalCost || 0;
+				} else {
+					shippingCost =
+						subRequestData.quotationForPurchase?.shippingEstimate ||
+						0;
+				}
+
+				// Total = base price + shipping
+				const totalAmount = basePrice + shippingCost;
+
+				console.log("=== PAYMENT DEBUG ===");
+				console.log("SubRequest ID:", subRequestData.id);
+				console.log("Payment Method:", selectedPaymentMethod);
 				console.log(
-					"Calculated total amount from all quotations:",
-					totalAmount
+					"Request Type:",
+					requestType,
+					"isOffline:",
+					isOfflineRequest
+				);
+				console.log("Payment calculation breakdown:", {
+					basePrice,
+					shippingCost,
+					totalAmount,
+					calculationMethod:
+						basePrice > 0
+							? "individual items"
+							: "totalPriceEstimate",
+					selectedShippingDetails: selectedShipping
+						? {
+								serviceName: selectedShipping.serviceName,
+								totalCost: selectedShipping.totalCost,
+						  }
+						: null,
+				});
+				console.log(
+					"Full QuotationForPurchase:",
+					JSON.stringify(subRequestData.quotationForPurchase, null, 2)
+				);
+
+				// Calculate all fees to understand the total structure
+				let totalFees = 0;
+				if (subRequestData.quotationForPurchase?.fees) {
+					subRequestData.quotationForPurchase.fees.forEach(
+						(fee, index) => {
+							console.log(`Fee ${index}:`, fee);
+							if (fee.amount) {
+								totalFees += fee.amount;
+							}
+						}
+					);
+				}
+				console.log("Total calculated fees:", totalFees);
+
+				// Create payload - server expects totalPriceEstimate to be final total (base + shipping)
+				const finalTotalAmount =
+					(subRequestData.quotationForPurchase.totalPriceEstimate ||
+						0) +
+					(subRequestData.quotationForPurchase.shippingEstimate || 0);
+
+				let payload = {
+					subRequestId: subRequestData.id,
+					totalPriceEstimate: finalTotalAmount, // Final total (base + shipping) like web
+					trackingNumber: "",
+					shippingFee:
+						subRequestData.quotationForPurchase.shippingEstimate, // Shipping cost separately
+				};
+
+				// For offline requests, maybe we need to include shipping method info
+				if (isOfflineRequest && selectedShipping) {
+					console.log(
+						"Adding shipping method info for offline request"
+					);
+					payload.shippingMethod = {
+						serviceCode: selectedShipping.serviceCode,
+						serviceName: selectedShipping.serviceName,
+						totalCost: selectedShipping.totalCost,
+						currency: selectedShipping.currency || "VND",
+					};
+				}
+
+				console.log("=== FINAL PAYLOAD APPROACH ===");
+				console.log(
+					"Matching web behavior - totalPriceEstimate = base + shipping"
 				);
 				console.log(
-					"Number of quotations:",
-					subRequestData.requestItems?.length || 0
+					"Base from DB:",
+					subRequestData.quotationForPurchase.totalPriceEstimate,
+					"VND"
 				);
+				console.log(
+					"Shipping from DB:",
+					subRequestData.quotationForPurchase.shippingEstimate,
+					"VND"
+				);
+				console.log(
+					"Final totalPriceEstimate sent:",
+					finalTotalAmount,
+					"VND"
+				);
+				console.log(
+					"shippingFee sent:",
+					subRequestData.quotationForPurchase.shippingEstimate,
+					"VND"
+				);
+				console.log("Full payload:", JSON.stringify(payload, null, 2));
+
+				// Add redirectUri for VNPay (direct-checkout) using deep linking
+				if (selectedPaymentMethod !== "wallet") {
+					payload.redirectUri = `${Linking.createURL(
+						"/"
+					)}payment-success`;
+				}
+
+				console.log("=== SENDING PAYLOAD ===");
+				console.log("Payment method:", selectedPaymentMethod);
+				console.log(
+					"API endpoint:",
+					selectedPaymentMethod === "wallet"
+						? "/orders/checkout"
+						: "/orders/direct-checkout"
+				);
+				console.log("Payload:", JSON.stringify(payload, null, 2));
 
 				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
@@ -209,45 +440,155 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}
 				}
 
-				// Prepare checkout data with total amount
-				const checkoutData = {
-					subRequestId: subRequestData.id,
-					paymentMethod: selectedPaymentMethod.toUpperCase(),
-					totalAmount: totalAmount, // Add total amount to match server validation
-				};
+				// Use correct API based on payment method
+				let response;
+				if (selectedPaymentMethod === "wallet") {
+					console.log(
+						"💰 Using WALLET CHECKOUT API (/orders/checkout)"
+					);
+					response = await walletCheckout(payload).unwrap();
+				} else {
+					console.log(
+						"💳 Using VNPAY CHECKOUT API (/orders/direct-checkout)"
+					);
+					response = await directCheckout(payload).unwrap();
+				}
 
-				console.log("Direct checkout data:", checkoutData);
-				console.log("SubRequest items:", subRequestData.requestItems);
-				console.log(
-					"QuotationDetails:",
-					subRequestData.requestItems?.map(
-						(item) => item.quotationDetail
-					)
-				);
+				console.log("🎉 PAYMENT SUCCESS RESPONSE 🎉");
+				console.log("Response:", JSON.stringify(response, null, 2));
 
-				// Call checkout API
-				const result = await directCheckout(checkoutData).unwrap();
-				console.log("Checkout result:", result);
+				// Handle different payment methods
+				if (selectedPaymentMethod === "wallet") {
+					// Wallet payment - process success immediately
+					console.log("Paid SubRequest ID:", subRequestData.id);
+					console.log("Expected changes after payment:");
+					console.log(
+						"1. Sub-request status should change from 'QUOTED' to 'PAID'"
+					);
+					console.log(
+						"2. Wallet transaction should be created with 'SUCCESS' status"
+					);
+					console.log(
+						"3. Order should be created with 'ORDER_REQUESTED' status"
+					);
 
-				// Refresh wallet balance
-				await refetchWallet();
+					// Success - refetch all related data
+					console.log(
+						"Refetching wallet and request data after payment..."
+					);
+					await refetchWallet();
 
-				// Use the already calculated totalAmount for display
-				const formattedAmount =
-					new Intl.NumberFormat("vi-VN", {
-						style: "decimal",
-						minimumFractionDigits: 0,
-					}).format(totalAmount) + " VNĐ";
+					// Also refetch the request data to update order status
+					if (refetch) {
+						console.log("🔄 Immediate refetch after payment...");
+						const updatedData = await refetch();
+						console.log(
+							"Updated request data:",
+							JSON.stringify(updatedData?.data, null, 2)
+						);
 
-				// Navigate to success payment screen
-				navigation.navigate("SuccessPaymentScreen", {
-					paymentMethod: selectedPaymentMethod,
-					amount: formattedAmount,
-					requestId: displayData?.id,
-					orderId: result?.orderId || result?.id,
-				});
+						// Check if sub-request status was updated
+						const updatedSubRequest =
+							updatedData?.data?.subRequests?.find(
+								(sr) => sr.id === subRequestData.id
+							);
+						if (updatedSubRequest) {
+							console.log("✅ Updated sub-request found:", {
+								id: updatedSubRequest.id,
+								oldStatus: subRequestData.status,
+								newStatus: updatedSubRequest.status,
+								statusChanged:
+									subRequestData.status !==
+									updatedSubRequest.status,
+							});
+						} else {
+							console.log(
+								"❌ Sub-request not found in updated data!"
+							);
+						}
+					}
+
+					// Multiple delayed refetches to ensure server-side processing is complete
+					setTimeout(async () => {
+						console.log("First delayed refetch (2s)...");
+						await refetchWallet();
+						if (refetch) {
+							await refetch();
+						}
+					}, 2000);
+
+					setTimeout(async () => {
+						console.log("Second delayed refetch (5s)...");
+						await refetchWallet();
+						if (refetch) {
+							await refetch();
+						}
+					}, 5000);
+
+					setTimeout(async () => {
+						console.log("Final delayed refetch (10s)...");
+						await refetchWallet();
+						if (refetch) {
+							const finalData = await refetch();
+							console.log("Final refetch result:");
+
+							// Check final sub-request status
+							const finalSubRequest =
+								finalData?.data?.subRequests?.find(
+									(sr) => sr.id === subRequestData.id
+								);
+							if (finalSubRequest) {
+								console.log("🔍 Final sub-request status:", {
+									id: finalSubRequest.id,
+									status: finalSubRequest.status,
+									isPaid: finalSubRequest.status === "PAID",
+									platform: finalSubRequest.ecommercePlatform,
+								});
+
+								if (finalSubRequest.status !== "PAID") {
+									console.warn(
+										"⚠️ Sub-request status is still not 'PAID' after 10s. API might need more time or there's an issue."
+									);
+								}
+							}
+						}
+					}, 10000);
+
+					const formattedAmount =
+						totalAmount.toLocaleString("vi-VN") + " VNĐ";
+					navigation.navigate("SuccessPaymentScreen", {
+						paymentMethod: selectedPaymentMethod,
+						amount: formattedAmount,
+						requestId: displayData?.id,
+						orderId: response?.orderId || response?.id,
+					});
+				} else {
+					// VNPay payment - navigate to VNPay gateway
+					console.log("💳 VNPay response:", response);
+					if (response.url) {
+						console.log(
+							"🔗 Redirecting to VNPay URL:",
+							response.url
+						);
+						navigation.navigate("VNPayGateWay", {
+							url: response.url,
+						});
+					} else {
+						console.error("❌ No VNPay URL in response");
+						Alert.alert(
+							"Lỗi thanh toán",
+							"Không nhận được URL thanh toán từ VNPay"
+						);
+					}
+				}
 			} catch (error) {
 				console.error("Checkout error:", error);
+				console.error("Error details:", {
+					status: error?.status,
+					data: error?.data,
+					message: error?.message,
+					originalStatus: error?.originalStatus,
+				});
 				Alert.alert(
 					"Lỗi thanh toán",
 					error?.data?.message ||
@@ -396,10 +737,58 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 					{/* Quotation */}
 					<View style={styles.section}>
+						{/* Shipping Section for Offline Requests - moved to top */}
+						{(() => {
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest) {
+								return (
+									<View style={styles.shippingSection}>
+										<Text
+											style={styles.shippingSectionTitle}
+										>
+											Phương thức vận chuyển
+										</Text>
+										<TouchableOpacity
+											style={styles.shippingSelectButton}
+											onPress={handleSelectShipping}
+										>
+											<Text
+												style={
+													styles.shippingSelectText
+												}
+											>
+												{selectedShipping
+													? `${
+															selectedShipping.serviceName
+													  } - ${Math.round(
+															selectedShipping.totalCost
+													  ).toLocaleString(
+															"vi-VN"
+													  )} VNĐ`
+													: "Chọn phương thức vận chuyển"}
+											</Text>
+											<Ionicons
+												name="chevron-forward"
+												size={20}
+												color="#666"
+											/>
+										</TouchableOpacity>
+									</View>
+								);
+							}
+							return null;
+						})()}
+
 						<Text style={styles.sectionTitle}>
-							Chi tiết báo giá (
-							{selectedSubRequest?.requestItems?.length || 0} sản
-							phẩm)
+							<Text>Thông tin sản phẩm (</Text>
+							<Text>
+								{selectedSubRequest?.requestItems?.length || 0}
+							</Text>
+							<Text> sản phẩm)</Text>
 						</Text>
 						{(() => {
 							// Check if we have quotations
@@ -417,199 +806,509 @@ export default function ConfirmQuotation({ navigation, route }) {
 							}
 
 							// Display all quotations in the sub-request
+							// Check if this is an offline request
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest) {
+								// Simple display - just product name and total price
+								return (
+									<>
+										{selectedSubRequest.requestItems.map(
+											(item, index) => {
+												const quotationDetail =
+													item.quotationDetail;
+												const totalPrice =
+													quotationDetail?.totalVNDPrice ||
+													0;
+
+												return (
+													<View
+														key={index}
+														style={
+															styles.simpleQuotationItem
+														}
+													>
+														<View
+															style={
+																styles.productRow
+															}
+														>
+															{/* Product Image */}
+															<View
+																style={
+																	styles.productImageContainer
+																}
+															>
+																{item.images &&
+																item.images
+																	.length >
+																	0 ? (
+																	<Image
+																		source={{
+																			uri: item
+																				.images[0],
+																		}}
+																		style={
+																			styles.productImage
+																		}
+																		resizeMode="cover"
+																	/>
+																) : (
+																	<View
+																		style={
+																			styles.placeholderImage
+																		}
+																	>
+																		<Ionicons
+																			name="image-outline"
+																			size={
+																				24
+																			}
+																			color="#999"
+																		/>
+																	</View>
+																)}
+															</View>
+
+															{/* Product Info */}
+															<View
+																style={
+																	styles.productInfo
+																}
+															>
+																<Text
+																	style={
+																		styles.simpleProductName
+																	}
+																>
+																	{item.productName ||
+																		item.name ||
+																		`Sản phẩm ${
+																			index +
+																			1
+																		}`}
+																</Text>
+															</View>
+
+															{/* Price */}
+															<View
+																style={
+																	styles.priceContainer
+																}
+															>
+																{quotationDetail ? (
+																	<Text
+																		style={
+																			styles.totalPrice
+																		}
+																	>
+																		{totalPrice.toLocaleString(
+																			"vi-VN"
+																		)}{" "}
+																		VNĐ
+																	</Text>
+																) : (
+																	<Text
+																		style={
+																			styles.noQuotationText
+																		}
+																	>
+																		Chưa có
+																		báo giá
+																	</Text>
+																)}
+															</View>
+														</View>
+													</View>
+												);
+											}
+										)}
+									</>
+								);
+							}
+
+							// For online requests, use simple layout like offline
 							return (
 								<>
 									{selectedSubRequest.requestItems.map(
 										(item, index) => {
 											const quotationDetail =
 												item.quotationDetail;
-
-											if (!quotationDetail) {
-												return (
-													<View
-														key={index}
-														style={
-															styles.quotationItem
-														}
-													>
-														<Text
-															style={
-																styles.productName
-															}
-														>
-															{item.productName ||
-																item.name ||
-																`Sản phẩm ${
-																	index + 1
-																}`}
-														</Text>
-														<Text
-															style={
-																styles.noQuotationText
-															}
-														>
-															Chưa có báo giá
-														</Text>
-													</View>
-												);
-											}
-
-											// Check if this quotation is expired
-											const isExpired =
-												isQuotationExpired(
-													quotationDetail
-												);
-
-											// Extract values from quotationDetail
-											const basePrice =
-												quotationDetail?.basePrice || 0;
-											const serviceFee =
-												quotationDetail?.serviceFee ||
-												0;
-											const totalTaxAmount =
-												quotationDetail?.totalTaxAmount ||
-												0;
-											const totalVNDPrice =
+											const totalPrice =
 												quotationDetail?.totalVNDPrice ||
 												0;
-											const exchangeRate =
-												quotationDetail?.exchangeRate ||
-												1;
-											const currency =
-												quotationDetail?.currency ||
-												"USD";
-											const expiryDate =
-												quotationDetail.expiryDate ||
-												quotationDetail.expiredAt ||
-												quotationDetail.validUntil;
 
 											return (
 												<View
 													key={index}
-													style={[
-														styles.quotationItem,
-														isExpired &&
-															styles.expiredQuotation,
-													]}
+													style={
+														styles.simpleQuotationItem
+													}
 												>
 													<View
 														style={
-															styles.quotationHeader
+															styles.productRow
 														}
 													>
-														<Text
+														{/* Product Image */}
+														<View
 															style={
-																styles.productName
+																styles.productImageContainer
 															}
 														>
-															{item.productName ||
-																item.name ||
-																`Sản phẩm ${
-																	index + 1
-																}`}
-														</Text>
-														{isExpired && (
-															<View
-																style={
-																	styles.expiredBadge
-																}
-															>
-																<Text
+															{item.images &&
+															item.images.length >
+																0 ? (
+																<Image
+																	source={{
+																		uri: item
+																			.images[0],
+																	}}
 																	style={
-																		styles.expiredText
+																		styles.productImage
+																	}
+																	resizeMode="cover"
+																/>
+															) : (
+																<View
+																	style={
+																		styles.placeholderImage
 																	}
 																>
-																	Hết hạn
-																</Text>
-															</View>
-														)}
-													</View>
-
-													{expiryDate && (
-														<Text
-															style={[
-																styles.expiryText,
-																isExpired &&
-																	styles.expiredDate,
-															]}
-														>
-															Hạn báo giá:{" "}
-															{formatDate(
-																expiryDate
+																	<Ionicons
+																		name="image-outline"
+																		size={
+																			24
+																		}
+																		color="#999"
+																	/>
+																</View>
 															)}
-														</Text>
-													)}
+														</View>
 
-													<QuotationCard
-														originalProductPrice={
-															basePrice
-														}
-														originalCurrency={
-															currency
-														}
-														exchangeRate={
-															exchangeRate
-														}
-														productPrice={Math.round(
-															basePrice *
-																exchangeRate
-														)}
-														serviceFee={Math.round(
-															serviceFee *
-																exchangeRate
-														)}
-														serviceFeePercent={
-															serviceFee
-														}
-														internationalShipping={
-															0
-														}
-														importTax={Math.round(
-															totalTaxAmount *
-																exchangeRate
-														)}
-														domesticShipping={0}
-														totalAmount={Math.round(
-															totalVNDPrice
-														)}
-														isExpanded={true}
-													/>
+														{/* Product Info */}
+														<View
+															style={
+																styles.productInfo
+															}
+														>
+															<Text
+																style={
+																	styles.simpleProductName
+																}
+															>
+																{item.productName ||
+																	item.name ||
+																	`Sản phẩm ${
+																		index +
+																		1
+																	}`}
+															</Text>
+														</View>
+
+														{/* Price */}
+														<View
+															style={
+																styles.priceContainer
+															}
+														>
+															{quotationDetail ? (
+																<Text
+																	style={
+																		styles.totalPrice
+																	}
+																>
+																	{totalPrice.toLocaleString(
+																		"vi-VN"
+																	)}{" "}
+																	VNĐ
+																</Text>
+															) : (
+																<Text
+																	style={
+																		styles.noQuotationText
+																	}
+																>
+																	Chưa có báo
+																	giá
+																</Text>
+															)}
+														</View>
+													</View>
 												</View>
 											);
 										}
 									)}
 
-									{/* Total amount for all quotations */}
-									<View style={styles.totalSummary}>
-										<View style={styles.totalRow}>
-											<Text style={styles.totalLabel}>
-												Tổng cộng (
-												{
-													selectedSubRequest
-														.requestItems.length
-												}{" "}
-												sản phẩm):
-											</Text>
-											<Text style={styles.totalAmount}>
-												{selectedSubRequest.requestItems
-													.reduce((total, item) => {
-														return (
-															total +
-															(item
-																.quotationDetail
-																?.totalVNDPrice ||
-																0)
-														);
-													}, 0)
-													.toLocaleString(
-														"vi-VN"
-													)}{" "}
-												VND
-											</Text>
-										</View>
+									{/* Shipping Fee */}
+									<View style={styles.shippingContainer}>
+										<Text style={styles.shippingLabel}>
+											Phí vận chuyển:
+										</Text>
+										<Text style={styles.shippingValue}>
+											{(() => {
+												const requestType =
+													displayData?.requestType ||
+													displayData?.type;
+												const isOfflineRequest =
+													requestType?.toLowerCase() ===
+													"offline";
+
+												let shippingCost = 0;
+												if (
+													isOfflineRequest &&
+													selectedShipping
+												) {
+													shippingCost =
+														selectedShipping.totalCost ||
+														0;
+												} else {
+													shippingCost =
+														selectedSubRequest
+															?.quotationForPurchase
+															?.shippingEstimate ||
+														0;
+												}
+
+												return `${Math.round(
+													shippingCost
+												).toLocaleString("vi-VN")} VNĐ`;
+											})()}
+										</Text>
 									</View>
+
+									{/* Total amount for all quotations - only for online requests */}
+									{!isOfflineRequest && (
+										<View style={styles.totalSummary}>
+											<View style={styles.totalRow}>
+												<Text style={styles.totalLabel}>
+													<Text>Tổng cộng (</Text>
+													<Text>
+														{
+															selectedSubRequest
+																.requestItems
+																.length
+														}
+													</Text>
+													<Text> sản phẩm):</Text>
+												</Text>
+												<Text
+													style={styles.totalAmount}
+												>
+													<Text>
+														{Math.round(
+															calculateTotalAmount(
+																selectedSubRequest
+															)
+														).toLocaleString(
+															"vi-VN"
+														)}
+													</Text>
+													<Text> VNĐ</Text>
+												</Text>
+											</View>
+										</View>
+									)}
 								</>
 							);
+						})()}
+
+						{/* Payment Summary Section for offline requests with selected shipping */}
+						{(() => {
+							const requestType =
+								displayData?.requestType || displayData?.type;
+							const isOfflineRequest =
+								requestType?.toLowerCase() === "offline";
+
+							if (isOfflineRequest && selectedShipping) {
+								// Debug logging to check data
+								console.log("=== PAYMENT SUMMARY DEBUG ===");
+								console.log(
+									"selectedSubRequest:",
+									selectedSubRequest
+								);
+								console.log(
+									"quotationForPurchase:",
+									selectedSubRequest?.quotationForPurchase
+								);
+								console.log(
+									"quotationDetails:",
+									selectedSubRequest?.quotationForPurchase
+										?.quotationDetails
+								);
+								console.log(
+									"requestItems:",
+									selectedSubRequest?.requestItems
+								);
+								console.log(
+									"totalPriceEstimate from quotationForPurchase:",
+									selectedSubRequest?.quotationForPurchase
+										?.totalPriceEstimate
+								);
+
+								// Check individual item quotationDetail
+								if (selectedSubRequest?.requestItems) {
+									selectedSubRequest.requestItems.forEach(
+										(item, index) => {
+											console.log(
+												`Item ${index + 1}:`,
+												item.productName
+											);
+											console.log(
+												`Item ${
+													index + 1
+												} quotationDetail:`,
+												item.quotationDetail
+											);
+										}
+									);
+								}
+
+								// Calculate subtotal from quotations
+								let subtotal = 0;
+
+								// Try method 1: Use totalPriceEstimate from quotationForPurchase
+								if (
+									selectedSubRequest?.quotationForPurchase
+										?.totalPriceEstimate
+								) {
+									subtotal =
+										selectedSubRequest.quotationForPurchase
+											.totalPriceEstimate;
+									console.log(
+										"Using totalPriceEstimate:",
+										subtotal
+									);
+								}
+								// Try method 2: Sum from individual item quotationDetail
+								else if (selectedSubRequest?.requestItems) {
+									subtotal =
+										selectedSubRequest.requestItems.reduce(
+											(sum, item) => {
+												const itemTotal =
+													item.quotationDetail
+														?.totalPrice || 0;
+												console.log(
+													`Item "${item.productName}" total:`,
+													itemTotal
+												);
+												return sum + itemTotal;
+											},
+											0
+										);
+									console.log(
+										"Calculated from individual items:",
+										subtotal
+									);
+								}
+								// Try method 3: quotationDetails array (original approach)
+								else if (
+									selectedSubRequest?.quotationForPurchase
+										?.quotationDetails
+								) {
+									const details =
+										selectedSubRequest.quotationForPurchase
+											.quotationDetails;
+									console.log(
+										"Processing quotation details:",
+										details
+									);
+
+									subtotal = details.reduce((sum, detail) => {
+										console.log(
+											"Detail:",
+											detail,
+											"totalPrice:",
+											detail.totalPrice
+										);
+										return sum + (detail.totalPrice || 0);
+									}, 0);
+								}
+
+								const shippingCost =
+									selectedShipping.totalCost || 0;
+								const totalAmount = subtotal + shippingCost;
+
+								console.log("Final calculations:");
+								console.log("subtotal:", subtotal);
+								console.log("shippingCost:", shippingCost);
+								console.log("totalAmount:", totalAmount);
+								console.log("=== END DEBUG ===");
+
+								return (
+									<View style={styles.paymentSummarySection}>
+										<Text style={styles.sectionTitle}>
+											Chi tiết thanh toán
+										</Text>
+										<View style={styles.paymentSummaryCard}>
+											<View style={styles.summaryRow}>
+												<Text
+													style={styles.summaryLabel}
+												>
+													Tổng tiền hàng
+												</Text>
+												<Text
+													style={styles.summaryValue}
+												>
+													{Math.round(
+														subtotal
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+											<View style={styles.summaryRow}>
+												<Text
+													style={styles.summaryLabel}
+												>
+													Phí vận chuyển
+												</Text>
+												<Text
+													style={styles.summaryValue}
+												>
+													{Math.round(
+														shippingCost
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+											<View
+												style={styles.summaryDivider}
+											/>
+											<View
+												style={styles.summaryTotalRow}
+											>
+												<Text
+													style={
+														styles.summaryTotalLabel
+													}
+												>
+													Tổng thanh toán
+												</Text>
+												<Text
+													style={
+														styles.summaryTotalValue
+													}
+												>
+													{Math.round(
+														totalAmount
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+										</View>
+									</View>
+								);
+							}
+							return null;
 						})()}
 					</View>
 				</ScrollView>
@@ -657,7 +1356,7 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		paddingHorizontal: 18,
 		paddingVertical: 10,
-		paddingBottom: 100, // Space for fixed button
+		paddingBottom: 100,
 	},
 	section: {
 		marginBottom: 16,
@@ -883,13 +1582,34 @@ const styles = StyleSheet.create({
 		color: "#E53E3E",
 		fontWeight: "600",
 	},
+	shippingContainer: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 12,
+		marginTop: 12,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingLabel: {
+		fontSize: 15,
+		fontWeight: "500",
+		color: "#333",
+	},
+	shippingValue: {
+		fontSize: 15,
+		fontWeight: "600",
+		color: "#666",
+	},
 	totalSummary: {
 		backgroundColor: "#F8F9FA",
 		borderRadius: 8,
 		padding: 16,
 		marginTop: 12,
-		borderWidth: 2,
-		borderColor: "#1976D2",
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
 	},
 	totalRow: {
 		flexDirection: "row",
@@ -904,6 +1624,141 @@ const styles = StyleSheet.create({
 	totalAmount: {
 		fontSize: 18,
 		fontWeight: "700",
-		color: "#1976D2",
+		color: "#E53E3E",
+	},
+	// Shipping section styles
+	shippingSection: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 10,
+		marginBottom: 16,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	shippingSectionTitle: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#333",
+		marginBottom: 16,
+	},
+	shippingSelectButton: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		backgroundColor: "#F8F9FA",
+		borderRadius: 8,
+		padding: 10,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+		minHeight: 50,
+	},
+	shippingSelectText: {
+		fontSize: 16,
+		color: "#333",
+		fontWeight: "600",
+		flex: 1,
+		marginRight: 8,
+	},
+	// Payment Summary Section styles
+	paymentSummarySection: {
+		marginBottom: 16,
+	},
+	paymentSummaryCard: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	summaryRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+	},
+	summaryLabel: {
+		fontSize: 15,
+		color: "#666",
+		fontWeight: "500",
+	},
+	summaryValue: {
+		fontSize: 15,
+		color: "#333",
+		fontWeight: "600",
+	},
+	summaryDivider: {
+		height: 1,
+		backgroundColor: "#E5E5E5",
+		marginVertical: 8,
+	},
+	summaryTotalRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 8,
+	},
+	summaryTotalLabel: {
+		fontSize: 16,
+		color: "#333",
+		fontWeight: "600",
+	},
+	summaryTotalValue: {
+		fontSize: 18,
+		color: "#E53E3E",
+		fontWeight: "700",
+	},
+	// Simple quotation item styles
+	simpleQuotationItem: {
+		backgroundColor: "#FFFFFF",
+		borderRadius: 8,
+		padding: 16,
+		marginBottom: 8,
+		borderWidth: 1,
+		borderColor: "#E5E5E5",
+	},
+	productRow: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+	},
+	productImageContainer: {
+		marginRight: 12,
+	},
+	productImage: {
+		width: 50,
+		height: 50,
+		borderRadius: 8,
+	},
+	placeholderImage: {
+		width: 50,
+		height: 50,
+		borderRadius: 8,
+		backgroundColor: "#F5F5F5",
+		justifyContent: "center",
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#E0E0E0",
+	},
+	productInfo: {
+		flex: 1,
+		marginRight: 12,
+	},
+	simpleProductName: {
+		fontSize: 14,
+		fontWeight: "500",
+		color: "#333",
+		lineHeight: 20,
+		flexWrap: "wrap",
+	},
+	priceContainer: {
+		alignItems: "flex-end",
+		minWidth: 80,
+		flexShrink: 0,
+	},
+	totalPrice: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#E53E3E",
+		textAlign: "right",
+		flexWrap: "wrap",
 	},
 });

@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+	KeyboardAvoidingView,
+	Platform,
+	ScrollView,
+	StyleSheet,
+	TouchableOpacity,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Header from "../../components/header";
 import LinkCard from "../../components/link-card";
@@ -39,6 +46,10 @@ export default function WithLink({ navigation }) {
 		if (urlLower.includes("amazon")) return "Amazon";
 		if (urlLower.includes("aliexpress")) return "AliExpress";
 		if (urlLower.includes("ebay")) return "eBay";
+		if (urlLower.includes("asos")) return "ASOS";
+		if (urlLower.includes("dhgate")) return "DHgate";
+		if (urlLower.includes("gmarket")) return "Gmarket";
+		if (urlLower.includes("shein")) return "Shein";
 		if (urlLower.includes("shopee")) return "Shopee";
 		if (urlLower.includes("lazada")) return "Lazada";
 		if (urlLower.includes("tiki")) return "Tiki";
@@ -323,7 +334,11 @@ export default function WithLink({ navigation }) {
 	};
 
 	return (
-		<View style={styles.container}>
+		<KeyboardAvoidingView
+			style={styles.container}
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
+			keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+		>
 			{/* Header */}
 			<Header
 				title="Dán link sản phẩm"
@@ -358,10 +373,10 @@ export default function WithLink({ navigation }) {
 				]}
 				bounces={true}
 				alwaysBounceVertical={false}
-				keyboardShouldPersistTaps="always"
-				keyboardDismissMode="none"
+				keyboardShouldPersistTaps="handled"
+				keyboardDismissMode="interactive"
 				nestedScrollEnabled={true}
-				automaticallyAdjustKeyboardInsets={false}
+				automaticallyAdjustKeyboardInsets={true}
 			>
 				{/* Collapsible Instructions */}
 				{showInstructions && (
@@ -472,7 +487,7 @@ export default function WithLink({ navigation }) {
 					</LinearGradient>
 				</TouchableOpacity>
 			</View>
-		</View>
+		</KeyboardAvoidingView>
 	);
 }
 
@@ -592,13 +607,9 @@ const styles = StyleSheet.create({
 		fontWeight: "500",
 	},
 	bottomContainer: {
-		position: "absolute",
-		bottom: 0,
-		left: 0,
-		right: 0,
 		backgroundColor: "#FFFFFF",
-		paddingHorizontal: 20,
-		paddingVertical: 16, // Reduce vertical padding slightly
+		paddingHorizontal: 18,
+		paddingVertical: 12,
 		borderTopWidth: 1,
 		borderTopColor: "#E8F2FF",
 		shadowColor: "#000",
@@ -617,7 +628,7 @@ const styles = StyleSheet.create({
 		elevation: 4,
 	},
 	buttonGradient: {
-		paddingVertical: 16,
+		paddingVertical: 15,
 		alignItems: "center",
 		justifyContent: "center",
 		flexDirection: "row",
@@ -626,6 +637,6 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: "600",
 		color: "#FFFFFF",
-		marginLeft: 8,
+		marginLeft: 4,
 	},
 });

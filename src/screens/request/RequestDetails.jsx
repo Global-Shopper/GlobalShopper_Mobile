@@ -11,23 +11,165 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
-import { Text } from "../../components/ui/text";
+import RequestActionButtons from "../../components/request-details/RequestActionButtons";
 import RequestDetailHeader from "../../components/request-details/RequestDetailHeader";
 import RequestDetailsInfo from "../../components/request-details/RequestDetailsInfo";
 import SubRequestItem from "../../components/request-details/SubRequestItem";
-import RequestActionButtons from "../../components/request-details/RequestActionButtons";
-import { useGetPurchaseRequestByIdQuery } from "../../services/gshopApi";
+import { Text } from "../../components/ui/text";
+import {
+	useGetAllOrdersQuery,
+	useGetPurchaseRequestByIdQuery,
+} from "../../services/gshopApi";
 import { shouldShowQuotation } from "../../utils/statusHandler";
 
 // Helper function to check if request/sub-request is completed/paid
-const isRequestCompleted = (status) => {
+const isRequestCompleted = (
+	subRequest,
+	ordersData = null,
+	requestData = null
+) => {
+	if (!subRequest) return false;
+
+	// First check: If sub-request is rejected, it's definitely not completed
+	const currentStatus =
+		subRequest.status || subRequest.orderStatus || subRequest.paymentStatus;
+	const currentNormalizedStatus = currentStatus?.toLowerCase();
+
+	if (
+		currentNormalizedStatus === "rejected" ||
+		currentNormalizedStatus === "cancelled"
+	) {
+		console.log("RequestDetails - Sub-request is rejected/cancelled:", {
+			subRequestId: subRequest.id,
+			status: subRequest.status,
+			rejectionReason: subRequest.rejectionReason,
+		});
+		return false;
+	}
+
+	// NEW: Quick check using paidCount - if 0, no payments made yet
+	if (requestData && requestData.paidCount === 0) {
+		console.log("RequestDetails - No payments made yet (paidCount: 0):", {
+			subRequestId: subRequest.id,
+			paidCount: requestData.paidCount,
+			status: subRequest.status,
+		});
+		return false;
+	}
+
+	// Primary check: If orderId exists, payment was successful
+	if (subRequest.orderId) {
+		console.log(
+			"RequestDetails - Payment completed (has orderId):",
+			subRequest.orderId
+		);
+		return true;
+	}
+
+	// NEW: Check if there's an order created for this sub-request
+	if (
+		ordersData?.content?.length > 0 &&
+		subRequest.requestItems?.length > 0
+	) {
+		console.log("RequestDetails - Checking orders for sub-request:", {
+			subRequestId: subRequest.id,
+			platform: subRequest.ecommercePlatform,
+			status: subRequest.status,
+			totalOrders: ordersData.content.length,
+			requestItemsCount: subRequest.requestItems.length,
+		});
+
+		const hasMatchingOrder = ordersData.content.some((order) => {
+			// Check if order has items matching this sub-request
+			if (!order.orderItems?.length) return false;
+
+			console.log("RequestDetails - Comparing order:", {
+				orderId: order.id,
+				orderStatus: order.status,
+				orderItemsCount: order.orderItems.length,
+				createdAt: order.createdAt,
+			});
+
+			return subRequest.requestItems.some((subRequestItem) => {
+				return order.orderItems.some((orderItem) => {
+					// Match by product URL or product name
+					const urlMatch =
+						subRequestItem.productURL &&
+						orderItem.productURL &&
+						subRequestItem.productURL === orderItem.productURL;
+					const nameMatch =
+						subRequestItem.productName &&
+						orderItem.productName &&
+						subRequestItem.productName === orderItem.productName;
+
+					if (urlMatch || nameMatch) {
+						console.log(
+							"✅ RequestDetails - Found matching order for sub-request:",
+							{
+								subRequestId: subRequest.id,
+								orderId: order.id,
+								orderStatus: order.status,
+								productMatch: urlMatch ? "URL" : "Name",
+								productURL: subRequestItem.productURL,
+								productName: subRequestItem.productName,
+							}
+						);
+						return true;
+					}
+					return false;
+				});
+			});
+		});
+
+		if (hasMatchingOrder) {
+			console.log(
+				"🎯 RequestDetails - Payment completed (has matching order):",
+				subRequest.id
+			);
+			return true;
+		} else {
+			console.log(
+				"❌ RequestDetails - No matching order found for sub-request:",
+				subRequest.id
+			);
+		}
+	}
+
+	// Secondary check: Check multiple possible status fields
+	const status =
+		subRequest.status ||
+		subRequest.orderStatus ||
+		subRequest.paymentStatus ||
+		subRequest?.quotationForPurchase?.status;
+
 	if (!status) return false;
+
 	const normalizedStatus = status.toLowerCase();
+
+	// Debug log to see actual status values
+	console.log("RequestDetails - isRequestCompleted check:", {
+		subRequestId: subRequest.id,
+		status: subRequest.status,
+		orderStatus: subRequest.orderStatus,
+		paymentStatus: subRequest.paymentStatus,
+		quotationStatus: subRequest?.quotationForPurchase?.status,
+		normalizedStatus: normalizedStatus,
+		orderId: subRequest.orderId,
+		hasOrderId: !!subRequest.orderId,
+	});
+
 	return (
 		normalizedStatus === "completed" ||
 		normalizedStatus === "paid" ||
 		normalizedStatus === "success" ||
-		normalizedStatus === "delivered"
+		normalizedStatus === "delivered" ||
+		// Additional statuses for orders after payment
+		normalizedStatus === "order_requested" ||
+		normalizedStatus === "purchased" ||
+		normalizedStatus === "confirmed" ||
+		normalizedStatus === "processing" ||
+		normalizedStatus === "awaiting_shipment" ||
+		normalizedStatus === "in_transit"
 	);
 };
 
@@ -50,6 +192,12 @@ export default function RequestDetails({ navigation, route }) {
 		refetchOnFocus: true,
 	});
 
+	// Fetch user orders to check for completed payments
+	const { data: ordersData } = useGetAllOrdersQuery({
+		page: 0,
+		size: 50, // Get recent orders to check payment status
+	});
+
 	// Refetch data when screen comes into focus
 	useFocusEffect(
 		useCallback(() => {
@@ -58,7 +206,14 @@ export default function RequestDetails({ navigation, route }) {
 					"[RequestDetails] Screen focused, refetching data for request:",
 					requestId
 				);
+				// Force refetch to ensure fresh data after payment
 				refetch();
+
+				// Also refetch with a delay to ensure server has processed the payment
+				setTimeout(() => {
+					console.log("[RequestDetails] Delayed refetch after focus");
+					refetch();
+				}, 1000);
 			}
 		}, [requestId, refetch])
 	);
@@ -154,10 +309,32 @@ export default function RequestDetails({ navigation, route }) {
 				.map((subRequest, subIndex) => {
 					if (!subRequest?.requestItems?.length) return null;
 
-					// Check if request or sub-request is completed/paid
-					const isCompleted =
-						isRequestCompleted(displayData?.status) ||
-						isRequestCompleted(subRequest?.status);
+					// Debug log sub-request data to understand status structure
+					console.log(
+						`RequestDetails - SubRequest ${subIndex} debug:`,
+						{
+							subRequestId: subRequest.id,
+							status: subRequest.status,
+							orderId: subRequest.orderId,
+							ecommercePlatform: subRequest.ecommercePlatform,
+							quotationForPurchase:
+								subRequest.quotationForPurchase,
+							fullSubRequest: subRequest,
+						}
+					);
+
+					// Check if this specific sub-request is completed/paid
+					// Pass ordersData and requestDetails to check for matching orders and paidCount
+					const isCompleted = isRequestCompleted(
+						subRequest,
+						ordersData,
+						requestDetails
+					);
+
+					console.log(
+						`SubRequest ${subIndex} (${subRequest.ecommercePlatform} - ${subRequest.id}) isCompleted:`,
+						isCompleted
+					);
 
 					return (
 						<SubRequestItem
@@ -294,6 +471,7 @@ export default function RequestDetails({ navigation, route }) {
 							product.productColor ||
 							parsedVariants.color
 						}
+						unit={product.unit || ""}
 						platform={product.platform || product.ecommercePlatform}
 						productLink={
 							product.productURL ||

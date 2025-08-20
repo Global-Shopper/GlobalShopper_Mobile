@@ -72,8 +72,6 @@ export default function AddAddress({ navigation }) {
 		}
 	}, [districtId]);
 
-	const [isEdited, setIsEdited] = useState(false);
-
 	const [createShippingAddress] = useCreateShippingAddressMutation();
 
 	const handleInputChange = (field, value) => {
@@ -81,7 +79,23 @@ export default function AddAddress({ navigation }) {
 			...prev,
 			[field]: value,
 		}));
-		setIsEdited(true);
+	};
+
+	// Validate form fields
+	const isFormValid = () => {
+		return (
+			formData.name.trim() !== "" &&
+			formData.phoneNumber.trim() !== "" &&
+			formData.houseNumber.trim() !== "" &&
+			formData.ward.trim() !== "" &&
+			formData.district.trim() !== "" &&
+			formData.province.trim() !== ""
+		);
+	};
+
+	// Check if form has been edited or is valid
+	const canSave = () => {
+		return isFormValid();
 	};
 
 	const handleSave = () => {
@@ -203,7 +217,6 @@ export default function AddAddress({ navigation }) {
 					primaryButton: {
 						text: "OK",
 						onPress: () => {
-							setIsEdited(false);
 							navigation.goBack();
 						},
 						style: "primary",
@@ -261,14 +274,14 @@ export default function AddAddress({ navigation }) {
 						onPress={handleSave}
 						style={[
 							styles.saveButton,
-							isEdited && styles.saveButtonActive,
+							canSave() && styles.saveButtonActive,
 						]}
-						disabled={!isEdited}
+						disabled={!canSave()}
 					>
 						<Text
 							style={[
 								styles.saveButtonText,
-								isEdited && styles.saveButtonTextActive,
+								canSave() && styles.saveButtonTextActive,
 							]}
 						>
 							Lưu
@@ -504,6 +517,26 @@ export default function AddAddress({ navigation }) {
 								}
 							/>
 						</View>
+
+						{/* Submit Button */}
+						<TouchableOpacity
+							style={[
+								styles.submitButton,
+								!isFormValid() && styles.submitButtonDisabled,
+							]}
+							onPress={handleSave}
+							disabled={!isFormValid()}
+						>
+							<Text
+								style={[
+									styles.submitButtonText,
+									!isFormValid() &&
+										styles.submitButtonTextDisabled,
+								]}
+							>
+								Thêm địa chỉ mới
+							</Text>
+						</TouchableOpacity>
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
@@ -653,5 +686,31 @@ const styles = StyleSheet.create({
 	switchSubtitle: {
 		fontSize: 13,
 		color: "#78909C",
+	},
+	submitButton: {
+		backgroundColor: "#42A5F5",
+		paddingVertical: 16,
+		borderRadius: 12,
+		alignItems: "center",
+		marginTop: 24,
+		marginBottom: 16,
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	submitButtonDisabled: {
+		backgroundColor: "#E0E0E0",
+		shadowOpacity: 0,
+		elevation: 0,
+	},
+	submitButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#FFFFFF",
+	},
+	submitButtonTextDisabled: {
+		color: "#9E9E9E",
 	},
 });

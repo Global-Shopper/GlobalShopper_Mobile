@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Text } from "./ui/text";
 
@@ -8,13 +7,30 @@ interface QuotationCardProps {
 	originalCurrency?: string;
 	exchangeRate?: number;
 
-	// VND converted prices
+	// USD prices for fees
+	originalServiceFee?: number;
+	originalShipping?: number;
+
+	// VND converted prices (remove defaults)
 	productPrice?: number;
 	serviceFee?: number;
 	serviceFeePercent?: number;
 	internationalShipping?: number;
 	importTax?: number;
 	domesticShipping?: number;
+
+	// Dynamic fees from admin
+	adminFees?: {
+		feeName: string;
+		amount: number;
+		currency: string;
+	}[];
+
+	// New props for API data
+	totalVNDPrice?: number;
+	totalPriceEstimate?: number;
+	totalPriceBeforeExchange?: number;
+	shippingEstimate?: number;
 
 	// Tax details
 	taxDetails?: {
@@ -50,13 +66,26 @@ export default function QuotationCard({
 	originalCurrency = "USD",
 	exchangeRate = 1,
 
-	// VND converted prices
-	productPrice = 1200000,
-	serviceFee = 60000,
-	serviceFeePercent = 5,
-	internationalShipping = 200000,
-	importTax = 120000,
-	domesticShipping = 35000,
+	// USD prices for fees
+	originalServiceFee,
+	originalShipping,
+
+	// VND converted prices (no defaults)
+	productPrice,
+	serviceFee,
+	serviceFeePercent = 0,
+	internationalShipping,
+	importTax,
+	domesticShipping,
+
+	// Dynamic fees from admin
+	adminFees,
+
+	// New props for API data
+	totalVNDPrice,
+	totalPriceEstimate,
+	totalPriceBeforeExchange,
+	shippingEstimate: shippingFromProps,
 
 	// Tax details
 	taxDetails,
@@ -65,374 +94,123 @@ export default function QuotationCard({
 	taxRates,
 
 	additionalFees,
-	totalAmount = 1615000,
+	totalAmount,
 	updatedTotalAmount,
 	isExpanded = false,
 }: QuotationCardProps) {
-	const formatCurrency = (amount: number) => {
-		return `${amount.toLocaleString("vi-VN")} VND`;
+	const formatCurrency = (amount: number): string => {
+		return amount.toLocaleString("vi-VN");
 	};
 
-	const formatOriginalCurrency = (amount: number, currency: string) => {
-		return `${amount.toLocaleString("en-US")} ${currency}`;
+	const formatOriginalCurrency = (
+		amount: number,
+		currency: string = "CNY"
+	): string => {
+		return `${amount.toLocaleString("vi-VN")} ${currency}`;
 	};
-
-	const formatExchangeRate = (rate: number, currency: string) => {
-		return `1 ${currency} = ${rate.toLocaleString("vi-VN")} VND`;
-	};
-
-	const totalDifference = additionalFees
-		? (additionalFees.importTaxIncrease || 0) +
-		  (additionalFees.shippingIncrease || 0)
-		: 0;
 
 	return (
 		<View style={styles.container}>
 			{/* Header */}
 			<View style={styles.header}>
 				<View style={styles.headerLeft}>
-					<Ionicons
-						name="receipt-outline"
-						size={20}
-						color="#1976D2"
-					/>
 					<Text style={styles.headerTitle}>Báo giá chi tiết</Text>
 				</View>
 			</View>
 
 			<View style={styles.content}>
-				{/* Exchange Rate Section */}
-				{originalProductPrice && exchangeRate > 1 && (
-					<>
-						<View style={styles.exchangeSection}>
-							<View style={styles.exchangeRow}>
-								<View style={styles.exchangeLeft}>
-									<Ionicons
-										name="swap-horizontal-outline"
-										size={16}
-										color="#1976D2"
-									/>
-									<Text style={styles.exchangeTitle}>
-										Tỷ giá:
-									</Text>
-								</View>
-								<Text style={styles.exchangeRate}>
-									{formatExchangeRate(
-										exchangeRate,
-										originalCurrency
-									)}
-								</Text>
-							</View>
-						</View>
-						<View style={styles.divider} />
-					</>
-				)}
-
 				{/* Basic Pricing */}
 				<View style={styles.section}>
-					{/* Product Price */}
+					{/* Product Price - Show original currency */}
 					<View style={styles.priceRow}>
 						<Text style={styles.label}>Giá sản phẩm:</Text>
-						<View style={styles.priceColumn}>
-							{originalProductPrice && (
-								<Text style={styles.originalPrice}>
-									{formatOriginalCurrency(
+						<Text style={styles.value}>
+							{originalProductPrice
+								? formatOriginalCurrency(
 										originalProductPrice,
 										originalCurrency
-									)}
-								</Text>
-							)}
-							<Text style={styles.value}>
-								{formatCurrency(productPrice)}
-							</Text>
-						</View>
+								  )
+								: productPrice
+								? formatCurrency(productPrice) + " VNĐ"
+								: "0 VNĐ"}
+						</Text>
 					</View>
 
+					{/* Service Fee - Show original currency only */}
 					<View style={styles.priceRow}>
 						<Text style={styles.label}>
 							Phí dịch vụ ({serviceFeePercent}%):
 						</Text>
 						<Text style={styles.value}>
-							{formatCurrency(serviceFee)}
+							{originalServiceFee
+								? formatOriginalCurrency(
+										originalServiceFee,
+										originalCurrency
+								  )
+								: "0 " + originalCurrency}
 						</Text>
 					</View>
 
-					{/* Tax Details Section */}
-					{taxRates && taxRates.length > 0 ? (
-						<>
-							<View style={styles.taxHeaderCompact}>
-								<View style={styles.taxHeaderLeft}>
-									<Ionicons
-										name="document-text-outline"
-										size={16}
-										color="#ff9800"
-									/>
-									<Text style={styles.taxTitle}>
-										Chi tiết thuế nhập khẩu
-									</Text>
-								</View>
-							</View>
-
-							{taxRates.map((tax, index) => (
-								<View key={index} style={styles.taxRowCompact}>
-									<Text style={styles.taxLabelCompact}>
-										• {tax.taxName} ({tax.rate}%)
-									</Text>
-									<Text style={styles.taxValueCompact}>
-										{formatCurrency(
-											Math.round(
-												(productPrice * tax.rate) / 100
-											)
-										)}
-									</Text>
-								</View>
-							))}
-
-							<View style={styles.taxTotalRowCompact}>
-								<Text style={styles.taxTotalLabel}>
-									Tổng thuế nhập khẩu
-								</Text>
-								<Text style={styles.taxTotalValue}>
-									{formatCurrency(importTax)}
-								</Text>
-							</View>
-						</>
-					) : taxDetails ? (
-						<>
-							<View style={styles.taxHeader}>
-								<Ionicons
-									name="document-text-outline"
-									size={16}
-									color="#ff9800"
-								/>
-								<Text style={styles.taxTitle}>
-									Chi tiết thuế nhập khẩu
-								</Text>
-							</View>
-
-							{taxDetails.importDuty &&
-								taxDetails.importDuty > 0 && (
-									<View style={styles.taxRow}>
-										<Text style={styles.taxLabel}>
-											• Thuế nhập khẩu:
-										</Text>
-										<Text style={styles.taxValue}>
-											{formatCurrency(
-												taxDetails.importDuty
-											)}
-										</Text>
-									</View>
-								)}
-
-							{taxDetails.vat && taxDetails.vat > 0 && (
-								<View style={styles.taxRow}>
-									<Text style={styles.taxLabel}>
-										• Thuế VAT:
-									</Text>
-									<Text style={styles.taxValue}>
-										{formatCurrency(taxDetails.vat)}
-									</Text>
-								</View>
-							)}
-
-							{taxDetails.specialConsumptionTax &&
-								taxDetails.specialConsumptionTax > 0 && (
-									<View style={styles.taxRow}>
-										<Text style={styles.taxLabel}>
-											• Thuế tiêu thụ đặc biệt:
-										</Text>
-										<Text style={styles.taxValue}>
-											{formatCurrency(
-												taxDetails.specialConsumptionTax
-											)}
-										</Text>
-									</View>
-								)}
-
-							{taxDetails.environmentTax &&
-								taxDetails.environmentTax > 0 && (
-									<View style={styles.taxRow}>
-										<Text style={styles.taxLabel}>
-											• Thuế bảo vệ môi trường:
-										</Text>
-										<Text style={styles.taxValue}>
-											{formatCurrency(
-												taxDetails.environmentTax
-											)}
-										</Text>
-									</View>
-								)}
-
-							<View style={styles.taxTotalRow}>
-								<Text style={styles.taxTotalLabel}>
-									Tổng thuế nhập khẩu:
-								</Text>
-								<Text style={styles.taxTotalValue}>
-									{formatCurrency(
-										taxDetails.totalTaxAmount || importTax
-									)}
-								</Text>
-							</View>
-						</>
-					) : (
+					{/* Total before conversion - Make prominent with red color */}
+					{totalPriceBeforeExchange && (
 						<View style={styles.priceRow}>
 							<Text style={styles.label}>
-								Thuế nhập khẩu (ước tính):
+								Tổng trước quy đổi:
 							</Text>
-							<Text style={styles.value}>
-								{formatCurrency(importTax)}
-							</Text>
-						</View>
-					)}
-
-					{/* Shipping Fees Section */}
-					<View style={styles.shippingSection}>
-						<View style={styles.priceRow}>
-							<Text style={styles.label}>
-								Phí vận chuyển quốc tế (tạm tính):
-							</Text>
-							<Text style={styles.value}>
-								{formatCurrency(internationalShipping)}
-							</Text>
-						</View>
-
-						<View style={styles.priceRow}>
-							<Text style={styles.label}>
-								Phí giao hàng nội địa (tạm tính):
-							</Text>
-							<Text style={styles.value}>
-								{formatCurrency(domesticShipping)}
-							</Text>
-						</View>
-					</View>
-				</View>
-
-				{/* Divider */}
-				<View style={styles.divider} />
-
-				{/* Total Section */}
-				<View style={styles.totalSection}>
-					{/* Original Total (if applicable) */}
-					{originalProductPrice && exchangeRate > 1 && (
-						<View style={styles.originalTotalRow}>
-							<Text style={styles.originalTotalLabel}>
-								Tổng tiền gốc ({originalCurrency}):
-							</Text>
-							<Text style={styles.originalTotalValue}>
+							<Text style={[styles.value, styles.prominentValue]}>
 								{formatOriginalCurrency(
-									Math.round(totalAmount / exchangeRate),
+									totalPriceBeforeExchange,
 									originalCurrency
 								)}
 							</Text>
 						</View>
 					)}
+				</View>
 
-					{/* VND Total */}
+				<View style={styles.divider} />
+
+				{/* Admin Fees Section */}
+				{adminFees && adminFees.length > 0 && (
+					<View style={styles.section}>
+						{adminFees.map((fee, index) => (
+							<View key={index} style={styles.priceRow}>
+								<Text style={styles.label}>{fee.feeName}:</Text>
+								<Text style={styles.value}>
+									{formatCurrency(fee.amount || 0)}{" "}
+									{fee.currency}
+								</Text>
+							</View>
+						))}
+					</View>
+				)}
+
+				{/* Shipping Fee Section */}
+				{shippingFromProps && (
+					<View style={styles.section}>
+						<View style={styles.priceRow}>
+							<Text style={styles.label}>Phí vận chuyển:</Text>
+							<Text style={styles.value}>
+								{formatCurrency(shippingFromProps)} VNĐ
+							</Text>
+						</View>
+					</View>
+				)}
+
+				<View style={styles.divider} />
+
+				{/* Final Total Section */}
+				<View style={styles.totalSection}>
 					<View style={styles.totalRowCompact}>
-						<Text style={styles.totalLabelCompact}>
-							Tổng thanh toán (VND)
-						</Text>
+						<Text style={styles.totalLabelCompact}>Tổng tiền:</Text>
 						<Text style={styles.totalValue}>
-							{formatCurrency(updatedTotalAmount || totalAmount)}
+							{formatCurrency(
+								(totalPriceEstimate || totalVNDPrice || 0) +
+									(shippingFromProps || 0)
+							)}{" "}
+							VNĐ
 						</Text>
 					</View>
 				</View>
-
-				{/* Additional Fees Section */}
-				{additionalFees && (
-					<>
-						<View style={styles.additionalFeesSection}>
-							<Text style={styles.additionalFeesTitle}>
-								Phí phát sinh (nếu có)
-							</Text>
-
-							{additionalFees.actualImportTax && (
-								<View style={styles.additionalFeeRow}>
-									<Text style={styles.additionalFeeLabel}>
-										+ Thuế nhập khẩu chính thức:
-									</Text>
-									<View style={styles.additionalFeeValue}>
-										<Text style={styles.actualAmount}>
-											{formatCurrency(
-												additionalFees.actualImportTax
-											)}
-										</Text>
-										<Text style={styles.increaseAmount}>
-											(tăng{" "}
-											{formatCurrency(
-												additionalFees.importTaxIncrease ||
-													0
-											)}
-											)
-										</Text>
-									</View>
-								</View>
-							)}
-
-							{additionalFees.actualShipping && (
-								<View style={styles.additionalFeeRow}>
-									<Text style={styles.additionalFeeLabel}>
-										+ Phí vận chuyển thực tế:
-									</Text>
-									<View style={styles.additionalFeeValue}>
-										<Text style={styles.actualAmount}>
-											{formatCurrency(
-												additionalFees.actualShipping
-											)}
-										</Text>
-										<Text style={styles.increaseAmount}>
-											(tăng{" "}
-											{formatCurrency(
-												additionalFees.shippingIncrease ||
-													0
-											)}
-											)
-										</Text>
-									</View>
-								</View>
-							)}
-						</View>
-
-						{/* Additional Fees Divider */}
-						<View style={styles.divider} />
-
-						{/* Difference Total */}
-						<View style={styles.differenceSection}>
-							<View style={styles.differenceRow}>
-								<View style={styles.differenceLeft}>
-									<Text style={styles.differenceIcon}>
-										📌
-									</Text>
-									<Text style={styles.differenceLabel}>
-										Tổng chênh lệch:
-									</Text>
-								</View>
-								<Text
-									style={[
-										styles.differenceValue,
-										totalDifference > 0
-											? styles.positiveValue
-											: styles.negativeValue,
-									]}
-								>
-									{totalDifference > 0 ? "+" : ""}
-									{formatCurrency(totalDifference)}
-								</Text>
-							</View>
-
-							{updatedTotalAmount && (
-								<View style={styles.updatedTotalRow}>
-									<Text style={styles.updatedTotalLabel}>
-										Cập nhật tổng thanh toán:
-									</Text>
-									<Text style={styles.updatedTotalValue}>
-										{formatCurrency(updatedTotalAmount)}
-									</Text>
-								</View>
-							)}
-						</View>
-					</>
-				)}
 
 				{/* Note */}
 				<View style={styles.noteSection}>
@@ -449,7 +227,6 @@ export default function QuotationCard({
 const styles = StyleSheet.create({
 	container: {
 		backgroundColor: "#ffffff",
-		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: "#E5E5E5",
 		marginBottom: 5,
@@ -544,6 +321,10 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		color: "#333",
 		textAlign: "right",
+	},
+	prominentValue: {
+		color: "#D32F2F",
+		fontWeight: "700",
 	},
 	// Tax Details Section
 	taxHeader: {

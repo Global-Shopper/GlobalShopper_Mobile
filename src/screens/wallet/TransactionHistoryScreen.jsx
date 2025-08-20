@@ -528,14 +528,50 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 										style={[
 											styles.transactionAmount,
 											{
-												color:
-													transaction.amount > 0
+												color: (() => {
+													// Payment/purchase transactions should always be red (money going out)
+													if (
+														[
+															"payment",
+															"purchase",
+															"buy",
+															"order",
+															"checkout",
+															"pay",
+														].includes(
+															transaction.type
+														)
+													) {
+														return "#F44336"; // Red for payments
+													}
+													// For other transactions, use amount to determine color
+													return transaction.amount >
+														0
 														? "#4CAF50"
-														: "#F44336",
+														: "#F44336";
+												})(),
 											},
 										]}
 									>
-										{transaction.amount > 0 ? "+" : ""}
+										{(() => {
+											// Payment/purchase transactions should show minus sign
+											if (
+												[
+													"payment",
+													"purchase",
+													"buy",
+													"order",
+													"checkout",
+													"pay",
+												].includes(transaction.type)
+											) {
+												return "-"; // Always minus for payments
+											}
+											// For other transactions, show + for positive amounts
+											return transaction.amount > 0
+												? "+"
+												: "";
+										})()}
 										{formatCurrency(
 											Math.abs(transaction.amount)
 										)}
