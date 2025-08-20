@@ -4,6 +4,21 @@ import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { getStatusColor, getStatusText } from "../utils/statusHandler";
 import { Text } from "./ui/text";
 
+// Helper function to extract store name from contactInfo
+const getStoreNameFromContactInfo = (contactInfo: any[]) => {
+	if (!contactInfo || !Array.isArray(contactInfo)) return null;
+
+	const storeNameEntry = contactInfo.find(
+		(info) => typeof info === "string" && info.startsWith("Tên cửa hàng:")
+	);
+
+	if (storeNameEntry) {
+		return storeNameEntry.replace("Tên cửa hàng:", "").trim();
+	}
+
+	return null;
+};
+
 interface OrderCardProps {
 	order: {
 		id: string;
@@ -12,6 +27,8 @@ interface OrderCardProps {
 		status: string;
 		totalPrice: number;
 		shippingFee?: number;
+		contactInfo?: string[];
+		requestType?: string;
 		orderItems?: {
 			id: string;
 			productName: string;
@@ -41,6 +58,18 @@ export default function OrderCard({
 
 	// Get display title (store name or seller)
 	const getDisplayTitle = () => {
+		// For offline requests, try to get store name from contactInfo first
+		if (
+			order.requestType?.toLowerCase() === "offline" &&
+			order.contactInfo
+		) {
+			const storeName = getStoreNameFromContactInfo(order.contactInfo);
+			if (storeName) {
+				return storeName;
+			}
+		}
+
+		// Fallback to existing logic for online requests or when no store name found
 		if (order.seller && order.ecommercePlatform) {
 			return `${order.seller} (${order.ecommercePlatform})`;
 		} else if (order.seller) {

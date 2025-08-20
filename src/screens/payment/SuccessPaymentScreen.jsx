@@ -20,11 +20,11 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 	};
 
 	const handleBackToHome = () => {
-		navigation.navigate("Tabs", { screen: "HomeScreen" });
+		navigation.navigate("Tabs", { screen: "Home" });
 	};
 
 	const handleViewOrders = () => {
-		navigation.navigate("Tabs", { screen: "OrderScreen" });
+		navigation.navigate("Tabs", { screen: "Order" });
 	};
 
 	return (
@@ -69,12 +69,22 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 							Số tiền đã thanh toán
 						</Text>
 						<Text style={styles.amountText}>
-							{Math.round(
-								parseFloat(
+							{(() => {
+								if (!amount) return "0 VNĐ";
+
+								// If amount already contains VNĐ, just return it
+								if (amount.toString().includes("VNĐ")) {
+									return amount.toString();
+								}
+
+								// Otherwise, parse and format with VNĐ
+								const numericAmount = parseFloat(
 									amount.toString().replace(/[^\d.-]/g, "")
-								)
-							).toLocaleString("vi-VN")}{" "}
-							VNĐ
+								);
+								return `${Math.round(
+									numericAmount
+								).toLocaleString("vi-VN")} VNĐ`;
+							})()}
 						</Text>
 					</View>
 				)}
@@ -326,11 +336,13 @@ const styles = StyleSheet.create({
 		fontWeight: "500",
 	},
 	actions: {
-		paddingHorizontal: 20,
-		paddingBottom: 28,
+		flexDirection: "row",
+		paddingHorizontal: 22,
+		paddingBottom: 30,
 		gap: 14,
 	},
 	primaryButton: {
+		flex: 1,
 		borderRadius: 12,
 		overflow: "hidden",
 		shadowColor: "#007BFF",
@@ -350,6 +362,7 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 	},
 	secondaryButton: {
+		flex: 1,
 		backgroundColor: "#FFFFFF",
 		borderRadius: 12,
 		paddingVertical: 15,

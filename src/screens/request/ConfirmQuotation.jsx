@@ -271,37 +271,14 @@ export default function ConfirmQuotation({ navigation, route }) {
 				const isOfflineRequest =
 					requestType?.toLowerCase() === "offline";
 
-				// Try calculating base price from individual item totals instead of totalPriceEstimate
-				let basePrice = 0;
-				if (subRequestData.requestItems) {
-					basePrice = subRequestData.requestItems.reduce(
-						(sum, item) => {
-							const itemTotal =
-								item.quotationDetail?.totalVNDPrice || 0;
-							console.log(
-								`Item "${item.productName}" totalVNDPrice:`,
-								itemTotal
-							);
-							return sum + itemTotal;
-						},
-						0
-					);
-					console.log(
-						"Calculated basePrice from individual items:",
-						basePrice
-					);
-				}
-
-				// Fallback to totalPriceEstimate if no individual totals
-				if (basePrice === 0) {
-					basePrice =
-						subRequestData.quotationForPurchase
-							?.totalPriceEstimate || 0;
-					console.log(
-						"Using fallback totalPriceEstimate:",
-						basePrice
-					);
-				}
+				// Use the same calculation method as UI display for consistency
+				const basePrice =
+					subRequestData.quotationForPurchase?.totalPriceEstimate ||
+					0;
+				console.log(
+					"Using totalPriceEstimate for consistency with UI:",
+					basePrice
+				);
 
 				// Get shipping cost based on request type
 				let shippingCost = 0;
@@ -359,18 +336,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 				}
 				console.log("Total calculated fees:", totalFees);
 
-				// Create payload - server expects totalPriceEstimate to be final total (base + shipping)
+				// Create payload - server expects totalPriceEstimate to be final total
+				// Note: totalPriceEstimate from API already includes fees, so don't add them again
 				const finalTotalAmount =
 					(subRequestData.quotationForPurchase.totalPriceEstimate ||
-						0) +
-					(subRequestData.quotationForPurchase.shippingEstimate || 0);
+						0) + shippingCost;
 
 				let payload = {
 					subRequestId: subRequestData.id,
-					totalPriceEstimate: finalTotalAmount, // Final total (base + shipping) like web
+					totalPriceEstimate: finalTotalAmount, // Final total (base + shipping) - fees already included in base
 					trackingNumber: "",
-					shippingFee:
-						subRequestData.quotationForPurchase.shippingEstimate, // Shipping cost separately
+					shippingFee: shippingCost, // Shipping cost separately
 				};
 
 				// For offline requests, maybe we need to include shipping method info
@@ -388,18 +364,15 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 				console.log("=== FINAL PAYLOAD APPROACH ===");
 				console.log(
-					"Matching web behavior - totalPriceEstimate = base + shipping"
+					"totalPriceEstimate from API already includes fees"
 				);
 				console.log(
-					"Base from DB:",
+					"Base from DB (includes fees):",
 					subRequestData.quotationForPurchase.totalPriceEstimate,
 					"VND"
 				);
-				console.log(
-					"Shipping from DB:",
-					subRequestData.quotationForPurchase.shippingEstimate,
-					"VND"
-				);
+				console.log("Shipping from DB:", shippingCost, "VND");
+				console.log("Total fees (for display only):", totalFees, "VND");
 				console.log(
 					"Final totalPriceEstimate sent:",
 					finalTotalAmount,
@@ -554,8 +527,15 @@ export default function ConfirmQuotation({ navigation, route }) {
 						}
 					}, 10000);
 
+					// Use the same calculation as UI display for consistency
+					const displayAmount = calculateTotalAmount(subRequestData);
 					const formattedAmount =
-						totalAmount.toLocaleString("vi-VN") + " VNĐ";
+						Math.round(displayAmount).toLocaleString("vi-VN") +
+						" VNĐ";
+					console.log(
+						"Amount passed to success screen:",
+						formattedAmount
+					);
 					navigation.navigate("SuccessPaymentScreen", {
 						paymentMethod: selectedPaymentMethod,
 						amount: formattedAmount,

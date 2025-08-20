@@ -143,26 +143,14 @@ const SubRequestItem = ({
 	let subRequestTotal = 0;
 	if (hasQuotation) {
 		// Use quotationForPurchase.totalPriceEstimate + shippingEstimate for consistency with ConfirmQuotation
+		// Note: totalPriceEstimate from API already includes fees, so don't add them again
 		const basePrice =
 			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
 		const shippingEstimate =
 			subRequest?.quotationForPurchase?.shippingEstimate || 0;
 
-		// Calculate additional fees
-		let additionalFees = 0;
-		if (
-			subRequest?.quotationForPurchase?.fees &&
-			Array.isArray(subRequest.quotationForPurchase.fees)
-		) {
-			additionalFees = subRequest.quotationForPurchase.fees.reduce(
-				(total, fee) => {
-					return total + (fee.amount || 0);
-				},
-				0
-			);
-		}
-
-		subRequestTotal = basePrice + shippingEstimate + additionalFees;
+		// Don't add fees to total calculation as they're already included in totalPriceEstimate
+		subRequestTotal = basePrice + shippingEstimate;
 
 		// Fallback: If no quotationForPurchase, calculate from individual items
 		if (basePrice === 0) {
