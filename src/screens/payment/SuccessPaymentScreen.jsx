@@ -68,7 +68,14 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 						<Text style={styles.amountLabel}>
 							Số tiền đã thanh toán
 						</Text>
-						<Text style={styles.amountText}>{amount}</Text>
+						<Text style={styles.amountText}>
+							{Math.round(
+								parseFloat(
+									amount.toString().replace(/[^\d.-]/g, "")
+								)
+							).toLocaleString("vi-VN")}{" "}
+							VNĐ
+						</Text>
 					</View>
 				)}
 

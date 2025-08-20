@@ -4,6 +4,7 @@ import {
 	formatDate,
 	getStatusColor,
 	getStatusText,
+	shouldShowQuotation,
 } from "../../utils/statusHandler";
 import PlatformLogo from "../platform-logo";
 import ProductCard from "../product-card";
@@ -111,6 +112,14 @@ const SubRequestItem = ({
 	const isRejected =
 		statusLower === "rejected" || statusLower === "cancelled";
 	const rejectionReason = subRequest.rejectionReason;
+
+	// For online requests, if main request is paid, sub-request is also paid
+	const isSubRequestPaid =
+		statusLower === "paid" ||
+		statusLower === "shipping" ||
+		statusLower === "delivered" ||
+		statusLower === "completed" ||
+		(requestType?.toLowerCase() === "online" && isCompleted);
 
 	// Check if this sub-request has quotation (only for non-rejected items)
 	const hasQuotation =
@@ -226,15 +235,14 @@ const SubRequestItem = ({
 								{getStatusText(subRequest.status)}
 							</Text>
 						</View>
-					) : hasQuotation || isCompleted ? (
+					) : hasQuotation || isSubRequestPaid ? (
 						<View
 							style={[
 								styles.quotationBadge,
-								isCompleted && {
-									backgroundColor:
-										getStatusColor("COMPLETED"),
+								isSubRequestPaid && {
+									backgroundColor: getStatusColor("PAID"),
 								},
-								!isCompleted &&
+								!isSubRequestPaid &&
 									hasQuotation && {
 										backgroundColor:
 											getStatusColor("QUOTED"),
@@ -242,8 +250,8 @@ const SubRequestItem = ({
 							]}
 						>
 							<Text style={styles.quotationBadgeText}>
-								{isCompleted
-									? getStatusText("COMPLETED")
+								{isSubRequestPaid
+									? getStatusText("PAID")
 									: getStatusText("QUOTED")}
 							</Text>
 						</View>
@@ -929,8 +937,8 @@ const SubRequestItem = ({
 				</View>
 			)}
 
-			{/* Payment Section - Only show if not completed */}
-			{!isCompleted && (
+			{/* Payment Section - Only show if status allows quotation display and not paid */}
+			{shouldShowQuotation(statusLower) && !isSubRequestPaid && (
 				<View style={styles.subRequestPayment}>
 					{/* Checkbox - Only show if not expired */}
 					{!isExpired && (

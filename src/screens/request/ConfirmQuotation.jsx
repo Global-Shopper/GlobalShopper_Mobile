@@ -359,12 +359,18 @@ export default function ConfirmQuotation({ navigation, route }) {
 				}
 				console.log("Total calculated fees:", totalFees);
 
-				// Create payload - try using individual item calculation
+				// Create payload - server expects totalPriceEstimate to be final total (base + shipping)
+				const finalTotalAmount =
+					(subRequestData.quotationForPurchase.totalPriceEstimate ||
+						0) +
+					(subRequestData.quotationForPurchase.shippingEstimate || 0);
+
 				let payload = {
 					subRequestId: subRequestData.id,
-					totalPriceEstimate: basePrice, // Use calculated basePrice (individual items)
+					totalPriceEstimate: finalTotalAmount, // Final total (base + shipping) like web
 					trackingNumber: "",
-					shippingFee: shippingCost, // Send actual shipping cost separately
+					shippingFee:
+						subRequestData.quotationForPurchase.shippingEstimate, // Shipping cost separately
 				};
 
 				// For offline requests, maybe we need to include shipping method info
@@ -381,10 +387,29 @@ export default function ConfirmQuotation({ navigation, route }) {
 				}
 
 				console.log("=== FINAL PAYLOAD APPROACH ===");
-				console.log("Using individual item totals for basePrice");
-				console.log("basePrice sent:", basePrice, "VND");
-				console.log("shippingFee sent:", shippingCost, "VND");
-				console.log("totalAmount expected:", totalAmount, "VND");
+				console.log(
+					"Matching web behavior - totalPriceEstimate = base + shipping"
+				);
+				console.log(
+					"Base from DB:",
+					subRequestData.quotationForPurchase.totalPriceEstimate,
+					"VND"
+				);
+				console.log(
+					"Shipping from DB:",
+					subRequestData.quotationForPurchase.shippingEstimate,
+					"VND"
+				);
+				console.log(
+					"Final totalPriceEstimate sent:",
+					finalTotalAmount,
+					"VND"
+				);
+				console.log(
+					"shippingFee sent:",
+					subRequestData.quotationForPurchase.shippingEstimate,
+					"VND"
+				);
 				console.log("Full payload:", JSON.stringify(payload, null, 2));
 
 				// Add redirectUri for VNPay (direct-checkout) using deep linking
