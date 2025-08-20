@@ -147,7 +147,22 @@ const SubRequestItem = ({
 			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
 		const shippingEstimate =
 			subRequest?.quotationForPurchase?.shippingEstimate || 0;
-		subRequestTotal = basePrice + shippingEstimate;
+
+		// Calculate additional fees
+		let additionalFees = 0;
+		if (
+			subRequest?.quotationForPurchase?.fees &&
+			Array.isArray(subRequest.quotationForPurchase.fees)
+		) {
+			additionalFees = subRequest.quotationForPurchase.fees.reduce(
+				(total, fee) => {
+					return total + (fee.amount || 0);
+				},
+				0
+			);
+		}
+
+		subRequestTotal = basePrice + shippingEstimate + additionalFees;
 
 		// Fallback: If no quotationForPurchase, calculate from individual items
 		if (basePrice === 0) {
@@ -908,6 +923,49 @@ const SubRequestItem = ({
 			{/* Sub-Request Summary - Show shipping fee and total */}
 			{hasQuotation && (
 				<View style={styles.subRequestSummaryContainer}>
+					{/* Show additional fees for online requests */}
+					{requestType?.toLowerCase() === "online" &&
+						subRequest?.quotationForPurchase?.fees &&
+						Array.isArray(subRequest.quotationForPurchase.fees) &&
+						subRequest.quotationForPurchase.fees.length > 0 && (
+							<>
+								{subRequest.quotationForPurchase.fees.map(
+									(fee, index) => {
+										// Use feeName first, then fallback to other fields
+										let feeName =
+											fee.feeName ||
+											fee.name ||
+											fee.type ||
+											fee.description ||
+											"Phí khác";
+
+										return (
+											<View
+												key={index}
+												style={styles.summaryRow}
+											>
+												<Text
+													style={styles.summaryLabel}
+												>
+													{feeName}:
+												</Text>
+												<Text
+													style={styles.summaryValue}
+												>
+													{Math.round(
+														fee.amount || 0
+													).toLocaleString(
+														"vi-VN"
+													)}{" "}
+													VNĐ
+												</Text>
+											</View>
+										);
+									}
+								)}
+							</>
+						)}
+
 					{/* Only show shipping fee for online requests */}
 					{requestType?.toLowerCase() === "online" && (
 						<View style={styles.summaryRow}>
