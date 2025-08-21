@@ -36,9 +36,12 @@ import ConfirmRequest from "../screens/request/ConfirmRequest";
 import ProductDetails from "../screens/request/ProductDetails";
 import RequestDetails from "../screens/request/RequestDetails";
 import RequestHistory from "../screens/request/RequestHistory";
+import SelectShipping from "../screens/request/SelectShipping";
 import SuccessConfirmationScreen from "../screens/request/SuccessConfirmationScreen";
 import WithLink from "../screens/request/WithLink";
 import StatisticScreen from "../screens/statistic/StatisticScreen";
+import TaxDetail from "../screens/tax/TaxDetail";
+import TaxListScreen from "../screens/tax/TaxListScreen";
 import SuccessWithdrawScreen from "../screens/wallet/SuccessWithdrawScreen";
 import TopUpScreen from "../screens/wallet/TopUpScreen";
 import TransactionHistoryScreen from "../screens/wallet/TransactionHistoryScreen";
@@ -217,6 +220,11 @@ const AppNavigator = () => {
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
+				name="SelectShipping"
+				component={SelectShipping}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
 				name="SuccessPaymentScreen"
 				component={SuccessPaymentScreen}
 				options={{ headerShown: false }}
@@ -279,6 +287,16 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="StatisticScreen"
 				component={StatisticScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="TaxListScreen"
+				component={TaxListScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="TaxDetail"
+				component={TaxDetail}
 				options={{ headerShown: false }}
 			/>
 		</Stack.Navigator>

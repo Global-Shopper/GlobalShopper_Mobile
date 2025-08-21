@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
 	ActivityIndicator,
 	Clipboard,
+	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -11,7 +12,6 @@ import {
 import AddressSmCard from "../../components/address-sm-card";
 import Dialog from "../../components/dialog";
 import Header from "../../components/header";
-import OrderProductCard from "../../components/order-product-card";
 import RefundHistorySection from "../../components/RefundHistorySection";
 import { Text } from "../../components/ui/text";
 import { useGetOrderByIdQuery } from "../../services/gshopApi";
@@ -30,6 +30,7 @@ export default function OrderDetails({ navigation, route }) {
 	const [showDialog, setShowDialog] = useState(false);
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [dialogMessage, setDialogMessage] = useState("");
+	const [showTotalDetails, setShowTotalDetails] = useState(false);
 
 	// API query for order details
 	const {
@@ -48,6 +49,11 @@ export default function OrderDetails({ navigation, route }) {
 			return fullId.split("-")[0];
 		}
 		return fullId;
+	};
+
+	// Format currency without decimals
+	const formatCurrency = (amount) => {
+		return `${Math.round(amount).toLocaleString("vi-VN")} VNĐ`;
 	};
 
 	// Copy order ID to clipboard
@@ -260,21 +266,121 @@ export default function OrderDetails({ navigation, route }) {
 				</View>
 
 				{/* Product Info Card */}
-				<OrderProductCard
-					orderItem={{
-						id: orderData.orderItems?.[0]?.id || "",
-						productName:
-							orderData.orderItems?.[0]?.productName ||
-							"Tên sản phẩm không có",
-						images: orderData.orderItems?.[0]?.images || [],
-						quantity: orderData.orderItems?.[0]?.quantity || 1,
-						basePrice: orderData.orderItems?.[0]?.basePrice || 0,
-						currency: orderData.currency || "VND",
-						variants: orderData.orderItems?.[0]?.variants || [],
-						description: orderData.orderItems?.[0]?.description,
-					}}
-					totalPrice={orderData.totalPrice}
-				/>
+				<View style={styles.productCard}>
+					<Text style={styles.cardTitle}>
+						{orderData.seller && orderData.ecommercePlatform
+							? `${orderData.seller} (${orderData.ecommercePlatform})`
+							: orderData.seller ||
+							  orderData.ecommercePlatform ||
+							  "Thông tin sản phẩm"}
+					</Text>
+
+					{/* All Products */}
+					{orderData.orderItems &&
+						orderData.orderItems.length > 0 &&
+						orderData.orderItems.map((item, index) => (
+							<View
+								key={item.id || index}
+								style={styles.productRow}
+							>
+								{/* Product Image */}
+								<View style={styles.productImageContainer}>
+									{item.images && item.images.length > 0 ? (
+										<Image
+											source={{ uri: item.images[0] }}
+											style={styles.productImage}
+											resizeMode="cover"
+										/>
+									) : (
+										<View style={styles.placeholderImage}>
+											<Ionicons
+												name="image-outline"
+												size={24}
+												color="#ccc"
+											/>
+										</View>
+									)}
+								</View>
+
+								{/* Product Info */}
+								<View style={styles.productInfo}>
+									<Text
+										style={styles.productName}
+										numberOfLines={2}
+									>
+										{item.productName ||
+											"Tên sản phẩm không có"}
+									</Text>
+									<View style={styles.productDetailsRow}>
+										<Text style={styles.quantityText}>
+											x{item.quantity || 1}
+										</Text>
+										<Text style={styles.productPrice}>
+											{formatCurrency(
+												item.totalVNDPrice ||
+													item.basePrice *
+														item.quantity
+											)}
+										</Text>
+									</View>
+								</View>
+							</View>
+						))}
+
+					{/* Total Summary with Expandable Details */}
+					<View style={styles.totalSummarySection}>
+						<TouchableOpacity
+							style={styles.totalSummaryHeader}
+							onPress={() =>
+								setShowTotalDetails(!showTotalDetails)
+							}
+						>
+							<View style={styles.totalTextContainer}>
+								<Text style={styles.totalLabel}>
+									Tổng tiền:{" "}
+								</Text>
+								<Text style={styles.totalAmount}>
+									{formatCurrency(
+										orderData.totalPrice +
+											(orderData.shippingFee || 0)
+									)}
+								</Text>
+							</View>
+							<Ionicons
+								name={
+									showTotalDetails
+										? "chevron-up"
+										: "chevron-down"
+								}
+								size={20}
+								color="#1976D2"
+							/>
+						</TouchableOpacity>
+
+						{showTotalDetails && (
+							<View style={styles.totalDetails}>
+								<View style={styles.totalDetailRow}>
+									<Text style={styles.totalDetailLabel}>
+										Tổng sản phẩm:
+									</Text>
+									<Text style={styles.totalDetailValue}>
+										{formatCurrency(orderData.totalPrice)}
+									</Text>
+								</View>
+								<View style={styles.totalDetailRow}>
+									<Text style={styles.totalDetailLabel}>
+										Phí vận chuyển:
+									</Text>
+									<Text style={styles.totalDetailValue}>
+										{formatCurrency(
+											orderData.shippingFee || 0
+										)}
+									</Text>
+								</View>
+							</View>
+						)}
+					</View>
+				</View>
 
 				{/* Support Section */}
 				<View style={styles.supportCard}>
@@ -626,5 +732,116 @@ const styles = StyleSheet.create({
 		color: "#ffffff",
 		fontSize: 16,
 		fontWeight: "600",
+	},
+	productCard: {
+		backgroundColor: "#ffffff",
+		borderRadius: 12,
+		padding: 16,
+		marginBottom: 16,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	cardTitle: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#212529",
+		marginBottom: 16,
+	},
+	productRow: {
+		flexDirection: "row",
+		marginBottom: 16,
+		paddingBottom: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f0f0f0",
+	},
+	productImageContainer: {
+		width: 60,
+		height: 60,
+		borderRadius: 8,
+		overflow: "hidden",
+		marginRight: 12,
+	},
+	productImage: {
+		width: "100%",
+		height: "100%",
+	},
+	placeholderImage: {
+		width: "100%",
+		height: "100%",
+		backgroundColor: "#f8f9fa",
+		justifyContent: "center",
+		alignItems: "center",
+		borderWidth: 1,
+		borderColor: "#e9ecef",
+	},
+	productInfo: {
+		flex: 1,
+	},
+	productName: {
+		fontSize: 15,
+		fontWeight: "600",
+		color: "#212529",
+		marginBottom: 8,
+	},
+	productDetailsRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	quantityText: {
+		fontSize: 13,
+		color: "#6c757d",
+		fontWeight: "600",
+	},
+	productPrice: {
+		fontSize: 14,
+		fontWeight: "700",
+		color: "#dc3545",
+	},
+	totalSummarySection: {
+		marginTop: 8,
+	},
+	totalSummaryHeader: {
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		alignItems: "center",
+		paddingVertical: 12,
+		borderTopWidth: 1,
+		borderTopColor: "#e9ecef",
+		gap: 8,
+	},
+	totalTextContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+	totalLabel: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#212529",
+	},
+	totalAmount: {
+		fontSize: 16,
+		fontWeight: "700",
+		color: "#dc3545",
+	},
+	totalDetails: {
+		paddingTop: 8,
+	},
+	totalDetailRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		paddingVertical: 4,
+	},
+	totalDetailLabel: {
+		fontSize: 14,
+		color: "#6c757d",
+	},
+	totalDetailValue: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#212529",
 	},
 });

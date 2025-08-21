@@ -1,7 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { getStatusColor, getStatusText } from "../utils/statusHandler";
 import { Text } from "./ui/text";
+
+// Helper function to extract store name from contactInfo
+const getStoreNameFromContactInfo = (contactInfo: any[]) => {
+	if (!contactInfo || !Array.isArray(contactInfo)) return null;
+
+	const storeNameEntry = contactInfo.find(
+		(info) => typeof info === "string" && info.startsWith("Tên cửa hàng:")
+	);
+
+	if (storeNameEntry) {
+		return storeNameEntry.replace("Tên cửa hàng:", "").trim();
+	}
+
+	return null;
+};
 
 interface OrderCardProps {
 	order: {
@@ -11,6 +27,8 @@ interface OrderCardProps {
 		status: string;
 		totalPrice: number;
 		shippingFee?: number;
+		contactInfo?: string[];
+		requestType?: string;
 		orderItems?: {
 			id: string;
 			productName: string;
@@ -36,8 +54,22 @@ export default function OrderCard({
 	onReview,
 	hasFeedback = false,
 }: OrderCardProps) {
+	const [isExpanded, setIsExpanded] = useState(false);
+
 	// Get display title (store name or seller)
 	const getDisplayTitle = () => {
+		// For offline requests, try to get store name from contactInfo first
+		if (
+			order.requestType?.toLowerCase() === "offline" &&
+			order.contactInfo
+		) {
+			const storeName = getStoreNameFromContactInfo(order.contactInfo);
+			if (storeName) {
+				return storeName;
+			}
+		}
+
+		// Fallback to existing logic for online requests or when no store name found
 		if (order.seller && order.ecommercePlatform) {
 			return `${order.seller} (${order.ecommercePlatform})`;
 		} else if (order.seller) {
@@ -68,10 +100,17 @@ export default function OrderCard({
 
 	// Format currency without decimals
 	const formatCurrency = (amount: number) => {
-		return `${Math.round(amount).toLocaleString("vi-VN")} VND`;
+		return `${Math.round(amount).toLocaleString("vi-VN")} VNĐ`;
 	};
 
-	// Check if can cancel (only ORDER_REQUESTED status since we removed PURCHASED)
+	// Get total quantity of all products
+	const getTotalQuantity = () => {
+		if (!order.orderItems) return 0;
+		return order.orderItems.reduce(
+			(total, item) => total + (item.quantity || 0),
+			0
+		);
+	}; // Check if can cancel (only ORDER_REQUESTED status since we removed PURCHASED)
 	const canCancel = order.status === "ORDER_REQUESTED";
 
 	// Check if can review (DELIVERED status)
@@ -114,64 +153,130 @@ export default function OrderCard({
 
 			{/* Product Section */}
 			<View style={styles.productSection}>
-				{/* Product Image */}
-				<View style={styles.productImageContainer}>
-					{order.orderItems?.[0]?.images?.[0] ? (
-						<Image
-							source={{ uri: order.orderItems[0].images[0] }}
-							style={styles.productImage}
-							resizeMode="cover"
-						/>
-					) : (
-						<View style={styles.placeholderImage}>
-							<Ionicons
-								name="image-outline"
-								size={24}
-								color="#ccc"
-							/>
+				{/* First product always shows */}
+				{order.orderItems && order.orderItems.length > 0 && (
+					<View style={styles.productRow}>
+						{/* Product Image */}
+						<View style={styles.productImageContainer}>
+							{order.orderItems[0].images?.[0] ? (
+								<Image
+									source={{
+										uri: order.orderItems[0].images[0],
+									}}
+									style={styles.productImage}
+									resizeMode="cover"
+								/>
+							) : (
+								<View style={styles.placeholderImage}>
+									<Ionicons
+										name="image-outline"
+										size={24}
+										color="#ccc"
+									/>
+								</View>
+							)}
 						</View>
-					)}
-				</View>
 
-				{/* Product Info */}
-				<View style={styles.productInfo}>
-					<Text style={styles.productName} numberOfLines={2}>
-						{order.orderItems?.[0]?.productName ||
-							"Tên sản phẩm không có"}
-					</Text>
+						{/* Product Info */}
+						<View style={styles.productInfo}>
+							<Text style={styles.productName} numberOfLines={2}>
+								{order.orderItems[0].productName ||
+									"Tên sản phẩm không có"}
+							</Text>
+							<View style={styles.productQuantityContainer}>
+								<Text style={styles.quantityValue}>
+									x{order.orderItems[0].quantity || 0}
+								</Text>
+							</View>
+						</View>
+					</View>
+				)}
 
-					{/* Product Variants Info */}
-					{order.orderItems?.[0]?.variants &&
-						order.orderItems[0].variants.length > 0 && (
-							<View style={styles.variantsContainer}>
-								{order.orderItems[0].variants.map(
-									(variant, index) => (
-										<View
-											key={index}
-											style={styles.variantBadge}
+				{/* Additional products when expanded */}
+				{isExpanded &&
+					order.orderItems &&
+					order.orderItems.length > 1 && (
+						<View>
+							{order.orderItems.slice(1).map((item, index) => (
+								<View
+									key={item.id || index}
+									style={styles.productRow}
+								>
+									{/* Product Image */}
+									<View style={styles.productImageContainer}>
+										{item.images?.[0] ? (
+											<Image
+												source={{ uri: item.images[0] }}
+												style={styles.productImage}
+												resizeMode="cover"
+											/>
+										) : (
+											<View
+												style={styles.placeholderImage}
+											>
+												<Ionicons
+													name="image-outline"
+													size={24}
+													color="#ccc"
+												/>
+											</View>
+										)}
+									</View>
+
+									{/* Product Info */}
+									<View style={styles.productInfo}>
+										<Text
+											style={styles.productName}
+											numberOfLines={2}
 										>
-											<Text style={styles.variantText}>
-												{variant}
+											{item.productName ||
+												"Tên sản phẩm không có"}
+										</Text>
+										<View
+											style={
+												styles.productQuantityContainer
+											}
+										>
+											<Text style={styles.quantityValue}>
+												x{item.quantity || 0}
 											</Text>
 										</View>
-									)
-								)}
-							</View>
+									</View>
+								</View>
+							))}
+						</View>
+					)}
+			</View>
+
+			{/* Show more button if there are more products */}
+			{order.orderItems && order.orderItems.length > 1 && (
+				<TouchableOpacity
+					style={styles.showMoreButton}
+					onPress={() => setIsExpanded(!isExpanded)}
+				>
+					<Text style={styles.showMoreText}>
+						{isExpanded ? "Thu gọn" : "Xem thêm"}
+					</Text>
+					<Ionicons
+						name={isExpanded ? "chevron-up" : "chevron-down"}
+						size={16}
+						color="#1976D2"
+					/>
+				</TouchableOpacity>
+			)}
+
+			{/* Total Summary */}
+			<View style={styles.totalSummary}>
+				<Text style={styles.totalSummaryText}>
+					<Text style={styles.totalLabelText}>
+						Tổng số tiền ({getTotalQuantity()} sản phẩm):{" "}
+					</Text>
+					<Text style={styles.totalPriceText}>
+						{formatCurrency(
+							order.totalPrice + (order.shippingFee || 0)
 						)}
-
-					<View style={styles.quantityRow}>
-						<Text style={styles.quantityLabel}>Số lượng:</Text>
-						<Text style={styles.quantityValue}>
-							x{order.orderItems?.[0]?.quantity || 0}
-						</Text>
-					</View>
-
-					<View style={styles.priceRow}>
-						<Text style={styles.totalPrice}>
-							{formatCurrency(order.totalPrice)}
-						</Text>
-					</View>
-				</View>
+					</Text>
+				</Text>
 			</View>
 
 			{/* Actions Section */}
@@ -254,7 +359,6 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	productSection: {
-		flexDirection: "row",
 		marginBottom: 12,
 	},
 	productImageContainer: {
@@ -279,6 +383,7 @@ const styles = StyleSheet.create({
 	},
 	productInfo: {
 		flex: 1,
+		paddingVertical: 2,
 		justifyContent: "space-between",
 	},
 	productName: {
@@ -286,7 +391,6 @@ const styles = StyleSheet.create({
 		color: "#212529",
 		fontWeight: "600",
 		lineHeight: 20,
-		marginBottom: 8,
 	},
 	storeInfoRow: {
 		marginBottom: 6,
@@ -344,9 +448,7 @@ const styles = StyleSheet.create({
 	actionsSection: {
 		flexDirection: "row",
 		justifyContent: "flex-end",
-		paddingTop: 12,
-		borderTopWidth: 1,
-		borderTopColor: "#f0f0f0",
+		paddingTop: 8,
 		gap: 12,
 	},
 	actionButton: {
@@ -376,5 +478,79 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 		fontWeight: "600",
 		marginLeft: 4,
+	},
+	productRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		backgroundColor: "#f8f9fa",
+		borderRadius: 8,
+		marginBottom: 8,
+	},
+	additionalProduct: {
+		backgroundColor: "#ffffff",
+		borderWidth: 1,
+		borderColor: "#e9ecef",
+	},
+	productPrice: {
+		fontSize: 14,
+		color: "#dc3545",
+		fontWeight: "600",
+		marginLeft: "auto",
+	},
+	showMoreButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		paddingVertical: 1,
+		marginTop: 1,
+		marginBottom: 1,
+	},
+	showMoreText: {
+		fontSize: 13,
+		color: "#1976d2",
+		fontWeight: "500",
+	},
+	totalSummary: {
+		paddingTop: 8,
+		alignItems: "flex-end",
+	},
+	totalSummaryText: {
+		fontSize: 15,
+		color: "#dc3545",
+		fontWeight: "700",
+	},
+	additionalProductsList: {
+		paddingLeft: 16,
+		marginTop: 8,
+	},
+	simpleProductName: {
+		fontSize: 14,
+		color: "#495057",
+		marginBottom: 4,
+		lineHeight: 20,
+	},
+	productNameRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 4,
+	},
+	productQuantityRow: {
+		paddingLeft: 16,
+	},
+	productQuantityContainer: {
+		alignItems: "flex-end",
+		marginTop: 4,
+	},
+	totalLabelText: {
+		fontSize: 15,
+		color: "#212529",
+		fontWeight: "600",
+	},
+	totalPriceText: {
+		fontSize: 15,
+		color: "#dc3545",
+		fontWeight: "700",
 	},
 });

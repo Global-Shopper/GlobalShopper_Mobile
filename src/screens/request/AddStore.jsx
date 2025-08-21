@@ -56,15 +56,6 @@ export default function AddStore({ navigation }) {
 			return;
 		}
 
-		if (!storeData.shopLink?.trim()) {
-			showDialog({
-				type: "error",
-				title: "Thiếu thông tin",
-				message: "Vui lòng nhập link cửa hàng.",
-			});
-			return;
-		}
-
 		// Navigate to add product screen with store data
 		console.log("AddStore - Navigating with storeData:", storeData);
 		console.log("AddStore - StoreData keys:", Object.keys(storeData));

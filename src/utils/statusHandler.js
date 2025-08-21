@@ -71,15 +71,23 @@ export const REQUEST_TYPE = {
 export const getStatusText = (status) => {
 	if (!status) return "Không xác định";
 
+	// Normalize status to handle different formats
+	const normalizedStatus = status.toString().toLowerCase();
+
 	const statusMap = {
 		// Transaction statuses
 		[TRANSACTION_STATUS.SUCCESS]: "Thành công",
 		[TRANSACTION_STATUS.COMPLETED]: "Hoàn thành",
-		[TRANSACTION_STATUS.PENDING]: "Đang chờ",
+		[TRANSACTION_STATUS.PENDING]: "Đang xử lý", // Changed from "Đang chờ" to "Đang xử lý"
 		[TRANSACTION_STATUS.PROCESSING]: "Đang xử lý",
 		[TRANSACTION_STATUS.FAILED]: "Thất bại",
 		[TRANSACTION_STATUS.CANCELLED]: "Đã hủy",
 		[TRANSACTION_STATUS.REFUNDED]: "Đã hoàn tiền",
+		// Additional fail variations
+		fail: "Thất bại",
+		failed: "Thất bại",
+		failure: "Thất bại",
+		error: "Lỗi",
 		// Order API statuses
 		[ORDER_STATUS.ORDER_REQUESTED]: "Đang đặt hàng",
 		[ORDER_STATUS.PURCHASED]: "Đã mua",
@@ -108,7 +116,7 @@ export const getStatusText = (status) => {
 		[REFUND_STATUS.REJECTED]: "Bị từ chối",
 	};
 
-	return statusMap[status] || statusMap[status?.toLowerCase()] || status;
+	return statusMap[status] || statusMap[normalizedStatus] || status;
 };
 
 /**
@@ -119,15 +127,23 @@ export const getStatusText = (status) => {
 export const getStatusColor = (status) => {
 	if (!status) return "#999999";
 
+	// Normalize status to handle different formats
+	const normalizedStatus = status.toString().toLowerCase();
+
 	const colorMap = {
 		// Transaction statuses
 		[TRANSACTION_STATUS.SUCCESS]: "#4CAF50", // Green - Thành công
 		[TRANSACTION_STATUS.COMPLETED]: "#4CAF50", // Green - Hoàn thành
-		[TRANSACTION_STATUS.PENDING]: "#FF9800", // Orange - Đang chờ
+		[TRANSACTION_STATUS.PENDING]: "#4CAF50", // Green - Đang xử lý (treat as success for wallet payments)
 		[TRANSACTION_STATUS.PROCESSING]: "#2196F3", // Blue - Đang xử lý
 		[TRANSACTION_STATUS.FAILED]: "#f44336", // Red - Thất bại
 		[TRANSACTION_STATUS.CANCELLED]: "#9E9E9E", // Gray - Đã hủy
 		[TRANSACTION_STATUS.REFUNDED]: "#9C27B0", // Purple - Đã hoàn tiền
+		// Additional fail variations
+		fail: "#f44336", // Red - Thất bại
+		failed: "#f44336", // Red - Thất bại
+		failure: "#f44336", // Red - Thất bại
+		error: "#f44336", // Red - Lỗi
 		// Order API statuses
 		[ORDER_STATUS.ORDER_REQUESTED]: "#007bff", // Blue - Đang đặt hàng
 		[ORDER_STATUS.PURCHASED]: "#28a745", // Green - Đã mua
@@ -156,7 +172,7 @@ export const getStatusColor = (status) => {
 		[REFUND_STATUS.REJECTED]: "#dc3545", // Red - Bị từ chối
 	};
 
-	return colorMap[status] || colorMap[status?.toLowerCase()] || "#999999";
+	return colorMap[status] || colorMap[normalizedStatus] || "#999999";
 };
 
 /**

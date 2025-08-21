@@ -66,6 +66,17 @@ export default function WalletScreen({ navigation }) {
 
 	// Transform and format transactions with Vietnamese descriptions
 	const formatTransactionForDisplay = (transaction) => {
+		// Debug log transaction data
+		console.log("WalletScreen - Raw transaction data:", {
+			id: transaction.id,
+			type: transaction.type || transaction.transactionType,
+			status: transaction.status || transaction.transactionStatus,
+			amount: transaction.amount,
+			description: transaction.description,
+			createdAt: transaction.createdAt,
+			fullTransaction: transaction,
+		});
+
 		// Get Vietnamese description based on transaction type and data
 		const getVietnameseDescription = (item) => {
 			const type = (
@@ -438,14 +449,50 @@ export default function WalletScreen({ navigation }) {
 										style={[
 											styles.transactionAmount,
 											{
-												color:
-													transaction.amount > 0
+												color: (() => {
+													// Payment/purchase transactions should always be red (money going out)
+													if (
+														[
+															"payment",
+															"purchase",
+															"buy",
+															"order",
+															"checkout",
+															"pay",
+														].includes(
+															transaction.type
+														)
+													) {
+														return "#F44336"; // Red for payments
+													}
+													// For other transactions, use amount to determine color
+													return transaction.amount >
+														0
 														? "#4CAF50"
-														: "#F44336",
+														: "#F44336";
+												})(),
 											},
 										]}
 									>
-										{transaction.amount > 0 ? "+" : ""}
+										{(() => {
+											// Payment/purchase transactions should show minus sign
+											if (
+												[
+													"payment",
+													"purchase",
+													"buy",
+													"order",
+													"checkout",
+													"pay",
+												].includes(transaction.type)
+											) {
+												return "-"; // Always minus for payments
+											}
+											// For other transactions, show + for positive amounts
+											return transaction.amount > 0
+												? "+"
+												: "";
+										})()}
 										{formatCurrency(
 											Math.abs(transaction.amount)
 										)}

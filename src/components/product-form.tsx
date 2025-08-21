@@ -34,6 +34,7 @@ interface ProductData {
 	material: string;
 	size: string;
 	color: string;
+	unit: string; // Unit of product (chiếc, quyển, cái, chai, etc.)
 	quantity: number | string; // Allow string for temporary editing
 	platform: string;
 	productLink: string;
@@ -81,6 +82,7 @@ function getInitialFormData(
 		material: initialData?.material || "",
 		size: initialData?.size || "",
 		color: initialData?.color || "",
+		unit: initialData?.unit || "",
 		quantity: initialData?.quantity || "", // Default empty, let user input
 		platform: initialData?.platform || "",
 		productLink: initialData?.productLink || "",
@@ -136,6 +138,11 @@ function getPlatformLogo(platform: string) {
 	if (platformLower.includes("shein")) {
 		return require("../assets/images/ecommerce/shein-logo.png");
 	}
+	// Fallback for other platforms
+	if (platformLower.includes("shopee")) return null;
+	if (platformLower.includes("lazada")) return null;
+	if (platformLower.includes("tiki")) return null;
+	if (platformLower.includes("sendo")) return null;
 	return null;
 }
 
@@ -586,6 +593,30 @@ export default function ProductForm({
 						/>
 					</View>
 				</View>
+
+				{/* Unit - User input field (only for manual mode) */}
+				{mode === "manual" && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Đơn vị sản phẩm</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="cube-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.unit}
+								onChangeText={(value) =>
+									handleInputChange("unit", value)
+								}
+								placeholder="Nhập đơn vị (VD: chiếc, quyển, cái, chai...)"
+								placeholderTextColor="#B0BEC5"
+							/>
+						</View>
+					</View>
+				)}
 
 				{/* Quantity - User input field */}
 				<View style={styles.inputGroup}>
