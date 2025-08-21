@@ -29,6 +29,7 @@
 			},
 			"package": "com.globalshopper.globalshoppermobile",
 			"googleServicesFile": "./google-services.json",
+			"useNextNotificationsApi": true,
 			"edgeToEdgeEnabled": true,
 			"permissions": [
 				"android.permission.CAMERA",
