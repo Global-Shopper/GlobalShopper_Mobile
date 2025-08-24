@@ -131,6 +131,32 @@ const setUpInterceptor = (store) => {
 			return Promise.reject(error);
 		}
 	);
+
+	// Response interceptor to handle 403 errors
+	axiosInstance.interceptors.response.use(
+		(response) => {
+			return response;
+		},
+		async (error) => {
+			// Handle 403 Forbidden errors
+			if (error.response?.status === 403) {
+				console.log(
+					"🚨 403 Forbidden - Token likely expired, forcing logout..."
+				);
+
+				// Import signout action
+				const { signout } = await import("../features/user");
+
+				// Clear user data and navigate to login
+				store.dispatch(signout());
+
+				// Optional: Show alert to user
+				console.log("User has been logged out due to expired session");
+			}
+
+			return Promise.reject(error);
+		}
+	);
 };
 
 // Function to check if the token is expired
