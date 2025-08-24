@@ -7,7 +7,6 @@
 		"icon": "./src/assets/images/logo/logo-gshop.png",
 		"scheme": "globalshoppermobile",
 		"userInterfaceStyle": "automatic",
-		"newArchEnabled": false,
 		"updates": {
 			"enabled": true,
 			"checkAutomatically": "ON_LOAD",
