@@ -61,7 +61,7 @@ export default function Header({
 	onBackPress,
 	navigation,
 	showNotificationIcon = true,
-	showChatIcon = true,
+	showChatIcon = false,
 	variant = "gradient",
 	rightButton,
 }: HeaderProps) {
