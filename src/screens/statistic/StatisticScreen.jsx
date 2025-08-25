@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	RefreshControl,
@@ -7,100 +7,213 @@ import {
 	StatusBar,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from "react-native";
 import Header from "../../components/header";
+import {
+	useCurrentUserTransactionsQuery,
+	useGetAllOrdersQuery,
+	useGetAllRefundTicketsQuery,
+	useGetPurchaseRequestQuery,
+} from "../../services/gshopApi";
 
 const StatisticScreen = ({ navigation }) => {
 	console.log("StatisticScreen component mounted");
 
 	const [statistics, setStatistics] = useState({
 		totalRequests: 0,
+		onlineRequests: 0,
+		offlineRequests: 0,
 		requestsByStatus: {
-			pending: 0,
-			processing: 0,
-			completed: 0,
-			cancelled: 0,
+			PENDING: 0,
+			PROCESSING: 0,
+			COMPLETED: 0,
+			CANCELLED: 0,
+			QUOTED: 0,
+			PAID: 0,
 		},
 		totalOrders: 0,
 		ordersByStatus: {
-			pending: 0,
-			confirmed: 0,
-			shipping: 0,
-			delivered: 0,
-			cancelled: 0,
+			PENDING: 0,
+			CONFIRMED: 0,
+			PROCESSING: 0,
+			SHIPPING: 0,
+			DELIVERED: 0,
+			CANCELLED: 0,
 		},
 		totalRefunds: 0,
-		refundsByStatus: {
-			pending: 0,
-			approved: 0,
-			rejected: 0,
-		},
 		totalWithdrawals: 0,
-		withdrawalsByStatus: {
-			pending: 0,
-			approved: 0,
-			rejected: 0,
-		},
 	});
 
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
-	const [selectedPeriod, setSelectedPeriod] = useState("month"); // day, week, month, year
+
+	// API queries
+	const {
+		data: purchaseRequestsData,
+		isLoading: loadingPR,
+		refetch: refetchPR,
+	} = useGetPurchaseRequestQuery({ size: 1000 });
+	const {
+		data: ordersData,
+		isLoading: loadingOrders,
+		refetch: refetchOrders,
+	} = useGetAllOrdersQuery({ size: 1000 });
+	const {
+		data: transactionsData,
+		isLoading: loadingTransactions,
+		refetch: refetchTransactions,
+	} = useCurrentUserTransactionsQuery();
+	const {
+		data: refundsData,
+		isLoading: loadingRefunds,
+		refetch: refetchRefunds,
+	} = useGetAllRefundTicketsQuery({ size: 1000 });
 
 	useEffect(() => {
-		loadStatistics();
-	}, [selectedPeriod]);
-
-	const loadStatistics = async () => {
-		try {
-			setLoading(true);
-			// TODO: Implement API call to fetch statistics
-			// const response = await gshopApi.getStatistics(selectedPeriod);
-
-			// Mock data for demo
-			setTimeout(() => {
-				setStatistics({
-					totalRequests: 245,
-					requestsByStatus: {
-						pending: 23,
-						processing: 45,
-						completed: 156,
-						cancelled: 21,
-					},
-					totalOrders: 189,
-					ordersByStatus: {
-						pending: 12,
-						confirmed: 34,
-						shipping: 28,
-						delivered: 98,
-						cancelled: 17,
-					},
-					totalRefunds: 32,
-					refundsByStatus: {
-						pending: 8,
-						approved: 20,
-						rejected: 4,
-					},
-					totalWithdrawals: 56,
-					withdrawalsByStatus: {
-						pending: 5,
-						approved: 45,
-						rejected: 6,
-					},
-				});
-				setLoading(false);
-			}, 1000);
-		} catch (error) {
-			console.error("Error loading statistics:", error);
+		if (
+			!loadingPR &&
+			!loadingOrders &&
+			!loadingTransactions &&
+			!loadingRefunds
+		) {
+			calculateStatistics();
 			setLoading(false);
 		}
-	};
+	}, [
+		purchaseRequestsData,
+		ordersData,
+		transactionsData,
+		refundsData,
+		loadingPR,
+		loadingOrders,
+		loadingTransactions,
+		loadingRefunds,
+		calculateStatistics,
+	]);
+
+	const calculateStatistics = useCallback(() => {
+		console.log("Calculating statistics...");
+		console.log("Purchase requests data:", purchaseRequestsData);
+		console.log("Orders data:", ordersData);
+		console.log("Transactions data:", transactionsData);
+		console.log("Refunds data:", refundsData);
+
+		// Xử lý Purchase Requests
+		let totalRequests = 0;
+		let onlineRequests = 0;
+		let offlineRequests = 0;
+		const requestsByStatus = {
+			PENDING: 0,
+			PROCESSING: 0,
+			COMPLETED: 0,
+			CANCELLED: 0,
+			QUOTED: 0,
+			PAID: 0,
+		};
+
+		if (purchaseRequestsData?.content) {
+			const requests = purchaseRequestsData.content;
+			totalRequests = requests.length; // Tổng số tất cả yêu cầu
+
+			console.log("Total requests found:", totalRequests);
+
+			requests.forEach((request, index) => {
+				const status = request.status?.toUpperCase();
+
+				// Đếm theo status
+				if (requestsByStatus.hasOwnProperty(status)) {
+					requestsByStatus[status]++;
+				}
+
+				// Phân loại online/offline theo requestType
+				const requestType = request.requestType?.toUpperCase();
+
+				if (index < 5) {
+					// Log first 5 requests for debugging
+					console.log(`Request ${index + 1}:`, {
+						id: request.id,
+						requestType: request.requestType,
+						status: request.status,
+					});
+				}
+
+				if (requestType === "ONLINE") {
+					onlineRequests++;
+				} else if (requestType === "OFFLINE") {
+					offlineRequests++;
+				}
+			});
+
+			console.log("Final counts:", {
+				totalRequests,
+				onlineRequests,
+				offlineRequests,
+			});
+		}
+
+		// Xử lý Orders
+		let totalOrders = 0;
+		const ordersByStatus = {
+			PENDING: 0,
+			CONFIRMED: 0,
+			PROCESSING: 0,
+			SHIPPING: 0,
+			DELIVERED: 0,
+			CANCELLED: 0,
+		};
+
+		if (ordersData?.content) {
+			const orders = ordersData.content;
+			totalOrders = orders.length; // Tổng số tất cả đơn hàng
+
+			orders.forEach((order) => {
+				const status = order.status?.toUpperCase();
+
+				// Đếm theo status
+				if (ordersByStatus.hasOwnProperty(status)) {
+					ordersByStatus[status]++;
+				}
+			});
+		}
+
+		// Xử lý Transactions để đếm withdrawals
+		let totalWithdrawals = 0;
+		if (transactionsData?.content) {
+			const transactions = transactionsData.content;
+			totalWithdrawals = transactions.filter(
+				(transaction) =>
+					transaction.type === "WITHDRAW" ||
+					transaction.description?.includes("rút tiền")
+			).length;
+		}
+
+		// Xử lý Refunds
+		let totalRefunds = 0;
+		if (refundsData?.content) {
+			totalRefunds = refundsData.content.length;
+		}
+
+		setStatistics({
+			totalRequests,
+			onlineRequests,
+			offlineRequests,
+			requestsByStatus,
+			totalOrders,
+			ordersByStatus,
+			totalRefunds,
+			totalWithdrawals,
+		});
+	}, [purchaseRequestsData, ordersData, transactionsData, refundsData]);
 
 	const onRefresh = async () => {
 		setRefreshing(true);
-		await loadStatistics();
+		await Promise.all([
+			refetchPR(),
+			refetchOrders(),
+			refetchTransactions(),
+			refetchRefunds(),
+		]);
 		setRefreshing(false);
 	};
 
@@ -115,6 +228,8 @@ const StatisticScreen = ({ navigation }) => {
 			approved: "#34C759",
 			cancelled: "#FF3B30",
 			rejected: "#FF3B30",
+			quoted: "#5AC8FA",
+			paid: "#30D158",
 		};
 		return colors[status] || "#8E8E93";
 	};
@@ -158,34 +273,6 @@ const StatisticScreen = ({ navigation }) => {
 		</View>
 	);
 
-	const PeriodSelector = () => (
-		<View style={styles.periodSelector}>
-			{["day", "week", "month", "year"].map((period) => (
-				<TouchableOpacity
-					key={period}
-					style={[
-						styles.periodButton,
-						selectedPeriod === period && styles.periodButtonActive,
-					]}
-					onPress={() => setSelectedPeriod(period)}
-				>
-					<Text
-						style={[
-							styles.periodText,
-							selectedPeriod === period &&
-								styles.periodTextActive,
-						]}
-					>
-						{period === "day" && "Ngày"}
-						{period === "week" && "Tuần"}
-						{period === "month" && "Tháng"}
-						{period === "year" && "Năm"}
-					</Text>
-				</TouchableOpacity>
-			))}
-		</View>
-	);
-
 	if (loading) {
 		return (
 			<View style={styles.container}>
@@ -222,8 +309,6 @@ const StatisticScreen = ({ navigation }) => {
 				}
 				showsVerticalScrollIndicator={false}
 			>
-				<PeriodSelector />
-
 				{/* Requests Statistics */}
 				<StatCard
 					title="Yêu cầu mua hàng"
@@ -233,24 +318,14 @@ const StatisticScreen = ({ navigation }) => {
 				>
 					<View style={styles.statusList}>
 						<StatusItem
-							label="Đang chờ"
-							count={statistics.requestsByStatus.pending}
-							status="pending"
-						/>
-						<StatusItem
-							label="Đang xử lý"
-							count={statistics.requestsByStatus.processing}
+							label="Online"
+							count={statistics.onlineRequests}
 							status="processing"
 						/>
 						<StatusItem
-							label="Hoàn thành"
-							count={statistics.requestsByStatus.completed}
-							status="completed"
-						/>
-						<StatusItem
-							label="Đã hủy"
-							count={statistics.requestsByStatus.cancelled}
-							status="cancelled"
+							label="Offline"
+							count={statistics.offlineRequests}
+							status="pending"
 						/>
 					</View>
 				</StatCard>
@@ -264,84 +339,37 @@ const StatisticScreen = ({ navigation }) => {
 				>
 					<View style={styles.statusList}>
 						<StatusItem
-							label="Chờ xác nhận"
-							count={statistics.ordersByStatus.pending}
-							status="pending"
-						/>
-						<StatusItem
-							label="Đã xác nhận"
-							count={statistics.ordersByStatus.confirmed}
-							status="confirmed"
-						/>
-						<StatusItem
-							label="Đang giao"
-							count={statistics.ordersByStatus.shipping}
-							status="shipping"
-						/>
-						<StatusItem
 							label="Đã giao"
-							count={statistics.ordersByStatus.delivered}
+							count={statistics.ordersByStatus.DELIVERED}
 							status="delivered"
 						/>
 						<StatusItem
 							label="Đã hủy"
-							count={statistics.ordersByStatus.cancelled}
+							count={statistics.ordersByStatus.CANCELLED}
 							status="cancelled"
 						/>
 					</View>
 				</StatCard>
 
-				{/* Refunds Statistics */}
-				<StatCard
-					title="Hoàn tiền"
-					value={statistics.totalRefunds}
-					icon="return-down-back-outline"
-					color="#FF9500"
-				>
-					<View style={styles.statusList}>
-						<StatusItem
-							label="Đang chờ"
-							count={statistics.refundsByStatus.pending}
-							status="pending"
-						/>
-						<StatusItem
-							label="Đã duyệt"
-							count={statistics.refundsByStatus.approved}
-							status="approved"
-						/>
-						<StatusItem
-							label="Từ chối"
-							count={statistics.refundsByStatus.rejected}
-							status="rejected"
+				{/* Refunds and Withdrawals Statistics - Side by Side */}
+				<View style={styles.rowContainer}>
+					<View style={styles.halfCard}>
+						<StatCard
+							title="Yêu cầu hoàn tiền"
+							value={statistics.totalRefunds}
+							icon="return-down-back-outline"
+							color="#FF9500"
 						/>
 					</View>
-				</StatCard>
-
-				{/* Withdrawals Statistics */}
-				<StatCard
-					title="Rút tiền"
-					value={statistics.totalWithdrawals}
-					icon="wallet-outline"
-					color="#FF6B35"
-				>
-					<View style={styles.statusList}>
-						<StatusItem
-							label="Đang chờ"
-							count={statistics.withdrawalsByStatus.pending}
-							status="pending"
-						/>
-						<StatusItem
-							label="Đã duyệt"
-							count={statistics.withdrawalsByStatus.approved}
-							status="approved"
-						/>
-						<StatusItem
-							label="Từ chối"
-							count={statistics.withdrawalsByStatus.rejected}
-							status="rejected"
+					<View style={styles.halfCard}>
+						<StatCard
+							title="Yêu cầu rút tiền"
+							value={statistics.totalWithdrawals}
+							icon="wallet-outline"
+							color="#FF6B35"
 						/>
 					</View>
-				</StatCard>
+				</View>
 
 				<View style={styles.bottomSpacing} />
 			</ScrollView>
@@ -352,11 +380,12 @@ const StatisticScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#F8F9FA",
+		backgroundColor: "#F5F7FA",
 	},
 	content: {
 		flex: 1,
 		paddingHorizontal: 16,
+		paddingTop: 16,
 	},
 	loadingContainer: {
 		flex: 1,
@@ -364,57 +393,21 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	loadingText: {
-		marginTop: 16,
+		marginTop: 12,
 		fontSize: 16,
 		color: "#8E8E93",
 	},
-	periodSelector: {
-		flexDirection: "row",
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 4,
-		marginVertical: 16,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 3.84,
-		elevation: 5,
-	},
-	periodButton: {
-		flex: 1,
-		paddingVertical: 8,
-		paddingHorizontal: 12,
-		borderRadius: 8,
-		alignItems: "center",
-	},
-	periodButtonActive: {
-		backgroundColor: "#007AFF",
-	},
-	periodText: {
-		fontSize: 14,
-		fontWeight: "500",
-		color: "#8E8E93",
-	},
-	periodTextActive: {
-		color: "#FFFFFF",
-	},
 	statCard: {
 		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 16,
+		borderRadius: 16,
+		padding: 20,
 		marginBottom: 16,
 		borderLeftWidth: 4,
 		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
+		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
-		shadowRadius: 3.84,
-		elevation: 5,
+		shadowRadius: 8,
+		elevation: 4,
 	},
 	statHeader: {
 		flexDirection: "row",
@@ -443,6 +436,7 @@ const styles = StyleSheet.create({
 	},
 	statusList: {
 		gap: 8,
+		marginBottom: 12,
 	},
 	statusItem: {
 		flexDirection: "row",
@@ -471,8 +465,23 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 	},
+	comingSoonText: {
+		fontSize: 14,
+		color: "#8E8E93",
+		fontStyle: "italic",
+		textAlign: "center",
+		paddingVertical: 12,
+	},
 	bottomSpacing: {
 		height: 20,
+	},
+	rowContainer: {
+		flexDirection: "row",
+		gap: 8,
+		marginBottom: 16,
+	},
+	halfCard: {
+		flex: 1,
 	},
 });
 

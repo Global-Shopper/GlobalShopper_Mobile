@@ -489,6 +489,20 @@ const gshopApi = createApi({
 			],
 		}),
 
+		getAllRefundTickets: builder.query({
+			query: ({ page = 0, size = 1000 } = {}) => {
+				const params = new URLSearchParams({
+					page: page.toString(),
+					size: size.toString(),
+				});
+				return {
+					url: `${endpoints.REFUND_TICKET}?${params.toString()}`,
+					method: "GET",
+				};
+			},
+			providesTags: ["RefundTicket"],
+		}),
+
 		getAllFeedback: builder.query({
 			query: ({ page = 0, size = 10 } = {}) => {
 				const params = new URLSearchParams({
@@ -561,6 +575,7 @@ export const {
 	useGetAllFeedbackQuery,
 	useCreateRefundTicketMutation,
 	useGetRefundTicketsByOrderIdQuery,
+	useGetAllRefundTicketsQuery,
 } = gshopApi;
 
 export default gshopApi;
