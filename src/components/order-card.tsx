@@ -77,7 +77,13 @@ export default function OrderCard({
 		} else if (order.ecommercePlatform) {
 			return order.ecommercePlatform;
 		}
-		return "Cửa hàng online";
+		
+		// Better fallback based on request type
+		if (order.requestType?.toLowerCase() === "offline") {
+			return "Cửa hàng offline";
+		} else {
+			return "Cửa hàng online";
+		}
 	};
 
 	// Format date from timestamp to Vietnamese format: dd/mm/yyyy hh:mm

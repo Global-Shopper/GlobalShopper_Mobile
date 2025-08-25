@@ -4,6 +4,7 @@ import {
 	ActivityIndicator,
 	Clipboard,
 	Image,
+	RefreshControl,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -31,6 +32,7 @@ export default function OrderDetails({ navigation, route }) {
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [dialogMessage, setDialogMessage] = useState("");
 	const [showTotalDetails, setShowTotalDetails] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 
 	// API query for order details
 	const {
@@ -101,6 +103,18 @@ export default function OrderDetails({ navigation, route }) {
 		navigation.goBack();
 	};
 
+	// Handle refresh
+	const onRefresh = async () => {
+		setRefreshing(true);
+		try {
+			await refetch();
+		} catch (error) {
+			console.error("Error refreshing order details:", error);
+		} finally {
+			setRefreshing(false);
+		}
+	};
+
 	// Handle loading state
 	if (isLoading) {
 		return (
@@ -111,12 +125,6 @@ export default function OrderDetails({ navigation, route }) {
 					onBackPress={handleBackPress}
 					navigation={navigation}
 				/>
-				<View style={styles.loadingContainer}>
-					<ActivityIndicator size="large" color="#1D4ED8" />
-					<Text style={styles.loadingText}>
-						Đang tải thông tin đơn hàng...
-					</Text>
-				</View>
 			</View>
 		);
 	}
@@ -147,6 +155,13 @@ export default function OrderDetails({ navigation, route }) {
 		);
 	}
 
+	// Debug logging for orderData
+	console.log("OrderDetails Debug:", {
+		orderId: orderData?.id,
+		hasOrderData: !!orderData,
+		orderDataKeys: orderData ? Object.keys(orderData) : [],
+	});
+
 	return (
 		<View style={styles.container}>
 			{/* Header */}
@@ -161,6 +176,14 @@ export default function OrderDetails({ navigation, route }) {
 				style={styles.content}
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
+				refreshControl={
+					<RefreshControl
+						refreshing={refreshing}
+						onRefresh={onRefresh}
+						colors={["#1D4ED8"]}
+						tintColor="#1D4ED8"
+					/>
+				}
 			>
 				{/* Main Info Card */}
 				<View style={styles.mainCard}>
@@ -505,6 +528,16 @@ export default function OrderDetails({ navigation, route }) {
 					onPress: () => setShowDialog(false),
 				}}
 			/>
+
+			{/* Refresh Loading Overlay */}
+			{refreshing && (
+				<View style={styles.refreshOverlay}>
+					<View style={styles.refreshIndicator}>
+						<ActivityIndicator size="small" color="#1D4ED8" />
+						<Text style={styles.refreshText}>Đang cập nhật...</Text>
+					</View>
+				</View>
+			)}
 		</View>
 	);
 }
@@ -843,5 +876,33 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontWeight: "600",
 		color: "#212529",
+	},
+	// Refresh overlay styles
+	refreshOverlay: {
+		position: "absolute",
+		top: 80, // Below header
+		left: 0,
+		right: 0,
+		alignItems: "center",
+		zIndex: 1000,
+	},
+	refreshIndicator: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "rgba(29, 78, 216, 0.9)",
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 20,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	refreshText: {
+		color: "#fff",
+		fontSize: 12,
+		fontWeight: "500",
+		marginLeft: 8,
 	},
 });
