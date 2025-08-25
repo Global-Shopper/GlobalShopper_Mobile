@@ -90,7 +90,7 @@ export default function AccountScreen({ navigation }) {
 			title: "Gửi yêu cầu hỗ trợ",
 			subtitle: "Liên hệ đội ngũ hỗ trợ",
 			icon: "mail-outline",
-			action: () => console.log("Navigate to support request"),
+			action: () => navigation.navigate("ContactSupport"),
 		},
 		{
 			id: 3,
