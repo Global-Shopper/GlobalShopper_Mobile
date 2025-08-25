@@ -22,6 +22,7 @@ import AddWithdraw from "../screens/profile/AddWithdraw";
 import ChangePassword from "../screens/profile/ChangePassword";
 import ChangeProfile from "../screens/profile/ChangeProfile";
 import ChatSetting from "../screens/profile/ChatSetting";
+import ContactSupport from "../screens/profile/ContactSupport";
 import EditAddress from "../screens/profile/EditAddress";
 import FAQScreen from "../screens/profile/FAQScreen";
 import MyAddress from "../screens/profile/MyAddress";
@@ -137,6 +138,11 @@ const AppNavigator = () => {
 			<Stack.Screen
 				name="ChangePassword"
 				component={ChangePassword}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="ContactSupport"
+				component={ContactSupport}
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

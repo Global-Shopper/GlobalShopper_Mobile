@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-	Alert,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -10,6 +9,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useCancelOrderMutation } from "../../services/gshopApi";
@@ -24,8 +24,37 @@ export default function CancelOrder({ navigation, route }) {
 	const [customReason, setCustomReason] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
+	// Dialog states
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButton: null,
+		secondaryButton: null,
+	});
+
 	// Cancel order mutation
 	const [cancelOrder] = useCancelOrderMutation();
+
+	// Dialog helper functions
+	const showDialog = (
+		title,
+		message,
+		primaryButton = null,
+		secondaryButton = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButton,
+			secondaryButton,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	};
 
 	// Predefined reasons
 	const cancelReasons = [
@@ -93,15 +122,14 @@ export default function CancelOrder({ navigation, route }) {
 			console.log("Cancel order result:", result);
 
 			// Show success message
-			Alert.alert("Thành công", "Đơn hàng đã được hủy thành công", [
-				{
-					text: "OK",
-					onPress: () => {
-						// Navigate back to OrderScreen and refresh
-						navigation.navigate("OrderScreen");
-					},
+			showDialog("Thành công", "Đơn hàng đã được hủy thành công", {
+				text: "OK",
+				onPress: () => {
+					// Navigate back to OrderScreen and refresh
+					navigation.navigate("OrderScreen");
 				},
-			]);
+				style: "success",
+			});
 		} catch (error) {
 			console.error("Failed to cancel order:", error);
 
@@ -117,7 +145,11 @@ export default function CancelOrder({ navigation, route }) {
 				}`;
 			}
 
-			Alert.alert("Lỗi", errorMessage);
+			showDialog("Lỗi", errorMessage, {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 		} finally {
 			setIsLoading(false);
 		}
@@ -263,6 +295,16 @@ export default function CancelOrder({ navigation, route }) {
 					</Text>
 				</TouchableOpacity>
 			</View>
+
+			{/* Dialog */}
+			<Dialog
+				visible={dialogConfig.visible}
+				onClose={closeDialog}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButton={dialogConfig.primaryButton}
+				secondaryButton={dialogConfig.secondaryButton}
+			/>
 		</KeyboardAvoidingView>
 	);
 }

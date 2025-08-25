@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
 import { useGetRefundTicketsByOrderIdQuery } from "../services/gshopApi";
 import {
@@ -9,77 +8,71 @@ import {
 import { Text } from "./ui/text";
 
 const RefundHistorySection = ({ orderData }) => {
-	// API call to get refund tickets by order ID
+	console.log("RefundHistorySection RENDER STARTED", {
+		hasOrderData: !!orderData,
+		orderId: orderData?.id,
+	});
+
 	const {
 		data: refundTickets,
 		isLoading,
-		isError,
 		error,
-	} = useGetRefundTicketsByOrderIdQuery(orderData?.id, {
-		skip: !orderData?.id, // Skip if no order ID
+	} = useGetRefundTicketsByOrderIdQuery(orderData?.id || "", {
+		skip: !orderData?.id,
 	});
 
-	// Handle loading state
+	console.log("RefundHistorySection DATA", {
+		refundTickets,
+		isLoading,
+		error,
+		refundTicketsType: typeof refundTickets,
+		isArray: Array.isArray(refundTickets),
+		isObject: typeof refundTickets === "object" && refundTickets !== null,
+	});
+
 	if (isLoading) {
 		return (
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Ionicons name="time-outline" size={20} color="#dc3545" />
-					<Text style={styles.title}>Lịch sử trả hàng/hoàn tiền</Text>
+					<Text style={styles.title}>
+						Thông tin trả hàng/hoàn tiền
+					</Text>
 				</View>
-				<Text style={styles.loadingText}>Đang tải...</Text>
+				<Text style={styles.loadingText}>Đang tải thông tin...</Text>
 			</View>
 		);
 	}
 
-	// Handle error state
-	if (isError) {
-		console.log("Error loading refund tickets:", error);
-
-		// If it's a 400 error with "source cannot be null", it might mean no refund tickets exist
-		// In this case, just hide the component instead of showing error
-		if (error?.status === 400 || error?.data?.statusCode === 400) {
-			return null; // Hide component for 400 errors (likely no refund tickets)
-		}
-
-		// For other errors, show a generic message
+	if (error) {
 		return (
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Ionicons name="time-outline" size={20} color="#dc3545" />
-					<Text style={styles.title}>Lịch sử trả hàng/hoàn tiền</Text>
+					<Text style={styles.title}>
+						Thông tin trả hàng/hoàn tiền
+					</Text>
 				</View>
 				<Text style={styles.errorText}>
-					Không thể tải thông tin hoàn tiền
+					Lỗi khi tải thông tin: {error.message || "Unknown error"}
 				</Text>
 			</View>
 		);
 	}
 
-	// Process refund data - handle both array and object responses
-	let refundHistory = [];
-	if (refundTickets) {
-		// If API returns a single object (like in the log), wrap it in an array
-		if (refundTickets.id && refundTickets.status) {
-			refundHistory = [refundTickets];
-		}
-		// If API returns an array
-		else if (Array.isArray(refundTickets)) {
-			refundHistory = refundTickets;
-		}
-		// If API returns wrapped data
-		else if (refundTickets.data && Array.isArray(refundTickets.data)) {
-			refundHistory = refundTickets.data;
-		} else if (
-			refundTickets.content &&
-			Array.isArray(refundTickets.content)
-		) {
-			refundHistory = refundTickets.content;
-		}
+	// Handle both array and single object responses
+	let ticketsArray = [];
+	if (Array.isArray(refundTickets)) {
+		ticketsArray = refundTickets;
+	} else if (
+		refundTickets &&
+		typeof refundTickets === "object" &&
+		refundTickets.id
+	) {
+		// Single refund ticket object - convert to array
+		ticketsArray = [refundTickets];
 	}
 
-	// Không hiển thị nếu không có lịch sử hoàn tiền
-	if (!refundHistory || refundHistory.length === 0) {
+	if (ticketsArray.length === 0) {
+		// Don't render anything if there are no refund tickets
 		return null;
 	}
 
@@ -87,114 +80,75 @@ const RefundHistorySection = ({ orderData }) => {
 		<View style={styles.container}>
 			<View style={styles.header}>
 				<Text style={styles.title}>Thông tin trả hàng/hoàn tiền</Text>
-				<View
-					style={[
-						styles.statusBadge,
-						{
-							backgroundColor:
-								getStatusColor(refundHistory[0].status) + "20",
-						},
-					]}
-				>
-					<Text
-						style={[
-							styles.statusText,
-							{ color: getStatusColor(refundHistory[0].status) },
-						]}
-					>
-						{getStatusText(refundHistory[0].status)}
-					</Text>
-				</View>
 			</View>
-
-			{refundHistory.map((item) => (
-				<View key={item.id} style={styles.refundItem}>
-					<View style={styles.refundDetails}>
-						{/* Reason */}
-						<View style={styles.reasonSection}>
-							<Text style={styles.reasonLabel}>Lý do:</Text>
-							<Text style={styles.reasonText}>
-								{item.reason || "Không có lý do"}
+			{ticketsArray.map((ticket, index) => (
+				<View key={ticket.id || index} style={styles.ticketItem}>
+					<View style={styles.ticketHeader}>
+						<Text style={styles.ticketId} numberOfLines={1}>
+							#{ticket.id ? ticket.id.slice(-8) : "N/A"}
+						</Text>
+						<View
+							style={[
+								styles.statusBadge,
+								{
+									backgroundColor: getStatusColor(
+										ticket.status
+									),
+								},
+							]}
+						>
+							<Text style={styles.statusText} numberOfLines={1}>
+								{getStatusText(ticket.status)}
 							</Text>
 						</View>
-
-						{/* Amount - Only show for APPROVED status */}
-						{item.status === "APPROVED" &&
-							item.amount !== undefined && (
-								<View style={styles.reasonSection}>
-									<Text style={styles.reasonLabel}>
-										Phần trăm hoàn:
-									</Text>
-									<Text style={styles.percentText}>
-										{item.amount > 0
-											? `${(item.amount * 100).toFixed(
-													1
-											  )}%`
-											: "Chưa xác định"}
-									</Text>
-								</View>
-							)}
-
-						{/* Date - Only show if createdAt exists */}
-						{item.createdAt && (
-							<View style={styles.reasonSection}>
-								<Text style={styles.reasonLabel}>
-									Ngày tạo:
-								</Text>
-								<Text style={styles.reasonText}>
-									{formatDate(item.createdAt)}
-								</Text>
-							</View>
-						)}
-
-						{/* Evidence */}
-						{item.evidence && item.evidence.length > 0 && (
-							<View style={styles.evidenceSection}>
-								<Text style={styles.evidenceLabel}>
-									Minh chứng ({item.evidence.length} ảnh):
-								</Text>
-								<View style={styles.evidenceGrid}>
-									{item.evidence
-										.slice(0, 3)
-										.map((imageUri, index) => (
-											<Image
-												key={index}
-												source={{ uri: imageUri }}
-												style={styles.evidenceImage}
-											/>
-										))}
-									{item.evidence.length > 3 && (
-										<View
-											style={styles.moreEvidenceOverlay}
-										>
-											<Text
-												style={styles.moreEvidenceText}
-											>
-												+{item.evidence.length - 3}
-											</Text>
-										</View>
-									)}
-								</View>
-							</View>
-						)}
-
-						{/* Admin Response */}
-						{item.adminResponse && (
-							<View style={styles.responseSection}>
-								<Text style={styles.responseLabel}>
-									Phản hồi từ admin:
-								</Text>
-								<Text style={styles.responseText}>
-									{item.adminResponse}
-								</Text>
-								<Text style={styles.responseDate}>
-									{formatDate(
-										item.updatedAt || item.updatedDate
-									)}
-								</Text>
-							</View>
-						)}
 					</View>
+
+					<Text style={styles.reasonText}>
+						Lý do: {ticket.reason || "Không có lý do"}
+					</Text>
+
+					<Text style={styles.dateText}>
+						Ngày tạo: {formatDate(ticket.createdAt)}
+					</Text>
+
+					{ticket.amount && (
+						<Text style={styles.amountText}>
+							Số tiền hoàn: {ticket.amount.toLocaleString()}đ
+						</Text>
+					)}
+
+					{ticket.refundRate && (
+						<Text style={styles.refundRateText}>
+							Tỷ lệ hoàn tiền:{" "}
+							{Math.round(ticket.refundRate * 100)}%
+						</Text>
+					)}
+
+					{ticket.evidence && ticket.evidence.length > 0 && (
+						<View style={styles.imagesContainer}>
+							<Text style={styles.imagesLabel}>
+								Hình ảnh đính kèm:
+							</Text>
+							<View style={styles.imagesList}>
+								{ticket.evidence
+									.slice(0, 3)
+									.map((imageUrl, imgIndex) => (
+										<Image
+											key={imgIndex}
+											source={{ uri: imageUrl }}
+											style={styles.attachedImage}
+										/>
+									))}
+								{ticket.evidence.length > 3 && (
+									<View style={styles.moreImagesIndicator}>
+										<Text style={styles.moreImagesText}>
+											+{ticket.evidence.length - 3}
+										</Text>
+									</View>
+								)}
+							</View>
+						</View>
+					)}
 				</View>
 			))}
 		</View>
@@ -207,7 +161,7 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		padding: 20,
 		marginBottom: 16,
-		marginHorizontal: 0, // Remove horizontal margin to fit with OrderDetails layout
+		marginHorizontal: 0,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 3 },
 		shadowOpacity: 0.08,
@@ -229,119 +183,122 @@ const styles = StyleSheet.create({
 		color: "#333",
 		flex: 1,
 	},
-	refundItem: {
-		marginBottom: 0, // Remove margin since we don't have multiple items with expand/collapse
+	loadingText: {
+		fontSize: 16,
+		color: "#666",
+		textAlign: "center",
+		paddingVertical: 20,
+		fontStyle: "italic",
+	},
+	errorText: {
+		fontSize: 16,
+		color: "#ff6b6b",
+		textAlign: "center",
+		paddingVertical: 20,
+	},
+	noDataText: {
+		fontSize: 16,
+		color: "#8e8e93",
+		textAlign: "center",
+		paddingVertical: 12,
+		fontWeight: "500",
+		fontStyle: "italic",
+	},
+	ticketItem: {
+		backgroundColor: "#f8f9fa",
+		borderRadius: 12,
+		padding: 16,
+		marginBottom: 12,
+		borderWidth: 1,
+		borderColor: "#e9ecef",
+	},
+	ticketHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 12,
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	ticketId: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#333",
+		flex: 0,
+		minWidth: 100,
+		maxWidth: 150,
 	},
 	statusBadge: {
 		paddingHorizontal: 12,
 		paddingVertical: 6,
-		borderRadius: 20,
-		alignSelf: "flex-start",
+		borderRadius: 16,
+		maxWidth: 140,
+		alignItems: "center",
+		justifyContent: "center",
+		flex: 0,
 	},
 	statusText: {
 		fontSize: 12,
-		fontWeight: "700",
-		letterSpacing: 0.5,
-	},
-	refundDetails: {
-		backgroundColor: "#fafbfc",
-		borderRadius: 12,
-		padding: 16,
-	},
-	reasonSection: {
-		marginBottom: 16,
-	},
-	reasonLabel: {
-		fontSize: 14,
-		fontWeight: "700",
-		color: "#333",
-		marginBottom: 6,
+		fontWeight: "600",
+		color: "#fff",
+		textAlign: "center",
+		numberOfLines: 1,
 	},
 	reasonText: {
 		fontSize: 14,
 		color: "#555",
+		marginBottom: 8,
 		lineHeight: 20,
 	},
-	percentText: {
-		fontSize: 16,
-		color: "#28a745",
-		fontWeight: "700",
-		lineHeight: 20,
-	},
-	evidenceSection: {
-		marginBottom: 16,
-	},
-	evidenceLabel: {
+	dateText: {
 		fontSize: 14,
-		fontWeight: "700",
+		color: "#666",
+		marginBottom: 8,
+	},
+	amountText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#2e7d32",
+		marginBottom: 8,
+	},
+	refundRateText: {
+		fontSize: 14,
+		fontWeight: "500",
+		color: "#1976d2",
+		marginBottom: 12,
+	},
+	imagesContainer: {
+		marginTop: 12,
+	},
+	imagesLabel: {
+		fontSize: 14,
+		fontWeight: "600",
 		color: "#333",
-		marginBottom: 10,
+		marginBottom: 8,
 	},
-	evidenceGrid: {
+	imagesList: {
 		flexDirection: "row",
-		gap: 10,
+		flexWrap: "wrap",
+		gap: 8,
 	},
-	evidenceImage: {
+	attachedImage: {
 		width: 60,
 		height: 60,
-		borderRadius: 10,
-		backgroundColor: "#f8f9fa",
-		borderWidth: 1,
-		borderColor: "#e9ecef",
+		borderRadius: 8,
+		backgroundColor: "#f0f0f0",
 	},
-	moreEvidenceOverlay: {
+	moreImagesIndicator: {
 		width: 60,
 		height: 60,
-		borderRadius: 10,
-		backgroundColor: "rgba(0,0,0,0.75)",
+		borderRadius: 8,
+		backgroundColor: "#333",
 		justifyContent: "center",
 		alignItems: "center",
-		position: "absolute",
-		right: 0,
 	},
-	moreEvidenceText: {
-		color: "#ffffff",
+	moreImagesText: {
+		color: "#fff",
 		fontSize: 12,
-		fontWeight: "700",
-	},
-	responseSection: {
-		backgroundColor: "#e3f2fd",
-		padding: 16,
-		borderRadius: 12,
-		borderLeftWidth: 4,
-		borderLeftColor: "#1976d2",
-	},
-	responseLabel: {
-		fontSize: 14,
-		fontWeight: "700",
-		color: "#1976d2",
-		marginBottom: 8,
-	},
-	responseText: {
-		fontSize: 14,
-		color: "#333",
-		lineHeight: 20,
-		marginBottom: 8,
-	},
-	responseDate: {
-		fontSize: 12,
-		color: "#666",
-		textAlign: "right",
-		fontStyle: "italic",
-	},
-	loadingText: {
-		fontSize: 16,
-		color: "#8e8e93",
-		textAlign: "center",
-		paddingVertical: 24,
-		fontWeight: "500",
-	},
-	errorText: {
-		fontSize: 16,
-		color: "#dc3545",
-		textAlign: "center",
-		paddingVertical: 24,
-		fontWeight: "500",
+		fontWeight: "600",
 	},
 });
 

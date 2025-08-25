@@ -6,7 +6,7 @@ const SplashScreen = ({ navigation }) => {
 	const logoAnim = useRef(new Animated.Value(0)).current;
 
 	useEffect(() => {
-		//AsyncStorage.removeItem('@hasOnboarded'); //reset onboarding nếu muốn
+		AsyncStorage.removeItem("@hasOnboarded"); //reset onboarding nếu muốn
 		Animated.timing(logoAnim, {
 			toValue: 1,
 			duration: 1500,

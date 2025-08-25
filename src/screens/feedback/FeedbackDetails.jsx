@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-	Alert,
 	Image,
 	ScrollView,
 	StyleSheet,
@@ -9,6 +8,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useCreateFeedbackMutation } from "../../services/gshopApi";
@@ -29,6 +29,15 @@ export default function FeedbackDetails({ navigation, route }) {
 	const [comment, setComment] = useState("");
 	const [selectedReasonTags, setSelectedReasonTags] = useState([]);
 	const [showCustomInput, setShowCustomInput] = useState(false);
+
+	// Dialog states
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButton: null,
+		secondaryButton: null,
+	});
 
 	// Predefined reason tags
 	const reasonTags = [
@@ -51,6 +60,25 @@ export default function FeedbackDetails({ navigation, route }) {
 				minimumFractionDigits: 0,
 			}).format(amount) + " VNĐ"
 		);
+	};
+
+	const showDialog = (
+		title,
+		message,
+		primaryButton = null,
+		secondaryButton = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButton,
+			secondaryButton,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
 	};
 
 	const handleBackPress = () => {
@@ -124,12 +152,18 @@ export default function FeedbackDetails({ navigation, route }) {
 
 	const handleSubmitReview = async () => {
 		if (rating === 0) {
-			Alert.alert("Thông báo", "Vui lòng đánh giá số sao");
+			showDialog("Thông báo", "Vui lòng đánh giá số sao", {
+				text: "OK",
+				onPress: () => {},
+			});
 			return;
 		}
 
 		if (!comment.trim()) {
-			Alert.alert("Thông báo", "Vui lòng nhập nhận xét hoặc chọn lý do");
+			showDialog("Thông báo", "Vui lòng nhập nhận xét hoặc chọn lý do", {
+				text: "OK",
+				onPress: () => {},
+			});
 			return;
 		}
 
@@ -147,15 +181,14 @@ export default function FeedbackDetails({ navigation, route }) {
 			const result = await createFeedback(feedbackData).unwrap();
 			console.log("Feedback submitted successfully:", result);
 
-			Alert.alert("Thành công", "Đánh giá của bạn đã được gửi!", [
-				{
-					text: "OK",
-					onPress: () => {
-						// Navigate back to OrderScreen
-						navigation.goBack();
-					},
+			showDialog("Thành công", "Đánh giá của bạn đã được gửi!", {
+				text: "OK",
+				onPress: () => {
+					// Navigate back to OrderScreen
+					navigation.goBack();
 				},
-			]);
+				style: "success",
+			});
 		} catch (error) {
 			console.error("Error submitting feedback:", error);
 
@@ -165,15 +198,24 @@ export default function FeedbackDetails({ navigation, route }) {
 					"duplicate key value violates unique constraint"
 				)
 			) {
-				Alert.alert(
+				showDialog(
 					"Thông báo",
-					"Đơn hàng này đã được đánh giá rồi. Mỗi đơn hàng chỉ có thể đánh giá một lần."
+					"Đơn hàng này đã được đánh giá rồi. Mỗi đơn hàng chỉ có thể đánh giá một lần.",
+					{
+						text: "OK",
+						onPress: () => {},
+					}
 				);
 			} else {
-				Alert.alert(
+				showDialog(
 					"Lỗi",
 					error?.data?.message ||
-						"Không thể gửi đánh giá. Vui lòng thử lại!"
+						"Không thể gửi đánh giá. Vui lòng thử lại!",
+					{
+						text: "OK",
+						onPress: () => {},
+						style: "danger",
+					}
 				);
 			}
 		}
@@ -308,6 +350,16 @@ export default function FeedbackDetails({ navigation, route }) {
 					</Text>
 				</TouchableOpacity>
 			</ScrollView>
+
+			{/* Dialog */}
+			<Dialog
+				visible={dialogConfig.visible}
+				onClose={closeDialog}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButton={dialogConfig.primaryButton}
+				secondaryButton={dialogConfig.secondaryButton}
+			/>
 		</View>
 	);
 }

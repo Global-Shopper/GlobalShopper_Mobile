@@ -239,25 +239,34 @@ const WithdrawList = ({ navigation }) => {
 				onPress: async () => {
 					try {
 						await deleteBankAccount(accountId).unwrap();
-						showDialog({
-							title: "Thành công",
-							content: "Đã xóa tài khoản ngân hàng thành công",
-							primaryButton: { text: "OK" },
-						});
+						// Just refetch data - let the UI update speak for itself
+						refetch();
+						console.log("Bank account deleted successfully");
 					} catch (error) {
 						console.error("Delete error:", error);
-						showDialog({
-							title: "Lỗi",
-							content:
-								error.message ||
-								"Có lỗi xảy ra khi xóa tài khoản",
-							primaryButton: { text: "OK" },
-						});
+						// Only show dialog for errors, not success
+						setTimeout(() => {
+							showDialog({
+								title: "Lỗi",
+								content:
+									error.message ||
+									"Có lỗi xảy ra khi xóa tài khoản",
+								primaryButton: {
+									text: "OK",
+									onPress: () => {
+										console.log("Error dialog closed");
+									},
+								},
+							});
+						}, 200);
 					}
 				},
 			},
 			secondaryButton: {
 				text: "Hủy",
+				onPress: () => {
+					console.log("Delete cancelled");
+				},
 			},
 		});
 	};
@@ -473,14 +482,11 @@ const WithdrawList = ({ navigation }) => {
 				onBackPress={() => navigation.goBack()}
 				showNotificationIcon={false}
 				showChatIcon={false}
-				rightButton={
-					<TouchableOpacity
-						style={styles.addButton}
-						onPress={handleAddAccount}
-					>
-						<Ionicons name="add" size={24} color="#007AFF" />
-					</TouchableOpacity>
-				}
+				variant="clean"
+				rightButton={{
+					icon: "add",
+					onPress: handleAddAccount,
+				}}
 			/>
 
 			{/* Content */}
@@ -521,14 +527,6 @@ const styles = StyleSheet.create({
 		color: "#FFFFFF",
 		textAlign: "center",
 		flex: 1,
-	},
-	addButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		alignItems: "center",
-		justifyContent: "center",
 	},
 	content: {
 		flex: 1,

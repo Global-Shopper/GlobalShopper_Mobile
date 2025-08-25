@@ -189,20 +189,6 @@ const BottomTabNavigator = ({ navigation }) => {
 				}
 				options={{
 					title: "Yêu cầu",
-					tabBarBadge: isGuest ? null : 3,
-					tabBarBadgeStyle: {
-						backgroundColor: "#FF5722",
-						color: "#FFFFFF",
-						fontSize: 10,
-						fontWeight: "700",
-						minWidth: 20,
-						height: 20,
-						borderRadius: 10,
-						marginLeft: 10,
-						marginTop: -2,
-						borderWidth: 2,
-						borderColor: "#FFFFFF",
-					},
 				}}
 			/>
 			<Tab.Screen
@@ -214,20 +200,6 @@ const BottomTabNavigator = ({ navigation }) => {
 				}
 				options={{
 					title: "Đơn hàng",
-					tabBarBadge: isGuest ? null : 2,
-					tabBarBadgeStyle: {
-						backgroundColor: "#FF5722",
-						color: "#FFFFFF",
-						fontSize: 10,
-						fontWeight: "700",
-						minWidth: 20,
-						height: 20,
-						borderRadius: 10,
-						marginLeft: 10,
-						marginTop: -2,
-						borderWidth: 2,
-						borderColor: "#FFFFFF",
-					},
 				}}
 			/>
 			<Tab.Screen
