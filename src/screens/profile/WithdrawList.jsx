@@ -239,25 +239,34 @@ const WithdrawList = ({ navigation }) => {
 				onPress: async () => {
 					try {
 						await deleteBankAccount(accountId).unwrap();
-						showDialog({
-							title: "Thành công",
-							content: "Đã xóa tài khoản ngân hàng thành công",
-							primaryButton: { text: "OK" },
-						});
+						// Just refetch data - let the UI update speak for itself
+						refetch();
+						console.log("Bank account deleted successfully");
 					} catch (error) {
 						console.error("Delete error:", error);
-						showDialog({
-							title: "Lỗi",
-							content:
-								error.message ||
-								"Có lỗi xảy ra khi xóa tài khoản",
-							primaryButton: { text: "OK" },
-						});
+						// Only show dialog for errors, not success
+						setTimeout(() => {
+							showDialog({
+								title: "Lỗi",
+								content:
+									error.message ||
+									"Có lỗi xảy ra khi xóa tài khoản",
+								primaryButton: {
+									text: "OK",
+									onPress: () => {
+										console.log("Error dialog closed");
+									},
+								},
+							});
+						}, 200);
 					}
 				},
 			},
 			secondaryButton: {
 				text: "Hủy",
+				onPress: () => {
+					console.log("Delete cancelled");
+				},
 			},
 		});
 	};
