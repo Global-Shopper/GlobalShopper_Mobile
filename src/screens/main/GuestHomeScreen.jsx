@@ -32,21 +32,6 @@ export default function GuestHomeScreen({ navigation }) {
 		);
 	};
 
-	const handleChatPress = () => {
-		showDialog(
-			DialogTemplates.requireLogin(
-				() => {
-					// Chuyển đến màn hình đăng nhập
-					navigation.navigate("Login");
-				},
-				() => {
-					// Hủy - không làm gì
-					console.log("Hủy chat");
-				}
-			)
-		);
-	};
-
 	// Function để hiện dialog yêu cầu đăng nhập
 	const showLoginDialog = () => {
 		showDialog(
@@ -264,9 +249,8 @@ export default function GuestHomeScreen({ navigation }) {
 				userEmail="Global Shopper"
 				subtitle="Mua hàng quốc tế chưa bao giờ dễ hơn đến thế"
 				onNotificationPress={handleNotificationPress}
-				onChatPress={handleChatPress}
 				showNotificationIcon={true}
-				showChatIcon={true}
+				showChatIcon={false}
 				variant="gradient"
 			/>
 

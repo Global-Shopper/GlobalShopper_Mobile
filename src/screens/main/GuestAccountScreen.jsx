@@ -32,21 +32,6 @@ export default function GuestAccountScreen({ navigation }) {
 		);
 	};
 
-	const handleChatPress = () => {
-		showDialog(
-			DialogTemplates.requireLogin(
-				() => {
-					// Chuyển đến màn hình đăng nhập
-					navigation.navigate("Login");
-				},
-				() => {
-					// Hủy - không làm gì
-					console.log("Hủy chat");
-				}
-			)
-		);
-	};
-
 	// Hỗ trợ & Thông tin
 	const supportAndInfo = [
 		{
@@ -133,16 +118,6 @@ export default function GuestAccountScreen({ navigation }) {
 							>
 								<Ionicons
 									name="notifications-outline"
-									size={24}
-									color="#fff"
-								/>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.iconButton}
-								onPress={handleChatPress}
-							>
-								<Ionicons
-									name="chatbubble-outline"
 									size={24}
 									color="#fff"
 								/>

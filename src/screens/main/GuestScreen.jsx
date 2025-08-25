@@ -39,30 +39,14 @@ export default function GuestScreen({ navigation, route }) {
 		);
 	};
 
-	const handleChatPress = () => {
-		showDialog(
-			DialogTemplates.requireLogin(
-				() => {
-					// Chuyển đến màn hình đăng nhập
-					navigation.navigate("Login");
-				},
-				() => {
-					// Hủy - không làm gì
-					console.log("Hủy chat");
-				}
-			)
-		);
-	};
-
 	return (
 		<View style={styles.container}>
 			{/* Header */}
 			<Header
 				title={tabName}
 				onNotificationPress={handleNotificationPress}
-				onChatPress={handleChatPress}
 				showNotificationIcon={true}
-				showChatIcon={true}
+				showChatIcon={false}
 				variant="gradient"
 			/>
 
