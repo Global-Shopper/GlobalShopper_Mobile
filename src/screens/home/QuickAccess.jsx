@@ -19,20 +19,6 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			onPress: () => navigation?.navigate("TaxListScreen"),
 		},
 		{
-			id: 3,
-			title: "Tỉ giá",
-			icon: "trending-up-outline",
-			color: "#42A5F5",
-			onPress: () => console.log("Navigate to exchange rate"),
-		},
-		{
-			id: 4,
-			title: "Phí dịch vụ",
-			icon: "calculator-outline",
-			color: "#42A5F5",
-			onPress: () => console.log("Navigate to service fees"),
-		},
-		{
 			id: 5,
 			title: "Thống kê",
 			icon: "stats-chart-outline",
@@ -56,14 +42,10 @@ const QuickAccess = ({ navigation, showLoginDialog }) => {
 			<View style={styles.quickAccessContainer}>
 				<Text style={styles.sectionTitle}>Truy cập nhanh</Text>
 				<View style={styles.quickAccessGrid}>
-					{quickAccessItems.map((item, index) => (
+					{quickAccessItems.map((item) => (
 						<TouchableOpacity
 							key={item.id}
-							style={[
-								styles.quickAccessItem,
-								// Remove margin for every 4th item (item 4, 8, 12, etc.)
-								(index + 1) % 4 === 0 && { marginRight: 0 },
-							]}
+							style={styles.quickAccessItem}
 							onPress={item.onPress}
 							activeOpacity={0.7}
 						>
@@ -122,17 +104,16 @@ const styles = StyleSheet.create({
 	},
 	quickAccessGrid: {
 		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "flex-start",
-		gap: 0, // Remove gap to ensure items fit properly
+		justifyContent: "space-between", // Evenly distribute 4 items
+		alignItems: "center",
 	},
 	quickAccessItem: {
 		backgroundColor: "transparent",
 		borderRadius: 12,
 		padding: 12,
 		alignItems: "center",
-		width: "24%", // Slightly larger width for better spacing
-		marginRight: "1.33%", // Smaller margin: 24% * 4 + 1.33% * 3 = 100%
+		flex: 1, // Each item takes equal space
+		marginHorizontal: 4, // Small horizontal margin for spacing
 	},
 	quickAccessIcon: {
 		width: 40, // Back to original size for 4 columns
