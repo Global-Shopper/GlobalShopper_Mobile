@@ -72,18 +72,8 @@ const RefundHistorySection = ({ orderData }) => {
 	}
 
 	if (ticketsArray.length === 0) {
-		return (
-			<View style={styles.container}>
-				<View style={styles.header}>
-					<Text style={styles.title}>
-						Thông tin trả hàng/hoàn tiền
-					</Text>
-				</View>
-				<Text style={styles.noDataText}>
-					Chưa có yêu cầu trả hàng/hoàn tiền nào.
-				</Text>
-			</View>
-		);
+		// Don't render anything if there are no refund tickets
+		return null;
 	}
 
 	return (

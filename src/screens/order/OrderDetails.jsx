@@ -496,8 +496,10 @@ export default function OrderDetails({ navigation, route }) {
 					)}
 				</View>
 
-				{/* Refund History Section */}
-				<RefundHistorySection orderData={orderData} />
+				{/* Refund History Section - Only for delivered orders */}
+				{orderData.status === "DELIVERED" && (
+					<RefundHistorySection orderData={orderData} />
+				)}
 			</ScrollView>
 
 			{/* Review Button (only for completed orders) - Fixed at bottom */}
