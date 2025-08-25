@@ -7,7 +7,6 @@ import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { signout } from "../../features/user";
 import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
-import { getStatusText, REQUEST_STATUS } from "../../utils/statusHandler";
 
 export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
@@ -21,10 +20,6 @@ export default function AccountScreen({ navigation }) {
 		isLoading: isLoadingRequests,
 		error: requestError,
 	} = useGetPurchaseRequestQuery();
-
-	// State cho số lượng
-	const [requestCount, setRequestCount] = useState(0);
-	const [orderCount, setOrderCount] = useState(0);
 
 	const [user] = useState({
 		name: reduxUser?.name,
@@ -43,52 +38,11 @@ export default function AccountScreen({ navigation }) {
 		console.log("Purchase Request Data:", purchaseRequestData);
 		console.log("Is Loading:", isLoadingRequests);
 		console.log("Error:", requestError);
-
-		if (purchaseRequestData && Array.isArray(purchaseRequestData)) {
-			// Đếm số yêu cầu đang xử lý (chưa hoàn thành)
-			const pendingRequests = purchaseRequestData.filter(
-				(request) =>
-					request.status !== "DELIVERED" &&
-					request.status !== "CANCELED"
-			).length;
-
-			// Đếm số đơn hàng đã hoàn thành
-			const completedOrders = purchaseRequestData.filter(
-				(request) => request.status === "DELIVERED"
-			).length;
-
-			setRequestCount(pendingRequests);
-			setOrderCount(completedOrders);
-		} else {
-			// Nếu chưa có data hoặc data không hợp lệ, set về 0
-			setRequestCount(0);
-			setOrderCount(0);
-		}
 	}, [purchaseRequestData, isLoadingRequests, requestError]);
 
 	const handleChatPress = () => {
 		console.log("Chat pressed");
 	};
-
-	// Stats để hiển thị tổng quan nhanh
-	const userStats = [
-		{
-			id: 1,
-			title: "Yêu cầu",
-			icon: "clipboard",
-			color: "#667eea",
-			value: requestCount.toString(),
-			subtitle: getStatusText(REQUEST_STATUS.CHECKING),
-		},
-		{
-			id: 2,
-			title: "Đơn hàng",
-			icon: "bag-check",
-			color: "#f093fb",
-			value: orderCount.toString(),
-			subtitle: getStatusText(REQUEST_STATUS.COMPLETED),
-		},
-	];
 
 	// Quản lý tài khoản
 	const accountManagement = [
@@ -199,47 +153,6 @@ export default function AccountScreen({ navigation }) {
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Tổng quan nhanh */}
-				<View style={styles.statsContainer}>
-					<Text style={styles.sectionTitle}>Tổng quan</Text>
-					<View style={styles.statsRow}>
-						{userStats.map((stat) => (
-							<TouchableOpacity
-								key={stat.id}
-								style={styles.statCard}
-								activeOpacity={0.7}
-								onPress={() =>
-									console.log(
-										`Navigate to ${stat.title} details`
-									)
-								}
-							>
-								<View
-									style={[
-										styles.statIcon,
-										{ backgroundColor: stat.color + "20" },
-									]}
-								>
-									<Ionicons
-										name={stat.icon}
-										size={26}
-										color={stat.color}
-									/>
-								</View>
-								<Text style={styles.statValue}>
-									{stat.value}
-								</Text>
-								<Text style={styles.statTitle}>
-									{stat.title}
-								</Text>
-								<Text style={styles.statSubtitle}>
-									{stat.subtitle}
-								</Text>
-							</TouchableOpacity>
-						))}
-					</View>
-				</View>
-
 				{/* Quản lý tài khoản */}
 				<View style={styles.sectionContainer}>
 					<Text style={styles.sectionTitle}>Quản lý tài khoản</Text>
