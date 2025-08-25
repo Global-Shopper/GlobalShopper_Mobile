@@ -19,7 +19,14 @@ import {
 } from "../../services/gshopApi";
 
 export default function OrderScreen({ navigation }) {
-	const [activeTab, setActiveTab] = useState("all");
+	const [activeTab, setTab] = useState("all");
+
+	// Handle tab switching with forced refetch
+	const setActiveTab = (tab) => {
+		setTab(tab);
+		// Force refetch when switching tabs to ensure fresh data
+		refetch();
+	};
 	const [refreshing, setRefreshing] = useState(false);
 	const [feedbackMap, setFeedbackMap] = useState({}); // Track which orders have feedback
 
@@ -33,16 +40,19 @@ export default function OrderScreen({ navigation }) {
 	});
 
 	// API query for orders
+	const queryParams = {
+		status: activeTab === "all" ? undefined : activeTab,
+		page: 0,
+		size: 100, // Increased to ensure we get recent orders
+		sort: "createdAt,desc", // Explicit sort parameter
+	};
+
 	const {
 		data: ordersResponse,
 		isLoading,
 		error,
 		refetch,
-	} = useGetAllOrdersQuery({
-		status: activeTab === "all" ? undefined : activeTab,
-		page: 0,
-		size: 50,
-	});
+	} = useGetAllOrdersQuery(queryParams);
 
 	// Lazy query to get order details with feedback info
 	const [getOrderById] = useLazyGetOrderByIdQuery();
@@ -70,8 +80,16 @@ export default function OrderScreen({ navigation }) {
 	// Extract orders from API response and sort by newest first
 	const orders = useMemo(() => {
 		const ordersList = ordersResponse?.content || [];
+
 		// Create a copy of the array before sorting to avoid read-only property error
-		return [...ordersList].sort((a, b) => b.createdAt - a.createdAt);
+		const sorted = [...ordersList].sort((a, b) => {
+			// Ensure proper date comparison
+			const dateA = new Date(a.createdAt).getTime();
+			const dateB = new Date(b.createdAt).getTime();
+			return dateB - dateA; // Newest first
+		});
+
+		return sorted;
 	}, [ordersResponse]);
 
 	// Load feedback status for delivered orders
@@ -84,25 +102,11 @@ export default function OrderScreen({ navigation }) {
 
 			if (deliveredOrders.length === 0) return;
 
-			console.log(
-				`Loading feedback status for ${deliveredOrders.length} delivered orders...`
-			);
-
 			// Always load feedback for all delivered orders to ensure fresh data
 			for (const order of deliveredOrders) {
 				try {
-					console.log(`Loading feedback for order ${order.id}...`);
 					const result = await getOrderById(order.id);
 					if (result.data) {
-						console.log(
-							`Order ${order.id} full response:`,
-							JSON.stringify(result.data, null, 2)
-						);
-						console.log(
-							`Order ${order.id} feedback field:`,
-							result.data.feedback
-						);
-
 						// Check if feedback exists in the order detail
 						const hasFeedback =
 							result.data.feedback &&
@@ -110,23 +114,13 @@ export default function OrderScreen({ navigation }) {
 								result.data.feedback.rating ||
 								result.data.feedback.comment);
 
-						console.log(
-							`Order ${order.id}: hasFeedback = ${hasFeedback}`,
-							`feedback object:`,
-							result.data.feedback
-						);
-
 						// Update feedback map for this specific order
 						setFeedbackMap((prev) => ({
 							...prev,
 							[order.id]: hasFeedback,
 						}));
 					}
-				} catch (error) {
-					console.error(
-						`Error loading feedback for order ${order.id}:`,
-						error
-					);
+				} catch (_error) {
 					// Set to false on error
 					setFeedbackMap((prev) => ({
 						...prev,
@@ -148,7 +142,6 @@ export default function OrderScreen({ navigation }) {
 	// Refresh orders when screen comes into focus (e.g., after checkout or feedback)
 	useFocusEffect(
 		useCallback(() => {
-			console.log("OrderScreen focused, refreshing orders...");
 			refetch();
 
 			// Force refresh feedback status for delivered orders when screen comes back into focus
@@ -158,15 +151,9 @@ export default function OrderScreen({ navigation }) {
 			);
 
 			if (deliveredOrders.length > 0) {
-				console.log(
-					"Screen focused: Force reloading feedback status for delivered orders"
-				);
 				// Force reload feedback for all delivered orders
 				deliveredOrders.forEach(async (order) => {
 					try {
-						console.log(
-							`Force loading feedback for order ${order.id}`
-						);
 						const result = await getOrderById(order.id);
 						if (result.data) {
 							const hasFeedback =
@@ -175,21 +162,13 @@ export default function OrderScreen({ navigation }) {
 									result.data.feedback.rating ||
 									result.data.feedback.comment);
 
-							console.log(`Order ${order.id} feedback check:`, {
-								feedback: result.data.feedback,
-								hasFeedback: hasFeedback,
-							});
-
 							setFeedbackMap((prev) => ({
 								...prev,
 								[order.id]: hasFeedback,
 							}));
 						}
-					} catch (error) {
-						console.error(
-							`Error force loading feedback for order ${order.id}:`,
-							error
-						);
+					} catch (_error) {
+						// Silently handle error
 					}
 				});
 			}
@@ -312,10 +291,14 @@ export default function OrderScreen({ navigation }) {
 	};
 
 	// Filter orders based on active tab
-	const filteredOrders =
-		activeTab === "all"
-			? orders
-			: orders.filter((order) => order.status === activeTab);
+	const filteredOrders = useMemo(() => {
+		const filtered =
+			activeTab === "all"
+				? orders
+				: orders.filter((order) => order.status === activeTab);
+
+		return filtered;
+	}, [orders, activeTab]);
 
 	// Handle loading state
 	if (isLoading) {
