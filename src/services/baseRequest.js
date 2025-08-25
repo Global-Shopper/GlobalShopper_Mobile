@@ -1,22 +1,22 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
+import Constants from "expo-constants";
 import { setOnLineStatus } from "../features/app";
-import { setUser } from "../features/user";
+import { setUser, signout } from "../features/user";
 
-// Axios instance setup
-const url = process.env.EXPO_PUBLIC_SERVER_URL;
+// 🔹 Lấy URL từ app.config.js (đã inject từ .env)
+const url = Constants.expoConfig?.extra?.serverUrl;
 
+// Axios instance
 export const axiosInstance = axios.create({
 	baseURL: url,
-	headers: {
-		"Content-Type": "application/json",
-	},
+	headers: { "Content-Type": "application/json" },
 	responseType: "json",
-	timeout: 300000,
-	timeoutErrorMessage: "Connection is timeout exceeded",
+	timeout: 30000, // 30s
+	timeoutErrorMessage: "Connection timeout exceeded",
 });
 
-// Lưu ý: baseurl không cần truyền vào vì đã được định nghĩa trong axiosInstance
+// Axios Base Query cho RTK Query
 export const axiosBaseQuery =
 	({ baseUrl } = { baseUrl: "" }) =>
 	async ({ url, method, data, params }) => {
@@ -39,7 +39,7 @@ export const axiosBaseQuery =
 		}
 	};
 
-// Lưu ý dùng hàm này vì thực thi store của redux ngay module này sẽ bị lỗi circular dependency
+// Setup interceptor
 const setUpInterceptor = (store) => {
 	// Retry logic
 	axiosRetry(axiosInstance, {
@@ -51,53 +51,47 @@ const setUpInterceptor = (store) => {
 				store.dispatch(setOnLineStatus(false));
 				return false;
 			}
-
 			const status = Number(error?.response?.status);
-			if (status === 503) {
-				return false;
-			}
+			if (status === 503) return false;
 
 			return (
-				(status >= 100 && status <= 199) ||
 				(status >= 500 && status <= 599) ||
 				axiosRetry.isNetworkOrIdempotentRequestError(error) ||
 				status === 429 ||
-				status === 408 ||
-				status === 400
+				status === 408
 			);
 		},
 	});
+
 	// Request interceptor
 	axiosInstance.interceptors.request.use(
 		async (config) => {
-			// Skip auth for AI endpoints (they might be public)
-			const isAIEndpoint = config.url?.includes("/ai/");
+			const appState = store.getState();
+			const accessToken = appState?.rootReducer?.user?.accessToken;
+			const refreshToken = appState?.rootReducer?.user?.refreshToken;
 
-			if (!isAIEndpoint) {
-				const appState = await store.getState();
-				const accessToken = appState?.rootReducer?.user?.accessToken;
-				const refreshToken = appState?.rootReducer?.user?.refreshToken;
+			if (accessToken) {
+				config.headers["Authorization"] = `Bearer ${accessToken}`;
+			}
 
-				if (accessToken) {
-					config.headers["Authorization"] = `Bearer ${accessToken}`;
-				}
-
-				if (isTokenExpired(accessToken)) {
-					const newAccessToken = await refreshAccessToken(
-						refreshToken
+			if (isTokenExpired(accessToken) && refreshToken) {
+				const newAccessToken = await refreshAccessToken(refreshToken);
+				if (newAccessToken) {
+					config.headers[
+						"Authorization"
+					] = `Bearer ${newAccessToken}`;
+					store.dispatch(
+						setUser({
+							accessToken: newAccessToken,
+							isLoggedIn: true,
+						})
 					);
-					if (newAccessToken) {
-						config.headers[
-							"Authorization"
-						] = `Bearer ${newAccessToken}`;
-						store.dispatch(
-							setUser({ ...newAccessToken, isLoggedIn: true })
-						);
-					}
+				} else {
+					store.dispatch(signout());
 				}
 			}
 
-			// Debug logging for purchase request
+			// Debug log cho purchase-request
 			if (config.url?.includes("purchase-request")) {
 				console.log("=== AXIOS REQUEST DEBUG ===");
 				console.log("URL:", config.baseURL + config.url);
@@ -106,69 +100,52 @@ const setUpInterceptor = (store) => {
 				console.log("Data:", JSON.stringify(config.data, null, 2));
 			}
 
-			if (config.data) {
-				// Check if data is FormData (React Native)
-				if (config.data instanceof FormData) {
-					// Let browser set Content-Type with boundary for multipart/form-data
-					delete config.headers["Content-Type"];
-				} else {
-					// Check if data contains file objects (fallback)
-					const haveFile = Object.values(config.data).some(
-						(e) =>
-							e &&
-							(e.toString() === "[object File]" ||
-								(e.uri && e.type && e.name))
-					);
-					if (haveFile) {
-						config.headers["Content-Type"] = "multipart/form-data";
-					}
-				}
+			// Nếu là FormData thì bỏ Content-Type mặc định
+			if (config.data instanceof FormData) {
+				delete config.headers["Content-Type"];
 			}
 
 			return config;
 		},
-		(error) => {
-			return Promise.reject(error);
-		}
+		(error) => Promise.reject(error)
 	);
 
-	// Response interceptor to handle 403 errors
+	// Response interceptor
 	axiosInstance.interceptors.response.use(
-		(response) => {
-			return response;
-		},
+		(response) => response,
 		async (error) => {
-			// Handle 403 Forbidden errors
 			if (error.response?.status === 403) {
-				console.log(
-					"🚨 403 Forbidden - Token likely expired, forcing logout..."
-				);
-
-				// Import signout action
-				const { signout } = await import("../features/user");
-
-				// Clear user data and navigate to login
 				store.dispatch(signout());
-
-				// Optional: Show alert to user
-				console.log("User has been logged out due to expired session");
+				console.log(
+					"🚨 403 Forbidden - Logged out due to expired session"
+				);
 			}
-
 			return Promise.reject(error);
 		}
 	);
 };
 
-// Function to check if the token is expired
+// Check token expired
 const isTokenExpired = (token) => {
-	// Implement your logic to check token expiration
-	// Return true if expired, false otherwise
+	if (!token) return true;
+	try {
+		const [, payload] = token.split(".");
+		const decoded = JSON.parse(atob(payload));
+		return decoded.exp * 1000 < Date.now();
+	} catch {
+		return true;
+	}
 };
 
-// Function to refresh the access token
+// Refresh access token
 const refreshAccessToken = async (refreshToken) => {
-	// Implement your logic to refresh the access token using the refresh token
-	// Return the new access token
+	try {
+		const res = await axios.post(`${url}/auth/refresh`, { refreshToken });
+		return res.data?.accessToken || null;
+	} catch (err) {
+		console.log("Refresh token failed", err);
+		return null;
+	}
 };
 
 export default setUpInterceptor;
