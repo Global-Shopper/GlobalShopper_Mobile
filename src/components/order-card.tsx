@@ -77,7 +77,7 @@ export default function OrderCard({
 		} else if (order.ecommercePlatform) {
 			return order.ecommercePlatform;
 		}
-		
+
 		// Better fallback based on request type
 		if (order.requestType?.toLowerCase() === "offline") {
 			return "Cửa hàng offline";

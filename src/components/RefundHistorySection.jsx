@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
 import { useGetRefundTicketsByOrderIdQuery } from "../services/gshopApi";
 import {
@@ -28,14 +27,16 @@ const RefundHistorySection = ({ orderData }) => {
 		error,
 		refundTicketsType: typeof refundTickets,
 		isArray: Array.isArray(refundTickets),
-		isObject: typeof refundTickets === 'object' && refundTickets !== null,
+		isObject: typeof refundTickets === "object" && refundTickets !== null,
 	});
 
 	if (isLoading) {
 		return (
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Text style={styles.title}>Thông tin trả hàng/hoàn tiền</Text>
+					<Text style={styles.title}>
+						Thông tin trả hàng/hoàn tiền
+					</Text>
 				</View>
 				<Text style={styles.loadingText}>Đang tải thông tin...</Text>
 			</View>
@@ -46,7 +47,9 @@ const RefundHistorySection = ({ orderData }) => {
 		return (
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Text style={styles.title}>Thông tin trả hàng/hoàn tiền</Text>
+					<Text style={styles.title}>
+						Thông tin trả hàng/hoàn tiền
+					</Text>
 				</View>
 				<Text style={styles.errorText}>
 					Lỗi khi tải thông tin: {error.message || "Unknown error"}
@@ -59,7 +62,11 @@ const RefundHistorySection = ({ orderData }) => {
 	let ticketsArray = [];
 	if (Array.isArray(refundTickets)) {
 		ticketsArray = refundTickets;
-	} else if (refundTickets && typeof refundTickets === 'object' && refundTickets.id) {
+	} else if (
+		refundTickets &&
+		typeof refundTickets === "object" &&
+		refundTickets.id
+	) {
 		// Single refund ticket object - convert to array
 		ticketsArray = [refundTickets];
 	}
@@ -68,7 +75,9 @@ const RefundHistorySection = ({ orderData }) => {
 		return (
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Text style={styles.title}>Thông tin trả hàng/hoàn tiền</Text>
+					<Text style={styles.title}>
+						Thông tin trả hàng/hoàn tiền
+					</Text>
 				</View>
 				<Text style={styles.noDataText}>
 					Chưa có yêu cầu trả hàng/hoàn tiền nào.
@@ -86,12 +95,16 @@ const RefundHistorySection = ({ orderData }) => {
 				<View key={ticket.id || index} style={styles.ticketItem}>
 					<View style={styles.ticketHeader}>
 						<Text style={styles.ticketId} numberOfLines={1}>
-							#{ticket.id ? ticket.id.slice(-8) : 'N/A'}
+							#{ticket.id ? ticket.id.slice(-8) : "N/A"}
 						</Text>
 						<View
 							style={[
 								styles.statusBadge,
-								{ backgroundColor: getStatusColor(ticket.status) },
+								{
+									backgroundColor: getStatusColor(
+										ticket.status
+									),
+								},
 							]}
 						>
 							<Text style={styles.statusText} numberOfLines={1}>
@@ -116,21 +129,26 @@ const RefundHistorySection = ({ orderData }) => {
 
 					{ticket.refundRate && (
 						<Text style={styles.refundRateText}>
-							Tỷ lệ hoàn tiền: {Math.round(ticket.refundRate * 100)}%
+							Tỷ lệ hoàn tiền:{" "}
+							{Math.round(ticket.refundRate * 100)}%
 						</Text>
 					)}
 
 					{ticket.evidence && ticket.evidence.length > 0 && (
 						<View style={styles.imagesContainer}>
-							<Text style={styles.imagesLabel}>Hình ảnh đính kèm:</Text>
+							<Text style={styles.imagesLabel}>
+								Hình ảnh đính kèm:
+							</Text>
 							<View style={styles.imagesList}>
-								{ticket.evidence.slice(0, 3).map((imageUrl, imgIndex) => (
-									<Image
-										key={imgIndex}
-										source={{ uri: imageUrl }}
-										style={styles.attachedImage}
-									/>
-								))}
+								{ticket.evidence
+									.slice(0, 3)
+									.map((imageUrl, imgIndex) => (
+										<Image
+											key={imgIndex}
+											source={{ uri: imageUrl }}
+											style={styles.attachedImage}
+										/>
+									))}
 								{ticket.evidence.length > 3 && (
 									<View style={styles.moreImagesIndicator}>
 										<Text style={styles.moreImagesText}>
