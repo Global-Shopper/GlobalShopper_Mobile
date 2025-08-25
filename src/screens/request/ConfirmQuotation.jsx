@@ -3,13 +3,13 @@ import * as Linking from "expo-linking";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	Image,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import PaymentSmCard from "../../components/payment-sm-card";
 import { Text } from "../../components/ui/text";
@@ -26,6 +26,42 @@ export default function ConfirmQuotation({ navigation, route }) {
 	const requestId = request?.id || route.params?.requestId;
 	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 	const [selectedShipping, setSelectedShipping] = useState(null);
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButtonText: "OK",
+		primaryButtonStyle: "primary",
+		onPrimaryPress: null,
+		secondaryButtonText: null,
+		onSecondaryPress: null,
+	});
+
+	// Helper functions for dialog management
+	const showDialog = (
+		title,
+		message,
+		style = "primary",
+		primaryText = "OK",
+		onPrimaryPress = null,
+		secondaryText = null,
+		onSecondaryPress = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButtonText: primaryText,
+			primaryButtonStyle: style,
+			onPrimaryPress: onPrimaryPress || closeDialog,
+			secondaryButtonText: secondaryText,
+			onSecondaryPress: onSecondaryPress,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	};
 
 	console.log("ConfirmQuotation params:", {
 		request: !!request,
@@ -233,9 +269,77 @@ export default function ConfirmQuotation({ navigation, route }) {
 		});
 	};
 
+	// Listen for beforeRemove event from SelectShipping to get shipping data
+	useEffect(() => {
+		const unsubscribe = navigation.addListener("focus", () => {
+			// Check if we have shipping data in route params when screen regains focus
+			if (route.params?.selectedShipping) {
+				console.log(
+					"Received shipping selection:",
+					route.params.selectedShipping
+				);
+				setSelectedShipping(route.params.selectedShipping);
+				// Clear the param to prevent reprocessing
+				navigation.setParams({ selectedShipping: undefined });
+			}
+		});
+
+		return unsubscribe;
+	}, [navigation, route.params]);
+
+	// Helper function to get button text based on current state
+	const getButtonText = () => {
+		if (isCheckingOut) {
+			return "Đang xử lý...";
+		}
+
+		if (!selectedPaymentMethod) {
+			return "Chọn phương thức thanh toán";
+		}
+
+		const requestType = displayData?.requestType || displayData?.type;
+		const isOfflineRequest = requestType?.toLowerCase() === "offline";
+
+		if (isOfflineRequest && !selectedShipping) {
+			return "Chọn phương thức vận chuyển";
+		}
+
+		return "Xác nhận thanh toán";
+	};
+
+	// Helper function to check if payment can be confirmed
+	const canConfirmPayment = () => {
+		if (!selectedPaymentMethod || isCheckingOut) {
+			return false;
+		}
+
+		const requestType = displayData?.requestType || displayData?.type;
+		const isOfflineRequest = requestType?.toLowerCase() === "offline";
+
+		// For offline requests, shipping must also be selected
+		if (isOfflineRequest && !selectedShipping) {
+			return false;
+		}
+
+		return true;
+	};
+
 	const handleConfirmPayment = async () => {
 		console.log("🚀 STARTING PAYMENT PROCESS 🚀");
 		if (selectedPaymentMethod) {
+			// Check if this is an offline request and validate shipping selection
+			const requestType = displayData?.requestType || displayData?.type;
+			const isOfflineRequest = requestType?.toLowerCase() === "offline";
+
+			if (isOfflineRequest && !selectedShipping) {
+				showDialog(
+					"Thiếu thông tin",
+					"Vui lòng chọn phương thức vận chuyển trước khi thanh toán.",
+					"danger"
+				);
+				return;
+			}
+
 			try {
 				console.log(
 					"Payment confirmed with method:",
@@ -246,7 +350,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 				const subRequestData = selectedSubRequest;
 				if (!subRequestData) {
 					console.error("No sub-request data found");
-					Alert.alert("Lỗi", "Không tìm thấy thông tin sub-request");
+					showDialog(
+						"Lỗi",
+						"Không tìm thấy thông tin sub-request",
+						"danger"
+					);
 					return;
 				}
 
@@ -257,10 +365,15 @@ export default function ConfirmQuotation({ navigation, route }) {
 						.map((info) => info.productName)
 						.join(", ");
 
-					Alert.alert(
+					showDialog(
 						"Báo giá đã hết hạn",
 						`Một số sản phẩm có báo giá đã hết hạn: ${expiredProducts}. Vui lòng yêu cầu báo giá mới trước khi thanh toán.`,
-						[{ text: "OK", onPress: () => navigation.goBack() }]
+						"danger",
+						"OK",
+						() => {
+							closeDialog();
+							navigation.goBack();
+						}
 					);
 					return;
 				}
@@ -405,9 +518,10 @@ export default function ConfirmQuotation({ navigation, route }) {
 				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
 					if (walletData?.balance < totalAmount) {
-						Alert.alert(
+						showDialog(
 							"Số dư không đủ",
-							"Số dư trong ví không đủ để thanh toán. Vui lòng nạp thêm tiền."
+							"Số dư trong ví không đủ để thanh toán. Vui lòng nạp thêm tiền.",
+							"danger"
 						);
 						return;
 					}
@@ -555,9 +669,10 @@ export default function ConfirmQuotation({ navigation, route }) {
 						});
 					} else {
 						console.error("❌ No VNPay URL in response");
-						Alert.alert(
+						showDialog(
 							"Lỗi thanh toán",
-							"Không nhận được URL thanh toán từ VNPay"
+							"Không nhận được URL thanh toán từ VNPay",
+							"danger"
 						);
 					}
 				}
@@ -569,11 +684,12 @@ export default function ConfirmQuotation({ navigation, route }) {
 					message: error?.message,
 					originalStatus: error?.originalStatus,
 				});
-				Alert.alert(
+				showDialog(
 					"Lỗi thanh toán",
 					error?.data?.message ||
 						error?.message ||
-						"Không thể thực hiện thanh toán. Vui lòng thử lại."
+						"Không thể thực hiện thanh toán. Vui lòng thử lại.",
+					"danger"
 				);
 			}
 		}
@@ -1299,11 +1415,10 @@ export default function ConfirmQuotation({ navigation, route }) {
 				<TouchableOpacity
 					style={[
 						styles.confirmButton,
-						(!selectedPaymentMethod || isCheckingOut) &&
-							styles.confirmButtonDisabled,
+						!canConfirmPayment() && styles.confirmButtonDisabled,
 					]}
 					onPress={handleConfirmPayment}
-					disabled={!selectedPaymentMethod || isCheckingOut}
+					disabled={!canConfirmPayment()}
 					activeOpacity={0.7}
 				>
 					{isCheckingOut ? (
@@ -1312,15 +1427,27 @@ export default function ConfirmQuotation({ navigation, route }) {
 						<Text
 							style={[
 								styles.confirmButtonText,
-								(!selectedPaymentMethod || isCheckingOut) &&
+								!canConfirmPayment() &&
 									styles.confirmButtonTextDisabled,
 							]}
 						>
-							Xác nhận thanh toán
+							{getButtonText()}
 						</Text>
 					)}
 				</TouchableOpacity>
 			</View>
+
+			{/* Dialog Component */}
+			<Dialog
+				visible={dialogConfig.visible}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButtonText={dialogConfig.primaryButtonText}
+				primaryButtonStyle={dialogConfig.primaryButtonStyle}
+				onPrimaryPress={dialogConfig.onPrimaryPress}
+				secondaryButtonText={dialogConfig.secondaryButtonText}
+				onSecondaryPress={dialogConfig.onSecondaryPress}
+			/>
 		</View>
 	);
 }

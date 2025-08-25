@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	FlatList,
 	StyleSheet,
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { useGetShippingRatesMutation } from "../../services/gshopApi";
@@ -18,8 +18,44 @@ export default function SelectShipping({ navigation, route }) {
 	const [shippingMethods, setShippingMethods] = useState([]);
 	const [selectedShipping, setSelectedShipping] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButtonText: "OK",
+		primaryButtonStyle: "primary",
+		onPrimaryPress: null,
+		secondaryButtonText: null,
+		onSecondaryPress: null,
+	});
 
 	const [getShippingRates] = useGetShippingRatesMutation();
+
+	// Helper functions for dialog management
+	const showDialog = (
+		title,
+		message,
+		style = "primary",
+		primaryText = "OK",
+		onPrimaryPress = null,
+		secondaryText = null,
+		onSecondaryPress = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButtonText: primaryText,
+			primaryButtonStyle: style,
+			onPrimaryPress: onPrimaryPress || closeDialog,
+			secondaryButtonText: secondaryText,
+			onSecondaryPress: onSecondaryPress,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	};
 
 	useEffect(() => {
 		fetchShippingRates();
@@ -27,17 +63,18 @@ export default function SelectShipping({ navigation, route }) {
 
 	const fetchShippingRates = async () => {
 		if (!quotation) {
-			Alert.alert("Lỗi", "Không có thông tin quotation");
-			navigation.goBack();
+			showDialog(
+				"Lỗi",
+				"Không có thông tin quotation",
+				"danger",
+				"OK",
+				() => {
+					closeDialog();
+					navigation.goBack();
+				}
+			);
 			return;
 		}
-
-		console.log("📦 Quotation data for shipping rates:", {
-			totalWeightEstimate: quotation.totalWeightEstimate,
-			packageType: quotation.packageType,
-			shipper: quotation.shipper,
-			recipient: quotation.recipient,
-		});
 
 		setLoading(true);
 		try {
@@ -57,39 +94,14 @@ export default function SelectShipping({ navigation, route }) {
 
 			const directPayload = fedexPayload; // Direct format
 
-			console.log(
-				"Fetching shipping rates with wrapped payload:",
-				JSON.stringify(shippingPayload, null, 2)
-			);
-			console.log(
-				"Direct payload format:",
-				JSON.stringify(directPayload, null, 2)
-			);
-			console.log("API Endpoint being called: /shipping/rate");
-			console.log("Full URL will be: [BASE_URL]/shipping/rate");
-
 			try {
 				// Try wrapped format first
 				let result;
 				try {
-					console.log("🔄 Trying wrapped format (inputJson)...");
 					result = await getShippingRates(shippingPayload).unwrap();
-					console.log(
-						"✅ Shipping rates API success with wrapped format:",
-						result
-					);
-				} catch (wrappedError) {
-					console.log(
-						"❌ Wrapped format failed, trying direct format..."
-					);
-					console.log("Wrapped error:", wrappedError);
-
+				} catch (_wrappedError) {
 					// Try direct format
 					result = await getShippingRates(directPayload).unwrap();
-					console.log(
-						"✅ Shipping rates API success with direct format:",
-						result
-					);
 				}
 
 				// Parse actual FedEx response - check multiple possible structures
@@ -98,26 +110,13 @@ export default function SelectShipping({ navigation, route }) {
 				if (result?.output?.rateReplyDetails) {
 					// Structure: result.output.rateReplyDetails
 					rateReplyDetails = result.output.rateReplyDetails;
-					console.log("📦 Found rateReplyDetails in result.output");
 				} else if (result?.rateReplyDetails) {
 					// Structure: result.rateReplyDetails (direct)
 					rateReplyDetails = result.rateReplyDetails;
-					console.log("📦 Found rateReplyDetails in result directly");
 				}
 
 				if (rateReplyDetails && Array.isArray(rateReplyDetails)) {
-					console.log(
-						"📦 Parsing real API response with",
-						rateReplyDetails.length,
-						"shipping options"
-					);
 					const shippingOptions = rateReplyDetails.map((rate) => {
-						console.log(
-							"Processing rate:",
-							rate.serviceType,
-							rate.serviceName
-						);
-
 						// Find VND rate (PREFERRED_CURRENCY) first
 						let bestRate = null;
 						if (
@@ -144,13 +143,6 @@ export default function SelectShipping({ navigation, route }) {
 							}
 						}
 
-						console.log("Selected rate detail:", {
-							rateType: bestRate?.rateType,
-							currency: bestRate?.currency,
-							totalNetCharge: bestRate?.totalNetCharge,
-							totalBaseCharge: bestRate?.totalBaseCharge,
-						});
-
 						// Convert USD to VND if needed (approximate rate: 1 USD = 24000 VND)
 						let displayCost =
 							bestRate?.totalNetCharge ||
@@ -161,7 +153,6 @@ export default function SelectShipping({ navigation, route }) {
 						if (displayCurrency === "USD" && displayCost > 0) {
 							displayCost = displayCost * 24000; // Rough conversion
 							displayCurrency = "VNĐ (ước tính)";
-							console.log("Converted USD to VND:", displayCost);
 						}
 
 						return {
@@ -186,44 +177,29 @@ export default function SelectShipping({ navigation, route }) {
 						};
 					});
 
-					console.log(
-						"✅ Parsed shipping options from real API:",
-						shippingOptions
-					);
 					setShippingMethods(shippingOptions);
 				} else {
-					console.log("❌ No valid rateReplyDetails found");
-					console.log("Response structure:", Object.keys(result));
 					setShippingMethods([]);
-					Alert.alert(
+					showDialog(
 						"Lỗi",
 						"Không thể tải phương thức vận chuyển. Vui lòng thử lại sau.",
-						[{ text: "OK" }]
+						"danger"
 					);
 				}
-			} catch (apiError) {
-				console.log("❌ API call failed");
-				console.error("API Error details:", {
-					status: apiError?.status,
-					message: apiError?.data?.message,
-					statusCode: apiError?.data?.statusCode,
-					fullError: apiError,
-				});
-
+			} catch (_apiError) {
 				setShippingMethods([]);
-				Alert.alert(
+				showDialog(
 					"Lỗi",
 					"Không thể kết nối với dịch vụ vận chuyển. Vui lòng kiểm tra kết nối mạng và thử lại.",
-					[{ text: "OK" }]
+					"danger"
 				);
 			}
-		} catch (error) {
-			console.error("Outer error fetching shipping rates:", error);
+		} catch (_error) {
 			setShippingMethods([]);
-			Alert.alert(
+			showDialog(
 				"Lỗi",
 				"Có lỗi không xác định xảy ra. Vui lòng thử lại.",
-				[{ text: "OK" }]
+				"danger"
 			);
 		} finally {
 			setLoading(false);
@@ -245,19 +221,24 @@ export default function SelectShipping({ navigation, route }) {
 
 	const handleSelectShipping = () => {
 		if (!selectedShipping) {
-			Alert.alert(
+			showDialog(
 				"Thông báo",
-				"Vui lòng chọn một phương thức vận chuyển"
+				"Vui lòng chọn một phương thức vận chuyển",
+				"primary"
 			);
 			return;
 		}
 
-		// Call the callback function to pass selected shipping back to ConfirmQuotation
+		// Use callback if available, otherwise use navigation params
 		if (onShippingSelect) {
 			onShippingSelect(selectedShipping);
+			navigation.goBack();
+		} else {
+			// Fallback: navigate back with params
+			navigation.navigate("ConfirmQuotation", {
+				selectedShipping: selectedShipping,
+			});
 		}
-
-		navigation.goBack();
 	};
 
 	const renderShippingItem = ({ item }) => (
@@ -395,6 +376,18 @@ export default function SelectShipping({ navigation, route }) {
 					</Text>
 				</TouchableOpacity>
 			</View>
+
+			{/* Dialog Component */}
+			<Dialog
+				visible={dialogConfig.visible}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButtonText={dialogConfig.primaryButtonText}
+				primaryButtonStyle={dialogConfig.primaryButtonStyle}
+				onPrimaryPress={dialogConfig.onPrimaryPress}
+				secondaryButtonText={dialogConfig.secondaryButtonText}
+				onSecondaryPress={dialogConfig.onSecondaryPress}
+			/>
 		</View>
 	);
 }

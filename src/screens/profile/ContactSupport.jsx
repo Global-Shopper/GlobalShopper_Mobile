@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-	Alert,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -13,6 +12,7 @@ import {
 	View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 
@@ -27,6 +27,15 @@ export default function ContactSupport({ navigation }) {
 		priority: "medium",
 	});
 	const [isLoading, setIsLoading] = useState(false);
+
+	// Dialog states
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButton: null,
+		secondaryButton: null,
+	});
 
 	const priorityOptions = [
 		{ value: "low", label: "Thấp", color: "#28a745", icon: "flag-outline" },
@@ -90,6 +99,26 @@ export default function ContactSupport({ navigation }) {
 		},
 	];
 
+	// Dialog helper functions
+	const showDialog = (
+		title,
+		message,
+		primaryButton = null,
+		secondaryButton = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButton,
+			secondaryButton,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	};
+
 	const handleInputChange = (field, value) => {
 		setFormData((prev) => ({
 			...prev,
@@ -99,32 +128,56 @@ export default function ContactSupport({ navigation }) {
 
 	const validateForm = () => {
 		if (!formData.email.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập email");
+			showDialog("Lỗi", "Vui lòng nhập email", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
 		if (!formData.email.includes("@")) {
-			Alert.alert("Lỗi", "Email không hợp lệ");
+			showDialog("Lỗi", "Email không hợp lệ", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
 		if (!formData.requestType) {
-			Alert.alert("Lỗi", "Vui lòng chọn loại yêu cầu");
+			showDialog("Lỗi", "Vui lòng chọn loại yêu cầu", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
 		if (!formData.subject.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập tiêu đề");
+			showDialog("Lỗi", "Vui lòng nhập tiêu đề", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
 		if (!formData.message.trim()) {
-			Alert.alert("Lỗi", "Vui lòng nhập nội dung yêu cầu");
+			showDialog("Lỗi", "Vui lòng nhập nội dung yêu cầu", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
 		if (formData.message.trim().length < 10) {
-			Alert.alert("Lỗi", "Nội dung yêu cầu phải có ít nhất 10 ký tự");
+			showDialog("Lỗi", "Nội dung yêu cầu phải có ít nhất 10 ký tự", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 			return false;
 		}
 
@@ -143,20 +196,24 @@ export default function ContactSupport({ navigation }) {
 			// Here you would normally call your API
 			console.log("Support request submitted:", formData);
 
-			Alert.alert(
+			showDialog(
 				"Thành công",
 				"Yêu cầu hỗ trợ đã được gửi thành công. Chúng tôi sẽ phản hồi trong vòng 24 giờ.",
-				[
-					{
-						text: "OK",
-						onPress: () => navigation.goBack(),
-					},
-				]
+				{
+					text: "OK",
+					onPress: () => navigation.goBack(),
+					style: "success",
+				}
 			);
 		} catch (_error) {
-			Alert.alert(
+			showDialog(
 				"Lỗi",
-				"Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại."
+				"Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.",
+				{
+					text: "OK",
+					onPress: () => {},
+					style: "danger",
+				}
 			);
 		} finally {
 			setIsLoading(false);
@@ -455,6 +512,16 @@ export default function ContactSupport({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</KeyboardAvoidingView>
+
+			{/* Dialog */}
+			<Dialog
+				visible={dialogConfig.visible}
+				onClose={closeDialog}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButton={dialogConfig.primaryButton}
+				secondaryButton={dialogConfig.secondaryButton}
+			/>
 		</View>
 	);
 }

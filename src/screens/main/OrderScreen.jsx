@@ -2,7 +2,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
-	Alert,
 	FlatList,
 	RefreshControl,
 	ScrollView,
@@ -10,6 +9,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import OrderCard from "../../components/order-card";
 import { Text } from "../../components/ui/text";
@@ -22,6 +22,15 @@ export default function OrderScreen({ navigation }) {
 	const [activeTab, setActiveTab] = useState("all");
 	const [refreshing, setRefreshing] = useState(false);
 	const [feedbackMap, setFeedbackMap] = useState({}); // Track which orders have feedback
+
+	// Dialog states
+	const [dialogConfig, setDialogConfig] = useState({
+		visible: false,
+		title: "",
+		message: "",
+		primaryButton: null,
+		secondaryButton: null,
+	});
 
 	// API query for orders
 	const {
@@ -37,6 +46,26 @@ export default function OrderScreen({ navigation }) {
 
 	// Lazy query to get order details with feedback info
 	const [getOrderById] = useLazyGetOrderByIdQuery();
+
+	// Dialog helper functions
+	const showDialog = (
+		title,
+		message,
+		primaryButton = null,
+		secondaryButton = null
+	) => {
+		setDialogConfig({
+			visible: true,
+			title,
+			message,
+			primaryButton,
+			secondaryButton,
+		});
+	};
+
+	const closeDialog = () => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	};
 
 	// Extract orders from API response and sort by newest first
 	const orders = useMemo(() => {
@@ -200,9 +229,13 @@ export default function OrderScreen({ navigation }) {
 
 		// Only allow review for delivered orders
 		if (selectedOrder.status !== "DELIVERED") {
-			Alert.alert(
+			showDialog(
 				"Thông báo",
-				"Chỉ có thể đánh giá đơn hàng đã được giao"
+				"Chỉ có thể đánh giá đơn hàng đã được giao",
+				{
+					text: "OK",
+					onPress: () => {},
+				}
 			);
 			return;
 		}
@@ -255,11 +288,19 @@ export default function OrderScreen({ navigation }) {
 					});
 				}
 			} else {
-				Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+				showDialog("Lỗi", "Không thể tải thông tin đơn hàng", {
+					text: "OK",
+					onPress: () => {},
+					style: "danger",
+				});
 			}
 		} catch (error) {
 			console.error("Error fetching order details:", error);
-			Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+			showDialog("Lỗi", "Không thể tải thông tin đơn hàng", {
+				text: "OK",
+				onPress: () => {},
+				style: "danger",
+			});
 		}
 	};
 
@@ -408,6 +449,16 @@ export default function OrderScreen({ navigation }) {
 						</Text>
 					</View>
 				}
+			/>
+
+			{/* Dialog */}
+			<Dialog
+				visible={dialogConfig.visible}
+				onClose={closeDialog}
+				title={dialogConfig.title}
+				message={dialogConfig.message}
+				primaryButton={dialogConfig.primaryButton}
+				secondaryButton={dialogConfig.secondaryButton}
 			/>
 		</View>
 	);
