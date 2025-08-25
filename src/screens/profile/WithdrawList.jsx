@@ -482,14 +482,11 @@ const WithdrawList = ({ navigation }) => {
 				onBackPress={() => navigation.goBack()}
 				showNotificationIcon={false}
 				showChatIcon={false}
-				rightButton={
-					<TouchableOpacity
-						style={styles.addButton}
-						onPress={handleAddAccount}
-					>
-						<Ionicons name="add" size={24} color="#007AFF" />
-					</TouchableOpacity>
-				}
+				variant="clean"
+				rightButton={{
+					icon: "add",
+					onPress: handleAddAccount,
+				}}
 			/>
 
 			{/* Content */}
@@ -530,14 +527,6 @@ const styles = StyleSheet.create({
 		color: "#FFFFFF",
 		textAlign: "center",
 		flex: 1,
-	},
-	addButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 20,
-		backgroundColor: "rgba(255, 255, 255, 0.2)",
-		alignItems: "center",
-		justifyContent: "center",
 	},
 	content: {
 		flex: 1,

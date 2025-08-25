@@ -319,7 +319,7 @@ export default function Header({
 						<Ionicons
 							name={rightButton.icon as any}
 							size={24}
-							color="#1e293b"
+							color="#FFFFFF"
 						/>
 					</TouchableOpacity>
 				) : (
@@ -679,7 +679,12 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		borderRadius: 8,
-		backgroundColor: "#f1f5f9",
+		backgroundColor: "#42A5F5",
+		shadowColor: "#42A5F5",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+		elevation: 4,
 	},
 	cleanHeaderRight: {
 		width: 40,
