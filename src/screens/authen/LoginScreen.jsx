@@ -13,14 +13,16 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useDialog } from "../../components/dialogHelpers";
 import { setUserInfo } from "../../features/user";
-import { useLoginMutation } from "../../services/gshopApi";
+import { useLoginMutation, useSaveFCMTokenMutation } from "../../services/gshopApi";
 
 const { height } = Dimensions.get("window");
 
 export default function LoginScreen({ navigation }) {
+	const fcmToken = useSelector((state) => state.rootReducer.app.fcmToken);
+	const [saveFCMToken] = useSaveFCMTokenMutation();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
@@ -98,6 +100,13 @@ export default function LoginScreen({ navigation }) {
 		login(values)
 			.unwrap()
 			.then((res) => {
+				if (fcmToken) {
+					console.log(Platform.OS)
+					saveFCMToken({
+						token: fcmToken,
+						deviceType: String(Platform.OS).toUpperCase(),
+					})
+				}
 				dispatch(
 					setUserInfo({ ...res?.user, accessToken: res?.token })
 				);

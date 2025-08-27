@@ -520,6 +520,13 @@ const gshopApi = createApi({
 			},
 			providesTags: ["Feedback"],
 		}),
+		saveFCMToken: builder.mutation({
+			query: (data) => ({
+				data: data,
+				url: endpoints.FCM_SAVE_TOKEN,
+				method: "POST",
+			}),
+		})
 	}),
 });
 
@@ -576,6 +583,7 @@ export const {
 	useCreateRefundTicketMutation,
 	useGetRefundTicketsByOrderIdQuery,
 	useGetAllRefundTicketsQuery,
+	useSaveFCMTokenMutation
 } = gshopApi;
 
 export default gshopApi;

@@ -41,5 +41,7 @@ const endpoints = {
 	REFUND_TICKET: "/refund-ticket",
 	REFUND_HISTORY: "/refund-ticket", // for getting refund history by order
 	REFUND_BY_ORDER: "/refund-ticket/order", // for getting refund tickets by orderId
+	// FCM
+	FCM_SAVE_TOKEN: "/fcm/save-token",
 };
 export default endpoints;

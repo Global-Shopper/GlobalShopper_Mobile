@@ -1,20 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  onLineStatus: true,
+  fcmToken: "",
 };
 
 const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
-    setOnLineStatus: (state, action) => {
-      state.onLineStatus = action.payload;
+    setFcmToken: (state, action) => {
+      state.fcmToken = action.payload;
     },
   },
 });
 
 export const {
-  setOnLineStatus
+  setFcmToken
 } = appSlice.actions;
 export default appSlice.reducer;
