@@ -56,11 +56,6 @@ export default function AddStore({ navigation }) {
 			return;
 		}
 
-		// Navigate to add product screen with store data
-		console.log("AddStore - Navigating with storeData:", storeData);
-		console.log("AddStore - StoreData keys:", Object.keys(storeData));
-		console.log("AddStore - StoreData values:", Object.values(storeData));
-
 		navigation.navigate("ProductDetails", {
 			mode: "manual",
 			storeData: storeData,
@@ -148,7 +143,7 @@ export default function AddStore({ navigation }) {
 						style={styles.addProductButtonGradient}
 					>
 						<Text style={styles.addProductButtonText}>
-							Thêm sản phẩm
+							Nhập thông tin sản phẩm
 						</Text>
 					</LinearGradient>
 				</TouchableOpacity>

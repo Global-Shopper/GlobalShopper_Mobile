@@ -86,114 +86,6 @@ export default function SelectShipping({ navigation, route }) {
 				"VND",
 				quotation.packageType || "FEDEX_SMALL_BOX"
 			);
-
-			// Try both payload formats
-			const shippingPayload = {
-				inputJson: fedexPayload, // Wrapped format
-			};
-
-			const directPayload = fedexPayload; // Direct format
-
-			try {
-				// Try wrapped format first
-				let result;
-				try {
-					result = await getShippingRates(shippingPayload).unwrap();
-				} catch (_wrappedError) {
-					// Try direct format
-					result = await getShippingRates(directPayload).unwrap();
-				}
-
-				// Parse actual FedEx response - check multiple possible structures
-				let rateReplyDetails = null;
-
-				if (result?.output?.rateReplyDetails) {
-					// Structure: result.output.rateReplyDetails
-					rateReplyDetails = result.output.rateReplyDetails;
-				} else if (result?.rateReplyDetails) {
-					// Structure: result.rateReplyDetails (direct)
-					rateReplyDetails = result.rateReplyDetails;
-				}
-
-				if (rateReplyDetails && Array.isArray(rateReplyDetails)) {
-					const shippingOptions = rateReplyDetails.map((rate) => {
-						// Find VND rate (PREFERRED_CURRENCY) first
-						let bestRate = null;
-						if (
-							rate.ratedShipmentDetails &&
-							Array.isArray(rate.ratedShipmentDetails)
-						) {
-							// Look for PREFERRED_CURRENCY with VND
-							bestRate = rate.ratedShipmentDetails.find(
-								(detail) =>
-									detail.rateType === "PREFERRED_CURRENCY" &&
-									detail.currency === "VND"
-							);
-
-							// If no VND PREFERRED_CURRENCY, try any VND rate
-							if (!bestRate) {
-								bestRate = rate.ratedShipmentDetails.find(
-									(detail) => detail.currency === "VND"
-								);
-							}
-
-							// Fallback to first rate (usually ACCOUNT rate)
-							if (!bestRate) {
-								bestRate = rate.ratedShipmentDetails[0];
-							}
-						}
-
-						// Convert USD to VND if needed (approximate rate: 1 USD = 24000 VND)
-						let displayCost =
-							bestRate?.totalNetCharge ||
-							bestRate?.totalBaseCharge ||
-							0;
-						let displayCurrency = bestRate?.currency || "USD";
-
-						if (displayCurrency === "USD" && displayCost > 0) {
-							displayCost = displayCost * 24000; // Rough conversion
-							displayCurrency = "VNĐ (ước tính)";
-						}
-
-						return {
-							serviceCode: rate.serviceType,
-							serviceName: rate.serviceName,
-							description:
-								rate.serviceDescription?.description ||
-								rate.operationalDetail?.astraDescription ||
-								"Vận chuyển quốc tế",
-							totalCost: displayCost,
-							currency: displayCurrency,
-							deliveryTime: getDeliveryTime(rate.serviceType),
-							packageType:
-								rate.packagingType || "FEDEX_SMALL_BOX",
-							// Additional details for UI
-							baseCharge: bestRate?.totalBaseCharge || 0,
-							surcharges: bestRate?.totalSurcharges || 0,
-							discounts: bestRate?.totalDiscounts || 0,
-							rateType: bestRate?.rateType || "UNKNOWN",
-							// Raw data for debugging
-							rawRate: rate,
-						};
-					});
-
-					setShippingMethods(shippingOptions);
-				} else {
-					setShippingMethods([]);
-					showDialog(
-						"Lỗi",
-						"Không thể tải phương thức vận chuyển. Vui lòng thử lại sau.",
-						"danger"
-					);
-				}
-			} catch (_apiError) {
-				setShippingMethods([]);
-				showDialog(
-					"Lỗi",
-					"Không thể kết nối với dịch vụ vận chuyển. Vui lòng kiểm tra kết nối mạng và thử lại.",
-					"danger"
-				);
-			}
 		} catch (_error) {
 			setShippingMethods([]);
 			showDialog(
@@ -382,11 +274,20 @@ export default function SelectShipping({ navigation, route }) {
 				visible={dialogConfig.visible}
 				title={dialogConfig.title}
 				message={dialogConfig.message}
-				primaryButtonText={dialogConfig.primaryButtonText}
-				primaryButtonStyle={dialogConfig.primaryButtonStyle}
-				onPrimaryPress={dialogConfig.onPrimaryPress}
-				secondaryButtonText={dialogConfig.secondaryButtonText}
-				onSecondaryPress={dialogConfig.onSecondaryPress}
+				onClose={closeDialog}
+				primaryButton={{
+					text: dialogConfig.primaryButtonText,
+					onPress: dialogConfig.onPrimaryPress,
+					style: dialogConfig.primaryButtonStyle,
+				}}
+				secondaryButton={
+					dialogConfig.secondaryButtonText
+						? {
+								text: dialogConfig.secondaryButtonText,
+								onPress: dialogConfig.onSecondaryPress,
+						  }
+						: undefined
+				}
 			/>
 		</View>
 	);
