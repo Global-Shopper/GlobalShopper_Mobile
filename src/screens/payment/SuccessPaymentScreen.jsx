@@ -105,7 +105,7 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 							</Text>
 						</View>
 						<Text style={styles.detailValue}>
-							{getPaymentMethodDisplay(paymentMethod)}
+							{paymentMethod &&getPaymentMethodDisplay(paymentMethod)}
 						</Text>
 					</View>
 

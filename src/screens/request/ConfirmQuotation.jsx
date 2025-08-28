@@ -502,7 +502,7 @@ export default function ConfirmQuotation({ navigation, route }) {
 				if (selectedPaymentMethod !== "wallet") {
 					payload.redirectUri = `${Linking.createURL(
 						"/"
-					)}payment-success`;
+					)}success-payment-screen`;
 				}
 
 				console.log("=== SENDING PAYLOAD ===");

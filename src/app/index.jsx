@@ -26,8 +26,10 @@ const linking = {
       Tabs: {
         screens: {
           Wallet: 'wallet',
+					Order: 'order',
         },
       },
+			SuccessPaymentScreen: 'success-payment-screen',
     },
   },
 };
