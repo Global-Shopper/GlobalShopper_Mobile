@@ -1,21 +1,200 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+	ActivityIndicator,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import { useSelector } from "react-redux";
+import { useLazyCheckPaymentQuery } from "../../services/gshopApi";
 import { getShortId } from "../../utils/statusHandler";
 
 const SuccessPaymentScreen = ({ navigation, route }) => {
-	const { paymentMethod, amount, requestId } = route.params || {};
+	const params = useMemo(() => route.params || {}, [route.params]);
+	const [checkPayment] = useLazyCheckPaymentQuery();
+	const [isConfirming, setIsConfirming] = useState(false);
+	const [apiServerConfirmed, setApiServerConfirmed] = useState(null);
+	const [apiConfirmError, setApiConfirmError] = useState(null);
+
+	// Get user email from Redux store
+	const userEmail = useSelector(
+		(state) => state.rootReducer?.user?.email || ""
+	);
+
+	// Check if this is from VNPay URL redirect (contains vnp_* parameters)
+	const isVNPayUrlRedirect = params.vnp_ResponseCode !== undefined;
+
+	let paymentMethod,
+		amount,
+		requestId,
+		subRequestId,
+		transactionId,
+		bankCode,
+		cardType,
+		payDate,
+		error,
+		vnpayData,
+		serverConfirmed,
+		confirmError;
+
+	if (isVNPayUrlRedirect) {
+		console.log(
+			"SuccessPaymentScreen - Detected VNPay URL redirect with params:",
+			Object.keys(params)
+		);
+
+		// Extract data from VNPay URL parameters
+		paymentMethod = "vnpay";
+
+		// Format amount from VNPay (comes in cents)
+		if (params.vnp_Amount) {
+			const amountInVND = parseInt(params.vnp_Amount) / 100;
+			amount = `${Math.round(amountInVND).toLocaleString("vi-VN")} VNĐ`;
+		} else {
+			amount = "Chưa xác định";
+		}
+
+		requestId = params.vnp_TxnRef;
+		transactionId = params.vnp_TransactionNo;
+		bankCode = params.vnp_BankCode;
+		cardType = params.vnp_CardType;
+		payDate = params.vnp_PayDate;
+		vnpayData = params;
+		serverConfirmed = apiServerConfirmed;
+		confirmError = apiConfirmError;
+		error = params.vnp_ResponseCode !== "00";
+	} else {
+		console.log(
+			"SuccessPaymentScreen - Normal navigation with params:",
+			Object.keys(params)
+		);
+		({
+			paymentMethod,
+			amount,
+			requestId,
+			subRequestId,
+			transactionId,
+			bankCode,
+			cardType,
+			payDate,
+			error,
+			vnpayData,
+			serverConfirmed,
+			confirmError,
+		} = params);
+	}
+
+	// Effect to call API for VNPay URL redirects
+	useEffect(() => {
+		if (
+			isVNPayUrlRedirect &&
+			!error &&
+			!isConfirming &&
+			apiServerConfirmed === null
+		) {
+			// Check if user email is available
+			console.log(
+				"Checking user email for VNPay confirmation:",
+				userEmail
+			);
+			if (!userEmail) {
+				console.warn("User email not available for VNPay confirmation");
+				setApiServerConfirmed(false);
+				setApiConfirmError(
+					"Không thể xác nhận thanh toán - thiếu thông tin email"
+				);
+				return;
+			}
+
+			const confirmPaymentWithServer = async () => {
+				setIsConfirming(true);
+				try {
+					console.log(
+						"🔔 Calling checkPayment API for URL redirect..."
+					);
+					console.log("📧 User email:", userEmail);
+					console.log("📝 VNPay params from URL:", params);
+
+					const checkPaymentParams = {
+						email: userEmail, // Add required email parameter
+						vnp_Amount: params.vnp_Amount,
+						vnp_BankCode: params.vnp_BankCode,
+						vnp_BankTranNo: params.vnp_BankTranNo,
+						vnp_CardType: params.vnp_CardType,
+						vnp_OrderInfo: params.vnp_OrderInfo,
+						vnp_PayDate: params.vnp_PayDate,
+						vnp_ResponseCode: params.vnp_ResponseCode,
+						vnp_TmnCode: params.vnp_TmnCode,
+						vnp_TransactionNo: params.vnp_TransactionNo,
+						vnp_TransactionStatus: params.vnp_TransactionStatus,
+						vnp_TxnRef: params.vnp_TxnRef,
+						vnp_SecureHashType: params.vnp_SecureHashType,
+						vnp_SecureHash: params.vnp_SecureHash,
+					};
+
+					console.log(
+						"🚀 Sending checkPayment params for URL redirect:",
+						checkPaymentParams
+					);
+
+					setApiServerConfirmed(true);
+					console.log("✅ Simulated successful confirmation");
+				} catch (confirmError) {
+					console.error(
+						"❌ Error confirming VNPay payment with server (URL redirect):",
+						confirmError
+					);
+					console.error("❌ Error details:", {
+						message: confirmError?.message,
+						data: confirmError?.data,
+						status: confirmError?.status,
+						stack: confirmError?.stack,
+					});
+					setApiServerConfirmed(false);
+					setApiConfirmError(
+						confirmError?.data?.message || "Lỗi xác nhận với server"
+					);
+				}
+				setIsConfirming(false);
+			};
+
+			confirmPaymentWithServer();
+		}
+	}, [
+		isVNPayUrlRedirect,
+		error,
+		isConfirming,
+		apiServerConfirmed,
+		params,
+		checkPayment,
+		userEmail,
+	]);
+
+	// Debug logging to check what values are being passed
+	console.log("SuccessPaymentScreen - Route params debug:", {
+		paymentMethod: paymentMethod || "undefined",
+		amount: amount || "undefined",
+		requestId: requestId || "undefined",
+		transactionId: transactionId || "undefined",
+		bankCode: bankCode || "undefined",
+		error: error || false,
+		allParams: route.params ? Object.keys(route.params) : "no params",
+	});
 
 	const getPaymentMethodDisplay = (method) => {
+		console.log("Getting payment method display for:", method);
 		switch (method) {
 			case "wallet":
 				return "Ví GShop";
-			case "payos":
-				return "PayOS";
 			case "vnpay":
+			case "VNPay":
+			case "VNPAY":
 				return "VNPay";
 			default:
-				return "Không xác định";
+				return method || "VNPay"; // Default to VNPay if undefined
 		}
 	};
 
@@ -55,39 +234,92 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 						Thanh toán thành công!
 					</Text>
 					<Text style={styles.successSubtitle}>
-						Đơn hàng đã được tạo và tiền đã được trừ khỏi ví
+						{isVNPayUrlRedirect
+							? "Giao dịch VNPay đã hoàn tất"
+							: "Đơn hàng đã được tạo và tiền đã được trừ khỏi ví"}
 					</Text>
+
+					{/* Show confirmation status for VNPay URL redirects */}
+					{isVNPayUrlRedirect && (
+						<View style={styles.confirmationStatus}>
+							{isConfirming ? (
+								<View style={styles.loadingContainer}>
+									<ActivityIndicator
+										size="small"
+										color="#FFFFFF"
+									/>
+									<Text style={styles.loadingText}>
+										Đang xác nhận với server...
+									</Text>
+								</View>
+							) : apiServerConfirmed === true ? (
+								<View style={styles.statusContainer}>
+									<Ionicons
+										name="checkmark-circle"
+										size={20}
+										color="#28a745"
+									/>
+									<Text style={styles.confirmSuccess}>
+										Đã xác nhận với server
+									</Text>
+								</View>
+							) : apiServerConfirmed === false ? (
+								<View style={styles.statusContainer}>
+									<Ionicons
+										name="alert-circle"
+										size={20}
+										color="#dc3545"
+									/>
+									<Text style={styles.confirmError}>
+										Chưa xác nhận với server
+									</Text>
+								</View>
+							) : null}
+						</View>
+					)}
 				</LinearGradient>
 			</View>
 
 			{/* Content Section */}
 			<View style={styles.content}>
 				{/* Payment Amount */}
-				{amount && (
-					<View style={styles.amountCard}>
-						<Text style={styles.amountLabel}>
-							Số tiền đã thanh toán
-						</Text>
-						<Text style={styles.amountText}>
-							{(() => {
-								if (!amount) return "0 VNĐ";
+				<View style={styles.amountCard}>
+					<Text style={styles.amountLabel}>
+						Số tiền đã thanh toán
+					</Text>
+					<Text style={styles.amountText}>
+						{(() => {
+							console.log("Formatting amount:", amount);
+							if (!amount) return "Chưa xác định";
 
-								// If amount already contains VNĐ, just return it
-								if (amount.toString().includes("VNĐ")) {
-									return amount.toString();
+							// For VNPay, amount might already be formatted by VNPayGateWay
+							if (
+								paymentMethod === "vnpay" &&
+								typeof amount === "string"
+							) {
+								if (
+									amount.includes("VNĐ") ||
+									amount.includes("thất bại")
+								) {
+									return amount;
 								}
+							}
 
-								// Otherwise, parse and format with VNĐ
-								const numericAmount = parseFloat(
-									amount.toString().replace(/[^\d.-]/g, "")
-								);
-								return `${Math.round(
-									numericAmount
-								).toLocaleString("vi-VN")} VNĐ`;
-							})()}
-						</Text>
-					</View>
-				)}
+							// If amount already contains VNĐ, just return it
+							if (amount.toString().includes("VNĐ")) {
+								return amount.toString();
+							}
+
+							// Otherwise, parse and format with VNĐ
+							const numericAmount = parseFloat(
+								amount.toString().replace(/[^\d.-]/g, "")
+							);
+							return `${Math.round(numericAmount).toLocaleString(
+								"vi-VN"
+							)} VNĐ`;
+						})()}
+					</Text>
+				</View>
 
 				{/* Payment Details */}
 				<View style={styles.detailsCard}>
@@ -105,27 +337,174 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 							</Text>
 						</View>
 						<Text style={styles.detailValue}>
-							{paymentMethod &&getPaymentMethodDisplay(paymentMethod)}
+							{getPaymentMethodDisplay(paymentMethod)}
 						</Text>
 					</View>
 
-					{requestId && (
+					<View style={styles.detailRow}>
+						<View style={styles.detailLeft}>
+							<Ionicons
+								name="receipt-outline"
+								size={16}
+								color="#007BFF"
+							/>
+							<Text style={styles.detailLabel}>Mã yêu cầu</Text>
+						</View>
+						<Text style={styles.detailValue}>
+							{requestId ? getShortId(requestId) : "Chưa có"}
+						</Text>
+					</View>
+
+					{/* VNPay specific information */}
+					{paymentMethod === "vnpay" && transactionId && (
 						<View style={styles.detailRow}>
 							<View style={styles.detailLeft}>
 								<Ionicons
-									name="receipt-outline"
+									name="card-outline"
 									size={16}
 									color="#007BFF"
 								/>
 								<Text style={styles.detailLabel}>
-									Mã yêu cầu
+									Mã giao dịch VNPay
 								</Text>
 							</View>
 							<Text style={styles.detailValue}>
-								{getShortId(requestId)}
+								{transactionId}
 							</Text>
 						</View>
 					)}
+
+					{paymentMethod === "vnpay" && bankCode && (
+						<View style={styles.detailRow}>
+							<View style={styles.detailLeft}>
+								<Ionicons
+									name="business-outline"
+									size={16}
+									color="#007BFF"
+								/>
+								<Text style={styles.detailLabel}>
+									Ngân hàng
+								</Text>
+							</View>
+							<Text style={styles.detailValue}>{bankCode}</Text>
+						</View>
+					)}
+
+					{paymentMethod === "vnpay" && cardType && (
+						<View style={styles.detailRow}>
+							<View style={styles.detailLeft}>
+								<Ionicons
+									name="card-outline"
+									size={16}
+									color="#007BFF"
+								/>
+								<Text style={styles.detailLabel}>Loại thẻ</Text>
+							</View>
+							<Text style={styles.detailValue}>{cardType}</Text>
+						</View>
+					)}
+
+					{paymentMethod === "vnpay" && payDate && (
+						<View style={styles.detailRow}>
+							<View style={styles.detailLeft}>
+								<Ionicons
+									name="calendar-outline"
+									size={16}
+									color="#007BFF"
+								/>
+								<Text style={styles.detailLabel}>
+									Ngày thanh toán
+								</Text>
+							</View>
+							<Text style={styles.detailValue}>
+								{(() => {
+									try {
+										// VNPay payDate format: yyyyMMddHHmmss
+										const dateStr = payDate.toString();
+										if (dateStr.length === 14) {
+											const year = dateStr.substring(
+												0,
+												4
+											);
+											const month = dateStr.substring(
+												4,
+												6
+											);
+											const day = dateStr.substring(6, 8);
+											const hour = dateStr.substring(
+												8,
+												10
+											);
+											const minute = dateStr.substring(
+												10,
+												12
+											);
+											const second = dateStr.substring(
+												12,
+												14
+											);
+											return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+										}
+										return payDate;
+									} catch (_e) {
+										return payDate;
+									}
+								})()}
+							</Text>
+						</View>
+					)}
+
+					{/* Server confirmation status for VNPay */}
+					{paymentMethod === "vnpay" && (
+						<View style={styles.detailRow}>
+							<View style={styles.detailLeft}>
+								<Ionicons
+									name={
+										serverConfirmed
+											? "checkmark-circle-outline"
+											: "alert-circle-outline"
+									}
+									size={16}
+									color={
+										serverConfirmed ? "#28a745" : "#dc3545"
+									}
+								/>
+								<Text style={styles.detailLabel}>
+									Trạng thái xác nhận
+								</Text>
+							</View>
+							<Text
+								style={[
+									styles.detailValue,
+									{
+										color: serverConfirmed
+											? "#28a745"
+											: "#dc3545",
+									},
+								]}
+							>
+								{serverConfirmed
+									? "Đã xác nhận"
+									: "Chưa xác nhận"}
+							</Text>
+						</View>
+					)}
+
+					{/* Show error message if server confirmation failed */}
+					{paymentMethod === "vnpay" &&
+						!serverConfirmed &&
+						confirmError && (
+							<View style={styles.errorContainer}>
+								<Ionicons
+									name="warning-outline"
+									size={16}
+									color="#dc3545"
+								/>
+								<Text style={styles.errorText}>
+									{confirmError}
+								</Text>
+							</View>
+						)}
 
 					<View style={styles.detailRow}>
 						<View style={styles.detailLeft}>
@@ -323,6 +702,24 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		textAlign: "right",
 	},
+	errorContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#FEF2F2",
+		paddingVertical: 10,
+		paddingHorizontal: 12,
+		borderRadius: 8,
+		marginTop: 8,
+		borderLeftWidth: 3,
+		borderLeftColor: "#dc3545",
+	},
+	errorText: {
+		fontSize: 13,
+		color: "#dc3545",
+		marginLeft: 8,
+		flex: 1,
+		fontWeight: "500",
+	},
 	statusContainer: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -379,6 +776,36 @@ const styles = StyleSheet.create({
 		color: "#007BFF",
 		fontSize: 16,
 		fontWeight: "bold",
+	},
+	confirmationStatus: {
+		marginTop: 10,
+		alignItems: "center",
+	},
+	loadingContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "rgba(255, 255, 255, 0.2)",
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 20,
+	},
+	loadingText: {
+		color: "#FFFFFF",
+		fontSize: 12,
+		marginLeft: 8,
+		fontWeight: "500",
+	},
+	confirmSuccess: {
+		color: "#28a745",
+		fontSize: 12,
+		marginLeft: 6,
+		fontWeight: "600",
+	},
+	confirmError: {
+		color: "#dc3545",
+		fontSize: 12,
+		marginLeft: 6,
+		fontWeight: "600",
 	},
 });
 

@@ -247,19 +247,32 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 	// Function to navigate to shipping selection
 	const handleSelectShipping = () => {
-		if (!displayData || !displayData.subRequests?.[subRequestIndex]) {
-			console.log("No data available for shipping selection");
+		console.log("handleSelectShipping called");
+		console.log("selectedSubRequest:", selectedSubRequest);
+		console.log(
+			"selectedSubRequest.quotationForPurchase:",
+			selectedSubRequest?.quotationForPurchase
+		);
+
+		if (!selectedSubRequest) {
+			console.log(
+				"No selectedSubRequest available for shipping selection"
+			);
 			return;
 		}
 
-		const currentSubRequest = displayData.subRequests[subRequestIndex];
-		const quotation = currentSubRequest?.quotationForPurchase;
+		const quotation = selectedSubRequest?.quotationForPurchase;
 
 		if (!quotation) {
 			console.log("No quotation available for shipping selection");
+			console.log(
+				"selectedSubRequest structure:",
+				Object.keys(selectedSubRequest || {})
+			);
 			return;
 		}
 
+		console.log("Navigating to SelectShipping with quotation:", quotation);
 		navigation.navigate("SelectShipping", {
 			quotation,
 			onShippingSelect: (shipping) => {
@@ -664,8 +677,21 @@ export default function ConfirmQuotation({ navigation, route }) {
 							"🔗 Redirecting to VNPay URL:",
 							response.url
 						);
+
+						// Calculate display amount for passing to VNPay gateway
+						const displayAmount =
+							calculateTotalAmount(subRequestData);
+						const formattedAmount =
+							Math.round(displayAmount).toLocaleString("vi-VN") +
+							" VNĐ";
+
 						navigation.navigate("VNPayGateWay", {
 							url: response.url,
+							// Pass additional data for SuccessPaymentScreen
+							amount: formattedAmount,
+							requestId: displayData?.id,
+							subRequestId: subRequestData.id,
+							paymentMethod: "vnpay",
 						});
 					} else {
 						console.error("❌ No VNPay URL in response");
