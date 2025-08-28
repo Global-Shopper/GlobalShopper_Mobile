@@ -298,7 +298,10 @@ export default function Header({
 		}
 	};
 
-	console.log(email, name);
+	// console.log("User info:", {
+	// 	email: email ? String(email) : "no email",
+	// 	name: name ? String(name) : "no name"
+	// });
 
 	// Render clean variant (for blog screens)
 	if (variant === "clean") {

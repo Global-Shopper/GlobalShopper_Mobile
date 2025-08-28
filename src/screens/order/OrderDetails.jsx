@@ -47,10 +47,11 @@ export default function OrderDetails({ navigation, route }) {
 	// Format order ID to show only first part before dash
 	const getShortOrderId = (fullId) => {
 		if (!fullId) return "N/A";
-		if (typeof fullId === "string" && fullId.includes("-")) {
-			return fullId.split("-")[0];
+		const stringId = String(fullId);
+		if (stringId.includes("-")) {
+			return stringId.split("-")[0];
 		}
-		return fullId;
+		return stringId;
 	};
 
 	// Format currency without decimals
@@ -154,14 +155,6 @@ export default function OrderDetails({ navigation, route }) {
 			</View>
 		);
 	}
-
-	// Debug logging for orderData
-	console.log("OrderDetails Debug:", {
-		orderId: orderData?.id,
-		hasOrderData: !!orderData,
-		orderDataKeys: orderData ? Object.keys(orderData) : [],
-	});
-
 	return (
 		<View style={styles.container}>
 			{/* Header */}
@@ -241,7 +234,7 @@ export default function OrderDetails({ navigation, route }) {
 									Đơn vị vận chuyển:
 								</Text>
 								<Text style={styles.shippingValue}>
-									{orderData.shippingUnit}
+									{orderData.shippingUnit || "Chưa cập nhật"}
 								</Text>
 							</View>
 						)}
@@ -252,7 +245,7 @@ export default function OrderDetails({ navigation, route }) {
 									Mã vận đơn:
 								</Text>
 								<Text style={styles.shippingValue}>
-									{orderData.trackingCode}
+									{orderData.trackingCode || "Chưa có"}
 								</Text>
 							</View>
 						)}
@@ -263,7 +256,9 @@ export default function OrderDetails({ navigation, route }) {
 								{getStatusText(orderData.status)}
 							</Text>
 							<Text style={styles.latestStatusDate}>
-								{formatDate(orderData.createdAt)}
+								{orderData.createdAt
+									? formatDate(orderData.createdAt)
+									: "Chưa cập nhật"}
 							</Text>
 						</View>
 					</View>
@@ -275,12 +270,21 @@ export default function OrderDetails({ navigation, route }) {
 								Địa chỉ giao hàng
 							</Text>
 							<AddressSmCard
-								recipientName={
-									orderData.deliveryAddress.recipientName
+								recipientName={String(
+									orderData.deliveryAddress.recipientName ||
+										"Chưa có tên"
+								)}
+								phone={String(
+									orderData.deliveryAddress.phone ||
+										"Chưa có SĐT"
+								)}
+								address={String(
+									orderData.deliveryAddress.address ||
+										"Chưa có địa chỉ"
+								)}
+								isDefault={
+									!!orderData.deliveryAddress.isDefault
 								}
-								phone={orderData.deliveryAddress.phone}
-								address={orderData.deliveryAddress.address}
-								isDefault={orderData.deliveryAddress.isDefault}
 								onEdit={handleEditAddress}
 								showEditButton={false}
 							/>
@@ -292,10 +296,14 @@ export default function OrderDetails({ navigation, route }) {
 				<View style={styles.productCard}>
 					<Text style={styles.cardTitle}>
 						{orderData.seller && orderData.ecommercePlatform
-							? `${orderData.seller} (${orderData.ecommercePlatform})`
-							: orderData.seller ||
-							  orderData.ecommercePlatform ||
-							  "Thông tin sản phẩm"}
+							? `${String(orderData.seller)} (${String(
+									orderData.ecommercePlatform
+							  )})`
+							: String(
+									orderData.seller ||
+										orderData.ecommercePlatform ||
+										"Thông tin sản phẩm"
+							  )}
 					</Text>
 
 					{/* All Products */}
@@ -331,8 +339,10 @@ export default function OrderDetails({ navigation, route }) {
 										style={styles.productName}
 										numberOfLines={2}
 									>
-										{item.productName ||
-											"Tên sản phẩm không có"}
+										{String(
+											item.productName ||
+												"Tên sản phẩm không có"
+										)}
 									</Text>
 									<View style={styles.productDetailsRow}>
 										<Text style={styles.quantityText}>
@@ -490,7 +500,7 @@ export default function OrderDetails({ navigation, route }) {
 								Phương thức thanh toán
 							</Text>
 							<Text style={styles.detailValue}>
-								{orderData.paymentMethod}
+								{orderData.paymentMethod || "Chưa cập nhật"}
 							</Text>
 						</View>
 					)}
@@ -510,8 +520,10 @@ export default function OrderDetails({ navigation, route }) {
 						onPress={handleReview}
 					>
 						<Text style={styles.reviewButtonText}>
-							{orderData.feedback ||
-							orderData.feedbacks?.length > 0
+							{(orderData.feedback &&
+								typeof orderData.feedback === "object") ||
+							(Array.isArray(orderData.feedbacks) &&
+								orderData.feedbacks.length > 0)
 								? "Xem đánh giá"
 								: "Đánh giá"}
 						</Text>

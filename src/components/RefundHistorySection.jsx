@@ -8,26 +8,12 @@ import {
 import { Text } from "./ui/text";
 
 const RefundHistorySection = ({ orderData }) => {
-	console.log("RefundHistorySection RENDER STARTED", {
-		hasOrderData: !!orderData,
-		orderId: orderData?.id,
-	});
-
 	const {
 		data: refundTickets,
 		isLoading,
 		error,
 	} = useGetRefundTicketsByOrderIdQuery(orderData?.id || "", {
 		skip: !orderData?.id,
-	});
-
-	console.log("RefundHistorySection DATA", {
-		refundTickets,
-		isLoading,
-		error,
-		refundTicketsType: typeof refundTickets,
-		isArray: Array.isArray(refundTickets),
-		isObject: typeof refundTickets === "object" && refundTickets !== null,
 	});
 
 	if (isLoading) {
@@ -52,7 +38,8 @@ const RefundHistorySection = ({ orderData }) => {
 					</Text>
 				</View>
 				<Text style={styles.errorText}>
-					Lỗi khi tải thông tin: {error.message || "Unknown error"}
+					Lỗi khi tải thông tin:{" "}
+					{String(error?.message || "Unknown error")}
 				</Text>
 			</View>
 		);
@@ -60,15 +47,23 @@ const RefundHistorySection = ({ orderData }) => {
 
 	// Handle both array and single object responses
 	let ticketsArray = [];
+
 	if (Array.isArray(refundTickets)) {
 		ticketsArray = refundTickets;
-	} else if (
-		refundTickets &&
-		typeof refundTickets === "object" &&
-		refundTickets.id
-	) {
-		// Single refund ticket object - convert to array
-		ticketsArray = [refundTickets];
+	} else if (refundTickets && typeof refundTickets === "object") {
+		// Check if it has a data property (common API pattern)
+		if (Array.isArray(refundTickets.data)) {
+			ticketsArray = refundTickets.data;
+		} else if (refundTickets.id) {
+			// Single refund ticket object - convert to array
+			ticketsArray = [refundTickets];
+		} else if (
+			refundTickets.content &&
+			Array.isArray(refundTickets.content)
+		) {
+			// Paginated response pattern
+			ticketsArray = refundTickets.content;
+		}
 	}
 
 	if (ticketsArray.length === 0) {
@@ -81,76 +76,141 @@ const RefundHistorySection = ({ orderData }) => {
 			<View style={styles.header}>
 				<Text style={styles.title}>Thông tin trả hàng/hoàn tiền</Text>
 			</View>
-			{ticketsArray.map((ticket, index) => (
-				<View key={ticket.id || index} style={styles.ticketItem}>
-					<View style={styles.ticketHeader}>
-						<Text style={styles.ticketId} numberOfLines={1}>
-							#{ticket.id ? ticket.id.slice(-8) : "N/A"}
-						</Text>
-						<View
-							style={[
-								styles.statusBadge,
-								{
-									backgroundColor: getStatusColor(
-										ticket.status
-									),
-								},
-							]}
-						>
-							<Text style={styles.statusText} numberOfLines={1}>
-								{getStatusText(ticket.status)}
+			{ticketsArray.map((ticket, index) => {
+				return (
+					<View
+						key={String(ticket.id || index)}
+						style={styles.ticketItem}
+					>
+						<View style={styles.ticketHeader}>
+							<Text style={styles.ticketId} numberOfLines={1}>
+								#
+								{ticket.id
+									? String(ticket.id).slice(-8)
+									: "N/A"}
 							</Text>
-						</View>
-					</View>
-
-					<Text style={styles.reasonText}>
-						Lý do: {ticket.reason || "Không có lý do"}
-					</Text>
-
-					<Text style={styles.dateText}>
-						Ngày tạo: {formatDate(ticket.createdAt)}
-					</Text>
-
-					{ticket.amount && (
-						<Text style={styles.amountText}>
-							Số tiền hoàn: {ticket.amount.toLocaleString()}đ
-						</Text>
-					)}
-
-					{ticket.refundRate && (
-						<Text style={styles.refundRateText}>
-							Tỷ lệ hoàn tiền:{" "}
-							{Math.round(ticket.refundRate * 100)}%
-						</Text>
-					)}
-
-					{ticket.evidence && ticket.evidence.length > 0 && (
-						<View style={styles.imagesContainer}>
-							<Text style={styles.imagesLabel}>
-								Hình ảnh đính kèm:
-							</Text>
-							<View style={styles.imagesList}>
-								{ticket.evidence
-									.slice(0, 3)
-									.map((imageUrl, imgIndex) => (
-										<Image
-											key={imgIndex}
-											source={{ uri: imageUrl }}
-											style={styles.attachedImage}
-										/>
-									))}
-								{ticket.evidence.length > 3 && (
-									<View style={styles.moreImagesIndicator}>
-										<Text style={styles.moreImagesText}>
-											+{ticket.evidence.length - 3}
-										</Text>
-									</View>
-								)}
+							<View
+								style={[
+									styles.statusBadge,
+									{
+										backgroundColor: getStatusColor(
+											ticket.status || "PENDING"
+										),
+									},
+								]}
+							>
+								<Text
+									style={styles.statusText}
+									numberOfLines={1}
+								>
+									{String(
+										getStatusText(
+											ticket.status || "PENDING"
+										)
+									)}
+								</Text>
 							</View>
 						</View>
-					)}
-				</View>
-			))}
+
+						<Text style={styles.reasonText}>
+							Lý do: {String(ticket.reason || "Không có lý do")}
+						</Text>
+
+						<Text style={styles.dateText}>
+							Ngày tạo:{" "}
+							{ticket.createdAt
+								? String(formatDate(ticket.createdAt))
+								: "Chưa cập nhật"}
+						</Text>
+
+						{ticket.amount !== undefined &&
+							ticket.amount !== null && (
+								<Text style={styles.amountText}>
+									Số tiền hoàn:{" "}
+									{String(
+										Number(
+											ticket.amount || 0
+										).toLocaleString()
+									)}
+									đ
+								</Text>
+							)}
+
+						{ticket.refundRate !== undefined &&
+							ticket.refundRate !== null && (
+								<Text style={styles.refundRateText}>
+									Tỷ lệ hoàn tiền:{" "}
+									{String(
+										Math.round(
+											Number(ticket.refundRate || 0) * 100
+										)
+									)}
+									%
+								</Text>
+							)}
+
+						{ticket.evidence &&
+							Array.isArray(ticket.evidence) &&
+							ticket.evidence.length > 0 && (
+								<View style={styles.imagesContainer}>
+									<Text style={styles.imagesLabel}>
+										Hình ảnh đính kèm:
+									</Text>
+									<View style={styles.imagesList}>
+										{ticket.evidence
+											.slice(0, 3)
+											.map((imageItem, imgIndex) => {
+												// Handle both string URLs and objects with url property
+												const imageUrl =
+													typeof imageItem ===
+													"string"
+														? imageItem
+														: imageItem?.url ||
+														  imageItem?.src ||
+														  String(imageItem);
+
+												return (
+													<Image
+														key={imgIndex}
+														source={{
+															uri: String(
+																imageUrl
+															),
+														}}
+														style={
+															styles.attachedImage
+														}
+													/>
+												);
+											})}
+										{ticket.evidence.length > 3 && (
+											<View
+												style={
+													styles.moreImagesIndicator
+												}
+											>
+												<Text
+													style={
+														styles.moreImagesText
+													}
+												>
+													+
+													{String(
+														Math.max(
+															0,
+															ticket.evidence
+																.length - 3
+														)
+													)}
+												</Text>
+											</View>
+										)}
+									</View>
+								</View>
+							)}
+					</View>
+				);
+			})}
 		</View>
 	);
 };
