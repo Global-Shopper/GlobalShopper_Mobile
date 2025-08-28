@@ -105,22 +105,9 @@ const VNPayGateWay = ({ route, navigation }) => {
 							);
 							const checkPaymentParams = {
 								email: userEmail,
-								vnp_Amount: vnpayParams.vnp_Amount,
-								vnp_BankCode: vnpayParams.vnp_BankCode,
-								vnp_BankTranNo: vnpayParams.vnp_BankTranNo,
-								vnp_CardType: vnpayParams.vnp_CardType,
-								vnp_OrderInfo: vnpayParams.vnp_OrderInfo,
-								vnp_PayDate: vnpayParams.vnp_PayDate,
 								vnp_ResponseCode: vnpayParams.vnp_ResponseCode,
-								vnp_TmnCode: vnpayParams.vnp_TmnCode,
-								vnp_TransactionNo:
-									vnpayParams.vnp_TransactionNo,
-								vnp_TransactionStatus:
-									vnpayParams.vnp_TransactionStatus,
+								vnp_Amount: vnpayParams.vnp_Amount,
 								vnp_TxnRef: vnpayParams.vnp_TxnRef,
-								vnp_SecureHashType:
-									vnpayParams.vnp_SecureHashType,
-								vnp_SecureHash: vnpayParams.vnp_SecureHash,
 							};
 
 							console.log(
@@ -146,7 +133,7 @@ const VNPayGateWay = ({ route, navigation }) => {
 								cardType: vnpayParams.vnp_CardType,
 								payDate: vnpayParams.vnp_PayDate,
 								vnpayData: vnpayParams,
-								serverConfirmed: true, // Add flag to indicate server confirmation
+								serverConfirmed: true,
 							});
 						} catch (confirmError) {
 							console.error(

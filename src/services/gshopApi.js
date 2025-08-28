@@ -526,7 +526,7 @@ const gshopApi = createApi({
 				url: endpoints.FCM_SAVE_TOKEN,
 				method: "POST",
 			}),
-		})
+		}),
 	}),
 });
 
@@ -583,7 +583,7 @@ export const {
 	useCreateRefundTicketMutation,
 	useGetRefundTicketsByOrderIdQuery,
 	useGetAllRefundTicketsQuery,
-	useSaveFCMTokenMutation
+	useSaveFCMTokenMutation,
 } = gshopApi;
 
 export default gshopApi;

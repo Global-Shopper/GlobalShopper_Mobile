@@ -95,11 +95,6 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 			!isConfirming &&
 			apiServerConfirmed === null
 		) {
-			// Check if user email is available
-			console.log(
-				"Checking user email for VNPay confirmation:",
-				userEmail
-			);
 			if (!userEmail) {
 				console.warn("User email not available for VNPay confirmation");
 				setApiServerConfirmed(false);
@@ -112,41 +107,19 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 			const confirmPaymentWithServer = async () => {
 				setIsConfirming(true);
 				try {
-					console.log(
-						"🔔 Calling checkPayment API for URL redirect..."
-					);
-					console.log("📧 User email:", userEmail);
-					console.log("📝 VNPay params from URL:", params);
-
 					const checkPaymentParams = {
-						email: userEmail, // Add required email parameter
-						vnp_Amount: params.vnp_Amount,
-						vnp_BankCode: params.vnp_BankCode,
-						vnp_BankTranNo: params.vnp_BankTranNo,
-						vnp_CardType: params.vnp_CardType,
-						vnp_OrderInfo: params.vnp_OrderInfo,
-						vnp_PayDate: params.vnp_PayDate,
+						email: userEmail,
 						vnp_ResponseCode: params.vnp_ResponseCode,
-						vnp_TmnCode: params.vnp_TmnCode,
-						vnp_TransactionNo: params.vnp_TransactionNo,
-						vnp_TransactionStatus: params.vnp_TransactionStatus,
+						vnp_Amount: params.vnp_Amount,
 						vnp_TxnRef: params.vnp_TxnRef,
-						vnp_SecureHashType: params.vnp_SecureHashType,
-						vnp_SecureHash: params.vnp_SecureHash,
 					};
 
-					console.log(
-						"🚀 Sending checkPayment params for URL redirect:",
+					const checkResult = await checkPayment(
 						checkPaymentParams
-					);
+					).unwrap();
 
 					setApiServerConfirmed(true);
-					console.log("✅ Simulated successful confirmation");
 				} catch (confirmError) {
-					console.error(
-						"❌ Error confirming VNPay payment with server (URL redirect):",
-						confirmError
-					);
 					console.error("❌ Error details:", {
 						message: confirmError?.message,
 						data: confirmError?.data,
@@ -194,7 +167,7 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 			case "VNPAY":
 				return "VNPay";
 			default:
-				return method || "VNPay"; // Default to VNPay if undefined
+				return method || "VNPay";
 		}
 	};
 
