@@ -10,6 +10,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { useGetAllVariantsQuery } from "../services/gshopApi";
 import { uploadToCloudinary } from "../utils/uploadToCloundinary";
 import { useDialog } from "./dialogHelpers";
 import { Text } from "./ui/text";
@@ -37,7 +38,10 @@ interface ProductData {
 	unit: string; // Unit of product (chiếc, quyển, cái, chai, etc.)
 	quantity: number | string; // Allow string for temporary editing
 	platform: string;
+	seller: string; // Add seller field
 	productLink: string;
+	// Dynamic variant fields
+	variants?: { [key: string]: string };
 	sellerInfo?: {
 		name: string;
 		phone: string;
@@ -85,7 +89,9 @@ function getInitialFormData(
 		unit: initialData?.unit || "",
 		quantity: initialData?.quantity || "", // Default empty, let user input
 		platform: initialData?.platform || "",
+		seller: initialData?.seller || "", // Add seller field
 		productLink: initialData?.productLink || "",
+		variants: initialData?.variants || {}, // Initialize variants object
 	};
 
 	// Only include sellerInfo in manual mode
@@ -146,6 +152,54 @@ function getPlatformLogo(platform: string) {
 	return null;
 }
 
+// Helper function to get variant field icon and placeholder
+function getVariantFieldInfo(variantName: string) {
+	const lowerName = variantName.toLowerCase();
+
+	if (lowerName.includes("kích thước") || lowerName.includes("size")) {
+		return {
+			icon: "resize-outline",
+			placeholder: "Nhập kích thước (VD: S, M, L, XL...)",
+			fieldKey: "size",
+		};
+	}
+	if (lowerName.includes("màu") || lowerName.includes("color")) {
+		return {
+			icon: "color-palette-outline",
+			placeholder: "Nhập màu sắc (VD: Đỏ, Xanh, Trắng...)",
+			fieldKey: "color",
+		};
+	}
+	if (lowerName.includes("chất liệu") || lowerName.includes("material")) {
+		return {
+			icon: "layers-outline",
+			placeholder: "Nhập chất liệu (VD: Cotton, Da, Gỗ...)",
+			fieldKey: "material",
+		};
+	}
+	if (lowerName.includes("chất lượng") || lowerName.includes("quality")) {
+		return {
+			icon: "star-outline",
+			placeholder: "Nhập chất lượng (VD: Cao cấp, Trung bình...)",
+			fieldKey: "quality",
+		};
+	}
+	if (lowerName.includes("nguồn gốc") || lowerName.includes("origin")) {
+		return {
+			icon: "location-outline",
+			placeholder: "Nhập nguồn gốc (VD: Việt Nam, Trung Quốc...)",
+			fieldKey: "origin",
+		};
+	}
+
+	// Default fallback
+	return {
+		icon: "information-circle-outline",
+		placeholder: `Nhập ${variantName.toLowerCase()}`,
+		fieldKey: lowerName.replace(/\s+/g, ""),
+	};
+}
+
 export default function ProductForm({
 	initialData,
 	mode,
@@ -154,6 +208,17 @@ export default function ProductForm({
 	onChange,
 }: ProductFormProps) {
 	const { showDialog, hideDialog, Dialog } = useDialog();
+
+	// Fetch variants from API
+	const { data: variantsData, isLoading: variantsLoading } =
+		useGetAllVariantsQuery(undefined);
+
+	console.log("Variants loading:", variantsLoading, "Data:", variantsData);
+
+	// State for managing selected variants
+	const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
+	const [showVariantSelector, setShowVariantSelector] = useState(false);
+
 	const [formData, setFormData] = useState<ProductData>(() => {
 		return getInitialFormData(initialData, storeData, mode);
 	});
@@ -179,6 +244,16 @@ export default function ProductForm({
 				sellerInfo: {
 					...formData.sellerInfo,
 					[sellerField]: value,
+				},
+			};
+		} else if (field.includes("variants.")) {
+			// Handle variants fields
+			const variantField = field.split(".")[1];
+			newFormData = {
+				...formData,
+				variants: {
+					...formData.variants,
+					[variantField]: String(value), // Ensure value is string
 				},
 			};
 		} else {
@@ -520,6 +595,28 @@ export default function ProductForm({
 					</View>
 				)}
 
+				{/* Seller - Add seller field */}
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Người bán</Text>
+					<View style={styles.inputContainer}>
+						<Ionicons
+							name="person-outline"
+							size={20}
+							color="#78909C"
+							style={styles.inputIcon}
+						/>
+						<TextInput
+							style={styles.textInput}
+							value={formData.seller}
+							onChangeText={(value) =>
+								handleInputChange("seller", value)
+							}
+							placeholder="Nhập tên người bán"
+							placeholderTextColor="#B0BEC5"
+						/>
+					</View>
+				</View>
+
 				{/* Product Link - Show for manual mode (editable) */}
 				{mode === "manual" && (
 					<View style={styles.inputGroup}>
@@ -549,50 +646,6 @@ export default function ProductForm({
 						</View>
 					</View>
 				)}
-
-				{/* Size - User input field */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Kích thước</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="resize-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.size}
-							onChangeText={(value) =>
-								handleInputChange("size", value)
-							}
-							placeholder="Nhập kích thước (VD: S, M, L, XL...)"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
-
-				{/* Color - User input field */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Màu sắc</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="color-palette-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.color}
-							onChangeText={(value) =>
-								handleInputChange("color", value)
-							}
-							placeholder="Nhập màu sắc (VD: Đỏ, Xanh, Trắng...)"
-							placeholderTextColor="#B0BEC5"
-						/>
-					</View>
-				</View>
 
 				{/* Unit - User input field (only for manual mode) */}
 				{mode === "manual" && (
@@ -691,6 +744,242 @@ export default function ProductForm({
 						{formData.images.length}/4 ảnh
 					</Text>
 				</View>
+
+				{/* Dynamic Variants from API - Selective Display */}
+				{variantsData && variantsData.length > 0 && (
+					<>
+						{/* Add Variant Button */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>
+								Thuộc tính sản phẩm
+							</Text>
+							<TouchableOpacity
+								style={styles.addVariantButton}
+								onPress={() =>
+									setShowVariantSelector(!showVariantSelector)
+								}
+							>
+								<Ionicons
+									name="add-circle-outline"
+									size={20}
+									color="#42A5F5"
+									style={styles.inputIcon}
+								/>
+								<Text style={styles.addVariantText}>
+									Thêm thuộc tính
+								</Text>
+								<Ionicons
+									name={
+										showVariantSelector
+											? "chevron-up"
+											: "chevron-down"
+									}
+									size={16}
+									color="#42A5F5"
+									style={{ marginLeft: "auto" }}
+								/>
+							</TouchableOpacity>
+
+							{/* Variant Dropdown - appears right below the button */}
+							{showVariantSelector && (
+								<View style={styles.variantDropdown}>
+									<ScrollView
+										style={styles.variantScrollView}
+										showsVerticalScrollIndicator={false}
+										nestedScrollEnabled={true}
+									>
+										{variantsData
+											.filter(
+												(variant: any) =>
+													variant.isActive &&
+													!selectedVariants.includes(
+														variant.id
+													)
+											)
+											.map((variant: any) => {
+												const fieldInfo =
+													getVariantFieldInfo(
+														variant.name
+													);
+												return (
+													<TouchableOpacity
+														key={variant.id}
+														style={
+															styles.variantOption
+														}
+														onPress={() => {
+															setSelectedVariants(
+																(prev) => [
+																	...prev,
+																	variant.id,
+																]
+															);
+															setShowVariantSelector(
+																false
+															);
+														}}
+													>
+														<Ionicons
+															name={
+																fieldInfo.icon as any
+															}
+															size={20}
+															color="#42A5F5"
+														/>
+														<Text
+															style={
+																styles.variantOptionText
+															}
+														>
+															{variant.name}
+														</Text>
+													</TouchableOpacity>
+												);
+											})}
+										{variantsData.filter(
+											(variant: any) =>
+												variant.isActive &&
+												!selectedVariants.includes(
+													variant.id
+												)
+										).length === 0 && (
+											<View
+												style={
+													styles.noVariantsContainer
+												}
+											>
+												<Text
+													style={
+														styles.noVariantsText
+													}
+												>
+													Tất cả thuộc tính đã được
+													thêm
+												</Text>
+											</View>
+										)}
+									</ScrollView>
+								</View>
+							)}
+						</View>
+
+						{/* Selected Variants Fields */}
+						{selectedVariants.map((variantId) => {
+							const variant = variantsData.find(
+								(v: any) => v.id === variantId
+							);
+							if (!variant) return null;
+
+							const fieldInfo = getVariantFieldInfo(variant.name);
+							return (
+								<View
+									key={variant.id}
+									style={styles.inputGroup}
+								>
+									<View style={styles.labelWithRemove}>
+										<Text style={styles.label}>
+											{variant.name}
+										</Text>
+										<TouchableOpacity
+											onPress={() => {
+												setSelectedVariants((prev) =>
+													prev.filter(
+														(id) => id !== variantId
+													)
+												);
+												// Clear the form data for this variant
+												handleInputChange(
+													`variants.${fieldInfo.fieldKey}`,
+													""
+												);
+											}}
+											style={styles.removeVariantButton}
+										>
+											<Ionicons
+												name="close-circle"
+												size={18}
+												color="#FF5722"
+											/>
+										</TouchableOpacity>
+									</View>
+									<View style={styles.inputContainer}>
+										<Ionicons
+											name={fieldInfo.icon as any}
+											size={20}
+											color="#78909C"
+											style={styles.inputIcon}
+										/>
+										<TextInput
+											style={styles.textInput}
+											value={
+												formData.variants?.[
+													fieldInfo.fieldKey
+												] || ""
+											}
+											onChangeText={(value) =>
+												handleInputChange(
+													`variants.${fieldInfo.fieldKey}`,
+													value
+												)
+											}
+											placeholder={fieldInfo.placeholder}
+											placeholderTextColor="#B0BEC5"
+										/>
+									</View>
+								</View>
+							);
+						})}
+					</>
+				)}
+
+				{/* Fallback to basic variants if API fails */}
+				{(!variantsData || variantsData.length === 0) && (
+					<>
+						{/* Size - User input field */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Kích thước</Text>
+							<View style={styles.inputContainer}>
+								<Ionicons
+									name="resize-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+								<TextInput
+									style={styles.textInput}
+									value={formData.size}
+									onChangeText={(value) =>
+										handleInputChange("size", value)
+									}
+									placeholder="Nhập kích thước (VD: S, M, L, XL...)"
+									placeholderTextColor="#B0BEC5"
+								/>
+							</View>
+						</View>
+
+						{/* Color - User input field */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Màu sắc</Text>
+							<View style={styles.inputContainer}>
+								<Ionicons
+									name="color-palette-outline"
+									size={20}
+									color="#78909C"
+									style={styles.inputIcon}
+								/>
+								<TextInput
+									style={styles.textInput}
+									value={formData.color}
+									onChangeText={(value) =>
+										handleInputChange("color", value)
+									}
+									placeholder="Nhập màu sắc (VD: Đỏ, Xanh, Trắng...)"
+									placeholderTextColor="#B0BEC5"
+								/>
+							</View>
+						</View>
+					</>
+				)}
 			</View>
 
 			{/* Submit Button */}
@@ -927,5 +1216,70 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#495057",
 		fontWeight: "500",
+	},
+	addVariantButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#E3F2FD",
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 12,
+		borderWidth: 1,
+		borderColor: "#BBDEFB",
+	},
+	addVariantText: {
+		fontSize: 14,
+		color: "#42A5F5",
+		fontWeight: "500",
+	},
+	variantDropdown: {
+		marginTop: 8,
+		backgroundColor: "white",
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#E0E0E0",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
+		maxHeight: 200,
+		overflow: "hidden",
+	},
+	variantScrollView: {
+		maxHeight: 200,
+	},
+	variantOption: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: "#F0F0F0",
+	},
+	variantOptionText: {
+		fontSize: 14,
+		color: "#263238",
+		marginLeft: 12,
+		fontWeight: "400",
+	},
+	noVariantsContainer: {
+		paddingVertical: 16,
+		paddingHorizontal: 16,
+		alignItems: "center",
+	},
+	noVariantsText: {
+		fontSize: 14,
+		color: "#999",
+		fontStyle: "italic",
+	},
+	labelWithRemove: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		marginBottom: 8,
+	},
+	removeVariantButton: {
+		padding: 4,
 	},
 });

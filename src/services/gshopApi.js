@@ -15,6 +15,7 @@ const gshopApi = createApi({
 		"Order",
 		"Feedback",
 		"RefundTicket",
+		"Variants",
 	],
 	baseQuery: axiosBaseQuery(), // Adjust base URL as needed
 	endpoints: (builder) => ({
@@ -527,6 +528,15 @@ const gshopApi = createApi({
 				method: "POST",
 			}),
 		}),
+
+		// Variants API
+		getAllVariants: builder.query({
+			query: () => ({
+				url: endpoints.VARIANTS,
+				method: "GET",
+			}),
+			providesTags: ["Variants"],
+		}),
 	}),
 });
 
@@ -584,6 +594,7 @@ export const {
 	useGetRefundTicketsByOrderIdQuery,
 	useGetAllRefundTicketsQuery,
 	useSaveFCMTokenMutation,
+	useGetAllVariantsQuery,
 } = gshopApi;
 
 export default gshopApi;
