@@ -63,17 +63,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		setDialogConfig((prev) => ({ ...prev, visible: false }));
 	};
 
-	console.log("ConfirmQuotation params:", {
-		request: !!request,
-		subRequest: !!subRequest,
-		subRequestIndex,
-		requestId,
-	});
-	console.log("Selected subRequest:", subRequest);
-	console.log("SubRequest ID being processed:", subRequest?.id);
-	console.log("SubRequest status:", subRequest?.status);
-
-	// Fetch purchase request detail from API
 	const {
 		data: requestDetails,
 		isLoading,
@@ -83,10 +72,8 @@ export default function ConfirmQuotation({ navigation, route }) {
 		skip: !requestId,
 	});
 
-	// Fetch wallet balance
 	const { data: walletData, refetch: refetchWallet } = useGetWalletQuery();
 
-	// API hooks for checkout
 	const [directCheckout, { isLoading: isDirectCheckingOut }] =
 		useDirectCheckoutMutation(); // For VNPay
 	const [walletCheckout, { isLoading: isWalletCheckingOut }] =
@@ -94,7 +81,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 	const isCheckingOut = isDirectCheckingOut || isWalletCheckingOut;
 
-	// Debug selectedShipping changes
 	useEffect(() => {
 		if (selectedShipping) {
 			console.log(
@@ -113,35 +99,10 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return "#" + fullId;
 	};
 
-	// Use the correct data for rendering
 	const displayData = requestDetails || request;
 
-	// Debug all subRequests to understand the array order
-	console.log(
-		"ConfirmQuotation - displayData.subRequests:",
-		displayData?.subRequests?.map((sr, i) => ({
-			index: i,
-			id: sr.id,
-			platform: sr.ecommercePlatform,
-			status: sr.status,
-		}))
-	);
-
-	// Get the specific sub-request for this payment
 	const selectedSubRequest =
 		subRequest || displayData?.subRequests?.[subRequestIndex ?? 0];
-
-	console.log("ConfirmQuotation - subRequest param:", subRequest);
-	console.log("ConfirmQuotation - subRequestIndex param:", subRequestIndex);
-	console.log("ConfirmQuotation - selectedSubRequest:", selectedSubRequest);
-	console.log(
-		"ConfirmQuotation - selectedSubRequest platform:",
-		selectedSubRequest?.ecommercePlatform
-	);
-	console.log(
-		"ConfirmQuotation - selectedSubRequest status:",
-		selectedSubRequest?.status
-	);
 
 	// Helper function to check if quotation is expired
 	const isQuotationExpired = (quotationDetail) => {
@@ -163,7 +124,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return currentDate > expiry;
 	};
 
-	// Helper function to check if any quotation in sub-request is expired
 	const hasExpiredQuotations = () => {
 		if (!selectedSubRequest?.requestItems) return false;
 
@@ -173,7 +133,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		);
 	};
 
-	// Helper function to get expired quotations info
 	const getExpiredQuotationsInfo = () => {
 		if (!selectedSubRequest?.requestItems) return [];
 
@@ -192,13 +151,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 			}));
 	};
 
-	// Format wallet balance
 	const formatWalletBalance = (balance) => {
 		if (!balance && balance !== 0) return "0 VND";
 		return `${balance.toLocaleString("vi-VN")} VND`;
 	};
 
-	// Calculate total amount consistently
 	const calculateTotalAmount = (subRequest) => {
 		const basePrice =
 			subRequest?.quotationForPurchase?.totalPriceEstimate || 0;
@@ -234,26 +191,17 @@ export default function ConfirmQuotation({ navigation, route }) {
 	};
 
 	const getRequestTypeBorderColor = (type) => {
-		// Match logic from RequestDetails
 		const normalizedType = type?.toLowerCase();
 		return normalizedType === "online" ? "#42A5F5" : "#28a745";
 	};
 
 	const getRequestTypeIcon = (type) => {
-		// Match logic from RequestDetails
 		const normalizedType = type?.toLowerCase();
 		return normalizedType === "online" ? "link-outline" : "create-outline";
 	};
 
 	// Function to navigate to shipping selection
 	const handleSelectShipping = () => {
-		console.log("handleSelectShipping called");
-		console.log("selectedSubRequest:", selectedSubRequest);
-		console.log(
-			"selectedSubRequest.quotationForPurchase:",
-			selectedSubRequest?.quotationForPurchase
-		);
-
 		if (!selectedSubRequest) {
 			console.log(
 				"No selectedSubRequest available for shipping selection"
@@ -264,15 +212,9 @@ export default function ConfirmQuotation({ navigation, route }) {
 		const quotation = selectedSubRequest?.quotationForPurchase;
 
 		if (!quotation) {
-			console.log("No quotation available for shipping selection");
-			console.log(
-				"selectedSubRequest structure:",
-				Object.keys(selectedSubRequest || {})
-			);
 			return;
 		}
 
-		console.log("Navigating to SelectShipping with quotation:", quotation);
 		navigation.navigate("SelectShipping", {
 			quotation,
 			onShippingSelect: (shipping) => {
@@ -282,7 +224,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		});
 	};
 
-	// Listen for beforeRemove event from SelectShipping to get shipping data
 	useEffect(() => {
 		const unsubscribe = navigation.addListener("focus", () => {
 			// Check if we have shipping data in route params when screen regains focus
@@ -300,7 +241,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return unsubscribe;
 	}, [navigation, route.params]);
 
-	// Helper function to get button text based on current state
 	const getButtonText = () => {
 		if (isCheckingOut) {
 			return "Đang xử lý...";
@@ -320,7 +260,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		return "Xác nhận thanh toán";
 	};
 
-	// Helper function to check if payment can be confirmed
 	const canConfirmPayment = () => {
 		if (!selectedPaymentMethod || isCheckingOut) {
 			return false;
@@ -329,7 +268,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 		const requestType = displayData?.requestType || displayData?.type;
 		const isOfflineRequest = requestType?.toLowerCase() === "offline";
 
-		// For offline requests, shipping must also be selected
 		if (isOfflineRequest && !selectedShipping) {
 			return false;
 		}
@@ -338,7 +276,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 	};
 
 	const handleConfirmPayment = async () => {
-		console.log("🚀 STARTING PAYMENT PROCESS 🚀");
 		if (selectedPaymentMethod) {
 			// Check if this is an offline request and validate shipping selection
 			const requestType = displayData?.requestType || displayData?.type;
@@ -354,11 +291,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 			}
 
 			try {
-				console.log(
-					"Payment confirmed with method:",
-					selectedPaymentMethod
-				);
-
 				// Get sub-request data for checkout
 				const subRequestData = selectedSubRequest;
 				if (!subRequestData) {
@@ -391,13 +323,11 @@ export default function ConfirmQuotation({ navigation, route }) {
 					return;
 				}
 
-				// Calculate total amount using consistent method
 				const requestType =
 					displayData?.requestType || displayData?.type;
 				const isOfflineRequest =
 					requestType?.toLowerCase() === "offline";
 
-				// Use the same calculation method as UI display for consistency
 				const basePrice =
 					subRequestData.quotationForPurchase?.totalPriceEstimate ||
 					0;
@@ -406,7 +336,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 					basePrice
 				);
 
-				// Get shipping cost based on request type
 				let shippingCost = 0;
 				if (isOfflineRequest && selectedShipping) {
 					shippingCost = selectedShipping.totalCost || 0;
@@ -418,35 +347,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 
 				// Total = base price + shipping
 				const totalAmount = basePrice + shippingCost;
-
-				console.log("=== PAYMENT DEBUG ===");
-				console.log("SubRequest ID:", subRequestData.id);
-				console.log("Payment Method:", selectedPaymentMethod);
-				console.log(
-					"Request Type:",
-					requestType,
-					"isOffline:",
-					isOfflineRequest
-				);
-				console.log("Payment calculation breakdown:", {
-					basePrice,
-					shippingCost,
-					totalAmount,
-					calculationMethod:
-						basePrice > 0
-							? "individual items"
-							: "totalPriceEstimate",
-					selectedShippingDetails: selectedShipping
-						? {
-								serviceName: selectedShipping.serviceName,
-								totalCost: selectedShipping.totalCost,
-						  }
-						: null,
-				});
-				console.log(
-					"Full QuotationForPurchase:",
-					JSON.stringify(subRequestData.quotationForPurchase, null, 2)
-				);
 
 				// Calculate all fees to understand the total structure
 				let totalFees = 0;
@@ -460,26 +360,20 @@ export default function ConfirmQuotation({ navigation, route }) {
 						}
 					);
 				}
-				console.log("Total calculated fees:", totalFees);
 
-				// Create payload - server expects totalPriceEstimate to be final total
-				// Note: totalPriceEstimate from API already includes fees, so don't add them again
 				const finalTotalAmount =
 					(subRequestData.quotationForPurchase.totalPriceEstimate ||
 						0) + shippingCost;
 
 				let payload = {
 					subRequestId: subRequestData.id,
-					totalPriceEstimate: finalTotalAmount, // Final total (base + shipping) - fees already included in base
+					totalPriceEstimate: finalTotalAmount,
 					trackingNumber: "",
-					shippingFee: shippingCost, // Shipping cost separately
+					shippingFee: shippingCost,
 				};
 
 				// For offline requests, maybe we need to include shipping method info
 				if (isOfflineRequest && selectedShipping) {
-					console.log(
-						"Adding shipping method info for offline request"
-					);
 					payload.shippingMethod = {
 						serviceCode: selectedShipping.serviceCode,
 						serviceName: selectedShipping.serviceName,
@@ -488,29 +382,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 					};
 				}
 
-				console.log("=== FINAL PAYLOAD APPROACH ===");
-				console.log(
-					"totalPriceEstimate from API already includes fees"
-				);
-				console.log(
-					"Base from DB (includes fees):",
-					subRequestData.quotationForPurchase.totalPriceEstimate,
-					"VND"
-				);
-				console.log("Shipping from DB:", shippingCost, "VND");
-				console.log("Total fees (for display only):", totalFees, "VND");
-				console.log(
-					"Final totalPriceEstimate sent:",
-					finalTotalAmount,
-					"VND"
-				);
-				console.log(
-					"shippingFee sent:",
-					subRequestData.quotationForPurchase.shippingEstimate,
-					"VND"
-				);
-				console.log("Full payload:", JSON.stringify(payload, null, 2));
-
 				// Add redirectUri for VNPay (direct-checkout) using deep linking
 				if (selectedPaymentMethod !== "wallet") {
 					payload.redirectUri = `${Linking.createURL(
@@ -518,17 +389,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 					)}success-payment-screen`;
 				}
 
-				console.log("=== SENDING PAYLOAD ===");
-				console.log("Payment method:", selectedPaymentMethod);
-				console.log(
-					"API endpoint:",
-					selectedPaymentMethod === "wallet"
-						? "/orders/checkout"
-						: "/orders/direct-checkout"
-				);
-				console.log("Payload:", JSON.stringify(payload, null, 2));
-
-				// Check wallet balance if using wallet
 				if (selectedPaymentMethod === "wallet") {
 					if (walletData?.balance < totalAmount) {
 						showDialog(
@@ -543,49 +403,18 @@ export default function ConfirmQuotation({ navigation, route }) {
 				// Use correct API based on payment method
 				let response;
 				if (selectedPaymentMethod === "wallet") {
-					console.log(
-						"💰 Using WALLET CHECKOUT API (/orders/checkout)"
-					);
 					response = await walletCheckout(payload).unwrap();
 				} else {
-					console.log(
-						"💳 Using VNPAY CHECKOUT API (/orders/direct-checkout)"
-					);
 					response = await directCheckout(payload).unwrap();
 				}
 
-				console.log("🎉 PAYMENT SUCCESS RESPONSE 🎉");
-				console.log("Response:", JSON.stringify(response, null, 2));
-
 				// Handle different payment methods
 				if (selectedPaymentMethod === "wallet") {
-					// Wallet payment - process success immediately
-					console.log("Paid SubRequest ID:", subRequestData.id);
-					console.log("Expected changes after payment:");
-					console.log(
-						"1. Sub-request status should change from 'QUOTED' to 'PAID'"
-					);
-					console.log(
-						"2. Wallet transaction should be created with 'SUCCESS' status"
-					);
-					console.log(
-						"3. Order should be created with 'ORDER_REQUESTED' status"
-					);
-
-					// Success - refetch all related data
-					console.log(
-						"Refetching wallet and request data after payment..."
-					);
 					await refetchWallet();
 
 					// Also refetch the request data to update order status
 					if (refetch) {
-						console.log("🔄 Immediate refetch after payment...");
 						const updatedData = await refetch();
-						console.log(
-							"Updated request data:",
-							JSON.stringify(updatedData?.data, null, 2)
-						);
 
 						// Check if sub-request status was updated
 						const updatedSubRequest =
@@ -593,24 +422,12 @@ export default function ConfirmQuotation({ navigation, route }) {
 								(sr) => sr.id === subRequestData.id
 							);
 						if (updatedSubRequest) {
-							console.log("✅ Updated sub-request found:", {
-								id: updatedSubRequest.id,
-								oldStatus: subRequestData.status,
-								newStatus: updatedSubRequest.status,
-								statusChanged:
-									subRequestData.status !==
-									updatedSubRequest.status,
-							});
 						} else {
-							console.log(
-								"❌ Sub-request not found in updated data!"
-							);
 						}
 					}
 
 					// Multiple delayed refetches to ensure server-side processing is complete
 					setTimeout(async () => {
-						console.log("First delayed refetch (2s)...");
 						await refetchWallet();
 						if (refetch) {
 							await refetch();
@@ -618,7 +435,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}, 2000);
 
 					setTimeout(async () => {
-						console.log("Second delayed refetch (5s)...");
 						await refetchWallet();
 						if (refetch) {
 							await refetch();
@@ -626,11 +442,9 @@ export default function ConfirmQuotation({ navigation, route }) {
 					}, 5000);
 
 					setTimeout(async () => {
-						console.log("Final delayed refetch (10s)...");
 						await refetchWallet();
 						if (refetch) {
 							const finalData = await refetch();
-							console.log("Final refetch result:");
 
 							// Check final sub-request status
 							const finalSubRequest =
@@ -638,13 +452,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 									(sr) => sr.id === subRequestData.id
 								);
 							if (finalSubRequest) {
-								console.log("🔍 Final sub-request status:", {
-									id: finalSubRequest.id,
-									status: finalSubRequest.status,
-									isPaid: finalSubRequest.status === "PAID",
-									platform: finalSubRequest.ecommercePlatform,
-								});
-
 								if (finalSubRequest.status !== "PAID") {
 									console.warn(
 										"⚠️ Sub-request status is still not 'PAID' after 10s. API might need more time or there's an issue."
@@ -670,8 +477,6 @@ export default function ConfirmQuotation({ navigation, route }) {
 						orderId: response?.orderId || response?.id,
 					});
 				} else {
-					// VNPay payment - navigate to VNPay gateway
-					console.log("💳 VNPay response:", response);
 					if (response.url) {
 						console.log(
 							"🔗 Redirecting to VNPay URL:",

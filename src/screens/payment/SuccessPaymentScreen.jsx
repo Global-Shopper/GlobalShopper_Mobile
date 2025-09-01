@@ -120,12 +120,7 @@ const SuccessPaymentScreen = ({ navigation, route }) => {
 
 					setApiServerConfirmed(true);
 				} catch (confirmError) {
-					console.error("❌ Error details:", {
-						message: confirmError?.message,
-						data: confirmError?.data,
-						status: confirmError?.status,
-						stack: confirmError?.stack,
-					});
+					
 					setApiServerConfirmed(false);
 					setApiConfirmError(
 						confirmError?.data?.message || "Lỗi xác nhận với server"

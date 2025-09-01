@@ -205,8 +205,6 @@ const WithdrawScreen = ({ navigation }) => {
 	};
 
 	const validateWithdraw = () => {
-		console.log("=== VALIDATION DEBUG ===");
-		console.log("Starting validation...");
 		const numericAmount = parseFloat(parseFormattedNumber(withdrawAmount));
 		console.log(
 			"Withdraw amount:",
@@ -214,7 +212,7 @@ const WithdrawScreen = ({ navigation }) => {
 			"Numeric:",
 			numericAmount
 		);
-		console.log("Current balance:", currentBalance);
+
 		console.log("Bank info:", {
 			selectedBank,
 			accountNumber,
@@ -223,32 +221,14 @@ const WithdrawScreen = ({ navigation }) => {
 		});
 
 		if (!withdrawAmount || numericAmount <= 0) {
-			console.log("❌ Amount validation failed");
-			showDialog({
-				title: "Lỗi",
-				content: "Vui lòng nhập số tiền hợp lệ",
-				primaryButton: { text: "OK" },
-			});
 			return false;
 		}
 
 		if (numericAmount > currentBalance) {
-			console.log("❌ Balance validation failed");
-			showDialog({
-				title: "Lỗi",
-				content: "Số tiền rút không được vượt quá số dư hiện tại",
-				primaryButton: { text: "OK" },
-			});
 			return false;
 		}
 
 		if (!selectedBank || !accountNumber || !accountName) {
-			console.log("❌ Bank info validation failed");
-			console.log("Missing fields:", {
-				selectedBank: !selectedBank,
-				accountNumber: !accountNumber,
-				accountName: !accountName,
-			});
 			showDialog({
 				title: "Lỗi",
 				content: "Vui lòng điền đầy đủ thông tin tài khoản",
@@ -257,17 +237,12 @@ const WithdrawScreen = ({ navigation }) => {
 			return false;
 		}
 
-		console.log("✅ All validation passed!");
 		return true;
 	};
 
 	const handleSubmitWithdraw = async () => {
-		console.log("=== WITHDRAW DEBUG START ===");
-		console.log("handleSubmitWithdraw called");
-
 		// Validate form
 		if (!validateWithdraw()) {
-			console.log("Validation failed, aborting withdraw");
 			return;
 		}
 
@@ -276,12 +251,9 @@ const WithdrawScreen = ({ navigation }) => {
 				parseFormattedNumber(withdrawAmount)
 			);
 
-			console.log("Parsed amount:", numericAmount);
-
 			// Save bank account if user checked the option
 			if (saveAccount) {
 				try {
-					console.log("Attempting to save bank account...");
 					const bankAccountData = {
 						bankName: selectedBank,
 						accountNumber: accountNumber,
@@ -291,9 +263,8 @@ const WithdrawScreen = ({ navigation }) => {
 						bankAccountNumber: accountNumber,
 						accountHolderName: accountName,
 					};
-					console.log("Bank account data:", bankAccountData);
+
 					await createBankAccount(bankAccountData).unwrap();
-					console.log("Bank account saved successfully");
 				} catch (error) {
 					console.error("Failed to save bank account:", error);
 					console.error(

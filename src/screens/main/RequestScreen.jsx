@@ -72,22 +72,16 @@ export default function RequestScreen({ navigation }) {
 		}, [refetch])
 	);
 	useEffect(() => {
-		console.log("useEffect: activeTab changed to", activeTab);
 		refetch();
 	}, [activeTab, refetch]);
 
 	const handleRequestPress = (request) => {
-		console.log("Request pressed:", request);
 		navigation.navigate("RequestDetails", { request });
 	};
 
-	const handleRequestCancel = (request) => {
-		console.log("Cancel request:", request.id);
-	};
+	const handleRequestCancel = (request) => {};
 
 	const handleTabChange = (tabId) => {
-		console.log("=== TAB CHANGE ===");
-		console.log("From:", activeTab, "To:", tabId);
 		setActiveTab(tabId);
 		refetch();
 	};
@@ -112,13 +106,10 @@ export default function RequestScreen({ navigation }) {
 			}
 		}
 
-		console.log("All requests from API:", allRequests.length);
-
 		// Debug: Log all unique statuses to understand what API returns
 		const uniqueStatuses = [
 			...new Set(allRequests.map((req) => req.status)),
 		];
-		console.log("Unique statuses from API:", uniqueStatuses);
 
 		if (activeTab === "all") {
 			return allRequests;
@@ -126,9 +117,6 @@ export default function RequestScreen({ navigation }) {
 
 		const selectedTab = tabs.find((tab) => tab.id === activeTab);
 		if (selectedTab?.status) {
-			console.log(
-				`Looking for requests with status: ${selectedTab.status}`
-			);
 			if (selectedTab.alternativeStatuses) {
 				console.log(
 					`Alternative statuses: ${selectedTab.alternativeStatuses.join(
@@ -143,9 +131,6 @@ export default function RequestScreen({ navigation }) {
 
 				// Check primary status (exact match)
 				if (requestStatus === primaryStatus) {
-					console.log(
-						`✅ Match found: ${requestStatus} === ${primaryStatus}`
-					);
 					return true;
 				}
 
@@ -158,11 +143,6 @@ export default function RequestScreen({ navigation }) {
 						(altStatus) => requestStatus === altStatus
 					);
 					if (isAltMatch) {
-						console.log(
-							`✅ Alternative match found: ${requestStatus} in [${selectedTab.alternativeStatuses.join(
-								", "
-							)}]`
-						);
 						return true;
 					}
 				}
@@ -170,15 +150,7 @@ export default function RequestScreen({ navigation }) {
 				return false;
 			});
 
-			console.log(
-				`Filtered requests for tab "${selectedTab.label}":`,
-				filtered.length
-			);
 			if (activeTab === "completed") {
-				console.log(
-					"Completed tab - statuses found:",
-					filtered.map((req) => req.status)
-				);
 			}
 
 			return filtered;
@@ -204,8 +176,6 @@ export default function RequestScreen({ navigation }) {
 			return dateB - dateA;
 		});
 	}, [filteredRequests]);
-
-	console.log("Sorted requests count:", sortedRequests?.length);
 
 	return (
 		<View style={styles.container}>

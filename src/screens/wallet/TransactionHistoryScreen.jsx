@@ -193,34 +193,6 @@ export default function TransactionHistoryScreen({ navigation, route }) {
 			return mapped;
 		});
 
-		// Debug: Log transaction types to check what we're getting
-		console.log("🔍 Raw transactions data:", transactions);
-		console.log(
-			"🔍 All transaction types:",
-			mappedTransactions.map((t) => ({
-				id: t.id,
-				originalType:
-					transactions.find((orig) => orig.id === t.id)?.type ||
-					transactions.find((orig) => orig.id === t.id)
-						?.transactionType,
-				mappedType: t.type,
-				description: t.description,
-			}))
-		);
-		console.log(
-			"🔍 Payment/Purchase transactions:",
-			mappedTransactions.filter((t) =>
-				[
-					"payment",
-					"purchase",
-					"buy",
-					"order",
-					"checkout",
-					"pay",
-				].includes(t.type)
-			)
-		);
-
 		return mappedTransactions;
 	})();
 
