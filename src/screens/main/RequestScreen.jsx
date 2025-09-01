@@ -335,14 +335,6 @@ export default function RequestScreen({ navigation }) {
 					</View>
 				)}
 			</ScrollView>
-
-			{/* Floating Action Button */}
-			<TouchableOpacity
-				style={styles.fab}
-				onPress={() => navigation.navigate("WithLink")}
-			>
-				<Ionicons name="add" size={24} color="#ffffff" />
-			</TouchableOpacity>
 		</View>
 	);
 }
@@ -447,24 +439,5 @@ const styles = StyleSheet.create({
 		color: "#ffffff",
 		fontSize: 16,
 		fontWeight: "600",
-	},
-	fab: {
-		position: "absolute",
-		bottom: 30,
-		right: 30,
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		backgroundColor: "#007bff",
-		justifyContent: "center",
-		alignItems: "center",
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 4,
-		},
-		shadowOpacity: 0.3,
-		shadowRadius: 8,
-		elevation: 8,
 	},
 });
