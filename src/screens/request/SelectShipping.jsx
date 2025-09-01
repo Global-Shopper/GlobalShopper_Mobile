@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	FlatList,
@@ -10,14 +10,14 @@ import {
 import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
-import { useGetShippingRatesMutation } from "../../services/gshopApi";
+import { SHIPMENT_TYPE } from "../../const/shippingType";
+import { useGetShipmentRateQuery } from "../../services/gshopApi";
 import { getFedexRatePayload } from "../../utils/fedexPayload";
 
 export default function SelectShipping({ navigation, route }) {
 	const { quotation, onShippingSelect } = route.params || {};
 	const [shippingMethods, setShippingMethods] = useState([]);
 	const [selectedShipping, setSelectedShipping] = useState(null);
-	const [loading, setLoading] = useState(true);
 	const [dialogConfig, setDialogConfig] = useState({
 		visible: false,
 		title: "",
@@ -29,185 +29,93 @@ export default function SelectShipping({ navigation, route }) {
 		onSecondaryPress: null,
 	});
 
-	// Add the shipping rates mutation hook
-	const [getShippingRates] = useGetShippingRatesMutation();
+	const getApiPayload = () => {
+		if (!quotation) return null;
 
-	// Helper functions for dialog management
-	const showDialog = (
-		title,
-		message,
-		style = "primary",
-		primaryText = "OK",
-		onPrimaryPress = null,
-		secondaryText = null,
-		onSecondaryPress = null
-	) => {
-		setDialogConfig({
-			visible: true,
+		const fedexPayload = getFedexRatePayload(
+			quotation.totalWeightEstimate || 1.0,
+			quotation.shipper,
+			quotation.recipient,
+			"VND",
+			quotation.packageType || "YOUR_PACKAGING"
+		);
+
+		const serverPayload = {
+			inputJson: fedexPayload,
+		};
+
+		return serverPayload;
+	};
+
+	const apiPayload = getApiPayload();
+	const {
+		data: shippingResponse,
+		error,
+		isLoading,
+	} = useGetShipmentRateQuery(apiPayload, {
+		skip: !apiPayload,
+	});
+
+	const closeDialog = useCallback(() => {
+		setDialogConfig((prev) => ({ ...prev, visible: false }));
+	}, []);
+
+	const showDialog = useCallback(
+		(
 			title,
 			message,
-			primaryButtonText: primaryText,
-			primaryButtonStyle: style,
-			onPrimaryPress: onPrimaryPress || closeDialog,
-			secondaryButtonText: secondaryText,
-			onSecondaryPress: onSecondaryPress,
-		});
-	};
-
-	const closeDialog = () => {
-		setDialogConfig((prev) => ({ ...prev, visible: false }));
-	};
+			style = "primary",
+			primaryText = "OK",
+			onPrimaryPress = null,
+			secondaryText = null,
+			onSecondaryPress = null
+		) => {
+			setDialogConfig({
+				visible: true,
+				title,
+				message,
+				primaryButtonText: primaryText,
+				primaryButtonStyle: style,
+				onPrimaryPress: onPrimaryPress || closeDialog,
+				secondaryButtonText: secondaryText,
+				onSecondaryPress: onSecondaryPress,
+			});
+		},
+		[closeDialog]
+	);
 
 	useEffect(() => {
-		fetchShippingRates();
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-	const fetchShippingRates = async () => {
-		console.log("🚢 SelectShipping - fetchShippingRates started");
-		console.log("Quotation data:", quotation);
-
-		if (!quotation) {
-			console.log("❌ No quotation data available");
-			showDialog(
-				"Lỗi",
-				"Không có thông tin quotation",
-				"danger",
-				"OK",
-				() => {
-					closeDialog();
-					navigation.goBack();
-				}
-			);
-			return;
+		if (shippingResponse) {
+			processShippingResponse(shippingResponse);
+		} else if (error) {
+			handleShippingError(error);
 		}
+	}, [shippingResponse, error, processShippingResponse, handleShippingError]);
 
-		setLoading(true);
-		try {
-			// Build FedEx API compatible payload using utils
-			const fedexPayload = getFedexRatePayload(
-				quotation.totalWeightEstimate || 1.0,
-				quotation.shipper,
-				quotation.recipient,
-				"VND",
-				quotation.packageType || "YOUR_PACKAGING"
-			);
-
-			console.log("📦 FedEx payload built:", fedexPayload);
-			console.log("🔍 Payload validation:");
-			console.log("- Weight:", quotation.totalWeightEstimate || 1.0);
-			console.log(
-				"- Shipper country:",
-				quotation.shipper?.shipmentCountryCode
-			);
-			console.log(
-				"- Shipper postal:",
-				quotation.shipper?.shipmentPostalCode
-			);
-			console.log(
-				"- Recipient country:",
-				quotation.recipient?.recipientCountryCode
-			);
-			console.log(
-				"- Recipient postal:",
-				quotation.recipient?.recipientPostalCode
-			);
-			console.log(
-				"- Package type:",
-				quotation.packageType || "YOUR_PACKAGING"
-			);
-
-			// Validate critical fields
-			const validation = {
-				shipperCountry: quotation.shipper?.shipmentCountryCode,
-				shipperPostal: quotation.shipper?.shipmentPostalCode,
-				recipientCountry: quotation.recipient?.recipientCountryCode,
-				recipientPostal: quotation.recipient?.recipientPostalCode,
-				weight: quotation.totalWeightEstimate || 1.0,
-				packageType: quotation.packageType || "YOUR_PACKAGING",
-			};
-
-			console.log("🔍 Field validation:", validation);
-
-			// Fix known issues in payload to match web format exactly
-			const fixedPayload = {
-				accountNumber: {
-					value: "740561073",
-				},
-				requestedShipment: {
-					shipper: {
-						address: {
-							postalCode: "10000", // Match web exactly
-							countryCode: "US", // Match web exactly
-						},
-					},
-					recipient: {
-						address: {
-							postalCode: "70000", // Match web exactly
-							countryCode: "VN", // Match web exactly
-						},
-					},
-					pickupType: "CONTACT_FEDEX_TO_SCHEDULE",
-					rateRequestType: ["PREFERRED"],
-					packagingType: "YOUR_PACKAGING", // Match web exactly
-					preferredCurrency: "VND",
-					requestedPackageLineItems: [
-						{
-							weight: {
-								units: "KG",
-								value: 1, // Match web exactly
-							},
-						},
-					],
-				},
-			};
-
-			// Wrap the payload in the format expected by server (match web format)
-			const serverPayload = {
-				inputJson: fixedPayload, // Send as object, not string (like web)
-			};
-
-			console.log("🚀 Fixed server payload:", serverPayload);
-			console.log("📝 Fixed payload details:");
-			console.log(
-				"- Fixed shipper postal:",
-				fixedPayload.requestedShipment.shipper.address.postalCode
-			);
-			console.log(
-				"- Fixed recipient postal:",
-				fixedPayload.requestedShipment.recipient.address.postalCode
-			);
-			console.log(
-				"- Fixed package type:",
-				fixedPayload.requestedShipment.packagingType
-			);
-
-			// Call the shipping rates API
-			const response = await getShippingRates(serverPayload).unwrap();
-			console.log("✅ Shipping rates response:", response);
-
-			// Check if response has the correct structure with real data
+	const processShippingResponse = useCallback(
+		(response) => {
 			if (
 				response?.output?.rateReplyDetails &&
 				response.output.rateReplyDetails.length > 0
 			) {
-				console.log(
-					`📋 Found ${response.output.rateReplyDetails.length} real shipping methods from FedEx`
-				);
-
-				// Transform FedEx response to our format
 				const transformedMethods = response.output.rateReplyDetails.map(
 					(rate) => {
-						// Get VND pricing (preferred currency)
-						const vndRate = rate.ratedShipmentDetails.find(
-							(detail) => detail.currency === "VND"
+						const preferredRate = rate.ratedShipmentDetails.find(
+							(detail) => detail.rateType === "PREFERRED_CURRENCY"
 						);
-						const pricing = vndRate || rate.ratedShipmentDetails[0]; // fallback to first if VND not found
+						const pricing =
+							preferredRate || rate.ratedShipmentDetails[0];
 
 						return {
 							serviceType: rate.serviceType,
 							serviceName: rate.serviceName,
-							totalNetCharge: pricing.totalNetCharge,
-							totalCost: pricing.totalNetCharge, // For compatibility with ConfirmQuotation
+
+							totalNetCharge:
+								pricing.totalNetChargeWithDutiesAndTaxes ||
+								pricing.totalNetCharge,
+							totalCost:
+								pricing.totalNetChargeWithDutiesAndTaxes ||
+								pricing.totalNetCharge,
 							currency: pricing.currency,
 							deliveryTimestamp: new Date(
 								Date.now() +
@@ -221,7 +129,7 @@ export default function SelectShipping({ navigation, route }) {
 								rate.serviceType
 							).toString(),
 							isAvailable: true,
-							// Include original FedEx data for reference
+
 							originalData: rate,
 						};
 					}
@@ -231,85 +139,23 @@ export default function SelectShipping({ navigation, route }) {
 				return;
 			}
 
-			// Check if response has errors (FedEx API error)
 			if (response?.errors && response.errors.length > 0) {
-				console.log("❌ FedEx API errors:", response.errors);
 				const errorMessage = response.errors
 					.map((err) => err.message)
 					.join(", ");
 
-				// For development/testing - provide fallback shipping options when FedEx is unavailable
-				console.log(
-					"🔄 FedEx unavailable, using fallback shipping options"
-				);
-				const fallbackShippingMethods = [
-					{
-						serviceName: "FedEx International Priority®",
-						serviceType: "FEDEX_INTERNATIONAL_PRIORITY",
-						totalNetCharge: 6280821,
-						totalCost: 6280821, // For compatibility with ConfirmQuotation
-						currency: "VND",
-						deliveryTimestamp: new Date(
-							Date.now() + 1 * 24 * 60 * 60 * 1000
-						).toISOString(),
-						transitTime: "1",
-						isAvailable: true,
-					},
-					{
-						serviceName: "FedEx International Economy®",
-						serviceType: "INTERNATIONAL_ECONOMY",
-						totalNetCharge: 5866039,
-						totalCost: 5866039, // For compatibility with ConfirmQuotation
-						currency: "VND",
-						deliveryTimestamp: new Date(
-							Date.now() + 4 * 24 * 60 * 60 * 1000
-						).toISOString(),
-						transitTime: "4",
-						isAvailable: true,
-					},
-					{
-						serviceName: "FedEx International Connect Plus",
-						serviceType: "FEDEX_INTERNATIONAL_CONNECT_PLUS",
-						totalNetCharge: 5010209,
-						totalCost: 5010209, // For compatibility with ConfirmQuotation
-						currency: "VND",
-						deliveryTimestamp: new Date(
-							Date.now() + 3 * 24 * 60 * 60 * 1000
-						).toISOString(),
-						transitTime: "3",
-						isAvailable: true,
-					},
-				];
-
-				setShippingMethods(fallbackShippingMethods);
-				console.log(
-					`📋 Using ${fallbackShippingMethods.length} fallback shipping methods with real pricing`
-				);
-
-				// Still show warning but don't block user
 				showDialog(
 					"Thông báo",
-					`Dịch vụ FedEx tạm thời không khả dụng từ mobile. Đang sử dụng phương thức vận chuyển dự phòng với giá thực từ web.\n\nLỗi: ${errorMessage}`,
+					`Dịch vụ FedEx tạm thời không khả dụng: ${errorMessage}`,
 					"primary"
 				);
+				setShippingMethods([]);
 				return;
 			}
 
-			// Check if response has shipping methods
 			if (response && Array.isArray(response) && response.length > 0) {
 				setShippingMethods(response);
-				console.log(`📋 Found ${response.length} shipping methods`);
-			} else if (
-				response?.output?.rateReplyDetails &&
-				response.output.rateReplyDetails.length > 0
-			) {
-				// Alternative response structure for FedEx
-				setShippingMethods(response.output.rateReplyDetails);
-				console.log(
-					`📋 Found ${response.output.rateReplyDetails.length} shipping methods (FedEx format)`
-				);
 			} else {
-				console.log("⚠️ No shipping methods returned from API");
 				setShippingMethods([]);
 				showDialog(
 					"Thông báo",
@@ -317,8 +163,12 @@ export default function SelectShipping({ navigation, route }) {
 					"primary"
 				);
 			}
-		} catch (error) {
-			console.error("❌ Error fetching shipping rates:", error);
+		},
+		[showDialog]
+	);
+
+	const handleShippingError = useCallback(
+		(error) => {
 			setShippingMethods([]);
 			showDialog(
 				"Lỗi",
@@ -326,10 +176,9 @@ export default function SelectShipping({ navigation, route }) {
 					"Có lỗi xảy ra khi tải phương thức vận chuyển. Vui lòng thử lại.",
 				"danger"
 			);
-		} finally {
-			setLoading(false);
-		}
-	};
+		},
+		[showDialog]
+	);
 
 	const getTransitDays = (serviceType) => {
 		switch (serviceType) {
@@ -344,17 +193,12 @@ export default function SelectShipping({ navigation, route }) {
 		}
 	};
 
-	const getDeliveryTime = (serviceType) => {
-		switch (serviceType) {
-			case "FEDEX_INTERNATIONAL_PRIORITY":
-				return "1-2 ngày làm việc";
-			case "INTERNATIONAL_ECONOMY":
-				return "4-6 ngày làm việc";
-			case "FEDEX_INTERNATIONAL_CONNECT_PLUS":
-				return "3-4 ngày làm việc";
-			default:
-				return "3-5 ngày làm việc";
-		}
+	// Get shipping description from SHIPMENT_TYPE constants
+	const getShippingDescription = (serviceType) => {
+		const shipmentType = SHIPMENT_TYPE.find(
+			(type) => type.type === serviceType
+		);
+		return shipmentType ? shipmentType.value : null;
 	};
 
 	const handleSelectShipping = () => {
@@ -394,13 +238,15 @@ export default function SelectShipping({ navigation, route }) {
 						{item.serviceName}
 					</Text>
 					<Text style={styles.shippingMethodDesc}>
-						{item.description || getDeliveryTime(item.serviceType)}
+						{getShippingDescription(item.serviceType) ||
+							item.description ||
+							"Dịch vụ vận chuyển quốc tế"}
 					</Text>
 					<View style={styles.deliveryInfo}>
 						<Ionicons name="time-outline" size={16} color="#666" />
 						<Text style={styles.shippingMethodTime}>
 							{item.deliveryTime ||
-								getDeliveryTime(item.serviceType)}
+								`${item.transitTime || "3-5"} ngày làm việc`}
 						</Text>
 					</View>
 				</View>
@@ -427,7 +273,7 @@ export default function SelectShipping({ navigation, route }) {
 		</TouchableOpacity>
 	);
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<View style={styles.container}>
 				<Header

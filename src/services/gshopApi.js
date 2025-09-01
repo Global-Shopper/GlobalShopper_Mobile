@@ -156,7 +156,7 @@ const gshopApi = createApi({
 				method: "POST",
 			}),
 		}),
-		getShippingRates: builder.mutation({
+		getShippingRates: builder.query({
 			query: (data) => ({
 				data: data,
 				url: endpoints.SHIPMENT_RATE, // Try the single rate endpoint first
@@ -577,7 +577,7 @@ export const {
 	useUpdateCustomerProfileMutation,
 	useDefaultShippingAddressMutation,
 	useGetShipmentRateQuery,
-	useGetShippingRatesMutation,
+	useGetShippingRatesQuery,
 	useCreateShipmentMutation,
 	useUploadAvatarMutation,
 	useGetPurchaseRequestQuery,
