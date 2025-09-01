@@ -2,7 +2,7 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 import Constants from "expo-constants";
 import { setOnLineStatus } from "../features/app";
-import { setUser, signout } from "../features/user";
+import { setUser } from "../features/user";
 
 // 🔹 Lấy URL từ app.config.js (đã inject từ .env)
 const url = Constants.expoConfig?.extra?.serverUrl;
@@ -87,7 +87,7 @@ const setUpInterceptor = (store) => {
 						})
 					);
 				} else {
-					store.dispatch(signout());
+					// Use quick logout for token refresh failures
 				}
 			}
 
@@ -115,10 +115,6 @@ const setUpInterceptor = (store) => {
 		(response) => response,
 		async (error) => {
 			if (error.response?.status === 403) {
-				store.dispatch(signout());
-				console.log(
-					"🚨 403 Forbidden - Logged out due to expired session"
-				);
 			}
 			return Promise.reject(error);
 		}

@@ -43,6 +43,7 @@ const endpoints = {
 	REFUND_BY_ORDER: "/refund-ticket/order", // for getting refund tickets by orderId
 	// FCM
 	FCM_SAVE_TOKEN: "/fcm/save-token",
+	FCM_DELETE_TOKEN: "/fcm/delete-token",
 	// Variants
 	VARIANTS: "/variant",
 };

@@ -1,25 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useDialog } from "../../components/dialogHelpers";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
 import { signout } from "../../features/user";
-import { useGetPurchaseRequestQuery } from "../../services/gshopApi";
+import { useDeleteFCMTokenMutation } from "../../services/gshopApi";
 
 export default function AccountScreen({ navigation }) {
 	// Get user data from Redux
 	const reduxUser = useSelector((state) => state?.rootReducer?.user);
+	const fcmToken = useSelector((state) => state?.rootReducer?.app?.fcmToken);
 	const dispatch = useDispatch();
 	const { showDialog, Dialog } = useDialog();
 
-	// API calls để lấy số lượng thực tế
-	const {
-		data: purchaseRequestData,
-		isLoading: isLoadingRequests,
-		error: requestError,
-	} = useGetPurchaseRequestQuery();
+	// FCM delete API
+	const [deleteFCMToken] = useDeleteFCMTokenMutation();
 
 	const [user] = useState({
 		name: reduxUser?.name,
@@ -31,14 +28,6 @@ export default function AccountScreen({ navigation }) {
 	});
 
 	const [chatNotificationCount] = useState(3); // Số tin nhắn chưa đọc
-
-	// Cập nhật số lượng khi có data từ API
-	useEffect(() => {
-		// Debug log để xem cấu trúc data
-		console.log("Purchase Request Data:", purchaseRequestData);
-		console.log("Is Loading:", isLoadingRequests);
-		console.log("Error:", requestError);
-	}, [purchaseRequestData, isLoadingRequests, requestError]);
 
 	const handleChatPress = () => {
 		console.log("Chat pressed");
@@ -108,16 +97,26 @@ export default function AccountScreen({ navigation }) {
 		},
 	];
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
 		showDialog({
 			title: "Đăng xuất",
 			message: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?",
 			primaryButton: {
 				text: "Đăng xuất",
-				onPress: () => {
-					// Clear user data from Redux
+				onPress: async () => {
+					try {
+						// Xóa FCM token khỏi server nếu có token
+						if (fcmToken) {
+							console.log("Deleting FCM token:", fcmToken);
+							await deleteFCMToken(fcmToken);
+							console.log("FCM token deleted successfully");
+						}
+					} catch (error) {
+						console.error("Failed to delete FCM token:", error);
+					}
+
 					dispatch(signout());
-					// Navigate to login screen
+
 					navigation.reset({
 						index: 0,
 						routes: [{ name: "Tabs" }],

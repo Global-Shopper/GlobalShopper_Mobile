@@ -528,6 +528,16 @@ const gshopApi = createApi({
 				method: "POST",
 			}),
 		}),
+		deleteFCMToken: builder.mutation({
+			query: (token) => ({
+				data: {
+					token: token,
+					deviceType: "ANDROID", // Default to ANDROID as requested
+				},
+				url: endpoints.FCM_DELETE_TOKEN,
+				method: "POST",
+			}),
+		}),
 
 		// Variants API
 		getAllVariants: builder.query({
@@ -594,6 +604,7 @@ export const {
 	useGetRefundTicketsByOrderIdQuery,
 	useGetAllRefundTicketsQuery,
 	useSaveFCMTokenMutation,
+	useDeleteFCMTokenMutation,
 	useGetAllVariantsQuery,
 } = gshopApi;
 
