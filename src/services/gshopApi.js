@@ -468,6 +468,14 @@ const gshopApi = createApi({
 			invalidatesTags: ["Feedback", "Order"],
 		}),
 
+		// Refund APIs
+		getRefundReasons: builder.query({
+			query: () => ({
+				url: endpoints.REFUND_REASONS,
+				method: "GET",
+			}),
+		}),
+
 		createRefundTicket: builder.mutation({
 			query: (refundData) => {
 				console.log("Creating refund ticket with data:", refundData);
@@ -600,6 +608,7 @@ export const {
 	useDirectCheckoutMutation,
 	useCreateFeedbackMutation,
 	useGetAllFeedbackQuery,
+	useGetRefundReasonsQuery,
 	useCreateRefundTicketMutation,
 	useGetRefundTicketsByOrderIdQuery,
 	useGetAllRefundTicketsQuery,

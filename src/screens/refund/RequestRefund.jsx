@@ -13,34 +13,53 @@ import {
 import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import { Text } from "../../components/ui/text";
-import { useCreateRefundTicketMutation } from "../../services/gshopApi";
+import {
+	useCreateRefundTicketMutation,
+	useGetRefundReasonsQuery,
+} from "../../services/gshopApi";
 import { uploadToCloudinary } from "../../utils/uploadToCloundinary";
 
 export default function RequestRefund({ navigation, route }) {
 	const { orderData } = route.params;
-
-	// States
-	const [reason, setReason] = useState("");
+	const [selectedReason, setSelectedReason] = useState(null);
+	const [customReason, setCustomReason] = useState("");
 	const [evidence, setEvidence] = useState([]);
 	const [isUploading, setIsUploading] = useState(false);
-
-	// Dialog states
+	const [showCustomInput, setShowCustomInput] = useState(false);
 	const [showDialog, setShowDialog] = useState(false);
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [dialogMessage, setDialogMessage] = useState("");
 	const [dialogOnConfirm, setDialogOnConfirm] = useState(null);
-
-	// API mutation
+	const {
+		data: refundReasons,
+		isLoading: isLoadingReasons,
+		error: reasonsError,
+	} = useGetRefundReasonsQuery();
 	const [createRefundTicket, { isLoading }] = useCreateRefundTicketMutation();
 
-	// Format order ID to show only first part before dash
 	const getShortOrderId = (fullId) => {
 		if (!fullId) return "";
 		const parts = fullId.split("-");
 		return parts[0];
 	};
 
-	// Helper function to show dialog
+	const handleReasonSelect = (reason) => {
+		setSelectedReason(reason);
+		if (reason.id === "custom") {
+			setShowCustomInput(true);
+		} else {
+			setShowCustomInput(false);
+			setCustomReason("");
+		}
+	};
+
+	const getFinalReason = () => {
+		if (selectedReason?.id === "custom") {
+			return customReason.trim();
+		}
+		return selectedReason?.reason || "";
+	};
+
 	const showInfoDialog = (title, message, onConfirm = null) => {
 		setDialogTitle(title);
 		setDialogMessage(message);
@@ -48,7 +67,6 @@ export default function RequestRefund({ navigation, route }) {
 		setShowDialog(true);
 	};
 
-	// Handle image picker
 	const handleImagePicker = async () => {
 		if (evidence.length >= 10) {
 			showInfoDialog("Thông báo", "Bạn chỉ có thể tải lên tối đa 10 ảnh");
@@ -56,7 +74,6 @@ export default function RequestRefund({ navigation, route }) {
 		}
 
 		try {
-			// Request permission
 			const permissionResult =
 				await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -67,7 +84,6 @@ export default function RequestRefund({ navigation, route }) {
 				);
 				return;
 			}
-
 			const result = await ImagePicker.launchImageLibraryAsync({
 				mediaTypes: ImagePicker.MediaTypeOptions.Images,
 				allowsEditing: true,
@@ -79,7 +95,6 @@ export default function RequestRefund({ navigation, route }) {
 			if (!result.canceled && result.assets[0]) {
 				setIsUploading(true);
 				try {
-					// Create proper file object for Cloudinary
 					const fileUri = result.assets[0].uri;
 					const fileName =
 						result.assets[0].fileName || `image_${Date.now()}.jpg`;
@@ -116,23 +131,26 @@ export default function RequestRefund({ navigation, route }) {
 		}
 	};
 
-	// Remove image
 	const removeImage = (index) => {
 		const newEvidence = evidence.filter((_, i) => i !== index);
 		setEvidence(newEvidence);
 	};
 
-	// Handle submit
 	const handleSubmit = async () => {
-		if (!reason.trim()) {
-			showInfoDialog("Thông báo", "Vui lòng nhập lý do hoàn tiền");
+		const finalReason = getFinalReason();
+
+		if (!finalReason) {
+			showInfoDialog(
+				"Thông báo",
+				"Vui lòng chọn hoặc nhập lý do hoàn tiền"
+			);
 			return;
 		}
 
 		try {
 			const refundData = {
 				orderId: orderData.id,
-				reason: reason.trim(),
+				reason: finalReason,
 				evidence: evidence,
 			};
 
@@ -185,19 +203,123 @@ export default function RequestRefund({ navigation, route }) {
 						Lý do hoàn tiền <Text style={styles.required}>*</Text>
 					</Text>
 
-					<TextInput
-						style={styles.textArea}
-						placeholder="Nhập lý do hoàn tiền..."
-						value={reason}
-						onChangeText={setReason}
-						multiline={true}
-						numberOfLines={4}
-						textAlignVertical="top"
-						maxLength={500}
-					/>
-					<Text style={styles.characterCount}>
-						{reason.length}/500
-					</Text>
+					{/* Loading reasons */}
+					{isLoadingReasons ? (
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="small" color="#1d4ed8" />
+							<Text style={styles.loadingText}>
+								Đang tải lý do hoàn tiền...
+							</Text>
+						</View>
+					) : (
+						<>
+							{/* Reason Options */}
+							{refundReasons
+								?.filter((reason) => reason.active) // Only show active reasons
+								?.map((reason) => (
+									<TouchableOpacity
+										key={reason.id}
+										style={[
+											styles.reasonOption,
+											selectedReason?.id === reason.id &&
+												styles.reasonOptionSelected,
+										]}
+										onPress={() =>
+											handleReasonSelect(reason)
+										}
+									>
+										<View style={styles.radioContainer}>
+											<View
+												style={[
+													styles.radioButton,
+													selectedReason?.id ===
+														reason.id &&
+														styles.radioButtonSelected,
+												]}
+											>
+												{selectedReason?.id ===
+													reason.id && (
+													<View
+														style={
+															styles.radioButtonInner
+														}
+													/>
+												)}
+											</View>
+										</View>
+										<Text
+											style={[
+												styles.reasonText,
+												selectedReason?.id ===
+													reason.id &&
+													styles.reasonTextSelected,
+											]}
+										>
+											{reason.reason}
+										</Text>
+									</TouchableOpacity>
+								))}
+
+							{/* Custom reason option */}
+							<TouchableOpacity
+								style={[
+									styles.reasonOption,
+									selectedReason?.id === "custom" &&
+										styles.reasonOptionSelected,
+								]}
+								onPress={() =>
+									handleReasonSelect({
+										id: "custom",
+										reason: "Lý do khác",
+									})
+								}
+							>
+								<View style={styles.radioContainer}>
+									<View
+										style={[
+											styles.radioButton,
+											selectedReason?.id === "custom" &&
+												styles.radioButtonSelected,
+										]}
+									>
+										{selectedReason?.id === "custom" && (
+											<View
+												style={styles.radioButtonInner}
+											/>
+										)}
+									</View>
+								</View>
+								<Text
+									style={[
+										styles.reasonText,
+										selectedReason?.id === "custom" &&
+											styles.reasonTextSelected,
+									]}
+								>
+									Lý do khác
+								</Text>
+							</TouchableOpacity>
+
+							{/* Custom input when "Other" is selected */}
+							{showCustomInput && (
+								<View style={styles.customInputContainer}>
+									<TextInput
+										style={styles.textArea}
+										placeholder="Nhập lý do hoàn tiền của bạn..."
+										value={customReason}
+										onChangeText={setCustomReason}
+										multiline={true}
+										numberOfLines={4}
+										textAlignVertical="top"
+										maxLength={500}
+									/>
+									<Text style={styles.characterCount}>
+										{customReason.length}/500
+									</Text>
+								</View>
+							)}
+						</>
+					)}
 				</View>
 
 				{/* Evidence Section */}
@@ -272,11 +394,11 @@ export default function RequestRefund({ navigation, route }) {
 				<TouchableOpacity
 					style={[
 						styles.submitButton,
-						(!reason.trim() || isLoading) &&
+						(!getFinalReason() || isLoading) &&
 							styles.submitButtonDisabled,
 					]}
 					onPress={handleSubmit}
-					disabled={!reason.trim() || isLoading}
+					disabled={!getFinalReason() || isLoading}
 				>
 					{isLoading ? (
 						<ActivityIndicator size="small" color="#fff" />
@@ -379,6 +501,65 @@ const styles = StyleSheet.create({
 		color: "#6c757d",
 		textAlign: "right",
 		marginTop: 4,
+	},
+	loadingContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		padding: 16,
+		backgroundColor: "#f8f9fa",
+		borderRadius: 8,
+	},
+	loadingText: {
+		marginLeft: 8,
+		fontSize: 14,
+		color: "#6c757d",
+	},
+	reasonOption: {
+		flexDirection: "row",
+		alignItems: "center",
+		backgroundColor: "#fff",
+		padding: 16,
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#e9ecef",
+		marginBottom: 8,
+	},
+	reasonOptionSelected: {
+		borderColor: "#1d4ed8",
+		backgroundColor: "#f0f4ff",
+	},
+	radioContainer: {
+		marginRight: 12,
+	},
+	radioButton: {
+		width: 20,
+		height: 20,
+		borderRadius: 10,
+		borderWidth: 2,
+		borderColor: "#ccc",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	radioButtonSelected: {
+		borderColor: "#1d4ed8",
+	},
+	radioButtonInner: {
+		width: 10,
+		height: 10,
+		borderRadius: 5,
+		backgroundColor: "#1d4ed8",
+	},
+	reasonText: {
+		flex: 1,
+		fontSize: 16,
+		color: "#212529",
+	},
+	reasonTextSelected: {
+		color: "#1d4ed8",
+		fontWeight: "500",
+	},
+	customInputContainer: {
+		marginTop: 8,
 	},
 	imageGrid: {
 		flexDirection: "row",
