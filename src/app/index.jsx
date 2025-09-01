@@ -6,6 +6,7 @@ import React from "react";
 import { LogBox, Text } from "react-native";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { firebaseConfig } from '../../firebaseConfig';
 import AppNavigator from "../navigation/AppNavigator";
 import { persistor, store } from "../redux/store";
 import setUpInterceptor from "../services/baseRequest";
@@ -35,17 +36,9 @@ const linking = {
 };
 
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCdWCgf0nl6pGpXsvXNOvtNeuG9ZycIYJE",
-    authDomain: "globalshopper-54484.firebaseapp.com",
-    projectId: "globalshopper-54484",
-    storageBucket: "globalshopper-54484.firebasestorage.app",
-    messagingSenderId: "180078038826",
-    appId: "1:180078038826:web:d07314c8a28628fe099853",
-    measurementId: "G-DJPWLHETHB"
-  };
-  const app = initializeApp(firebaseConfig);
-  const messaging = getMessaging(app);
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 export default function App() {
 	console.log("Init app")
 	useNotification()
