@@ -17,6 +17,12 @@ import {
 	useConvertToVndMutation,
 	useGetRawDataFromUrlMutation,
 } from "../../services/gshopApi";
+import {
+	extractPlatformFromUrl,
+	isSupportedPlatform,
+	isValidUrl,
+	normalizeUrl,
+} from "../../utils/regrexLink";
 
 export default function WithLink({ navigation }) {
 	const insets = useSafeAreaInsets();
@@ -29,33 +35,6 @@ export default function WithLink({ navigation }) {
 	// RTK Query hooks
 	const [getRawDataFromUrl] = useGetRawDataFromUrlMutation();
 	const [convertToVnd] = useConvertToVndMutation();
-
-	// Simple validation functions
-	const isValidUrl = (string) => {
-		try {
-			new URL(string);
-			return true;
-		} catch {
-			return false;
-		}
-	};
-
-	// Helper function to extract platform from URL
-	const extractPlatform = (url) => {
-		const urlLower = url.toLowerCase();
-		if (urlLower.includes("amazon")) return "Amazon";
-		if (urlLower.includes("aliexpress")) return "AliExpress";
-		if (urlLower.includes("ebay")) return "eBay";
-		if (urlLower.includes("asos")) return "ASOS";
-		if (urlLower.includes("dhgate")) return "DHgate";
-		if (urlLower.includes("gmarket")) return "Gmarket";
-		if (urlLower.includes("shein")) return "Shein";
-		if (urlLower.includes("shopee")) return "Shopee";
-		if (urlLower.includes("lazada")) return "Lazada";
-		if (urlLower.includes("tiki")) return "Tiki";
-		if (urlLower.includes("sendo")) return "Sendo";
-		return "Unknown";
-	};
 
 	// Helper function to extract currency from price string
 	const extractCurrency = (priceString) => {
@@ -81,10 +60,6 @@ export default function WithLink({ navigation }) {
 
 	const parseProductLink = async (link) => {
 		try {
-			console.log("=== PARSING PRODUCT LINK ===");
-			console.log("URL:", link);
-
-			// Update status to show AI is working
 			const newLinks = [...productLinks];
 			const linkIndex = newLinks.findIndex((item) => item.link === link);
 			if (linkIndex !== -1) {
@@ -95,12 +70,7 @@ export default function WithLink({ navigation }) {
 				setProductLinks(newLinks);
 			}
 
-			// Call real API to get raw data
-			console.log("Calling getRawDataFromUrl with:", link);
 			const rawDataResponse = await getRawDataFromUrl(link);
-			console.log("Raw data response:", rawDataResponse);
-			console.log("Raw data response error:", rawDataResponse.error);
-			console.log("Raw data response data:", rawDataResponse.data);
 
 			if (rawDataResponse.error) {
 				console.error("API Error details:", rawDataResponse.error);
@@ -123,16 +93,13 @@ export default function WithLink({ navigation }) {
 				throw new Error("NO_DATA");
 			}
 
-			// Extract platform from URL
-			const platform = extractPlatform(link);
+			const platform = extractPlatformFromUrl(link);
 
-			// Extract price and currency
 			const priceValue = extractPrice(rawData.price);
 			const currency = extractCurrency(rawData.price);
 
 			console.log("Extracted price:", priceValue, currency);
 
-			// Convert to VND if not already VND
 			let convertedPrice = priceValue;
 			let exchangeRate = 1;
 
@@ -257,8 +224,23 @@ export default function WithLink({ navigation }) {
 				return;
 			}
 
+			// Check if platform is supported
+			if (!isSupportedPlatform(link)) {
+				newLinks[index] = {
+					link,
+					status: "error",
+					data: null,
+					error: "Website này chưa được hỗ trợ. Vui lòng sử dụng link từ Amazon, AliExpress, eBay, ASOS, DHgate, Gmarket, Shein, Shopee, Lazada, Tiki hoặc Sendo.",
+				};
+				setProductLinks(newLinks);
+				return;
+			}
+
+			// Normalize URL (add https if missing)
+			const normalizedLink = normalizeUrl(link);
+
 			// Try to parse the product data using real API
-			const data = await parseProductLink(link);
+			const data = await parseProductLink(normalizedLink);
 			newLinks[index] = {
 				link,
 				status: "success",
@@ -395,6 +377,12 @@ export default function WithLink({ navigation }) {
 								tử để chúng tôi hỗ trợ kiểm tra và mua hàng giúp
 								bạn. Bạn có thể thêm tối đa {MAX_LINKS} sản
 								phẩm.
+								{"\n\n"}
+								<Text style={styles.supportedPlatforms}>
+									Các trang được hỗ trợ: Amazon, AliExpress,
+									eBay, ASOS, DHgate, Gmarket, Shein, Shopee,
+									Lazada, Tiki, Sendo
+								</Text>
 							</Text>
 						</View>
 					</View>
@@ -564,6 +552,12 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#1565C0",
 		lineHeight: 20,
+	},
+	supportedPlatforms: {
+		fontSize: 13,
+		color: "#1976D2",
+		fontWeight: "500",
+		fontStyle: "italic",
 	},
 	addButton: {
 		backgroundColor: "#F0F8FF",
