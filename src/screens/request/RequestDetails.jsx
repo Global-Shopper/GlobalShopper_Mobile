@@ -9,6 +9,7 @@ import {
 	View,
 } from "react-native";
 import AddressSmCard from "../../components/address-sm-card";
+import Dialog from "../../components/dialog";
 import Header from "../../components/header";
 import ProductCard from "../../components/product-card";
 import RequestActionButtons from "../../components/request-details/RequestActionButtons";
@@ -17,6 +18,7 @@ import RequestDetailsInfo from "../../components/request-details/RequestDetailsI
 import SubRequestItem from "../../components/request-details/SubRequestItem";
 import { Text } from "../../components/ui/text";
 import {
+	useCancelPurchaseRequestMutation,
 	useGetAllOrdersQuery,
 	useGetPurchaseRequestByIdQuery,
 } from "../../services/gshopApi";
@@ -47,7 +49,6 @@ const isRequestCompleted = (
 		return false;
 	}
 
-	// NEW: Quick check using paidCount - if 0, no payments made yet
 	if (requestData && requestData.paidCount === 0) {
 		console.log("RequestDetails - No payments made yet (paidCount: 0):", {
 			subRequestId: subRequest.id,
@@ -180,6 +181,9 @@ export default function RequestDetails({ navigation, route }) {
 	const [acceptedQuotations, setAcceptedQuotations] = useState({});
 	const [expandedQuotations, setExpandedQuotations] = useState({});
 
+	// Dialog state for cancel confirmation
+	const [showCancelDialog, setShowCancelDialog] = useState(false);
+
 	// Fetch purchase request detail from API
 	const {
 		data: requestDetails,
@@ -197,6 +201,10 @@ export default function RequestDetails({ navigation, route }) {
 		page: 0,
 		size: 50, // Get recent orders to check payment status
 	});
+
+	// Cancel purchase request mutation
+	const [cancelPurchaseRequest, { isLoading: isCancelling }] =
+		useCancelPurchaseRequestMutation();
 
 	// Refetch data when screen comes into focus
 	useFocusEffect(
@@ -500,8 +508,34 @@ export default function RequestDetails({ navigation, route }) {
 
 	// Handle action buttons
 	const handleCancelRequest = () => {
-		console.log("Cancel request:", displayData?.id);
-		// TODO: Implement cancel request API call
+		setShowCancelDialog(true);
+	};
+
+	const confirmCancelRequest = async () => {
+		try {
+			console.log("Cancelling request:", displayData?.id);
+			await cancelPurchaseRequest(displayData?.id).unwrap();
+
+			console.log("Request cancelled successfully");
+			setShowCancelDialog(false);
+			refetch(); // Refresh data
+		} catch (error) {
+			console.error("Failed to cancel request:", error);
+			setShowCancelDialog(false);
+
+			// Extract error message from API response
+			let errorMessage = "Không thể hủy yêu cầu. Vui lòng thử lại.";
+			if (error?.data?.message) {
+				if (error.data.message.includes("constraint")) {
+					errorMessage =
+						"Yêu cầu này không thể hủy do trạng thái hiện tại. Vui lòng liên hệ hỗ trợ.";
+				} else {
+					errorMessage = error.data.message;
+				}
+			}
+
+			alert(errorMessage);
+		}
 	};
 
 	const handleUpdateRequest = () => {
@@ -611,6 +645,23 @@ export default function RequestDetails({ navigation, route }) {
 				status={displayData?.status}
 				onCancel={handleCancelRequest}
 				onUpdate={handleUpdateRequest}
+			/>
+
+			{/* Cancel Confirmation Dialog */}
+			<Dialog
+				visible={showCancelDialog}
+				title="Xác nhận hủy yêu cầu"
+				message="Bạn có chắc chắn muốn hủy yêu cầu này không? Hành động này không thể hoàn tác."
+				onClose={() => setShowCancelDialog(false)}
+				primaryButton={{
+					text: "Hủy yêu cầu",
+					onPress: confirmCancelRequest,
+					style: { backgroundColor: "#dc3545" },
+				}}
+				secondaryButton={{
+					text: "Đóng",
+					onPress: () => setShowCancelDialog(false),
+				}}
 			/>
 		</View>
 	);

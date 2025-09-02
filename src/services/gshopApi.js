@@ -281,6 +281,13 @@ const gshopApi = createApi({
 			}),
 			providesTags: ["PurchaseRequest"],
 		}),
+		cancelPurchaseRequest: builder.mutation({
+			query: (id) => ({
+				url: `${endpoints.CANCEL_PURCHASE_REQUEST}/${id}/cancel`,
+				method: "PUT",
+			}),
+			invalidatesTags: ["PurchaseRequest"],
+		}),
 		getWallet: builder.query({
 			query: () => ({
 				url: endpoints.WALLET,
@@ -585,6 +592,7 @@ export const {
 	useCreateWithLinkPurchaseRequestMutation,
 	useCreateWithoutLinkPurchaseRequestMutation,
 	useCreateOnlinePurchaseRequestMutation,
+	useCancelPurchaseRequestMutation,
 	useGetRawDataFromUrlMutation,
 	useConvertToVndMutation,
 	useGetWalletQuery,

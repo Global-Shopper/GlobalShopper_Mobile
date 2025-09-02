@@ -19,6 +19,7 @@ const endpoints = {
 	PURCHASE_REQUEST: "/purchase-request",
 	WITHOUT_LINK_PURCHASE_REQUEST: "/purchase-request/offline-request",
 	ONLINE_PURCHASE_REQUEST: "/purchase-request/online-request",
+	CANCEL_PURCHASE_REQUEST: "/purchase-request", // for cancel purchase request by ID
 	WALLET: "/wallet",
 	WITHDRAW_WALLET: "/wallet/withdraw-request",
 	CHECKPAYMENT: "/wallet/check-payment-vnpay",
