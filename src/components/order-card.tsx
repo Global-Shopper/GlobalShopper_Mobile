@@ -8,15 +8,53 @@ import { Text } from "./ui/text";
 const getStoreNameFromContactInfo = (contactInfo: any[]) => {
 	if (!contactInfo || !Array.isArray(contactInfo)) return null;
 
-	const storeNameEntry = contactInfo.find(
-		(info) => typeof info === "string" && info.startsWith("Tên cửa hàng:")
-	);
+	// Try different possible formats for store name
+	const possiblePrefixes = [
+		"Tên cửa hàng:",
+		"Store name:",
+		"Store Name:",
+		"STORE_NAME:",
+		"Cửa hàng:",
+		"Shop name:",
+		"Shop Name:",
+	];
 
-	if (storeNameEntry) {
-		return storeNameEntry.replace("Tên cửa hàng:", "").trim();
+	for (const prefix of possiblePrefixes) {
+		const storeNameEntry = contactInfo.find(
+			(info) => typeof info === "string" && info.startsWith(prefix)
+		);
+
+		if (storeNameEntry) {
+			const storeName = storeNameEntry.replace(prefix, "").trim();
+			if (storeName) {
+				return storeName;
+			}
+		}
 	}
 
-	return null;
+	// If no prefixed entry found, look for any entry that might be a store name
+	// Skip entries that look like contact details (phone, email, address)
+	const potentialStoreName = contactInfo.find((info) => {
+		if (typeof info !== "string") return false;
+
+		// Skip if it looks like contact info
+		if (
+			info.includes("@") || // Email
+			info.includes("+") || // Phone
+			info.includes("địa chỉ") || // Address
+			info.includes("phone") ||
+			info.includes("email") ||
+			info.includes("address") ||
+			info.length > 50
+		) {
+			// Too long to be store name
+			return false;
+		}
+
+		return info.length > 2; // At least 3 characters
+	});
+
+	return potentialStoreName || null;
 };
 
 interface OrderCardProps {
@@ -58,12 +96,21 @@ export default function OrderCard({
 
 	// Get display title (store name or seller)
 	const getDisplayTitle = () => {
-		// For offline requests, try to get store name from contactInfo first
-		if (
-			order.requestType?.toLowerCase() === "offline" &&
-			order.contactInfo
-		) {
+		// Debug logging to see full order structure for orders with contactInfo
+		if (order.contactInfo && Array.isArray(order.contactInfo)) {
+			console.log("🏪 OrderCard - Order with contactInfo:", {
+				id: order.id,
+				seller: order.seller,
+				ecommercePlatform: order.ecommercePlatform,
+				contactInfo: order.contactInfo,
+				requestType: order.requestType,
+			});
+		}
+
+		// Try to get store name from contactInfo if it exists (regardless of requestType)
+		if (order.contactInfo && Array.isArray(order.contactInfo)) {
 			const storeName = getStoreNameFromContactInfo(order.contactInfo);
+
 			if (storeName) {
 				return storeName;
 			}
@@ -78,8 +125,13 @@ export default function OrderCard({
 			return order.ecommercePlatform;
 		}
 
-		// Better fallback based on request type
-		if (order.requestType?.toLowerCase() === "offline") {
+		// Better fallback based on request type or presence of contactInfo
+		if (
+			order.requestType?.toLowerCase() === "offline" ||
+			(order.contactInfo &&
+				Array.isArray(order.contactInfo) &&
+				order.contactInfo.length > 0)
+		) {
 			return "Cửa hàng offline";
 		} else {
 			return "Cửa hàng online";
