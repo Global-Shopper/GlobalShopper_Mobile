@@ -16,10 +16,12 @@ const requestUserPermission = async () => {
     }
 }
 
+const keyPair = process.env.EXPO_PUBLIC_KEY_PAIR
+
 const getFCMToken = async () => {
     try {
         const messaging = getMessaging();
-        const token = await getToken(messaging, {vapidKey: "BDCpfgiARHJpgy-IosIVr3tqH_LferFwwAq3GE17I7eF4QjgsZaLbihqo22SGXS8KSCgNuECGryGXvBiconn7a4"});
+        const token = await getToken(messaging, {vapidKey: keyPair});
         console.log("Token," , token )
         store.dispatch(setFcmToken(token))
         return token
