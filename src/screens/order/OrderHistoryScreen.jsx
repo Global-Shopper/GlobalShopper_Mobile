@@ -712,44 +712,6 @@ export default function OrderHistoryScreen({ navigation, route }) {
 							</View>
 						)}
 				</View>
-
-				{/* Additional Info */}
-				<View style={styles.infoCard}>
-					<Text style={styles.infoTitle}>Thông tin bổ sung</Text>
-
-					<View style={styles.infoItem}>
-						<Ionicons
-							name="time-outline"
-							size={16}
-							color="#6c757d"
-						/>
-						<Text style={styles.infoText}>
-							Thời gian giao hàng dự kiến: 3-5 ngày làm việc
-						</Text>
-					</View>
-
-					<View style={styles.infoItem}>
-						<Ionicons
-							name="call-outline"
-							size={16}
-							color="#6c757d"
-						/>
-						<Text style={styles.infoText}>
-							Hotline hỗ trợ: 1900 1234
-						</Text>
-					</View>
-
-					<View style={styles.infoItem}>
-						<Ionicons
-							name="information-circle-outline"
-							size={16}
-							color="#6c757d"
-						/>
-						<Text style={styles.infoText}>
-							Liên hệ shipper trước khi giao hàng 30 phút
-						</Text>
-					</View>
-				</View>
 			</ScrollView>
 		</View>
 	);
