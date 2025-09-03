@@ -595,27 +595,29 @@ export default function ProductForm({
 					</View>
 				)}
 
-				{/* Seller - Add seller field */}
-				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Người bán</Text>
-					<View style={styles.inputContainer}>
-						<Ionicons
-							name="person-outline"
-							size={20}
-							color="#78909C"
-							style={styles.inputIcon}
-						/>
-						<TextInput
-							style={styles.textInput}
-							value={formData.seller}
-							onChangeText={(value) =>
-								handleInputChange("seller", value)
-							}
-							placeholder="Nhập tên người bán"
-							placeholderTextColor="#B0BEC5"
-						/>
+				{/* Seller - Only show for fromLink mode (online requests) */}
+				{mode === "fromLink" && (
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Người bán</Text>
+						<View style={styles.inputContainer}>
+							<Ionicons
+								name="person-outline"
+								size={20}
+								color="#78909C"
+								style={styles.inputIcon}
+							/>
+							<TextInput
+								style={styles.textInput}
+								value={formData.seller}
+								onChangeText={(value) =>
+									handleInputChange("seller", value)
+								}
+								placeholder="Nhập tên người bán"
+								placeholderTextColor="#B0BEC5"
+							/>
+						</View>
 					</View>
-				</View>
+				)}
 
 				{/* Product Link - Show for manual mode (editable) */}
 				{mode === "manual" && (

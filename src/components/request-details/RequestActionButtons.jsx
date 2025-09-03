@@ -5,8 +5,16 @@ import { Text } from "../ui/text";
 const RequestActionButtons = ({ status, onCancel, onUpdate }) => {
 	const normalizedStatus = status?.toLowerCase();
 
-	// Show cancel button for "sent" and "checking" status
-	if (normalizedStatus === "sent" || normalizedStatus === "checking") {
+	// Debug log to check status
+	console.log(
+		"RequestActionButtons - Status:",
+		status,
+		"Normalized:",
+		normalizedStatus
+	);
+
+	// Show cancel button ONLY for "sent" status (đã gửi)
+	if (normalizedStatus === "sent") {
 		return (
 			<View style={styles.actionButtonContainer}>
 				<TouchableOpacity
